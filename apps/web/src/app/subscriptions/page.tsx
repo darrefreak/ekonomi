@@ -1,10 +1,5 @@
-import { PagePlaceholder } from "@/components/placeholders/page-placeholder";
+import { SubscriptionsPage } from "@/components/money/subscriptions-page";
 
 export default function Page() {
-  return (
-    <PagePlaceholder
-      title="Subscriptions"
-      description="Den här ytan är förberedd i Phase 1. Funktionalitet byggs i senare faser enligt roadmap."
-    />
-  );
+  return <SubscriptionsPage />;
 }

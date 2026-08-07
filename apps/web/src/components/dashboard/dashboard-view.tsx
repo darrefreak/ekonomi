@@ -56,6 +56,10 @@ export function DashboardView({ data }: { data: DashboardResponse }) {
                 </span>
               }
             />
+            <Row
+              label="Budget kvar"
+              value={<MoneyValue value={data.thisMonth.budgetRemaining} signed />}
+            />
           </dl>
           <p className="mt-4 text-sm text-text-muted">
             Cash runway:{" "}

@@ -2,8 +2,9 @@ import { drizzle } from "drizzle-orm/node-postgres";
 import { Pool } from "pg";
 import * as core from "./schema";
 import * as economic from "./schema-economic";
+import * as planning from "./schema-planning";
 
-const schema = { ...core, ...economic };
+const schema = { ...core, ...economic, ...planning };
 
 let pool: Pool | null = null;
 
