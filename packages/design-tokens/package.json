@@ -15,11 +15,13 @@
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "lint": "echo 'lint ok'",
+    "lint": "eslint .",
     "test": "echo 'no token tests'",
     "clean": "rm -rf dist"
   },
   "devDependencies": {
-    "typescript": "^5.8.3"
+    "typescript": "^5.8.3",
+    "@ffos/eslint-config": "workspace:*",
+    "eslint": "^9.39.5"
   }
 }

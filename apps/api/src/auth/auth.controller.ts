@@ -25,19 +25,19 @@ import { ZodValidationPipe } from "../common/zod-validation.pipe";
 export class AuthController {
   constructor(@Inject(AuthService) private readonly auth: AuthService) {}
 
-  @Throttle({ default: { limit: 10, ttl: 60_000 } })
+  @Throttle({ default: { limit: 30, ttl: 60_000 } })
   @Post("register")
   register(@Body(new ZodValidationPipe(registerSchema)) body: unknown) {
     return this.auth.register(registerSchema.parse(body));
   }
 
-  @Throttle({ default: { limit: 10, ttl: 60_000 } })
+  @Throttle({ default: { limit: 30, ttl: 60_000 } })
   @Post("login")
   login(@Body(new ZodValidationPipe(loginSchema)) body: unknown) {
     return this.auth.login(loginSchema.parse(body));
   }
 
-  @Throttle({ default: { limit: 20, ttl: 60_000 } })
+  @Throttle({ default: { limit: 60, ttl: 60_000 } })
   @Post("refresh")
   refresh(@Body(new ZodValidationPipe(refreshSchema)) body: unknown) {
     const parsed = refreshSchema.parse(body);

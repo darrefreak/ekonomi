@@ -62,10 +62,10 @@ These must be resolved (or explicitly accepted with risk) before claiming produc
 
 ## P0-6 — Mobile “Mer” placeholder breaks primary navigation
 
-**Status:** BROKEN  
-**Evidence:** `apps/web/src/app/more/page.tsx` is `PagePlaceholder`; mobile bottom nav depends on it for overflow IA.
+**Status:** ADDRESSED  
+**Evidence:** `MorePage` at `apps/web/src/components/layout/more-page.tsx` lists desktop IA links; E2E mobile project covers `/more`.
 
-**Impact:** Most product areas unreachable on ~375px without typing URLs.
+**Impact:** Secondary areas reachable on ~375px via Mer.
 
 **Required:** Working More menu linking to desktop IA (or equivalent IA).
 

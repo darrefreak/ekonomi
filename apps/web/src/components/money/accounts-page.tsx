@@ -107,32 +107,41 @@ export function AccountsPage() {
       >
         <h2 className="text-sm font-medium text-text-secondary">Nytt konto</h2>
         <div className="grid gap-3 md:grid-cols-3">
-          <input
-            required
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            placeholder="Namn"
-            className="min-h-11 rounded-[12px] border border-border bg-surface px-3 text-sm"
-          />
-          <select
-            value={accountType}
-            onChange={(e) =>
-              setAccountType(e.target.value as (typeof ACCOUNT_TYPES)[number])
-            }
-            className="min-h-11 rounded-[12px] border border-border bg-surface px-3 text-sm"
-          >
-            {ACCOUNT_TYPES.map((t) => (
-              <option key={t} value={t}>
-                {t}
-              </option>
-            ))}
-          </select>
-          <input
-            value={provider}
-            onChange={(e) => setProvider(e.target.value)}
-            placeholder="Provider (valfritt)"
-            className="min-h-11 rounded-[12px] border border-border bg-surface px-3 text-sm"
-          />
+          <label className="block text-sm">
+            <span className="text-text-muted">Namn</span>
+            <input
+              required
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="Namn"
+              className="mt-1 min-h-11 w-full rounded-[12px] border border-border bg-surface px-3 text-sm"
+            />
+          </label>
+          <label className="block text-sm">
+            <span className="text-text-muted">Typ</span>
+            <select
+              value={accountType}
+              onChange={(e) =>
+                setAccountType(e.target.value as (typeof ACCOUNT_TYPES)[number])
+              }
+              className="mt-1 min-h-11 w-full rounded-[12px] border border-border bg-surface px-3 text-sm"
+            >
+              {ACCOUNT_TYPES.map((t) => (
+                <option key={t} value={t}>
+                  {t}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="block text-sm">
+            <span className="text-text-muted">Provider (valfritt)</span>
+            <input
+              value={provider}
+              onChange={(e) => setProvider(e.target.value)}
+              placeholder="Provider"
+              className="mt-1 min-h-11 w-full rounded-[12px] border border-border bg-surface px-3 text-sm"
+            />
+          </label>
         </div>
         {formError ? (
           <p className="text-sm text-negative" role="alert">
