@@ -1,8 +1,12 @@
 import {
+  accountsResponseSchema,
   dashboardResponseSchema,
+  transactionsResponseSchema,
+  type AccountsResponse,
   type DashboardResponse,
   type LoginInput,
   type RegisterInput,
+  type TransactionsResponse,
 } from "@ffos/schemas";
 
 export type ApiClientOptions = {
@@ -86,11 +90,27 @@ export function createApiClient(options: ApiClientOptions) {
           body: JSON.stringify(input),
         },
       ),
+    listHouseholds: () =>
+      request<Array<{ id: string; name: string; baseCurrency: string; role: string }>>(
+        "/api/v1/households",
+      ),
     getDashboard: async (householdId: string): Promise<DashboardResponse> => {
       const data = await request<unknown>(
         `/api/v1/dashboard?householdId=${encodeURIComponent(householdId)}`,
       );
       return dashboardResponseSchema.parse(data);
+    },
+    listAccounts: async (householdId: string) => {
+      const data = await request<unknown>(
+        `/api/v1/accounts?householdId=${encodeURIComponent(householdId)}`,
+      );
+      return accountsResponseSchema.parse(data) as AccountsResponse;
+    },
+    listTransactions: async (householdId: string, limit = 50) => {
+      const data = await request<unknown>(
+        `/api/v1/transactions?householdId=${encodeURIComponent(householdId)}&limit=${limit}`,
+      );
+      return transactionsResponseSchema.parse(data) as TransactionsResponse;
     },
   };
 }

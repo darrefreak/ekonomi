@@ -52,7 +52,7 @@ export function DashboardPage() {
     return (
       <ErrorState
         title="Vi kunde inte hämta översikten"
-        description={`${error}. Tidigare data kan saknas i Phase 1-demo.`}
+        description={`${error}. Kör pnpm db:seed om demodata saknas.`}
         onRetry={() => void load()}
       />
     );
@@ -71,6 +71,21 @@ export function DashboardPage() {
 }
 
 async function ensureDemoSession() {
+  try {
+    const loggedIn = await api.login({
+      email: "demo@ffos.local",
+      password: "demo-password-123",
+    });
+    setSession(loggedIn.tokens);
+    const households = await api.listHouseholds();
+    if (households[0]) {
+      setHouseholdId(households[0].id);
+      return;
+    }
+  } catch {
+    // fall through to register ephemeral user
+  }
+
   const email = `demo+${Date.now()}@ffos.local`;
   const password = "demo-password-123";
   const registered = await api.register({

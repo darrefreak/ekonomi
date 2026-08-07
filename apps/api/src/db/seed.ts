@@ -1,8 +1,9 @@
 import { eq } from "drizzle-orm";
 import { getDb, getPool } from "./client";
 import { featureFlags } from "./schema";
+import { seedDemoHousehold } from "./seed/demo-household";
 
-async function main() {
+async function seedFeatureFlags() {
   const db = getDb();
   const flags = [
     { key: "AI", enabled: false, description: "AI advisor features" },
@@ -33,8 +34,26 @@ async function main() {
       await db.insert(featureFlags).values(flag);
     }
   }
+}
 
-  console.log("Seed complete (feature flags). Full demo household seed is Phase 2.");
+async function main() {
+  await seedFeatureFlags();
+  const demo = await seedDemoHousehold();
+  console.log("Seed complete");
+  console.log(
+    JSON.stringify(
+      {
+        demoEmail: demo.email,
+        demoPassword: demo.password,
+        householdId: demo.householdId,
+        asOf: demo.asOf,
+        seedKey: demo.seedKey,
+        eventCount: demo.eventCount,
+      },
+      null,
+      2,
+    ),
+  );
   await getPool().end();
 }
 

@@ -31,13 +31,18 @@ Monorepo, Docker (web/api/worker/postgres/redis/minio/mailpit), NestJS, Next.js,
 Detaljer: [phases/PHASE_1.md](./phases/PHASE_1.md).  
 Report: [phase-reports/PHASE_1_REPORT.md](./phase-reports/PHASE_1_REPORT.md).
 
-## Phase 2 — Economic foundation
+## Phase 2 — Economic foundation ✅
 
 Accounts, balance snapshots, source transactions, financial events, ledger entries/postings, splits, categories, merchants, reconciliation foundation, raw import records, import batches, deterministic mockdata, seed scripts, ledger tests.
+
+Detaljer: [phases/PHASE_2.md](./phases/PHASE_2.md).  
+Report: [phase-reports/PHASE_2_REPORT.md](./phase-reports/PHASE_2_REPORT.md).
 
 ## Phase 3 — Core product
 
 Dashboard, accounts, transactions, cashflow, net worth, monthly metrics, freshness, coverage, review queue.
+
+Detaljer: [phases/PHASE_3.md](./phases/PHASE_3.md).
 
 ## Phase 4 — Planning foundation
 

@@ -1,6 +1,9 @@
 import { drizzle } from "drizzle-orm/node-postgres";
 import { Pool } from "pg";
-import * as schema from "./schema";
+import * as core from "./schema";
+import * as economic from "./schema-economic";
+
+const schema = { ...core, ...economic };
 
 let pool: Pool | null = null;
 
@@ -20,3 +23,4 @@ export function getDb() {
 }
 
 export type Db = ReturnType<typeof getDb>;
+export { schema };

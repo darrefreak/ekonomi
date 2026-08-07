@@ -4,8 +4,15 @@ Ett komplett ekonomiskt operativsystem för hushållet — inte en vanlig budget
 
 ## Status
 
-**Phase 1 — Foundation** ✅ (se `docs/phase-reports/PHASE_1_REPORT.md`)  
-Nästa: vänta på `START PHASE 2`.
+**Phase 2 — Economic foundation** ✅ (se `docs/phase-reports/PHASE_2_REPORT.md`)  
+Nästa: vänta på `START PHASE 3`.
+
+Demo efter seed:
+
+```bash
+pnpm db:seed
+# login: demo@ffos.local / demo-password-123
+```
 
 ## Quick start
 
