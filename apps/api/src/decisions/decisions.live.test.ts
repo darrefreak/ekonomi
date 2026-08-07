@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import {
   opportunitiesResponseSchema,
   riskResponseSchema,
@@ -18,18 +18,24 @@ import { DecisionsService } from "./decisions.service";
 test("opportunities and risk are live-engine with evidence", async () => {
   if (!process.env.DATABASE_URL) return;
   const db = getDb();
-  const [account] = await db
-    .select()
-    .from(accounts)
-    .where(eq(accounts.accountType, "MORTGAGE"))
-    .limit(1);
-  if (!account) return;
+  // Prefer seeded demo household — parallel invariant suites create extra mortgages.
   const [household] = await db
     .select()
     .from(households)
-    .where(eq(households.id, account.householdId))
+    .where(eq(households.name, "Familjen Demo"))
     .limit(1);
   if (!household) return;
+  const [account] = await db
+    .select()
+    .from(accounts)
+    .where(
+      and(
+        eq(accounts.householdId, household.id),
+        eq(accounts.accountType, "MORTGAGE"),
+      ),
+    )
+    .limit(1);
+  if (!account) return;
 
   const access = {
     requireMembership: async () => ({
