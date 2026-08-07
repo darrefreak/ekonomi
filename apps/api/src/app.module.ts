@@ -3,6 +3,7 @@ import { AccountsModule } from "./accounts/accounts.module";
 import { AuthModule } from "./auth/auth.module";
 import { CashflowModule } from "./cashflow/cashflow.module";
 import { DashboardModule } from "./dashboard/dashboard.module";
+import { DecisionsModule } from "./decisions/decisions.module";
 import { FeatureFlagsModule } from "./feature-flags/feature-flags.module";
 import { FinancialCoverageModule } from "./financial-coverage/financial-coverage.module";
 import { HealthModule } from "./health/health.module";
@@ -27,6 +28,7 @@ import { VehiclesModule } from "./vehicles/vehicles.module";
     ReviewModule,
     PlanningModule,
     VehiclesModule,
+    DecisionsModule,
     DashboardModule,
     FeatureFlagsModule,
     SettingsModule,

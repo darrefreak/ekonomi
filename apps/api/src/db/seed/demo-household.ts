@@ -26,6 +26,7 @@ import { persistBalancedEvent } from "./persist-event";
 import { createSeededRng, pick, randInt } from "./rng";
 import { seedPlanningData } from "./seed-planning";
 import { seedVehiclesData } from "./seed-vehicles";
+import { seedDecisionsData } from "./seed-decisions";
 
 const DEMO_EMAIL = "demo@ffos.local";
 const DEMO_PASSWORD = "demo-password-123";
@@ -677,6 +678,14 @@ export async function seedDemoHousehold() {
     householdId: household.id,
     asOf,
     assetAccountId: vehicle.id,
+  });
+
+  await seedDecisionsData({
+    householdId: household.id,
+    asOf,
+    startingCashMinor: 220_000_00n,
+    startingNetWorthMinor: 484_283_900n,
+    monthlyNetSavingsMinor: 35_000_00n,
   });
 
   // Ensure no orphan query warnings

@@ -4,8 +4,9 @@ import * as core from "./schema";
 import * as economic from "./schema-economic";
 import * as planning from "./schema-planning";
 import * as vehicles from "./schema-vehicles";
+import * as decisions from "./schema-decisions";
 
-const schema = { ...core, ...economic, ...planning, ...vehicles };
+const schema = { ...core, ...economic, ...planning, ...vehicles, ...decisions };
 
 let pool: Pool | null = null;
 

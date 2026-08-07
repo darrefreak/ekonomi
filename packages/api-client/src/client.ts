@@ -6,9 +6,14 @@ import {
   contractsResponseSchema,
   coverageResponseSchema,
   dashboardResponseSchema,
+  forecastResponseSchema,
   goalsResponseSchema,
+  insightsResponseSchema,
   netWorthResponseSchema,
+  opportunitiesResponseSchema,
   reviewResponseSchema,
+  riskResponseSchema,
+  scenariosResponseSchema,
   subscriptionsResponseSchema,
   transactionsResponseSchema,
   vehicleDetailSchema,
@@ -20,11 +25,16 @@ import {
   type ContractsResponse,
   type CoverageResponse,
   type DashboardResponse,
+  type ForecastResponse,
   type GoalsResponse,
+  type InsightsResponse,
   type LoginInput,
   type NetWorthResponse,
+  type OpportunitiesResponse,
   type RegisterInput,
   type ReviewResponse,
+  type RiskResponse,
+  type ScenariosResponse,
   type SubscriptionsResponse,
   type TransactionsResponse,
   type VehicleDetailDto,
@@ -208,6 +218,36 @@ export function createApiClient(options: ApiClientOptions) {
         `/api/v1/vehicles/${encodeURIComponent(vehicleId)}?householdId=${encodeURIComponent(householdId)}`,
       );
       return vehicleDetailSchema.parse(data) as VehicleDetailDto;
+    },
+    getForecast: async (householdId: string) => {
+      const data = await request<unknown>(
+        `/api/v1/forecast?householdId=${encodeURIComponent(householdId)}`,
+      );
+      return forecastResponseSchema.parse(data) as ForecastResponse;
+    },
+    getOpportunities: async (householdId: string) => {
+      const data = await request<unknown>(
+        `/api/v1/opportunities?householdId=${encodeURIComponent(householdId)}`,
+      );
+      return opportunitiesResponseSchema.parse(data) as OpportunitiesResponse;
+    },
+    getRisk: async (householdId: string) => {
+      const data = await request<unknown>(
+        `/api/v1/risk?householdId=${encodeURIComponent(householdId)}`,
+      );
+      return riskResponseSchema.parse(data) as RiskResponse;
+    },
+    getScenarios: async (householdId: string) => {
+      const data = await request<unknown>(
+        `/api/v1/scenarios?householdId=${encodeURIComponent(householdId)}`,
+      );
+      return scenariosResponseSchema.parse(data) as ScenariosResponse;
+    },
+    getInsights: async (householdId: string) => {
+      const data = await request<unknown>(
+        `/api/v1/insights?householdId=${encodeURIComponent(householdId)}`,
+      );
+      return insightsResponseSchema.parse(data) as InsightsResponse;
     },
   };
 }

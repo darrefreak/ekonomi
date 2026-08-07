@@ -1,10 +1,4 @@
-import { PagePlaceholder } from "@/components/placeholders/page-placeholder";
-
+import { OpportunitiesPage } from "@/components/decisions/opportunities-page";
 export default function Page() {
-  return (
-    <PagePlaceholder
-      title="Opportunities"
-      description="Den här ytan är förberedd i Phase 1. Funktionalitet byggs i senare faser enligt roadmap."
-    />
-  );
+  return <OpportunitiesPage />;
 }

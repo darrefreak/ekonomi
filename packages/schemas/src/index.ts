@@ -10,3 +10,4 @@ export * from "./coverage";
 export * from "./review";
 export * from "./planning";
 export * from "./vehicles";
+export * from "./decisions";

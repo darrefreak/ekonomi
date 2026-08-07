@@ -59,15 +59,18 @@ Vehicles, ownership, financing, mileage, actual costs, economic cost, TCO, equit
 Detaljer: [phases/PHASE_4B.md](./phases/PHASE_4B.md).  
 Report: [phase-reports/PHASE_4B_REPORT.md](./phase-reports/PHASE_4B_REPORT.md).
 
-## Phase 5 — Decision engines
+## Phase 5 — Decision engines ✅
 
 Forecast, backtesting, opportunities, risks, financial health, scenarios, savings optimizer.
 
-Detaljer: [phases/PHASE_5.md](./phases/PHASE_5.md).
+Detaljer: [phases/PHASE_5.md](./phases/PHASE_5.md).  
+Report: [phase-reports/PHASE_5_REPORT.md](./phase-reports/PHASE_5_REPORT.md).
 
 ## Phase 5B — Vehicle intelligence
 
 Market snapshots, valuation ranges, candidates, comparisons, replacement analysis, sell window, vehicle scenarios, mock market intelligence.
+
+Detaljer: [phases/PHASE_5B.md](./phases/PHASE_5B.md).
 
 ## Phase 6 — Data intake
 

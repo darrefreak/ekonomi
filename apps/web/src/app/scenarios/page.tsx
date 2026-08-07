@@ -1,10 +1,4 @@
-import { PagePlaceholder } from "@/components/placeholders/page-placeholder";
-
+import { ScenariosPage } from "@/components/decisions/scenarios-page";
 export default function Page() {
-  return (
-    <PagePlaceholder
-      title="Scenarios"
-      description="Den här ytan är förberedd i Phase 1. Funktionalitet byggs i senare faser enligt roadmap."
-    />
-  );
+  return <ScenariosPage />;
 }
