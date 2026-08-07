@@ -1,6 +1,7 @@
 import {
   bigint,
   date,
+  index,
   integer,
   jsonb,
   numeric,
@@ -121,3 +122,64 @@ export const scenarios = pgTable("scenarios", {
   currency: varchar("currency", { length: 3 }).notNull().default("SEK"),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
 });
+
+export const forecastActualComparisons = pgTable(
+  "forecast_actual_comparisons",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    householdId: uuid("household_id")
+      .notNull()
+      .references(() => households.id, { onDelete: "cascade" }),
+    forecastRunId: uuid("forecast_run_id").references(() => forecastRuns.id, {
+      onDelete: "set null",
+    }),
+    label: varchar("label", { length: 80 }).notNull(),
+    onDate: date("on_date").notNull(),
+    projectedCashMinor: bigint("projected_cash_minor", { mode: "bigint" }).notNull(),
+    actualCashMinor: bigint("actual_cash_minor", { mode: "bigint" }).notNull(),
+    projectedNetWorthMinor: bigint("projected_net_worth_minor", {
+      mode: "bigint",
+    }).notNull(),
+    actualNetWorthMinor: bigint("actual_net_worth_minor", {
+      mode: "bigint",
+    }).notNull(),
+    cashErrorMinor: bigint("cash_error_minor", { mode: "bigint" }).notNull(),
+    netWorthErrorMinor: bigint("net_worth_error_minor", {
+      mode: "bigint",
+    }).notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (t) => [index("forecast_actual_comparisons_household_idx").on(t.householdId)],
+);
+
+export const forecastAccuracyMetrics = pgTable(
+  "forecast_accuracy_metrics",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    householdId: uuid("household_id")
+      .notNull()
+      .references(() => households.id, { onDelete: "cascade" }),
+    forecastRunId: uuid("forecast_run_id").references(() => forecastRuns.id, {
+      onDelete: "set null",
+    }),
+    horizonLabel: varchar("horizon_label", { length: 80 }).notNull(),
+    sampleCount: integer("sample_count").notNull().default(1),
+    mapeCashPercent: numeric("mape_cash_percent", { precision: 10, scale: 4 }),
+    mapeNetWorthPercent: numeric("mape_net_worth_percent", {
+      precision: 10,
+      scale: 4,
+    }),
+    absCashErrorMinor: bigint("abs_cash_error_minor", { mode: "bigint" })
+      .notNull()
+      .default(0n),
+    absNetWorthErrorMinor: bigint("abs_net_worth_error_minor", {
+      mode: "bigint",
+    })
+      .notNull()
+      .default(0n),
+    computedAt: timestamp("computed_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (t) => [index("forecast_accuracy_metrics_household_idx").on(t.householdId)],
+);

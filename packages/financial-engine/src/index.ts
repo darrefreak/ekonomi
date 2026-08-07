@@ -7,4 +7,6 @@ export * from "./planning";
 export * from "./vehicle";
 export * from "./period-metrics";
 export * from "./forecast";
+export * from "./scenarios";
+export * from "./backtest";
 

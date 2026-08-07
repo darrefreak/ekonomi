@@ -1,8 +1,22 @@
-import { Controller, Get, Inject, Query, UseGuards } from "@nestjs/common";
+import {
+  Body,
+  Controller,
+  Get,
+  Inject,
+  Param,
+  Post,
+  Query,
+  UseGuards,
+} from "@nestjs/common";
 import { ApiBearerAuth, ApiTags } from "@nestjs/swagger";
+import {
+  createScenarioSchema,
+  simulateScenarioSchema,
+} from "@ffos/schemas";
 import { AuthGuard } from "../auth/auth.guard";
 import { CurrentUser } from "../auth/current-user.decorator";
 import type { AuthenticatedUser } from "../auth/auth.types";
+import { ZodValidationPipe } from "../common/zod-validation.pipe";
 import { DecisionsService } from "./decisions.service";
 
 @ApiTags("decisions")
@@ -18,6 +32,14 @@ export class DecisionsController {
     @Query("householdId") householdId: string,
   ) {
     return this.decisions.forecast(user.userId, householdId);
+  }
+
+  @Get("forecast/backtest")
+  backtest(
+    @CurrentUser() user: AuthenticatedUser,
+    @Query("householdId") householdId: string,
+  ) {
+    return this.decisions.backtest(user.userId, householdId);
   }
 
   @Get("opportunities")
@@ -42,6 +64,30 @@ export class DecisionsController {
     @Query("householdId") householdId: string,
   ) {
     return this.decisions.scenarios(user.userId, householdId);
+  }
+
+  @Post("scenarios")
+  createScenario(
+    @CurrentUser() user: AuthenticatedUser,
+    @Body(new ZodValidationPipe(createScenarioSchema)) body: unknown,
+  ) {
+    return this.decisions.createScenario(
+      user.userId,
+      body as ReturnType<typeof createScenarioSchema.parse>,
+    );
+  }
+
+  @Post("scenarios/:scenarioId/simulate")
+  simulateScenario(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param("scenarioId") scenarioId: string,
+    @Body(new ZodValidationPipe(simulateScenarioSchema)) body: unknown,
+  ) {
+    return this.decisions.simulateScenario(
+      user.userId,
+      scenarioId,
+      body as ReturnType<typeof simulateScenarioSchema.parse>,
+    );
   }
 
   @Get("insights")

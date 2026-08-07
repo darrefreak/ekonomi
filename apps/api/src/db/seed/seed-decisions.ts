@@ -144,21 +144,33 @@ export async function seedDecisionsData(input: {
       householdId: input.householdId,
       name: "Inkomstbortfall 3 mån",
       description: "En lön uteblir i 3 månader — påverkan på cash och runway.",
-      assumptions: { missingSalaries: 3, person: "Alex" },
+      assumptions: {
+        missingSalaries: 3,
+        person: "Alex",
+        monthlyIncomeDeltaMinor: "-4260000",
+      },
       projectedMonthlyDeltaMinor: -42_600_00n,
     },
     {
       householdId: input.householdId,
       name: "Räntehöjning +1%",
       description: "Bolåneräntan stiger 1 procentenhet.",
-      assumptions: { mortgageRateDeltaBps: 100 },
+      assumptions: {
+        mortgageRateDeltaBps: 100,
+        monthlyExpenseDeltaMinor: "210000",
+      },
       projectedMonthlyDeltaMinor: -2_100_00n,
     },
     {
       householdId: input.householdId,
       name: "Sälj bil om 12 mån",
       description: "Sälj XC60 och gå till billigare bil / kollektivtrafik-mix.",
-      assumptions: { sellVehicle: true, horizonMonths: 12 },
+      assumptions: {
+        sellVehicle: true,
+        horizonMonths: 12,
+        oneTimeCashDeltaMinor: "18000000",
+        monthlyExpenseDeltaMinor: "-380000",
+      },
       projectedMonthlyDeltaMinor: 3_800_00n,
     },
   ]);
