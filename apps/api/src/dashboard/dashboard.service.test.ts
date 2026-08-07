@@ -4,7 +4,7 @@ import { moneyFromJson } from "@ffos/domain";
 import { calculateNetWorth, forecastCashflowDeltas } from "@ffos/financial-engine";
 import { dashboardResponseSchema } from "@ffos/schemas";
 import { buildBrief } from "./dashboard.service";
-import { getDb, getPool } from "../db/client";
+import { getDb } from "../db/client";
 import { households } from "../db/schema";
 import { DashboardService } from "./dashboard.service";
 import { DecisionsService } from "../decisions/decisions.service";
@@ -123,12 +123,10 @@ test("forecast deltas for dashboard are engine-driven (not hardcoded)", () => {
 });
 
 test("getDashboard aggregates opportunities and forecast from live services", async () => {
+  if (!process.env.DATABASE_URL) return;
   const db = getDb();
   const [household] = await db.select().from(households).limit(1);
-  if (!household) {
-    await getPool().end().catch(() => undefined);
-    return;
-  }
+  if (!household) return;
 
   const access = {
     requireMembership: async () => ({

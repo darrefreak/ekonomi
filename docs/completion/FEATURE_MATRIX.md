@@ -52,15 +52,15 @@ Legend for layer columns: **C** complete · **P** partial · **S** scaffold · *
 
 | Feature | Status | BE | FE | Test | Mobile | Pri | Deps | Missing / defects |
 |---|---|---|---|---|---|---|---|---|
-| Financial position (NW/cash/inv/debt) | PARTIAL | P | P | S | P | P0 | Balances | From account caches + engine |
+| Financial position (NW/cash/inv/debt) | PARTIAL | P | P | P | P | P0 | Balances | Snapshot + engine (WS A/C) |
 | Month income/spend/savings/rate | PARTIAL | P | P | P | P | P0 | Events | Real from events |
-| Net worth change | MOCK_ONLY | M | P | N | P | P0 | Metrics | Hardcoded 63 410 |
+| Net worth change | PARTIAL | P | P | P | P | P0 | Metrics | From events via snapshot (WS A) |
 | Budget remaining | PARTIAL | P | P | P | P | P1 | Budget | Engine vs seed budget |
-| Cash runway | PARTIAL | P | P | N | P | P1 | Cashflow | Simple cash/spend ratio |
-| Cashflow forecast widget | MOCK_ONLY | M | P | N | P | P0 | Forecast | Hardcoded 30/60/90 |
-| Financial brief | PARTIAL | P | P | S | P | P1 | AI/Metrics | Mix of real delta + hardcoded mortgage tip |
-| Upcoming obligations | MOCK_ONLY | M | P | N | P | P1 | Recurring | Hardcoded list |
-| Opportunities on dashboard | NOT_STARTED | N | N | N | N | P2 | Opps | Not on dashboard view |
+| Cash runway | PARTIAL | P | P | P | P | P1 | Cashflow | cash/spend via engine |
+| Cashflow forecast widget | PARTIAL | P | P | P | P | P0 | Forecast | Engine 30/60/90 deltas (WS C) |
+| Financial brief | PARTIAL | P | P | P | P | P1 | AI/Metrics | Opps + cashflow + review (WS C); AI later |
+| Upcoming obligations | PARTIAL | P | P | P | P | P1 | Recurring | Subs/contracts/salary estimate |
+| Opportunities on dashboard | PARTIAL | P | P | P | P | P2 | Opps | Aggregated + widget (WS C); detectors later |
 | Coverage / freshness | PARTIAL | P | P | P | P | P1 | Accounts | Heuristic coverage |
 
 ---
