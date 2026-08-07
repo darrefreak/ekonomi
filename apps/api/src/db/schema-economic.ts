@@ -200,6 +200,7 @@ export const accounts = pgTable("accounts", {
     .notNull()
     .default("CONNECTED"),
   isSystem: boolean("is_system").notNull().default(false),
+  archivedAt: timestamp("archived_at", { withTimezone: true }),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
 });

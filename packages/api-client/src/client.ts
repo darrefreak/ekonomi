@@ -1,9 +1,11 @@
 import {
   accountsResponseSchema,
   accountDetailSchema,
+  accountSchema,
   advisorBriefResponseSchema,
   budgetResponseSchema,
   cashflowResponseSchema,
+  categoriesResponseSchema,
   contractsResponseSchema,
   coverageResponseSchema,
   dashboardResponseSchema,
@@ -19,17 +21,21 @@ import {
   riskResponseSchema,
   scenariosResponseSchema,
   subscriptionsResponseSchema,
+  transactionDetailSchema,
   transactionsResponseSchema,
   vehicleDetailSchema,
   vehicleMarketResponseSchema,
   vehiclesResponseSchema,
   type AccountDetailDto,
+  type AccountDto,
   type AccountsResponse,
   type AdvisorBriefResponse,
   type BudgetResponse,
   type CashflowResponse,
+  type CategoriesResponse,
   type ContractsResponse,
   type CoverageResponse,
+  type CreateAccountInput,
   type DashboardResponse,
   type DocumentsResponse,
   type ForecastResponse,
@@ -45,7 +51,10 @@ import {
   type RiskResponse,
   type ScenariosResponse,
   type SubscriptionsResponse,
+  type TransactionDetailDto,
   type TransactionsResponse,
+  type UpdateAccountInput,
+  type UpdateTransactionInput,
   type VehicleDetailDto,
   type VehicleMarketResponse,
   type VehiclesResponse,
@@ -142,11 +151,38 @@ export function createApiClient(options: ApiClientOptions) {
       );
       return dashboardResponseSchema.parse(data);
     },
-    listAccounts: async (householdId: string) => {
-      const data = await request<unknown>(
-        `/api/v1/accounts?householdId=${encodeURIComponent(householdId)}`,
-      );
+    listAccounts: async (
+      householdId: string,
+      opts?: { includeArchived?: boolean },
+    ) => {
+      const params = new URLSearchParams({ householdId });
+      if (opts?.includeArchived) params.set("includeArchived", "true");
+      const data = await request<unknown>(`/api/v1/accounts?${params}`);
       return accountsResponseSchema.parse(data) as AccountsResponse;
+    },
+    createAccount: async (input: CreateAccountInput) => {
+      const data = await request<unknown>("/api/v1/accounts", {
+        method: "POST",
+        body: JSON.stringify(input),
+      });
+      return accountSchema.parse(data) as AccountDto;
+    },
+    updateAccount: async (accountId: string, input: UpdateAccountInput) => {
+      const data = await request<unknown>(
+        `/api/v1/accounts/${encodeURIComponent(accountId)}`,
+        {
+          method: "PATCH",
+          body: JSON.stringify(input),
+        },
+      );
+      return accountSchema.parse(data) as AccountDto;
+    },
+    archiveAccount: async (householdId: string, accountId: string) => {
+      const data = await request<unknown>(
+        `/api/v1/accounts/${encodeURIComponent(accountId)}?householdId=${encodeURIComponent(householdId)}`,
+        { method: "DELETE" },
+      );
+      return accountSchema.parse(data) as AccountDto;
     },
     getAccount: async (householdId: string, accountId: string) => {
       const data = await request<unknown>(
@@ -154,9 +190,22 @@ export function createApiClient(options: ApiClientOptions) {
       );
       return accountDetailSchema.parse(data) as AccountDetailDto;
     },
+    listCategories: async (householdId: string) => {
+      const data = await request<unknown>(
+        `/api/v1/categories?householdId=${encodeURIComponent(householdId)}`,
+      );
+      return categoriesResponseSchema.parse(data) as CategoriesResponse;
+    },
     listTransactions: async (
       householdId: string,
-      opts?: { limit?: number; q?: string; accountId?: string; from?: string; to?: string },
+      opts?: {
+        limit?: number;
+        q?: string;
+        accountId?: string;
+        from?: string;
+        to?: string;
+        includeExcluded?: boolean;
+      },
     ) => {
       const params = new URLSearchParams({
         householdId,
@@ -166,8 +215,28 @@ export function createApiClient(options: ApiClientOptions) {
       if (opts?.accountId) params.set("accountId", opts.accountId);
       if (opts?.from) params.set("from", opts.from);
       if (opts?.to) params.set("to", opts.to);
+      if (opts?.includeExcluded) params.set("includeExcluded", "true");
       const data = await request<unknown>(`/api/v1/transactions?${params}`);
       return transactionsResponseSchema.parse(data) as TransactionsResponse;
+    },
+    getTransaction: async (householdId: string, transactionId: string) => {
+      const data = await request<unknown>(
+        `/api/v1/transactions/${encodeURIComponent(transactionId)}?householdId=${encodeURIComponent(householdId)}`,
+      );
+      return transactionDetailSchema.parse(data) as TransactionDetailDto;
+    },
+    updateTransaction: async (
+      transactionId: string,
+      input: UpdateTransactionInput,
+    ) => {
+      const data = await request<unknown>(
+        `/api/v1/transactions/${encodeURIComponent(transactionId)}`,
+        {
+          method: "PATCH",
+          body: JSON.stringify(input),
+        },
+      );
+      return transactionDetailSchema.parse(data) as TransactionDetailDto;
     },
     getCashflow: async (householdId: string) => {
       const data = await request<unknown>(

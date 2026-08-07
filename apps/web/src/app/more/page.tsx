@@ -1,10 +1,5 @@
-import { PagePlaceholder } from "@/components/placeholders/page-placeholder";
+import { MorePage } from "@/components/layout/more-page";
 
-export default function Page() {
-  return (
-    <PagePlaceholder
-      title="More"
-      description="Den här ytan är förberedd i Phase 1. Funktionalitet byggs i senare faser enligt roadmap."
-    />
-  );
+export default function MoreRoute() {
+  return <MorePage />;
 }
