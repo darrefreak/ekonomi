@@ -4,6 +4,12 @@ type Area = {
   status: "present" | "warning" | "missing";
 };
 
+type FreshnessRow = {
+  sourceName: string;
+  status: string;
+  freshnessLabel: string | null;
+};
+
 const statusLabel = {
   present: "✓",
   warning: "⚠",
@@ -13,9 +19,11 @@ const statusLabel = {
 export function CoverageList({
   percent,
   areas,
+  freshness,
 }: {
   percent: number;
   areas: Area[];
+  freshness?: FreshnessRow[];
 }) {
   return (
     <div>
@@ -44,6 +52,24 @@ export function CoverageList({
           </li>
         ))}
       </ul>
+      {freshness && freshness.length > 0 ? (
+        <div className="mt-5 border-t border-border pt-4">
+          <p className="text-xs font-medium text-text-secondary">Källors freshness</p>
+          <ul className="mt-2 space-y-1.5">
+            {freshness.map((row) => (
+              <li
+                key={`${row.sourceName}-${row.status}`}
+                className="flex items-center justify-between gap-3 text-xs"
+              >
+                <span className="text-text-muted">{row.sourceName}</span>
+                <span className="text-text-secondary">
+                  {row.freshnessLabel ?? row.status}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
     </div>
   );
 }

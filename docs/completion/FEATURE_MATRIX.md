@@ -154,13 +154,13 @@ Legend for layer columns: **C** complete · **P** partial · **S** scaffold · *
 
 | Feature | Status | BE | FE | Test | Mobile | Pri | Deps | Missing / defects |
 |---|---|---|---|---|---|---|---|---|
-| Integrations list + health | MOCK_ONLY | M | P | N | B | P1 | — | Allowed external mock |
-| Fake sync | MOCK_ONLY | M | P | N | B | P1 | — | Allowed |
-| Source CRUD | NOT_STARTED | N | N | N | N | P1 | — | — |
-| Import batches / history | MOCK_ONLY | M | P | N | B | P1 | — | Seed read |
-| Raw records | PARTIAL | M | N | N | N | P2 | — | Seed only |
+| Integrations list + health | PARTIAL | P | P | P | B | P1 | — | Live sources + computed freshness (WS K) |
+| Fake sync | PARTIAL | P | P | P | B | P1 | — | Source-scoped + import batch (WS K) |
+| Source CRUD | PARTIAL | P | P | P | B | P1 | — | Create/update/archive + reconnect (WS K) |
+| Import batches / history | PARTIAL | P | P | P | B | P1 | — | Source-linked history + counts (WS K) |
+| Raw records | PARTIAL | M | N | N | N | P2 | — | Seed + sync mock write |
 | Duplicate prevention | SCAFFOLD_ONLY | S | N | N | N | P1 | Imports | Fingerprints partial |
-| Connector metadata | PARTIAL | P | N | N | N | P2 | — | Architecture stubs |
+| Connector metadata | PARTIAL | P | P | N | B | P2 | — | Mock provider catalog (WS K) |
 
 ---
 

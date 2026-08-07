@@ -3,6 +3,7 @@ export * from "./ledger";
 export * from "./savings-rate";
 export * from "./cashflow";
 export * from "./coverage";
+export * from "./freshness";
 export * from "./planning";
 export * from "./vehicle";
 export * from "./period-metrics";

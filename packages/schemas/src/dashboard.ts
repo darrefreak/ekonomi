@@ -71,6 +71,17 @@ export const dashboardResponseSchema = z.object({
     )
     .optional()
     .default([]),
+  coverageFreshness: z
+    .array(
+      z.object({
+        sourceName: z.string(),
+        status: z.string(),
+        freshnessLabel: z.string().nullable(),
+        lastSyncedAt: z.string().nullable().optional(),
+      }),
+    )
+    .optional()
+    .default([]),
   coverageAreas: z
     .array(
       z.object({

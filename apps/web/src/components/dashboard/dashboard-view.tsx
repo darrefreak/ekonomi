@@ -226,6 +226,7 @@ export function DashboardView({ data }: { data: DashboardResponse }) {
           <CoverageList
             percent={data.coveragePercent}
             areas={data.coverageAreas ?? []}
+            freshness={data.coverageFreshness ?? []}
           />
         </section>
       </div>

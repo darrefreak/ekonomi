@@ -81,22 +81,79 @@ export const updateDocumentSchema = z.object({
 });
 export type UpdateDocumentInput = z.input<typeof updateDocumentSchema>;
 
+export const connectionStatusSchema = z.enum([
+  "CONNECTED",
+  "SYNCING",
+  "AUTH_REQUIRED",
+  "DEGRADED",
+  "ERROR",
+  "DISCONNECTED",
+]);
+
+export const dataSourceDomainSchema = z.enum([
+  "BANKING",
+  "INVESTMENTS",
+  "TAX",
+  "GOVERNMENT",
+  "INSURANCE",
+  "UTILITIES",
+  "VEHICLE",
+  "DOCUMENTS",
+  "OTHER",
+]);
+
+export const sourceSchema = z.object({
+  id: z.string().uuid(),
+  name: z.string(),
+  providerId: z.string(),
+  connectionStatus: z.string(),
+  freshnessLabel: z.string().nullable(),
+  lastSyncedAt: z.string().nullable(),
+  domain: z.string(),
+  protocol: z.string().optional(),
+  authenticationMethod: z.string().optional(),
+  archivedAt: z.string().nullable().optional(),
+});
+export type SourceDto = z.infer<typeof sourceSchema>;
+
+export const createSourceSchema = z.object({
+  householdId: z.string().uuid(),
+  providerId: z.string().min(1).max(80),
+  name: z.string().min(1).max(160).optional(),
+  domain: dataSourceDomainSchema.optional(),
+  protocol: z.string().min(1).max(40).optional(),
+  authenticationMethod: z.string().min(1).max(40).optional(),
+  connectionStatus: connectionStatusSchema.optional().default("CONNECTED"),
+});
+export type CreateSourceInput = z.input<typeof createSourceSchema>;
+
+export const updateSourceSchema = z.object({
+  householdId: z.string().uuid(),
+  name: z.string().min(1).max(160).optional(),
+  connectionStatus: connectionStatusSchema.optional(),
+  domain: dataSourceDomainSchema.optional(),
+});
+export type UpdateSourceInput = z.input<typeof updateSourceSchema>;
+
+export const reconnectSourceSchema = z.object({
+  householdId: z.string().uuid(),
+});
+export type ReconnectSourceInput = z.input<typeof reconnectSourceSchema>;
+
+export const syncSourceSchema = z.object({
+  householdId: z.string().uuid(),
+  sourceId: z.string().uuid().optional(),
+});
+export type SyncSourceInput = z.input<typeof syncSourceSchema>;
+
 export const integrationsResponseSchema = z.object({
   asOf: z.string(),
-  sources: z.array(
-    z.object({
-      id: z.string(),
-      name: z.string(),
-      providerId: z.string(),
-      connectionStatus: z.string(),
-      freshnessLabel: z.string().nullable(),
-      lastSyncedAt: z.string().nullable(),
-      domain: z.string(),
-    }),
-  ),
+  sources: z.array(sourceSchema),
   recentSyncs: z.array(
     z.object({
       id: z.string(),
+      sourceId: z.string().nullable().optional(),
+      sourceName: z.string().nullable().optional(),
       status: z.string(),
       recordsFetched: z.number(),
       message: z.string().nullable(),
@@ -104,6 +161,18 @@ export const integrationsResponseSchema = z.object({
       completedAt: z.string().nullable(),
     }),
   ),
+  providers: z
+    .array(
+      z.object({
+        providerId: z.string(),
+        name: z.string(),
+        domain: z.string(),
+        protocol: z.string(),
+        authenticationMethod: z.string(),
+      }),
+    )
+    .optional()
+    .default([]),
 });
 export type IntegrationsResponse = z.infer<typeof integrationsResponseSchema>;
 
@@ -112,12 +181,25 @@ export const importsResponseSchema = z.object({
   batches: z.array(
     z.object({
       id: z.string(),
+      sourceId: z.string().nullable(),
+      sourceName: z.string().nullable(),
       status: z.string(),
       totalRecords: z.number(),
       createdCount: z.number(),
+      updatedCount: z.number(),
+      ignoredCount: z.number(),
+      failedCount: z.number(),
       startedAt: z.string(),
       completedAt: z.string().nullable(),
     }),
   ),
 });
 export type ImportsResponse = z.infer<typeof importsResponseSchema>;
+
+export const syncResultSchema = z.object({
+  ok: z.boolean(),
+  syncRunId: z.string().uuid(),
+  importBatchId: z.string().uuid().nullable().optional(),
+  sourceId: z.string().uuid().nullable().optional(),
+});
+export type SyncResultDto = z.infer<typeof syncResultSchema>;
