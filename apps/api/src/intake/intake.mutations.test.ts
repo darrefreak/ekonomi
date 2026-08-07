@@ -42,6 +42,17 @@ test("document upload storage extract status and vehicle link", async () => {
       household,
       member: { id: "member", role: "OWNER" },
     }),
+    requireCanWrite: async () => ({
+      household,
+      member: { id: "member", role: "OWNER" },
+    }),
+    requireAdmin: async () => ({
+      household,
+      member: { id: "member", role: "OWNER" },
+    }),
+    accountVisibility: async () => "full" as const,
+    projectAccountListItem: <T>(item: T) => item,
+    projectTransactionItem: <T>(item: T) => item,
   } as unknown as HouseholdAccessService;
 
   const service = new IntakeService(access, new ObjectStorageService());

@@ -9,11 +9,13 @@ import { getDb } from "../db/client";
 import { householdMembers, households, users } from "../db/schema";
 import { householdSettings } from "../db/schema-ops";
 import { HouseholdAccessService } from "../households/household-access.service";
+import { AuditService } from "../audit/audit.service";
 
 @Injectable()
 export class SettingsService {
   constructor(
     @Inject(HouseholdAccessService) private readonly access: HouseholdAccessService,
+    @Inject(AuditService) private readonly audit: AuditService,
   ) {}
 
   private async ensureRow(householdId: string) {
@@ -69,7 +71,11 @@ export class SettingsService {
   }
 
   async update(userId: string, input: UpdateSettingsInput) {
-    await this.access.requireMembership(userId, input.householdId);
+    await this.access.requireCanWrite(userId, input.householdId);
+    if (input.memberPolicy) {
+      await this.access.requireAdmin(userId, input.householdId);
+    }
+
     const db = getDb();
     await this.ensureRow(input.householdId);
 
@@ -118,6 +124,7 @@ export class SettingsService {
       if (!member || member.householdId !== input.householdId) {
         throw new NotFoundException("Member not found");
       }
+      const before = { personalDataPolicy: member.personalDataPolicy };
       await db
         .update(householdMembers)
         .set({
@@ -125,6 +132,15 @@ export class SettingsService {
           updatedAt: new Date(),
         })
         .where(eq(householdMembers.id, member.id));
+      await this.audit.record({
+        householdId: input.householdId,
+        actorUserId: userId,
+        action: "privacy.policy_update",
+        entity: "household_member",
+        entityId: member.id,
+        before,
+        after: { personalDataPolicy: input.memberPolicy.personalDataPolicy },
+      });
     }
 
     return this.get(userId, input.householdId);

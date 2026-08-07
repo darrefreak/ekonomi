@@ -1,12 +1,13 @@
 import {
   bigint,
+  jsonb,
   pgTable,
   text,
   timestamp,
   uuid,
   varchar,
 } from "drizzle-orm/pg-core";
-import { households } from "./schema";
+import { households, users } from "./schema";
 
 export const householdSettings = pgTable("household_settings", {
   householdId: uuid("household_id")
@@ -44,6 +45,27 @@ export const notifications = pgTable("notifications", {
   href: varchar("href", { length: 240 }),
   readAt: timestamp("read_at", { withTimezone: true }),
   createdAt: timestamp("created_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+});
+
+/** Foundation for GDPR-style export/delete/leave workflows (async fulfillment later). */
+export const privacyRequests = pgTable("privacy_requests", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  householdId: uuid("household_id").references(() => households.id, {
+    onDelete: "set null",
+  }),
+  userId: uuid("user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  kind: varchar("kind", { length: 40 }).notNull(),
+  status: varchar("status", { length: 40 }).notNull().default("requested"),
+  note: text("note"),
+  payload: jsonb("payload"),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true })
     .defaultNow()
     .notNull(),
 });

@@ -13,12 +13,12 @@ Legend for layer columns: **C** complete · **P** partial · **S** scaffold · *
 
 | Feature | Status | BE | FE | Test | Mobile | Pri | Deps | Missing / defects |
 |---|---|---|---|---|---|---|---|---|
-| Authentication (login/register/JWT) | PARTIAL | P | P | S | P | P0 | — | No logout/revoke UI/API; register UI missing; refresh not in client |
-| Household creation | PARTIAL | C | N | N | N | P1 | Auth | API exists; no onboarding UI |
-| Household membership | PARTIAL | P | N | N | N | P0 | Auth | Membership gate yes; invite/list/manage UI no |
-| Permissions / roles | SCAFFOLD_ONLY | S | N | N | N | P0 | Members | Enums stored; never authorized |
-| Member privacy policies | SCAFFOLD_ONLY | S | N | N | N | P0 | Permissions | Column only |
-| Audit logging | SCAFFOLD_ONLY | S | N | N | N | P1 | Auth | Only household create |
+| Authentication (login/register/JWT) | PARTIAL | C | P | P | P | P0 | — | Logout/revoke-all API + UI; refresh still not auto-wired in client |
+| Household creation | PARTIAL | C | P | N | N | P1 | Auth | Onboarding creates household (WS M) |
+| Household membership | PARTIAL | P | P | P | N | P0 | Auth | Roles enforced; invite/manage UI still missing |
+| Permissions / roles | PARTIAL | C | P | C | P | P0 | Members | VIEWER/CHILD write-deny; ADMIN policy edits (WS N) |
+| Member privacy policies | PARTIAL | C | P | C | P | P0 | Permissions | Aggregate/balance/owner projection + settings UI (WS N) |
+| Audit logging | PARTIAL | C | N | P | N | P1 | Auth | Policy/logout/privacy/export audited (WS N) |
 | Settings (product) | PARTIAL | P | P | P | B | P1 | — | Persisted policies + members (WS M) |
 | Localization sv-SE | PARTIAL | P | P | P | P | P2 | — | Swedish copy; en-US not wired |
 | Appearance / dark mode | SCAFFOLD_ONLY | S | S | N | S | P2 | Tokens | Tokens mention dark; UI light-only |

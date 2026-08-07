@@ -34,7 +34,7 @@ export class BudgetService {
   }
 
   async updateLine(userId: string, lineId: string, input: UpdateBudgetLineInput) {
-    const { household } = await this.access.requireMembership(
+    const { household } = await this.access.requireCanWrite(
       userId,
       input.householdId,
     );

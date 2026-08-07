@@ -21,4 +21,5 @@ export * from "./settings";
 export * from "./search";
 export * from "./notifications";
 export * from "./reports";
+export * from "./privacy";
 

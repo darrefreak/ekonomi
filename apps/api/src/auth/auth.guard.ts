@@ -8,6 +8,7 @@ import {
 import { JwtService } from "@nestjs/jwt";
 import type { Request } from "express";
 import type { AuthenticatedUser, JwtPayload } from "./auth.types";
+import { requireAccessSecret } from "../common/jwt-secrets";
 
 @Injectable()
 export class AuthGuard implements CanActivate {
@@ -24,7 +25,7 @@ export class AuthGuard implements CanActivate {
     const token = header.slice("Bearer ".length);
     try {
       const payload = this.jwt.verify<JwtPayload>(token, {
-        secret: process.env.JWT_ACCESS_SECRET ?? "dev-access-secret-change-me",
+        secret: requireAccessSecret(),
       });
       if (payload.typ !== "access") {
         throw new UnauthorizedException("Invalid token type");

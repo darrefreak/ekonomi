@@ -115,7 +115,7 @@ export class IntakeService {
   }
 
   async uploadDocument(userId: string, input: UploadDocumentInput) {
-    await this.access.requireMembership(userId, input.householdId);
+    await this.access.requireCanWrite(userId, input.householdId);
     await this.assertLinks(input.householdId, input.vehicleId, input.accountId);
 
     let body: Buffer;
@@ -178,7 +178,7 @@ export class IntakeService {
     documentId: string,
     input: UpdateDocumentInput,
   ) {
-    await this.access.requireMembership(userId, input.householdId);
+    await this.access.requireCanWrite(userId, input.householdId);
     const db = getDb();
     const [existing] = await db
       .select()
@@ -361,7 +361,7 @@ export class IntakeService {
   }
 
   async createSource(userId: string, input: CreateSourceInput) {
-    await this.access.requireMembership(userId, input.householdId);
+    await this.access.requireCanWrite(userId, input.householdId);
     const catalog = mockProviderCatalog.find(
       (p) => p.providerId === input.providerId,
     );
@@ -393,7 +393,7 @@ export class IntakeService {
     sourceId: string,
     input: UpdateSourceInput,
   ) {
-    await this.access.requireMembership(userId, input.householdId);
+    await this.access.requireCanWrite(userId, input.householdId);
     const asOf = process.env.DEMO_AS_OF_DATE ?? "2026-08-01";
     const db = getDb();
     const existing = await this.requireSource(input.householdId, sourceId);
@@ -434,7 +434,7 @@ export class IntakeService {
     sourceId: string,
     input: ReconnectSourceInput,
   ) {
-    await this.access.requireMembership(userId, input.householdId);
+    await this.access.requireCanWrite(userId, input.householdId);
     const existing = await this.requireSource(input.householdId, sourceId);
     if (
       !["AUTH_REQUIRED", "ERROR", "DISCONNECTED", "DEGRADED"].includes(

@@ -12,6 +12,8 @@ import type { LoginInput, RegisterInput } from "@ffos/schemas";
 import { getDb } from "../db/client";
 import { refreshTokens, users } from "../db/schema";
 import { logger } from "../common/logger";
+import { requireAccessSecret } from "../common/jwt-secrets";
+import { AuditService } from "../audit/audit.service";
 
 function hashToken(token: string): string {
   return createHash("sha256").update(token).digest("hex");
@@ -29,7 +31,10 @@ function parseDurationMs(input: string): number {
 
 @Injectable()
 export class AuthService {
-  constructor(@Inject(JwtService) private readonly jwt: JwtService) {}
+  constructor(
+    @Inject(JwtService) private readonly jwt: JwtService,
+    @Inject(AuditService) private readonly audit: AuditService,
+  ) {}
 
   async register(input: RegisterInput) {
     const db = getDb();
@@ -106,13 +111,62 @@ export class AuthService {
     return this.issueTokens(user.id, user.email);
   }
 
+  async logout(userId: string, refreshToken?: string) {
+    const db = getDb();
+    const now = new Date();
+    if (refreshToken) {
+      const tokenHash = hashToken(refreshToken);
+      await db
+        .update(refreshTokens)
+        .set({ revokedAt: now })
+        .where(
+          and(
+            eq(refreshTokens.userId, userId),
+            eq(refreshTokens.tokenHash, tokenHash),
+            isNull(refreshTokens.revokedAt),
+          ),
+        );
+    } else {
+      await db
+        .update(refreshTokens)
+        .set({ revokedAt: now })
+        .where(
+          and(eq(refreshTokens.userId, userId), isNull(refreshTokens.revokedAt)),
+        );
+    }
+    await this.audit.record({
+      actorUserId: userId,
+      action: "auth.logout",
+      entity: "refresh_token",
+      after: { scope: refreshToken ? "single" : "all_active" },
+    });
+    logger.info("user_logout", { userId });
+    return { ok: true as const };
+  }
+
+  async revokeAll(userId: string) {
+    const db = getDb();
+    await db
+      .update(refreshTokens)
+      .set({ revokedAt: new Date() })
+      .where(and(eq(refreshTokens.userId, userId), isNull(refreshTokens.revokedAt)));
+    await this.audit.record({
+      actorUserId: userId,
+      action: "auth.revoke_all",
+      entity: "refresh_token",
+      after: { scope: "all" },
+    });
+    logger.info("user_revoke_all", { userId });
+    return { ok: true as const };
+  }
+
   private async issueTokens(userId: string, email: string) {
     const accessTtl = process.env.JWT_ACCESS_TTL ?? "15m";
     const refreshTtl = process.env.JWT_REFRESH_TTL ?? "30d";
     const accessToken = await this.jwt.signAsync(
       { sub: userId, email, typ: "access" },
       {
-        secret: process.env.JWT_ACCESS_SECRET ?? "dev-access-secret-change-me",
+        secret: requireAccessSecret(),
         expiresIn: accessTtl as `${number}${"s" | "m" | "h" | "d"}`,
       },
     );

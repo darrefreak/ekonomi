@@ -5,6 +5,7 @@ import {
   clearSession,
   getAccessToken,
   getHouseholdId,
+  getRefreshToken,
   setHouseholdId,
   setSession,
 } from "./api";
@@ -57,7 +58,16 @@ export async function ensureHouseholdSession(): Promise<string> {
   throw new AuthRequiredError();
 }
 
-export function logout(): void {
+/** Revoke refresh token server-side when possible, then clear local session. */
+export async function logout(): Promise<void> {
+  const refreshToken = getRefreshToken();
+  try {
+    if (getAccessToken()) {
+      await api.logout(refreshToken ? { refreshToken } : {});
+    }
+  } catch {
+    // Local clear still required if API is unreachable or token already invalid.
+  }
   clearSession();
 }
 

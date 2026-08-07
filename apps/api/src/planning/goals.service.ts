@@ -40,7 +40,7 @@ export class GoalsService {
   }
 
   async create(userId: string, input: CreateGoalInput) {
-    const { household } = await this.access.requireMembership(
+    const { household } = await this.access.requireCanWrite(
       userId,
       input.householdId,
     );
@@ -82,7 +82,7 @@ export class GoalsService {
   }
 
   async update(userId: string, goalId: string, input: UpdateGoalInput) {
-    await this.access.requireMembership(userId, input.householdId);
+    await this.access.requireCanWrite(userId, input.householdId);
     const db = getDb();
     const [existing] = await db
       .select()
