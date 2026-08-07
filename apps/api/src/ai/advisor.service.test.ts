@@ -1,18 +1,19 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { ForbiddenException } from "@nestjs/common";
+import { eq } from "drizzle-orm";
 import {
   advisorBriefResponseSchema,
   advisorChatRequestSchema,
   advisorChatResponseSchema,
 } from "@ffos/schemas";
 import { getDb } from "../db/client";
-import { households } from "../db/schema";
+import { householdMembers, households, users } from "../db/schema";
+import type { DecisionsService } from "../decisions/decisions.service";
 import { FeatureFlagsService } from "../feature-flags/feature-flags.service";
 import type { HouseholdAccessService } from "../households/household-access.service";
 import { HouseholdMetricsService } from "../metrics/household-metrics.service";
 import { PlanningMetricsService } from "../planning/planning-metrics.service";
-import type { DecisionsService } from "../decisions/decisions.service";
 import type { VehiclesService } from "../vehicles/vehicles.service";
 import { AdvisorService } from "./advisor.service";
 import { listAdvisorTools } from "./ai-tool-registry";
@@ -36,13 +37,29 @@ test("AI flag gate and tools-only chat/brief", async () => {
   if (!process.env.DATABASE_URL) return;
 
   const db = getDb();
-  const [household] = await db.select().from(households).limit(1);
+  const [demoUser] = await db
+    .select()
+    .from(users)
+    .where(eq(users.email, "demo@ffos.local"))
+    .limit(1);
+  if (!demoUser) return;
+  const [membership] = await db
+    .select()
+    .from(householdMembers)
+    .where(eq(householdMembers.userId, demoUser.id))
+    .limit(1);
+  if (!membership) return;
+  const [household] = await db
+    .select()
+    .from(households)
+    .where(eq(households.id, membership.householdId))
+    .limit(1);
   if (!household) return;
 
   const access = {
     requireMembership: async () => ({
       household,
-      member: { id: "member", role: "OWNER" },
+      member: { id: membership.id, role: "OWNER" },
     }),
   } as unknown as HouseholdAccessService;
 
@@ -50,7 +67,6 @@ test("AI flag gate and tools-only chat/brief", async () => {
   const planning = new PlanningMetricsService();
   const metrics = new HouseholdMetricsService();
 
-  // Minimal decisions/vehicles stubs — brief/chat use live services when available
   const decisions = {
     opportunities: async () => ({
       items: [
@@ -110,9 +126,12 @@ test("AI flag gate and tools-only chat/brief", async () => {
     await service.brief("user-1", household.id),
   );
   assert.ok(brief.sections.length > 0);
-  assert.ok(brief.toolTrace.some((t) => t.tool === "get_budget"));
+  assert.ok(brief.toolTrace.some((t) => t.tool === "get_budget" && t.ok));
   assert.ok(
     brief.sections.every((s) => !s.detail.includes("minor units")),
+  );
+  assert.ok(
+    brief.sections.some((s) => (s.citations ?? []).some((c) => c.href)),
   );
 
   const chat = advisorChatResponseSchema.parse(
