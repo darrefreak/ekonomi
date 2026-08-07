@@ -10,15 +10,15 @@ Rule: do not trust “phase complete” / route exists / table exists as product
 
 | Finding | Evidence | Reality |
 |---|---|---|
-| `docs/ROADMAP.md` says **“V1 roadmap status: COMPLETE”** | ROADMAP.md | Foundation/demo slice only — not product-complete vs master specification |
+| `docs/ROADMAP.md` historically said **“V1 roadmap status: COMPLETE”** | ROADMAP.md (pre-A/O) | Now **FOUNDATION COMPLETE** + tier table; still not PRODUCT COMPLETE |
 | Phase 1 claims “households/members/**permissions**” | ROADMAP / PHASE_1 | Membership check exists; role/privacy authorization does **not** |
 | Phase 2 “reconciliation foundation” | ROADMAP / schema | `reconciliation_groups` table never written or read |
 | Phase 5 “decision engines” | ROADMAP | Opportunities/risks/scenarios largely **seeded rows**, not live engines |
 | Phase 5B “vehicle intelligence” | ROADMAP | Market analysis mostly **precomputed at seed**; UI is thin |
 | Phase 6 “data intake” | ROADMAP | Read + fake sync only; no upload/workflow |
 | Phase 7 “AI” | ROADMAP | Deterministic template brief — no chat, no LLM, flag ungated |
-| Phase 8 “security review” | ROADMAP | Rate limit / helmet / privacy enforcement / logout still missing |
-| Lint “passes” in phase reports | `package.json` scripts | Most packages run `echo 'lint ok'` — not real ESLint |
+| Phase 8 “security review” | ROADMAP | Mitigated in Workstream N (helmet/throttle/logout/privacy); residual Zod breadth in O notes |
+| Lint “passes” in phase reports | `package.json` scripts | **Addressed in Workstream O** — real ESLint via `@ffos/eslint-config` |
 
 ---
 

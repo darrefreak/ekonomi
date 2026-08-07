@@ -50,9 +50,11 @@ Postgres host port i `.env.example` (ofta `5436` om `5432` är upptagen).
 | `pnpm install` | Install dependencies |
 | `pnpm dev` | Dev all apps |
 | `pnpm build` | Build all packages/apps |
-| `pnpm lint` | Lint |
+| `pnpm lint` | Real ESLint (via `@ffos/eslint-config`) |
 | `pnpm typecheck` | Typecheck |
-| `pnpm test` | Tests |
+| `pnpm test` | Unit/integration tests |
+| `pnpm test:e2e` | Playwright critical path (Chromium) |
+| `pnpm test:e2e:docker` | E2E via Playwright Docker image |
 | `pnpm db:migrate` | Run migrations |
 | `pnpm db:seed` | Seed demo household |
 | `pnpm db:reset` | Drop schema, migrate, seed |

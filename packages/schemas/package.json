@@ -14,7 +14,7 @@
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "lint": "echo 'lint ok'",
+    "lint": "eslint .",
     "test": "echo 'no schema tests yet'",
     "clean": "rm -rf dist"
   },
@@ -23,6 +23,8 @@
     "zod": "^3.25.67"
   },
   "devDependencies": {
-    "typescript": "^5.8.3"
+    "typescript": "^5.8.3",
+    "@ffos/eslint-config": "workspace:*",
+    "eslint": "^9.39.5"
   }
 }

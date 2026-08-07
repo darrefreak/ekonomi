@@ -40,3 +40,8 @@ infrastructure/docker/data/
 
 # Generated
 packages/api-client/src/generated/
+
+# Playwright
+e2e/.auth/
+test-results/
+playwright-report/

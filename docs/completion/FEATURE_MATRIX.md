@@ -222,9 +222,10 @@ These counts are row-level and intentionally rough; use for prioritization, not 
 | Gate | Result | Notes |
 |---|---|---|
 | `pnpm build` | Pass | 2026-08-07 |
-| `pnpm lint` | Pass | Echo stubs — not real lint |
+| `pnpm lint` | Pass | Real ESLint via `@ffos/eslint-config` (WS O) |
 | `pnpm typecheck` | Pass | |
-| `pnpm test` | Pass | Thin suite |
-| Docker | Healthy | Ports 3100/3101 via ports override |
-| Desktop UX | Partial | Placeholders in nav |
-| Mobile ~375 | Broken Mer | Overflow IA missing |
+| `pnpm test` | Pass | API + engine suite |
+| `pnpm test:e2e` | Pass | Playwright critical path + axe (WS O) |
+| Docker | Healthy | Ports 3000/3001 (alt 3100/3101) |
+| Desktop UX | Partial | Core IA wired |
+| Mobile ~375 | Partial | Mer overflow IA present (P0-6 addressed) |

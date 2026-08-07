@@ -1,5 +1,16 @@
 # Roadmap — Family Financial OS
 
+## Completion tiers (read this first)
+
+| Tier | Meaning |
+|---|---|
+| **FOUNDATION COMPLETE** | Platform + demo slice delivered (historical phases 0–8). |
+| **FEATURE COMPLETE** | A feature meets its product Definition of Done (see `docs/completion/`). |
+| **PRODUCT COMPLETE** | All in-scope completion-program workstreams are FEATURE COMPLETE. |
+
+Phase checkmarks (`✅`) below mean **foundation delivery of that phase**, not product completeness.  
+Do **not** treat this document as product-complete status. Authoritative gap tracking: `docs/completion/`.
+
 ## Phase gates (hard)
 
 Gå **aldrig** automatiskt vidare till nästa phase.
@@ -92,8 +103,11 @@ Accessibility, mobile UX, responsive refinement, testing, performance, security 
 Detaljer: [phases/PHASE_8.md](./phases/PHASE_8.md).  
 Report: [phase-reports/PHASE_8_REPORT.md](./phase-reports/PHASE_8_REPORT.md).
 
-**V1 roadmap status: FOUNDATION COMPLETE** (demo/foundation slice).  
-**Not** FEATURE COMPLETE / PRODUCT COMPLETE — see `docs/completion/`.
+**V1 roadmap status: FOUNDATION COMPLETE** (demo/foundation slice only).  
+**Not** FEATURE COMPLETE.  
+**Not** PRODUCT COMPLETE.  
+
+Product completion is tracked by workstreams A–O in `docs/completion/COMPLETION_PLAN.md` and `docs/completion/FEATURE_MATRIX.md`.
 
 ## Future (post V1 roadmap notes)
 
