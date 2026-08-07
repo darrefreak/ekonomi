@@ -22,6 +22,10 @@ export class AuthRequiredError extends Error {
 }
 
 export function hasSession(): boolean {
+  return Boolean(getAccessToken());
+}
+
+export function hasHouseholdSession(): boolean {
   return Boolean(getAccessToken() && getHouseholdId());
 }
 

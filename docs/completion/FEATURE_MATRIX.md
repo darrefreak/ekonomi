@@ -19,7 +19,7 @@ Legend for layer columns: **C** complete · **P** partial · **S** scaffold · *
 | Permissions / roles | SCAFFOLD_ONLY | S | N | N | N | P0 | Members | Enums stored; never authorized |
 | Member privacy policies | SCAFFOLD_ONLY | S | N | N | N | P0 | Permissions | Column only |
 | Audit logging | SCAFFOLD_ONLY | S | N | N | N | P1 | Auth | Only household create |
-| Settings (product) | SCAFFOLD_ONLY | S | S | N | S | P1 | — | Hardcoded API; demo settings page |
+| Settings (product) | PARTIAL | P | P | P | B | P1 | — | Persisted policies + members (WS M) |
 | Localization sv-SE | PARTIAL | P | P | P | P | P2 | — | Swedish copy; en-US not wired |
 | Appearance / dark mode | SCAFFOLD_ONLY | S | S | N | S | P2 | Tokens | Tokens mention dark; UI light-only |
 | Feature flags | SCAFFOLD_ONLY | S | N | N | N | P2 | — | Not enforced |
