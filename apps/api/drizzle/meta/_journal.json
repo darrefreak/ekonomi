@@ -120,6 +120,13 @@
       "when": 1754630400000,
       "tag": "0016_workstream_n_privacy_security",
       "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1754634000000,
+      "tag": "0017_batch_a2_ledger_runtime",
+      "breakpoints": true
     }
   ]
 }

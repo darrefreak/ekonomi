@@ -67,9 +67,28 @@ export const updateAccountSchema = z.object({
     .optional(),
 });
 
+export const reconcileStatusSchema = z.enum([
+  "MATCHED",
+  "MISMATCH",
+  "MISSING_REPORTED_BALANCE",
+  "MISSING_LEDGER_DATA",
+  "REVIEW_REQUIRED",
+]);
+
 export const accountDetailSchema = accountSchema.extend({
   creditLimit: moneySchema.nullable().optional(),
   externalReference: z.string().nullable().optional(),
+  /** Ledger-calculated balance (authoritative). */
+  ledgerBalance: moneySchema.optional(),
+  /** Provider/bank-reported balance for reconciliation. */
+  reportedBalance: moneySchema.nullable().optional(),
+  reconciliation: z
+    .object({
+      status: z.union([reconcileStatusSchema, z.string()]),
+      difference: moneySchema.nullable(),
+    })
+    .nullable()
+    .optional(),
   recentTransactions: z.array(
     z.object({
       id: z.string(),

@@ -1,4 +1,5 @@
 import type { BalancedLedgerDraft } from "@ffos/financial-engine";
+import { and, eq } from "drizzle-orm";
 import { getDb } from "../client";
 import {
   financialEvents,
@@ -37,12 +38,47 @@ export async function persistBalancedEvent(input: {
   transferGroupId?: string;
   importBatchId?: string;
   externalId?: string;
+  /** Provenance for the financial event (seed | api | import | …). */
+  sourceType?: string;
   /** Destination bank leg for internal transfers. */
   counterpartTx?: PersistCounterpartTx;
   splits?: PersistSplit[];
   createReconciliationGroup?: boolean;
 }) {
   const db = getDb();
+  const sourceType = input.sourceType ?? "seed";
+
+  // Idempotent retry: same household + externalId → return existing event.
+  if (input.externalId) {
+    const [existingTx] = await db
+      .select({ id: sourceTransactions.id })
+      .from(sourceTransactions)
+      .where(
+        and(
+          eq(sourceTransactions.householdId, input.householdId),
+          eq(sourceTransactions.externalId, input.externalId),
+        ),
+      )
+      .limit(1);
+    if (existingTx) {
+      const [link] = await db
+        .select({ financialEventId: sourceTransactionLinks.financialEventId })
+        .from(sourceTransactionLinks)
+        .where(
+          eq(sourceTransactionLinks.sourceTransactionId, existingTx.id),
+        )
+        .limit(1);
+      if (link) {
+        const [event] = await db
+          .select()
+          .from(financialEvents)
+          .where(eq(financialEvents.id, link.financialEventId))
+          .limit(1);
+        if (event) return event;
+      }
+    }
+  }
+
   const [event] = await db
     .insert(financialEvents)
     .values({
@@ -58,7 +94,7 @@ export async function persistBalancedEvent(input: {
       categoryId: input.categoryId,
       merchantId: input.merchantId,
       vehicleId: input.vehicleId,
-      sourceType: "seed",
+      sourceType,
       importBatchId: input.importBatchId,
       userVerified: true,
       confidence: "1",
@@ -108,7 +144,7 @@ export async function persistBalancedEvent(input: {
       .values({
         householdId: input.householdId,
         accountId: input.sourceAccountId,
-        externalId: input.externalId ?? `seed-${event.id}`,
+        externalId: input.externalId ?? `${sourceType}-${event.id}`,
         fingerprint: `fp-${event.id}`,
         bookingDate: input.occurredOn,
         valueDate: input.occurredOn,
@@ -141,7 +177,8 @@ export async function persistBalancedEvent(input: {
         householdId: input.householdId,
         accountId: input.counterpartTx.accountId,
         externalId:
-          input.counterpartTx.externalId ?? `seed-${event.id}-counterpart`,
+          input.counterpartTx.externalId ??
+          `${sourceType}-${event.id}-counterpart`,
         fingerprint: `fp-${event.id}-counterpart`,
         bookingDate: input.occurredOn,
         valueDate: input.occurredOn,

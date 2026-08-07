@@ -105,8 +105,28 @@ export function AccountDetailPage({ accountId }: { accountId: string }) {
       <section className="rounded-[16px] bg-surface-elevated p-5">
         <p className="text-sm text-text-secondary">Saldo</p>
         <p className="mt-1 text-3xl font-medium">
-          <MoneyValue value={data.currentBalance} />
+          <MoneyValue value={data.ledgerBalance ?? data.currentBalance} />
         </p>
+        {data.reconciliation?.status === "MISMATCH" &&
+        data.reportedBalance &&
+        data.ledgerBalance ? (
+          <div className="mt-4 space-y-1 text-sm">
+            <p className="font-medium text-text-primary">Datakontroll</p>
+            <p className="text-text-secondary">
+              Bank rapporterade: <MoneyValue value={data.reportedBalance} />
+            </p>
+            <p className="text-text-secondary">
+              Beräknat från transaktioner:{" "}
+              <MoneyValue value={data.ledgerBalance} />
+            </p>
+            {data.reconciliation.difference ? (
+              <p className="text-text-secondary">
+                Differens: <MoneyValue value={data.reconciliation.difference} />
+              </p>
+            ) : null}
+            <p className="pt-1 text-warning">Behöver granskning</p>
+          </div>
+        ) : null}
         <dl className="mt-4 grid grid-cols-2 gap-3 text-sm">
           <div>
             <dt className="text-text-secondary">Inkomst (period)</dt>

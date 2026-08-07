@@ -265,7 +265,9 @@ export async function seedDemoHousehold() {
     accountType: "CHECKING",
     externalReference: "SEB-DEMO-001",
     sourceId: sebSource.id,
+    openingBalanceMinor: 0n,
     currentBalanceMinor: 0n,
+    reportedBalanceMinor: 0n,
   });
   const joint = await mkAccount({
     householdId: household.id,
@@ -275,7 +277,9 @@ export async function seedDemoHousehold() {
     accountType: "CHECKING",
     externalReference: "SEB-DEMO-JOINT",
     sourceId: sebSource.id,
+    openingBalanceMinor: 0n,
     currentBalanceMinor: 0n,
+    reportedBalanceMinor: 0n,
   });
   const sbab = await mkAccount({
     householdId: household.id,
@@ -285,7 +289,9 @@ export async function seedDemoHousehold() {
     accountType: "SAVINGS",
     externalReference: "SBAB-DEMO-SAV",
     sourceId: sbabSource.id,
+    openingBalanceMinor: 0n,
     currentBalanceMinor: 0n,
+    reportedBalanceMinor: 0n,
     connectionStatus: "AUTH_REQUIRED",
   });
   const mortgage = await mkAccount({
@@ -296,7 +302,9 @@ export async function seedDemoHousehold() {
     accountType: "MORTGAGE",
     externalReference: "SBAB-DEMO-MTG",
     sourceId: sbabSource.id,
+    openingBalanceMinor: 3_900_000_00n,
     currentBalanceMinor: 3_900_000_00n,
+    reportedBalanceMinor: 3_900_000_00n,
     interestRateBps: 240,
     bindingEndDate: "2027-06-30",
     connectionStatus: "AUTH_REQUIRED",
@@ -308,7 +316,9 @@ export async function seedDemoHousehold() {
     ownerMemberId: owner.id,
     isShared: false,
     accountType: "CHECKING",
+    openingBalanceMinor: 0n,
     currentBalanceMinor: 0n,
+    reportedBalanceMinor: 0n,
   });
   const creditCard = await mkAccount({
     householdId: household.id,
@@ -317,7 +327,9 @@ export async function seedDemoHousehold() {
     isShared: true,
     accountType: "CREDIT_CARD",
     creditLimitMinor: 50_000_00n,
+    openingBalanceMinor: 0n,
     currentBalanceMinor: 0n,
+    reportedBalanceMinor: 0n,
   });
   // Opening includes prior market value; seed transfers add contributions.
   const avanzaOpening = 1_060_000_00n;
@@ -328,7 +340,9 @@ export async function seedDemoHousehold() {
     isShared: true,
     accountType: "INVESTMENT",
     sourceId: avanzaSource.id,
+    openingBalanceMinor: avanzaOpening,
     currentBalanceMinor: avanzaOpening,
+    reportedBalanceMinor: avanzaOpening,
   });
   const home = await mkAccount({
     householdId: household.id,
@@ -336,20 +350,25 @@ export async function seedDemoHousehold() {
     accountType: "ASSET",
     isShared: true,
     isSystem: false,
+    openingBalanceMinor: 6_800_000_00n,
     currentBalanceMinor: 6_800_000_00n,
+    reportedBalanceMinor: 6_800_000_00n,
   });
   const vehicle = await mkAccount({
     householdId: household.id,
     name: "Familjebil",
     accountType: "ASSET",
     isShared: true,
+    openingBalanceMinor: 320_000_00n,
     currentBalanceMinor: 320_000_00n,
+    reportedBalanceMinor: 320_000_00n,
   });
   const expenseBook = await mkAccount({
     householdId: household.id,
     name: "Utgiftsbok",
     accountType: "EXPENSE",
     isSystem: true,
+    openingBalanceMinor: 0n,
     currentBalanceMinor: 0n,
   });
   const incomeBook = await mkAccount({
@@ -357,6 +376,7 @@ export async function seedDemoHousehold() {
     name: "Inkomstbok",
     accountType: "INCOME",
     isSystem: true,
+    openingBalanceMinor: 0n,
     currentBalanceMinor: 0n,
   });
 
@@ -824,10 +844,14 @@ export async function seedDemoHousehold() {
       continue;
     }
     const bal = ledgerBalances.get(opening.accountId) ?? opening.openingMinor;
+    // Persist opening + reported (= ledger) so demo accounts reconcile MATCHED.
+    // currentBalanceMinor is a derived cache of ledger truth only.
     await db
       .update(accounts)
       .set({
+        openingBalanceMinor: opening.openingMinor,
         currentBalanceMinor: bal,
+        reportedBalanceMinor: bal,
         lastSyncedAt: asOfDate,
         updatedAt: new Date(),
       })

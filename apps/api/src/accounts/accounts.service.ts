@@ -3,6 +3,7 @@ import {
   Inject,
   Injectable,
   NotFoundException,
+  Optional,
 } from "@nestjs/common";
 import { and, asc, desc, eq, gte, isNull, lte, ne, sql } from "drizzle-orm";
 import { money, moneyToJson } from "@ffos/domain";
@@ -16,6 +17,7 @@ import {
   sourceTransactions,
 } from "../db/schema-economic";
 import { HouseholdAccessService } from "../households/household-access.service";
+import { LedgerTruthService } from "../ledger/ledger-truth.service";
 
 const USER_ACCOUNT_TYPES = new Set([
   "CHECKING",
@@ -36,6 +38,7 @@ const USER_ACCOUNT_TYPES = new Set([
 export class AccountsService {
   constructor(
     @Inject(HouseholdAccessService) private readonly access: HouseholdAccessService,
+    @Optional() private readonly ledger?: LedgerTruthService,
   ) {}
 
   async list(
@@ -94,7 +97,9 @@ export class AccountsService {
         isShared: input.isShared ?? true,
         creditLimitMinor: creditLimit,
         externalReference: input.externalReference ?? null,
+        openingBalanceMinor: opening,
         currentBalanceMinor: opening,
+        reportedBalanceMinor: opening,
         connectionStatus: "DISCONNECTED",
         isSystem: false,
         lastSyncedAt: null,
@@ -277,8 +282,58 @@ export class AccountsService {
             )
         : [{ income: "0", expenses: "0" }];
 
+    let ledgerBalanceMinor = row.currentBalanceMinor;
+    let reportedBalanceMinor = row.reportedBalanceMinor;
+    let reconcileStatus: string | null = null;
+    let differenceMinor: bigint | null = null;
+
+    if (
+      this.ledger &&
+      (visibility === "full" || visibility === "balance")
+    ) {
+      const balances = await this.ledger.getAuthoritativeBalances(
+        householdId,
+        asOf,
+      );
+      const auth = balances.find((b) => b.accountId === accountId);
+      if (auth) {
+        ledgerBalanceMinor = auth.ledgerCalculatedBalanceMinor;
+        reportedBalanceMinor = auth.reportedBalanceMinor;
+        reconcileStatus = auth.reconcile.status;
+        differenceMinor = auth.reconcile.differenceMinor;
+      }
+    }
+
     return {
       ...listItem,
+      currentBalance: moneyToJson({
+        amountMinor: ledgerBalanceMinor,
+        currency: row.currency as "SEK",
+      }),
+      ledgerBalance: moneyToJson({
+        amountMinor: ledgerBalanceMinor,
+        currency: row.currency as "SEK",
+      }),
+      reportedBalance:
+        reportedBalanceMinor != null
+          ? moneyToJson({
+              amountMinor: reportedBalanceMinor,
+              currency: row.currency as "SEK",
+            })
+          : null,
+      reconciliation:
+        reconcileStatus != null
+          ? {
+              status: reconcileStatus,
+              difference:
+                differenceMinor != null
+                  ? moneyToJson({
+                      amountMinor: differenceMinor,
+                      currency: row.currency as "SEK",
+                    })
+                  : null,
+            }
+          : null,
       creditLimit:
         visibility === "full" && row.creditLimitMinor
           ? moneyToJson({
@@ -301,7 +356,8 @@ export class AccountsService {
       balanceHistory: history.map((h) => ({
         asOf: h.asOf.toISOString(),
         balance: moneyToJson({
-          amountMinor: h.reportedBalanceMinor ?? 0n,
+          amountMinor:
+            h.ledgerCalculatedBalanceMinor ?? h.reportedBalanceMinor ?? 0n,
           currency: row.currency as "SEK",
         }),
         source: h.source,
@@ -327,6 +383,7 @@ export class AccountsService {
       accountType: row.accountType,
       currency: row.currency,
       isShared: row.isShared,
+      // Display uses derived cache; detail overlays ledger when available.
       currentBalance: moneyToJson({
         amountMinor: row.currentBalanceMinor,
         currency: row.currency as "SEK",

@@ -193,9 +193,19 @@ export const accounts = pgTable("accounts", {
     onDelete: "set null",
   }),
   creditLimitMinor: bigint("credit_limit_minor", { mode: "bigint" }),
+  /** Opening balance for ledger reconstruction (authoritative start). */
+  openingBalanceMinor: bigint("opening_balance_minor", { mode: "bigint" })
+    .notNull()
+    .default(0n),
+  /**
+   * Derived cache of ledger-calculated ending balance.
+   * Must be refreshed from postings; never an independent competing truth.
+   */
   currentBalanceMinor: bigint("current_balance_minor", { mode: "bigint" })
     .notNull()
     .default(0n),
+  /** Optional provider/bank-reported balance for reconciliation. */
+  reportedBalanceMinor: bigint("reported_balance_minor", { mode: "bigint" }),
   /** Annual nominal interest rate in basis points (e.g. 240 = 2.40%). */
   interestRateBps: integer("interest_rate_bps"),
   bindingEndDate: date("binding_end_date"),
