@@ -20,7 +20,8 @@ export type ForecastPoint = {
   label: string;
 };
 
-const HORIZONS = [
+/** Canonical deterministic horizons: 7d through 12m. */
+export const FORECAST_HORIZONS = [
   { days: 7, label: "7d" },
   { days: 30, label: "30d" },
   { days: 60, label: "60d" },
@@ -28,6 +29,8 @@ const HORIZONS = [
   { days: 180, label: "6m" },
   { days: 365, label: "12m" },
 ] as const;
+
+const HORIZONS = FORECAST_HORIZONS;
 
 export function buildForecastPoints(seed: ForecastSeed): ForecastPoint[] {
   const daily = seed.monthlyNetSavingsMinor / 30n;

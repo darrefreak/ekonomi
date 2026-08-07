@@ -15,7 +15,7 @@
     "build": "tsc -p tsconfig.json",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "lint": "echo 'lint ok'",
-    "test": "tsx --test src/net-worth.test.ts src/ledger/ledger.test.ts src/cashflow.test.ts src/coverage.test.ts src/planning.test.ts src/vehicle/tco.test.ts src/vehicle/market.test.ts src/forecast.test.ts src/period-metrics.test.ts",
+    "test": "tsx --test src/net-worth.test.ts src/ledger/ledger.test.ts src/cashflow.test.ts src/coverage.test.ts src/planning.test.ts src/vehicle/tco.test.ts src/vehicle/market.test.ts src/forecast.test.ts src/period-metrics.test.ts src/scenarios.test.ts",
     "clean": "rm -rf dist"
   },
   "dependencies": {

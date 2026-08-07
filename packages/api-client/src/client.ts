@@ -10,6 +10,7 @@ import {
   coverageResponseSchema,
   dashboardResponseSchema,
   documentsResponseSchema,
+  forecastBacktestResponseSchema,
   forecastResponseSchema,
   goalsResponseSchema,
   importsResponseSchema,
@@ -19,6 +20,7 @@ import {
   opportunitiesResponseSchema,
   reviewResponseSchema,
   riskResponseSchema,
+  scenarioSimulationResponseSchema,
   scenariosResponseSchema,
   subscriptionsResponseSchema,
   transactionDetailSchema,
@@ -39,9 +41,11 @@ import {
   type CoverageResponse,
   type CreateAccountInput,
   type CreateGoalInput,
+  type CreateScenarioInput,
   type CreateSinkingFundInput,
   type DashboardResponse,
   type DocumentsResponse,
+  type ForecastBacktestResponse,
   type ForecastResponse,
   type GoalsResponse,
   type ImportsResponse,
@@ -53,7 +57,9 @@ import {
   type RegisterInput,
   type ReviewResponse,
   type RiskResponse,
+  type ScenarioSimulationResponse,
   type ScenariosResponse,
+  type SimulateScenarioInput,
   type SubscriptionsResponse,
   type TransactionDetailDto,
   type TransactionsResponse,
@@ -378,6 +384,12 @@ export function createApiClient(options: ApiClientOptions) {
       );
       return forecastResponseSchema.parse(data) as ForecastResponse;
     },
+    getForecastBacktest: async (householdId: string) => {
+      const data = await request<unknown>(
+        `/api/v1/forecast/backtest?householdId=${encodeURIComponent(householdId)}`,
+      );
+      return forecastBacktestResponseSchema.parse(data) as ForecastBacktestResponse;
+    },
     getOpportunities: async (householdId: string) => {
       const data = await request<unknown>(
         `/api/v1/opportunities?householdId=${encodeURIComponent(householdId)}`,
@@ -395,6 +407,28 @@ export function createApiClient(options: ApiClientOptions) {
         `/api/v1/scenarios?householdId=${encodeURIComponent(householdId)}`,
       );
       return scenariosResponseSchema.parse(data) as ScenariosResponse;
+    },
+    createScenario: async (input: CreateScenarioInput) => {
+      const data = await request<unknown>("/api/v1/scenarios", {
+        method: "POST",
+        body: JSON.stringify(input),
+      });
+      return scenariosResponseSchema.parse(data) as ScenariosResponse;
+    },
+    simulateScenario: async (
+      scenarioId: string,
+      input: SimulateScenarioInput,
+    ) => {
+      const data = await request<unknown>(
+        `/api/v1/scenarios/${encodeURIComponent(scenarioId)}/simulate`,
+        {
+          method: "POST",
+          body: JSON.stringify(input),
+        },
+      );
+      return scenarioSimulationResponseSchema.parse(
+        data,
+      ) as ScenarioSimulationResponse;
     },
     getInsights: async (householdId: string) => {
       const data = await request<unknown>(

@@ -77,9 +77,9 @@ Legend for layer columns: **C** complete · **P** partial · **S** scaffold · *
 | Sinking funds | PARTIAL | P | P | P | P | P1 | Goals | Create/contribute UX (WS D) |
 | Goals | PARTIAL | P | P | P | P | P1 | — | Create/contribute + progress (WS D) |
 | Planned expenses | SCAFFOLD_ONLY | S | N | N | N | P2 | Forecast | — |
-| Forecast horizons | PARTIAL | M/P | P | P | B | P0 | Core | Engine linear + seeded runs; dashboard hardcoded |
-| Forecast backtesting | SCAFFOLD_ONLY | S | N | N | N | P2 | Forecast | Tables/seed thin |
-| Scenarios | MOCK_ONLY | M | P | N | B | P1 | Engine | Seeded scenarios |
+| Forecast horizons | PARTIAL | P | P | P | P | P0 | Core | Live 7d–12m engine (WS E); linear model |
+| Forecast backtesting | PARTIAL | P | P | P | P | P2 | Forecast | Infra + lookback compare (WS E) |
+| Scenarios | PARTIAL | P | P | P | P | P1 | Engine | Non-destructive simulate (WS E) |
 | Available to invest | SCAFFOLD_ONLY | S | N | N | N | P1 | Policies | Spec only / thin |
 
 ---
