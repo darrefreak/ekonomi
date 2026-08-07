@@ -74,7 +74,7 @@ Partial real path (for contrast): month income/spending/savings rate and account
 |---|---|---|
 | Integrations fake sync | Yes (external) | Inserts fake COMPLETED sync — OK for connectors, not a real sync pipeline |
 | Documents inbox | OCR mock OK | No upload, statuses workflow, linking UI |
-| Opportunities / risk / scenarios | — | Mostly seed table reads |
+| Opportunities / risk / scenarios | — | Opportunities/risk live (WS I); scenarios still definition-backed |
 | Vehicle market intel | Marketplace feed mock OK | Analytical pipeline largely seed-time; request path is read |
 | Account balances | — | Seeded cache; not ledger-derived |
 | Balance snapshots | — | Ending balances copied into all snapshot fields |

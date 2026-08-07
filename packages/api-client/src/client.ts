@@ -4,6 +4,9 @@ import {
   accountSchema,
   advisorBriefResponseSchema,
   assetsResponseSchema,
+  recommendationOutcomesResponseSchema,
+  trackRecommendationOutcomeSchema,
+  updateRecommendationOutcomeSchema,
   budgetResponseSchema,
   cashflowResponseSchema,
   categoriesResponseSchema,
@@ -37,6 +40,9 @@ import {
   type AccountsResponse,
   type AdvisorBriefResponse,
   type AssetsResponse,
+  type RecommendationOutcomesResponse,
+  type TrackRecommendationOutcomeInput,
+  type UpdateRecommendationOutcomeInput,
   type BudgetResponse,
   type CashflowResponse,
   type CategoriesResponse,
@@ -503,6 +509,38 @@ export function createApiClient(options: ApiClientOptions) {
         `/api/v1/advisor/brief?householdId=${encodeURIComponent(householdId)}`,
       );
       return advisorBriefResponseSchema.parse(data) as AdvisorBriefResponse;
+    },
+    getRecommendationOutcomes: async (householdId: string) => {
+      const data = await request<unknown>(
+        `/api/v1/advisor/outcomes?householdId=${encodeURIComponent(householdId)}`,
+      );
+      return recommendationOutcomesResponseSchema.parse(
+        data,
+      ) as RecommendationOutcomesResponse;
+    },
+    trackRecommendationOutcome: async (
+      input: TrackRecommendationOutcomeInput,
+    ) => {
+      const data = await request<unknown>("/api/v1/advisor/outcomes", {
+        method: "POST",
+        body: JSON.stringify(trackRecommendationOutcomeSchema.parse(input)),
+      });
+      return data as { id: string; created: boolean };
+    },
+    updateRecommendationOutcome: async (
+      outcomeId: string,
+      input: UpdateRecommendationOutcomeInput,
+    ) => {
+      const data = await request<unknown>(
+        `/api/v1/advisor/outcomes/${encodeURIComponent(outcomeId)}`,
+        {
+          method: "PATCH",
+          body: JSON.stringify(updateRecommendationOutcomeSchema.parse(input)),
+        },
+      );
+      return recommendationOutcomesResponseSchema.parse(
+        data,
+      ) as RecommendationOutcomesResponse;
     },
   };
 }

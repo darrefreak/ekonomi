@@ -270,6 +270,71 @@ export class HouseholdMetricsService {
     return buildMonthlyCashflow(months, byMonth);
   }
 
+  /** Average monthly spend by category for recent window vs baseline window. */
+  async categorySpendComparison(
+    householdId: string,
+    recentMonths: string[],
+    baselineMonths: string[],
+  ) {
+    if (!recentMonths.length || !baselineMonths.length) return [];
+    const db = getDb();
+    const load = async (months: string[]) => {
+      const start = `${months[0]}-01`;
+      const end = lastDayOfMonth(months[months.length - 1]!);
+      const rows = await db
+        .select({
+          categoryKey: categories.key,
+          categoryName: categories.name,
+          total: sql<string>`coalesce(sum(${financialEvents.expenseAmountMinor}), 0)`,
+        })
+        .from(financialEvents)
+        .innerJoin(categories, eq(financialEvents.categoryId, categories.id))
+        .where(
+          and(
+            eq(financialEvents.householdId, householdId),
+            gte(financialEvents.occurredOn, start),
+            lte(financialEvents.occurredOn, end),
+          ),
+        )
+        .groupBy(categories.key, categories.name);
+      return rows;
+    };
+    const [recentRows, baselineRows] = await Promise.all([
+      load(recentMonths),
+      load(baselineMonths),
+    ]);
+    const map = new Map<
+      string,
+      { categoryKey: string; categoryName: string; recent: bigint; baseline: bigint }
+    >();
+    for (const r of recentRows) {
+      map.set(r.categoryKey, {
+        categoryKey: r.categoryKey,
+        categoryName: r.categoryName,
+        recent: BigInt(r.total),
+        baseline: 0n,
+      });
+    }
+    for (const r of baselineRows) {
+      const prev = map.get(r.categoryKey) ?? {
+        categoryKey: r.categoryKey,
+        categoryName: r.categoryName,
+        recent: 0n,
+        baseline: 0n,
+      };
+      prev.baseline = BigInt(r.total);
+      map.set(r.categoryKey, prev);
+    }
+    const recentN = BigInt(recentMonths.length);
+    const baselineN = BigInt(baselineMonths.length);
+    return [...map.values()].map((r) => ({
+      categoryKey: r.categoryKey,
+      categoryName: r.categoryName,
+      recentMinor: recentN > 0n ? r.recent / recentN : 0n,
+      baselineMinor: baselineN > 0n ? r.baseline / baselineN : 0n,
+    }));
+  }
+
   async coverage(householdId: string, asOf: string) {
     const accountRows = await this.getAccountRows(householdId);
     const types = new Set(accountRows.map((a) => a.accountType));

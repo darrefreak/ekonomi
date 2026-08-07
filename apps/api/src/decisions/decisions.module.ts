@@ -4,6 +4,7 @@ import { DebtModule } from "../debt/debt.module";
 import { HouseholdsModule } from "../households/households.module";
 import { MetricsModule } from "../metrics/metrics.module";
 import { PlanningModule } from "../planning/planning.module";
+import { VehiclesModule } from "../vehicles/vehicles.module";
 import { DecisionsController } from "./decisions.controller";
 import { DecisionsService } from "./decisions.service";
 
@@ -14,6 +15,7 @@ import { DecisionsService } from "./decisions.service";
     MetricsModule,
     PlanningModule,
     DebtModule,
+    VehiclesModule,
   ],
   controllers: [DecisionsController],
   providers: [DecisionsService],

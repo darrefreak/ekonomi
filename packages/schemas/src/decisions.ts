@@ -61,11 +61,20 @@ export const forecastBacktestResponseSchema = z.object({
 });
 export type ForecastBacktestResponse = z.infer<typeof forecastBacktestResponseSchema>;
 
+export const evidenceLinkSchema = z.object({
+  kind: z.string(),
+  id: z.string(),
+  label: z.string(),
+  href: z.string(),
+});
+
 export const opportunitiesResponseSchema = z.object({
   asOf: z.string(),
+  source: z.enum(["live-engine", "seed"]).optional().default("live-engine"),
   items: z.array(
     z.object({
       id: z.string(),
+      detectorKey: z.string().optional(),
       title: z.string(),
       description: z.string(),
       estimatedAnnualSaving: moneySchema.nullable(),
@@ -75,13 +84,34 @@ export const opportunitiesResponseSchema = z.object({
       priority: z.number(),
       status: z.string(),
       category: z.string(),
+      evidence: z.array(evidenceLinkSchema).default([]),
     }),
   ),
+  lifestyleCreep: z
+    .object({
+      creeping: z.boolean(),
+      recentAvgMonthly: moneySchema,
+      baselineAvgMonthly: moneySchema,
+      delta: moneySchema,
+      deltaPercent: z.number().nullable(),
+      drivers: z.array(
+        z.object({
+          categoryKey: z.string(),
+          categoryName: z.string(),
+          delta: moneySchema,
+          deltaPercent: z.number().nullable(),
+          href: z.string(),
+        }),
+      ),
+    })
+    .nullable()
+    .optional(),
 });
 export type OpportunitiesResponse = z.infer<typeof opportunitiesResponseSchema>;
 
 export const riskResponseSchema = z.object({
   asOf: z.string(),
+  source: z.enum(["live-engine", "seed"]).optional().default("live-engine"),
   signals: z.array(
     z.object({
       id: z.string(),
@@ -90,6 +120,7 @@ export const riskResponseSchema = z.object({
       title: z.string(),
       detail: z.string(),
       score: z.number(),
+      evidence: z.array(evidenceLinkSchema).default([]),
     }),
   ),
   health: z.array(

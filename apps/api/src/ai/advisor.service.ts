@@ -1,6 +1,14 @@
-import { Inject, Injectable } from "@nestjs/common";
-import { eq } from "drizzle-orm";
-import type { CurrencyCode } from "@ffos/domain";
+import {
+  Inject,
+  Injectable,
+  NotFoundException,
+} from "@nestjs/common";
+import { and, desc, eq } from "drizzle-orm";
+import { money, moneyToJson, type CurrencyCode } from "@ffos/domain";
+import type {
+  TrackRecommendationOutcomeInput,
+  UpdateRecommendationOutcomeInput,
+} from "@ffos/schemas";
 import { getDb } from "../db/client";
 import { aiBriefs, recommendationOutcomes } from "../db/schema-ai";
 import { DecisionsService } from "../decisions/decisions.service";
@@ -46,27 +54,33 @@ export class AdvisorService {
       data: {
         topTitle: top?.title,
         annualSavingMinor: top?.estimatedAnnualSaving?.amountMinor,
+        evidence: top?.evidence?.slice(0, 3) ?? [],
+        lifestyleCreep: opps.lifestyleCreep?.creeping ?? false,
       },
     });
 
     const risk = await this.decisions.risk(userId, householdId);
-    const topRisk = risk.signals[0];
+    const topRisk = risk.signals.sort((a, b) => a.score - b.score)[0];
     tools.push({
       tool: "get_risk",
       ok: true,
-      data: { topTitle: topRisk?.title, level: topRisk?.level },
+      data: {
+        topTitle: topRisk?.title,
+        level: topRisk?.level,
+        evidence: topRisk?.evidence?.slice(0, 3) ?? [],
+      },
     });
 
-    const vehicleList = await this.vehiclesSvc.list(userId, householdId);
-    const v = vehicleList.items[0];
+    const vehicles = await this.vehiclesSvc.list(userId, householdId);
+    const v0 = vehicles.items[0];
     tools.push({
       tool: "get_vehicle_equity",
-      ok: !!v,
-      data: v
+      ok: vehicles.items.length > 0,
+      data: v0
         ? {
-            netEquityMinor: v.netEquity?.amountMinor,
-            negativeEquity: v.netEquity
-              ? BigInt(v.netEquity.amountMinor) < 0n
+            netEquityMinor: v0.netEquity?.amountMinor,
+            negativeEquity: v0.netEquity
+              ? BigInt(v0.netEquity.amountMinor) < 0n
               : false,
           }
         : {},
@@ -86,14 +100,12 @@ export class AdvisorService {
       .returning();
 
     if (top) {
-      await db.insert(recommendationOutcomes).values({
+      await this.track(userId, {
         householdId,
         recommendationKey: `opp:${top.id}`,
         title: top.title,
+        expectedImpactMinor: top.estimatedAnnualSaving?.amountMinor ?? null,
         status: "SHOWN",
-        expectedImpactMinor: top.estimatedAnnualSaving
-          ? BigInt(top.estimatedAnnualSaving.amountMinor)
-          : null,
         notes: "Tracked when shown in AI brief",
       });
     }
@@ -109,21 +121,104 @@ export class AdvisorService {
   }
 
   async outcomes(userId: string, householdId: string) {
-    await this.access.requireMembership(userId, householdId);
+    const { household } = await this.access.requireMembership(userId, householdId);
+    const currency = (household.baseCurrency || "SEK") as CurrencyCode;
     const db = getDb();
     const rows = await db
       .select()
       .from(recommendationOutcomes)
-      .where(eq(recommendationOutcomes.householdId, householdId));
+      .where(eq(recommendationOutcomes.householdId, householdId))
+      .orderBy(desc(recommendationOutcomes.shownAt));
     return {
       items: rows.map((r) => ({
         id: r.id,
         recommendationKey: r.recommendationKey,
         title: r.title,
         status: r.status,
+        expectedImpact: r.expectedImpactMinor
+          ? moneyToJson(money(r.expectedImpactMinor, currency))
+          : null,
         shownAt: r.shownAt.toISOString(),
         notes: r.notes,
       })),
     };
+  }
+
+  async track(userId: string, input: TrackRecommendationOutcomeInput) {
+    await this.access.requireMembership(userId, input.householdId);
+    const db = getDb();
+    const [existing] = await db
+      .select()
+      .from(recommendationOutcomes)
+      .where(
+        and(
+          eq(recommendationOutcomes.householdId, input.householdId),
+          eq(recommendationOutcomes.recommendationKey, input.recommendationKey),
+        ),
+      )
+      .limit(1);
+
+    if (existing) {
+      const [updated] = await db
+        .update(recommendationOutcomes)
+        .set({
+          status: input.status ?? existing.status,
+          notes: input.notes ?? existing.notes,
+          title: input.title,
+          expectedImpactMinor:
+            input.expectedImpactMinor != null
+              ? BigInt(input.expectedImpactMinor)
+              : existing.expectedImpactMinor,
+        })
+        .where(eq(recommendationOutcomes.id, existing.id))
+        .returning();
+      return { id: updated.id, created: false };
+    }
+
+    const [row] = await db
+      .insert(recommendationOutcomes)
+      .values({
+        householdId: input.householdId,
+        recommendationKey: input.recommendationKey,
+        title: input.title,
+        status: input.status ?? "SHOWN",
+        expectedImpactMinor:
+          input.expectedImpactMinor != null
+            ? BigInt(input.expectedImpactMinor)
+            : null,
+        notes: input.notes ?? null,
+      })
+      .returning();
+    return { id: row.id, created: true };
+  }
+
+  async updateOutcome(
+    userId: string,
+    outcomeId: string,
+    input: UpdateRecommendationOutcomeInput,
+  ) {
+    await this.access.requireMembership(userId, input.householdId);
+    const db = getDb();
+    const [existing] = await db
+      .select()
+      .from(recommendationOutcomes)
+      .where(
+        and(
+          eq(recommendationOutcomes.id, outcomeId),
+          eq(recommendationOutcomes.householdId, input.householdId),
+        ),
+      )
+      .limit(1);
+    if (!existing) throw new NotFoundException("Outcome not found");
+
+    await db
+      .update(recommendationOutcomes)
+      .set({
+        status: input.status,
+        notes: input.notes === undefined ? existing.notes : input.notes,
+      })
+      .where(eq(recommendationOutcomes.id, outcomeId));
+
+    return this.outcomes(userId, input.householdId);
   }
 }

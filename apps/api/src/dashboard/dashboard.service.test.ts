@@ -13,6 +13,7 @@ import { HouseholdMetricsService } from "../metrics/household-metrics.service";
 import { PlanningMetricsService } from "../planning/planning-metrics.service";
 import { ReviewService } from "../review/review.service";
 import type { HouseholdAccessService } from "../households/household-access.service";
+import { VehiclesService } from "../vehicles/vehicles.service";
 
 test("net worth composition uses financial-engine", () => {
   const netWorth = calculateNetWorth({
@@ -146,6 +147,7 @@ test("getDashboard aggregates opportunities and forecast from live services", as
       new HouseholdMetricsService(),
       new PlanningMetricsService(),
       new DebtService(access),
+      new VehiclesService(access),
     ),
   );
 
