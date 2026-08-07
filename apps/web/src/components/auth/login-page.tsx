@@ -10,8 +10,8 @@ import {
 
 export function LoginPage() {
   const router = useRouter();
-  const [email, setEmail] = useState(DEMO_CREDENTIALS.email);
-  const [password, setPassword] = useState(DEMO_CREDENTIALS.password);
+  const [email, setEmail] = useState<string>(DEMO_CREDENTIALS.email);
+  const [password, setPassword] = useState<string>(DEMO_CREDENTIALS.password);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
