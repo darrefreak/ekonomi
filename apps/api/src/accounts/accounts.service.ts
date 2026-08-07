@@ -43,7 +43,7 @@ export class AccountsService {
     householdId: string,
     opts?: { includeArchived?: boolean },
   ) {
-    await this.access.requireMembership(userId, householdId);
+    const viewer = await this.access.requireMembership(userId, householdId);
     const db = getDb();
     const conditions = [
       eq(accounts.householdId, householdId),
@@ -60,13 +60,20 @@ export class AccountsService {
       .where(and(...conditions))
       .orderBy(asc(accounts.name));
 
-    return {
-      items: rows.map((row) => this.toListItem(row)),
-    };
+    const items = [];
+    for (const row of rows) {
+      const visibility = await this.access.accountVisibility(viewer, row);
+      const projected = this.access.projectAccountListItem(
+        this.toListItem(row),
+        visibility,
+      );
+      if (projected) items.push(projected);
+    }
+    return { items };
   }
 
   async create(userId: string, input: CreateAccountInput) {
-    await this.access.requireMembership(userId, input.householdId);
+    await this.access.requireCanWrite(userId, input.householdId);
     if (!USER_ACCOUNT_TYPES.has(input.accountType)) {
       throw new BadRequestException("Invalid account type");
     }
@@ -114,7 +121,7 @@ export class AccountsService {
   }
 
   async update(userId: string, accountId: string, input: UpdateAccountInput) {
-    await this.access.requireMembership(userId, input.householdId);
+    await this.access.requireCanWrite(userId, input.householdId);
     const db = getDb();
     const [existing] = await db
       .select()
@@ -159,7 +166,7 @@ export class AccountsService {
   }
 
   async archive(userId: string, householdId: string, accountId: string) {
-    await this.access.requireMembership(userId, householdId);
+    await this.access.requireCanWrite(userId, householdId);
     const db = getDb();
     const [existing] = await db
       .select()
@@ -188,7 +195,7 @@ export class AccountsService {
   }
 
   async get(userId: string, householdId: string, accountId: string) {
-    await this.access.requireMembership(userId, householdId);
+    const viewer = await this.access.requireMembership(userId, householdId);
     const db = getDb();
     const [row] = await db
       .select()
@@ -197,67 +204,89 @@ export class AccountsService {
       .limit(1);
     if (!row || row.isSystem) return null;
 
-    const recent = await db
-      .select({
-        id: sourceTransactions.id,
-        bookingDate: sourceTransactions.bookingDate,
-        description: sourceTransactions.description,
-        amountMinor: sourceTransactions.amountMinor,
-        currency: sourceTransactions.currency,
-        merchantName: merchants.canonicalName,
-        categoryName: categories.name,
-      })
-      .from(sourceTransactions)
-      .leftJoin(merchants, eq(sourceTransactions.merchantId, merchants.id))
-      .leftJoin(categories, eq(sourceTransactions.categoryId, categories.id))
-      .where(
-        and(
-          eq(sourceTransactions.householdId, householdId),
-          eq(sourceTransactions.accountId, accountId),
-          eq(sourceTransactions.isExcluded, false),
-        ),
-      )
-      .orderBy(desc(sourceTransactions.bookingDate))
-      .limit(20);
+    const visibility = await this.access.accountVisibility(viewer, row);
+    if (visibility === "hidden") return null;
 
-    const history = await db
-      .select()
-      .from(accountBalanceSnapshots)
-      .where(
-        and(
-          eq(accountBalanceSnapshots.householdId, householdId),
-          eq(accountBalanceSnapshots.accountId, accountId),
-        ),
-      )
-      .orderBy(asc(accountBalanceSnapshots.asOf));
+    const listItem = this.access.projectAccountListItem(
+      this.toListItem(row),
+      visibility,
+    );
+    if (!listItem) return null;
+
+    const recent =
+      visibility === "full"
+        ? await db
+            .select({
+              id: sourceTransactions.id,
+              bookingDate: sourceTransactions.bookingDate,
+              description: sourceTransactions.description,
+              amountMinor: sourceTransactions.amountMinor,
+              currency: sourceTransactions.currency,
+              merchantName: merchants.canonicalName,
+              categoryName: categories.name,
+            })
+            .from(sourceTransactions)
+            .leftJoin(merchants, eq(sourceTransactions.merchantId, merchants.id))
+            .leftJoin(
+              categories,
+              eq(sourceTransactions.categoryId, categories.id),
+            )
+            .where(
+              and(
+                eq(sourceTransactions.householdId, householdId),
+                eq(sourceTransactions.accountId, accountId),
+                eq(sourceTransactions.isExcluded, false),
+              ),
+            )
+            .orderBy(desc(sourceTransactions.bookingDate))
+            .limit(20)
+        : [];
+
+    const history =
+      visibility === "full" || visibility === "balance"
+        ? await db
+            .select()
+            .from(accountBalanceSnapshots)
+            .where(
+              and(
+                eq(accountBalanceSnapshots.householdId, householdId),
+                eq(accountBalanceSnapshots.accountId, accountId),
+              ),
+            )
+            .orderBy(asc(accountBalanceSnapshots.asOf))
+        : [];
 
     const asOf = process.env.DEMO_AS_OF_DATE ?? "2026-08-01";
     const monthStart = `${asOf.slice(0, 7)}-01`;
-    const [period] = await db
-      .select({
-        income: sql<string>`coalesce(sum(case when ${sourceTransactions.amountMinor} > 0 then ${sourceTransactions.amountMinor} else 0 end), 0)`,
-        expenses: sql<string>`coalesce(sum(case when ${sourceTransactions.amountMinor} < 0 then -${sourceTransactions.amountMinor} else 0 end), 0)`,
-      })
-      .from(sourceTransactions)
-      .where(
-        and(
-          eq(sourceTransactions.householdId, householdId),
-          eq(sourceTransactions.accountId, accountId),
-          gte(sourceTransactions.bookingDate, monthStart),
-          lte(sourceTransactions.bookingDate, asOf),
-          eq(sourceTransactions.isExcluded, false),
-        ),
-      );
+    const [period] =
+      visibility === "full" || visibility === "balance"
+        ? await db
+            .select({
+              income: sql<string>`coalesce(sum(case when ${sourceTransactions.amountMinor} > 0 then ${sourceTransactions.amountMinor} else 0 end), 0)`,
+              expenses: sql<string>`coalesce(sum(case when ${sourceTransactions.amountMinor} < 0 then -${sourceTransactions.amountMinor} else 0 end), 0)`,
+            })
+            .from(sourceTransactions)
+            .where(
+              and(
+                eq(sourceTransactions.householdId, householdId),
+                eq(sourceTransactions.accountId, accountId),
+                gte(sourceTransactions.bookingDate, monthStart),
+                lte(sourceTransactions.bookingDate, asOf),
+                eq(sourceTransactions.isExcluded, false),
+              ),
+            )
+        : [{ income: "0", expenses: "0" }];
 
     return {
-      ...this.toListItem(row),
-      creditLimit: row.creditLimitMinor
-        ? moneyToJson({
-            amountMinor: row.creditLimitMinor,
-            currency: row.currency as "SEK",
-          })
-        : null,
-      externalReference: row.externalReference,
+      ...listItem,
+      creditLimit:
+        visibility === "full" && row.creditLimitMinor
+          ? moneyToJson({
+              amountMinor: row.creditLimitMinor,
+              currency: row.currency as "SEK",
+            })
+          : null,
+      externalReference: visibility === "full" ? row.externalReference : null,
       recentTransactions: recent.map((tx) => ({
         id: tx.id,
         bookingDate: String(tx.bookingDate),
@@ -285,6 +314,8 @@ export class AccountsService {
           money(BigInt(period?.expenses ?? "0"), row.currency as "SEK"),
         ),
       },
+      privacyRedacted: visibility !== "full",
+      privacyLevel: visibility,
     };
   }
 

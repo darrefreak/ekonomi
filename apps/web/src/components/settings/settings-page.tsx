@@ -14,6 +14,13 @@ import { ErrorState } from "../feedback/error-state";
 import { LoadingState } from "../feedback/loading-state";
 import { minorToKronorInput, kronorToMinorString } from "@/lib/money-input";
 
+const POLICY_OPTIONS = [
+  "FULL_DETAILS",
+  "AGGREGATES_ONLY",
+  "BALANCE_ONLY",
+  "OWNER_ONLY",
+] as const;
+
 export function SettingsPage() {
   const router = useRouter();
   const [data, setData] = useState<SettingsResponse | null>(null);
@@ -21,6 +28,7 @@ export function SettingsPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [demoBusy, setDemoBusy] = useState(false);
+  const [privacyBusy, setPrivacyBusy] = useState(false);
   const [name, setName] = useState("");
   const [locale, setLocale] = useState<"sv-SE" | "en-US">("sv-SE");
   const [appearance, setAppearance] = useState<"system" | "light" | "dark">(
@@ -30,6 +38,9 @@ export function SettingsPage() {
   const [emergency, setEmergency] = useState("");
   const [safety, setSafety] = useState("");
   const [message, setMessage] = useState<string | null>(null);
+  const [memberPolicies, setMemberPolicies] = useState<Record<string, string>>(
+    {},
+  );
 
   const load = useCallback(async () => {
     const id = await ensureHouseholdSession();
@@ -45,6 +56,11 @@ export function SettingsPage() {
       minorToKronorInput(settings.financialPolicies.emergencyFundTargetMinor),
     );
     setSafety(minorToKronorInput(settings.financialPolicies.safetyMarginMinor));
+    const policies: Record<string, string> = {};
+    for (const m of settings.members ?? []) {
+      policies[m.id] = m.personalDataPolicy;
+    }
+    setMemberPolicies(policies);
   }, []);
 
   useEffect(() => {
@@ -59,7 +75,7 @@ export function SettingsPage() {
     setError(null);
     setMessage(null);
     try {
-      const next = await api.updateSettings({
+      let next = await api.updateSettings({
         householdId: data.householdId,
         householdName: name.trim(),
         locale,
@@ -76,6 +92,20 @@ export function SettingsPage() {
             data.financialPolicies.safetyMarginMinor,
         },
       });
+
+      for (const m of data.members ?? []) {
+        const selected = memberPolicies[m.id];
+        if (selected && selected !== m.personalDataPolicy) {
+          next = await api.updateSettings({
+            householdId: data.householdId,
+            memberPolicy: {
+              memberId: m.id,
+              personalDataPolicy: selected as (typeof POLICY_OPTIONS)[number],
+            },
+          });
+        }
+      }
+
       setData(next);
       setMessage("Inställningar sparade.");
     } catch (err) {
@@ -95,7 +125,7 @@ export function SettingsPage() {
         await api.loadDemo();
         setMessage("Demodata omladdad. Loggar in på demo-kontot…");
       }
-      logout();
+      await logout();
       await loginWithDemo();
       router.replace("/");
       router.refresh();
@@ -103,6 +133,49 @@ export function SettingsPage() {
       setError(err instanceof Error ? err.message : "Demo-laddning misslyckades");
     } finally {
       setDemoBusy(false);
+    }
+  }
+
+  async function exportPrivacy() {
+    if (!data) return;
+    setPrivacyBusy(true);
+    setError(null);
+    setMessage(null);
+    try {
+      const exported = await api.exportPrivacyData(data.householdId);
+      const blob = new Blob([JSON.stringify(exported, null, 2)], {
+        type: "application/json",
+      });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `ffos-export-${data.householdId.slice(0, 8)}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+      setMessage("Personlig data exporterad.");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Export misslyckades");
+    } finally {
+      setPrivacyBusy(false);
+    }
+  }
+
+  async function requestDelete() {
+    if (!data) return;
+    setPrivacyBusy(true);
+    setError(null);
+    setMessage(null);
+    try {
+      const req = await api.requestPrivacyDelete({
+        householdId: data.householdId,
+        kind: "delete_personal",
+        note: "Begäran från inställningar",
+      });
+      setMessage(`Raderingsbegäran registrerad (${req.status}).`);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Begäran misslyckades");
+    } finally {
+      setPrivacyBusy(false);
     }
   }
 
@@ -119,7 +192,7 @@ export function SettingsPage() {
           Inställningar
         </h1>
         <p className="mt-2 text-sm text-text-secondary">
-          Hushåll, policies och demodata
+          Hushåll, privacy-policies och demodata
         </p>
       </div>
 
@@ -206,20 +279,65 @@ export function SettingsPage() {
       </section>
 
       <section className="rounded-[16px] bg-surface-elevated p-5">
-        <h2 className="text-sm text-text-secondary">Medlemmar & privacy (persistens)</h2>
+        <h2 className="text-sm text-text-secondary">Medlemmar & privacy</h2>
         <p className="mt-2 text-xs text-text-muted">
-          Policy lagras här; auktoriseringshandhavande kommer i Workstream N.
+          OWNER/ADMIN kan ändra personalDataPolicy. Servern redigerar andras
+          personliga konton/transaktioner enligt policy.
         </p>
-        <ul className="mt-3 space-y-2 text-sm">
+        <ul className="mt-3 space-y-3 text-sm">
           {(data.members ?? []).map((m) => (
-            <li key={m.id} className="flex justify-between gap-3">
+            <li
+              key={m.id}
+              className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between"
+            >
               <span>
                 {m.displayName} · {m.role}
               </span>
-              <span className="text-text-muted">{m.personalDataPolicy}</span>
+              <select
+                className="min-h-11 rounded-[12px] border border-border bg-surface px-3 text-sm"
+                value={memberPolicies[m.id] ?? m.personalDataPolicy}
+                onChange={(e) =>
+                  setMemberPolicies((prev) => ({
+                    ...prev,
+                    [m.id]: e.target.value,
+                  }))
+                }
+              >
+                {POLICY_OPTIONS.map((opt) => (
+                  <option key={opt} value={opt}>
+                    {opt}
+                  </option>
+                ))}
+              </select>
             </li>
           ))}
         </ul>
+      </section>
+
+      <section className="space-y-3 rounded-[16px] bg-surface-elevated p-5">
+        <h2 className="text-sm text-text-secondary">Integritet (export / radera)</h2>
+        <p className="text-xs text-text-muted">
+          Export hämtar din personliga data nu. Radering skapar en begäran
+          (foundation) som auditas.
+        </p>
+        <div className="flex flex-wrap gap-2">
+          <button
+            type="button"
+            disabled={privacyBusy}
+            className="min-h-11 rounded-[12px] border border-border-strong px-4 text-sm disabled:opacity-60"
+            onClick={() => void exportPrivacy()}
+          >
+            Exportera min data
+          </button>
+          <button
+            type="button"
+            disabled={privacyBusy}
+            className="min-h-11 rounded-[12px] border border-border-strong px-4 text-sm disabled:opacity-60"
+            onClick={() => void requestDelete()}
+          >
+            Begär radering
+          </button>
+        </div>
       </section>
 
       <section className="rounded-[16px] bg-surface-elevated p-5">
@@ -247,8 +365,7 @@ export function SettingsPage() {
             type="button"
             className="min-h-11 rounded-[12px] border border-border-strong px-4 text-sm"
             onClick={() => {
-              logout();
-              router.replace("/login");
+              void logout().then(() => router.replace("/login"));
             }}
           >
             Logga ut

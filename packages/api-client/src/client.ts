@@ -95,8 +95,12 @@ import {
   type UpdateSourceInput,
   type InvestmentsResponse,
   type LoginInput,
+  type LogoutInput,
   type NetWorthResponse,
   type OpportunitiesResponse,
+  type PrivacyDeleteRequest,
+  type PrivacyExportResponse,
+  type PrivacyDeleteResponse,
   type RegisterInput,
   type MonthlyReport,
   type NotificationsResponse,
@@ -196,6 +200,30 @@ export function createApiClient(options: ApiClientOptions) {
         body: JSON.stringify(input),
         skipAuth: true,
       }),
+    logout: (input?: LogoutInput) =>
+      request<{ ok: true }>("/api/v1/auth/logout", {
+        method: "POST",
+        body: JSON.stringify(input ?? {}),
+      }),
+    revokeAll: () =>
+      request<{ ok: true }>("/api/v1/auth/revoke-all", {
+        method: "POST",
+        body: JSON.stringify({}),
+      }),
+    exportPrivacyData: async (householdId: string) => {
+      const data = await request<unknown>("/api/v1/privacy/export", {
+        method: "POST",
+        body: JSON.stringify({ householdId }),
+      });
+      return data as PrivacyExportResponse;
+    },
+    requestPrivacyDelete: async (input: PrivacyDeleteRequest) => {
+      const data = await request<unknown>("/api/v1/privacy/delete-request", {
+        method: "POST",
+        body: JSON.stringify(input),
+      });
+      return data as PrivacyDeleteResponse;
+    },
     createHousehold: (input: { name: string; baseCurrency?: string }) =>
       request<{ id: string; name: string; baseCurrency: string }>(
         "/api/v1/households",

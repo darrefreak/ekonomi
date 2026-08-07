@@ -498,7 +498,7 @@ export class DecisionsService {
   }
 
   async createScenario(userId: string, input: CreateScenarioInput) {
-    const { household } = await this.access.requireMembership(
+    const { household } = await this.access.requireCanWrite(
       userId,
       input.householdId,
     );
@@ -532,7 +532,7 @@ export class DecisionsService {
     scenarioId: string,
     input: SimulateScenarioInput,
   ) {
-    const { household } = await this.access.requireMembership(
+    const { household } = await this.access.requireCanWrite(
       userId,
       input.householdId,
     );

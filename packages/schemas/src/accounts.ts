@@ -28,6 +28,8 @@ export const accountSchema = z.object({
   lastSyncedAt: z.string().nullable(),
   freshnessLabel: z.string().nullable().optional(),
   archivedAt: z.string().nullable().optional(),
+  privacyRedacted: z.boolean().optional(),
+  privacyLevel: z.enum(["full", "balance", "aggregate", "hidden"]).optional(),
 });
 
 export const accountsResponseSchema = z.object({

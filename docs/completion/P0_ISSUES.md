@@ -29,10 +29,10 @@ These must be resolved (or explicitly accepted with risk) before claiming produc
 
 ## P0-3 — No role or privacy enforcement
 
-**Status:** SCAFFOLD_ONLY  
-**Evidence:** `household_role`, `personalDataPolicy` columns; services only call `requireMembership`.
+**Status:** ADDRESSED (Workstream N)  
+**Evidence:** `requireCanWrite` / `requireAdmin`; account/transaction privacy projection; authz tests in `privacy-security.test.ts`.
 
-**Impact:** Any household member can read all personal account/transaction detail — violates PRIVACY_MODEL / SECURITY.
+**Impact:** Mitigated for accounts/transactions/search and write paths covered in N. Remaining: invite/manage UI, CHILD-specific UX limits.
 
 **Required:** Server-side role checks + aggregate-only query paths; authorization tests.
 
@@ -40,10 +40,10 @@ These must be resolved (or explicitly accepted with risk) before claiming produc
 
 ## P0-4 — Auth lifecycle incomplete (logout / revoke)
 
-**Status:** PARTIAL  
-**Evidence:** Refresh rotation exists; no logout / revoke-all endpoints; tokens live in localStorage until expiry.
+**Status:** ADDRESSED (Workstream N)  
+**Evidence:** `POST /api/v1/auth/logout`, `POST /api/v1/auth/revoke-all`; web `logout()` revokes then clears localStorage.
 
-**Impact:** Stolen/shared tokens cannot be invalidated; session hygiene fails Definition of Done for security.
+**Impact:** Refresh tokens can be invalidated; access JWT still expires naturally (short TTL).
 
 **Required:** Logout + refresh token revocation; client clear + optional revoke-all.
 
@@ -51,10 +51,10 @@ These must be resolved (or explicitly accepted with risk) before claiming produc
 
 ## P0-5 — Security baseline missing
 
-**Status:** NOT_STARTED / PARTIAL  
-**Evidence:** No rate limiting; no helmet/secure headers; Zod validation only on a few POSTs; default JWT secrets fallbacks in code.
+**Status:** ADDRESSED / PARTIAL (Workstream N)  
+**Evidence:** Helmet headers; global Throttler + tighter auth limits; `requireAccessSecret()` fail-closed in production.
 
-**Impact:** Brute-force login, missing browser hardening, inconsistent input validation.
+**Impact:** Baseline hardening in place. Broader Zod on all routes still incomplete (carry to O).
 
 **Required:** Throttling on auth, security headers, broaden Zod validation, fail closed without secrets in non-dev.
 

@@ -52,7 +52,7 @@ export class TransactionsService {
   }
 
   async list(userId: string, householdId: string, filters: TransactionListFilters = {}) {
-    await this.access.requireMembership(userId, householdId);
+    const viewer = await this.access.requireMembership(userId, householdId);
     const db = getDb();
     const conditions: SQL[] = [eq(sourceTransactions.householdId, householdId)];
 
@@ -87,6 +87,8 @@ export class TransactionsService {
         id: sourceTransactions.id,
         accountId: sourceTransactions.accountId,
         accountName: accounts.name,
+        accountIsShared: accounts.isShared,
+        accountOwnerMemberId: accounts.ownerMemberId,
         bookingDate: sourceTransactions.bookingDate,
         description: sourceTransactions.description,
         amountMinor: sourceTransactions.amountMinor,
@@ -123,8 +125,21 @@ export class TransactionsService {
       .orderBy(desc(sourceTransactions.bookingDate), desc(sourceTransactions.createdAt))
       .limit(Math.min(filters.limit ?? 50, 200));
 
+    const items = [];
+    for (const row of rows) {
+      const visibility = await this.access.accountVisibility(viewer, {
+        isShared: row.accountIsShared,
+        ownerMemberId: row.accountOwnerMemberId,
+      });
+      const projected = this.access.projectTransactionItem(
+        this.toListItem(row),
+        visibility,
+      );
+      if (projected) items.push(projected);
+    }
+
     return {
-      items: rows.map((row) => this.toListItem(row)),
+      items,
       filters: {
         q: filters.q ?? null,
         accountId: filters.accountId ?? null,
@@ -136,16 +151,27 @@ export class TransactionsService {
   }
 
   async get(userId: string, householdId: string, transactionId: string) {
-    await this.access.requireMembership(userId, householdId);
+    const viewer = await this.access.requireMembership(userId, householdId);
     const row = await this.loadOne(householdId, transactionId);
     if (!row) throw new NotFoundException("Transaction not found");
 
-    const relatedTransfers = row.transferGroupId
-      ? await this.loadRelated(householdId, row.transferGroupId, row.id)
-      : [];
+    const visibility = await this.access.accountVisibility(viewer, {
+      isShared: row.accountIsShared,
+      ownerMemberId: row.accountOwnerMemberId,
+    });
+    const projected = this.access.projectTransactionItem(
+      this.toListItem(row),
+      visibility,
+    );
+    if (!projected) throw new NotFoundException("Transaction not found");
+
+    const relatedTransfers =
+      visibility === "full" && row.transferGroupId
+        ? await this.loadRelated(householdId, row.transferGroupId, row.id)
+        : [];
 
     return {
-      ...this.toListItem(row),
+      ...projected,
       relatedTransfers,
     };
   }
@@ -155,7 +181,7 @@ export class TransactionsService {
     transactionId: string,
     input: UpdateTransactionInput,
   ) {
-    await this.access.requireMembership(userId, input.householdId);
+    await this.access.requireCanWrite(userId, input.householdId);
     const existing = await this.loadOne(input.householdId, transactionId);
     if (!existing) throw new NotFoundException("Transaction not found");
 
@@ -237,6 +263,8 @@ export class TransactionsService {
         id: sourceTransactions.id,
         accountId: sourceTransactions.accountId,
         accountName: accounts.name,
+        accountIsShared: accounts.isShared,
+        accountOwnerMemberId: accounts.ownerMemberId,
         bookingDate: sourceTransactions.bookingDate,
         description: sourceTransactions.description,
         amountMinor: sourceTransactions.amountMinor,

@@ -20,6 +20,8 @@ export const transactionSchema = z.object({
   status: z.string(),
   vehicleId: z.string().uuid().nullable().optional(),
   financialEventId: z.string().uuid().nullable().optional(),
+  privacyRedacted: z.boolean().optional(),
+  privacyLevel: z.enum(["full", "balance", "aggregate", "hidden"]).optional(),
 });
 
 export const relatedTransactionSchema = z.object({

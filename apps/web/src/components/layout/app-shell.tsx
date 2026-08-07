@@ -38,8 +38,7 @@ export function AppShell({ children }: { children: ReactNode }) {
               type="button"
               className="min-h-11 rounded-[12px] border border-border px-3 text-sm text-text-secondary hover:text-text-primary"
               onClick={() => {
-                logout();
-                router.replace("/login");
+                void logout().then(() => router.replace("/login"));
               }}
             >
               Logga ut

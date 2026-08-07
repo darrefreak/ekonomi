@@ -42,6 +42,13 @@ test("account create update archive and transaction patch against DB", async () 
       household,
       member: { id: "member", role: "OWNER" },
     }),
+    requireCanWrite: async () => ({
+      household,
+      member: { id: "member", role: "OWNER" },
+    }),
+    accountVisibility: async () => "full" as const,
+    projectAccountListItem: <T>(item: T) => item,
+    projectTransactionItem: <T>(item: T) => item,
   } as unknown as HouseholdAccessService;
 
   const accountsService = new AccountsService(access);

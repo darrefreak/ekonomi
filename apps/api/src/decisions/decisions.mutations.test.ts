@@ -43,6 +43,17 @@ test("live forecast horizons and non-destructive scenario simulate", async () =>
       household,
       member: { id: "member", role: "OWNER" },
     }),
+    requireCanWrite: async () => ({
+      household,
+      member: { id: "member", role: "OWNER" },
+    }),
+    requireAdmin: async () => ({
+      household,
+      member: { id: "member", role: "OWNER" },
+    }),
+    accountVisibility: async () => "full" as const,
+    projectAccountListItem: <T>(item: T) => item,
+    projectTransactionItem: <T>(item: T) => item,
   } as unknown as HouseholdAccessService;
 
   const service = new DecisionsService(

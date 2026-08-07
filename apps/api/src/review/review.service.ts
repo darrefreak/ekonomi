@@ -184,7 +184,7 @@ export class ReviewService {
   }
 
   async resolve(userId: string, input: ResolveReviewInput) {
-    await this.access.requireMembership(userId, input.householdId);
+    await this.access.requireCanWrite(userId, input.householdId);
     const db = getDb();
 
     if (input.kind === "document_field") {

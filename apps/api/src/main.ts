@@ -1,6 +1,7 @@
 import "reflect-metadata";
 import { NestFactory } from "@nestjs/core";
 import { DocumentBuilder, SwaggerModule } from "@nestjs/swagger";
+import helmet from "helmet";
 import { AppModule } from "./app.module";
 import { requestIdMiddleware } from "./common/request-id.middleware";
 import { logger } from "./common/logger";
@@ -8,6 +9,7 @@ import { enqueueHealthCheck } from "./jobs/queue";
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, { logger: ["error", "warn"] });
+  app.use(helmet());
   app.use(requestIdMiddleware);
   app.enableCors({
     origin: process.env.CORS_ORIGIN?.split(",") ?? ["http://localhost:3000"],

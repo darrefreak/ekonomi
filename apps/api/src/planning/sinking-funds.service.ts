@@ -38,7 +38,7 @@ export class SinkingFundsService {
   }
 
   async create(userId: string, input: CreateSinkingFundInput) {
-    const { household } = await this.access.requireMembership(
+    const { household } = await this.access.requireCanWrite(
       userId,
       input.householdId,
     );
@@ -59,7 +59,7 @@ export class SinkingFundsService {
   }
 
   async update(userId: string, fundId: string, input: UpdateSinkingFundInput) {
-    await this.access.requireMembership(userId, input.householdId);
+    await this.access.requireCanWrite(userId, input.householdId);
     const db = getDb();
     const [existing] = await db
       .select()

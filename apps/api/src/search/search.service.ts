@@ -42,7 +42,7 @@ export class SearchService {
   ) {}
 
   async search(userId: string, householdId: string, q: string) {
-    await this.access.requireMembership(userId, householdId);
+    const viewer = await this.access.requireMembership(userId, householdId);
     const query = q.trim();
     if (query.length < 2) {
       return { query, results: [] as SearchHit[] };
@@ -56,8 +56,11 @@ export class SearchService {
         id: sourceTransactions.id,
         description: sourceTransactions.description,
         bookingDate: sourceTransactions.bookingDate,
+        isShared: accounts.isShared,
+        ownerMemberId: accounts.ownerMemberId,
       })
       .from(sourceTransactions)
+      .innerJoin(accounts, eq(sourceTransactions.accountId, accounts.id))
       .where(
         and(
           eq(sourceTransactions.householdId, householdId),
@@ -68,8 +71,10 @@ export class SearchService {
         ),
       )
       .orderBy(desc(sourceTransactions.bookingDate))
-      .limit(8);
+      .limit(16);
     for (const row of txRows) {
+      const visibility = await this.access.accountVisibility(viewer, row);
+      if (visibility !== "full") continue;
       results.push({
         type: "transaction",
         id: row.id,
@@ -77,10 +82,17 @@ export class SearchService {
         subtitle: String(row.bookingDate),
         href: `/transactions/${row.id}`,
       });
+      if (results.filter((r) => r.type === "transaction").length >= 8) break;
     }
 
     const accountRows = await db
-      .select({ id: accounts.id, name: accounts.name, provider: accounts.provider })
+      .select({
+        id: accounts.id,
+        name: accounts.name,
+        provider: accounts.provider,
+        isShared: accounts.isShared,
+        ownerMemberId: accounts.ownerMemberId,
+      })
       .from(accounts)
       .where(
         and(
@@ -91,15 +103,22 @@ export class SearchService {
           ),
         ),
       )
-      .limit(6);
+      .limit(12);
+    let accountHits = 0;
     for (const row of accountRows) {
+      const visibility = await this.access.accountVisibility(viewer, row);
+      if (visibility === "hidden" || visibility === "aggregate") continue;
+      const title =
+        visibility === "balance" ? "Personligt konto (saldo)" : row.name;
       results.push({
         type: "account",
         id: row.id,
-        title: row.name,
-        subtitle: row.provider,
+        title,
+        subtitle: visibility === "full" ? row.provider : null,
         href: `/accounts/${row.id}`,
       });
+      accountHits += 1;
+      if (accountHits >= 6) break;
     }
 
     const merchantRows = await db

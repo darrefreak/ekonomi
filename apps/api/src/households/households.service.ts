@@ -1,12 +1,15 @@
-import { Injectable } from "@nestjs/common";
+import { Inject, Injectable } from "@nestjs/common";
 import { eq } from "drizzle-orm";
 import type { CreateHouseholdInput } from "@ffos/schemas";
 import { getDb } from "../db/client";
-import { auditLogs, householdMembers, households } from "../db/schema";
+import { householdMembers, households } from "../db/schema";
 import { logger } from "../common/logger";
+import { AuditService } from "../audit/audit.service";
 
 @Injectable()
 export class HouseholdsService {
+  constructor(@Inject(AuditService) private readonly audit: AuditService) {}
+
   async create(userId: string, input: CreateHouseholdInput, requestId?: string) {
     const db = getDb();
     const [household] = await db
@@ -24,7 +27,7 @@ export class HouseholdsService {
       personalDataPolicy: "FULL_DETAILS",
     });
 
-    await db.insert(auditLogs).values({
+    await this.audit.record({
       householdId: household.id,
       actorUserId: userId,
       action: "household.create",
@@ -32,7 +35,6 @@ export class HouseholdsService {
       entityId: household.id,
       after: { name: household.name, baseCurrency: household.baseCurrency },
       requestId,
-      source: "api",
     });
 
     logger.info("household_created", { householdId: household.id, userId });

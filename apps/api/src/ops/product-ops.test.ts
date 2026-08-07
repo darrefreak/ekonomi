@@ -58,9 +58,21 @@ test("settings search review resolve and monthly report", async () => {
       household,
       member: { id: membership.id, role: "OWNER" },
     }),
+    requireCanWrite: async () => ({
+      household,
+      member: { id: membership.id, role: "OWNER" },
+    }),
+    requireAdmin: async () => ({
+      household,
+      member: { id: membership.id, role: "OWNER" },
+    }),
+    accountVisibility: async () => "full" as const,
+    projectAccountListItem: <T>(item: T) => item,
+    projectTransactionItem: <T>(item: T) => item,
   } as unknown as HouseholdAccessService;
 
-  const settings = new SettingsService(access);
+  const { AuditService } = await import("../audit/audit.service");
+  const settings = new SettingsService(access, new AuditService());
   const before = settingsResponseSchema.parse(
     await settings.get("user-1", household.id),
   );
