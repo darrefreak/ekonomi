@@ -52,15 +52,18 @@ Budget, recurring, subscriptions, contracts, sinking funds, goals.
 Detaljer: [phases/PHASE_4.md](./phases/PHASE_4.md).  
 Report: [phase-reports/PHASE_4_REPORT.md](./phase-reports/PHASE_4_REPORT.md).
 
-## Phase 4B — Vehicle foundation
+## Phase 4B — Vehicle foundation ✅
 
 Vehicles, ownership, financing, mileage, actual costs, economic cost, TCO, equity, vehicle UI, vehicle tests.
 
-Detaljer: [phases/PHASE_4B.md](./phases/PHASE_4B.md).
+Detaljer: [phases/PHASE_4B.md](./phases/PHASE_4B.md).  
+Report: [phase-reports/PHASE_4B_REPORT.md](./phase-reports/PHASE_4B_REPORT.md).
 
 ## Phase 5 — Decision engines
 
 Forecast, backtesting, opportunities, risks, financial health, scenarios, savings optimizer.
+
+Detaljer: [phases/PHASE_5.md](./phases/PHASE_5.md).
 
 ## Phase 5B — Vehicle intelligence
 

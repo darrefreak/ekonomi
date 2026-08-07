@@ -1,10 +1,10 @@
-import { PagePlaceholder } from "@/components/placeholders/page-placeholder";
+import { VehicleDetailPage } from "@/components/vehicles/vehicle-detail-page";
 
-export default function Page() {
-  return (
-    <PagePlaceholder
-      title="Fordonsdetalj"
-      description="TCO, equity och rekommendationer kommer i Phase 4B."
-    />
-  );
+export default async function Page({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
+  const { id } = await params;
+  return <VehicleDetailPage vehicleId={id} />;
 }

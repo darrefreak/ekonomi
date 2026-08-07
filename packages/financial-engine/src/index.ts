@@ -4,4 +4,5 @@ export * from "./savings-rate";
 export * from "./cashflow";
 export * from "./coverage";
 export * from "./planning";
+export * from "./vehicle";
 

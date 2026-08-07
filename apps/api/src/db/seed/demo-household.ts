@@ -25,6 +25,7 @@ import { addDays, eachMonth, formatDate, parseDate } from "./dates";
 import { persistBalancedEvent } from "./persist-event";
 import { createSeededRng, pick, randInt } from "./rng";
 import { seedPlanningData } from "./seed-planning";
+import { seedVehiclesData } from "./seed-vehicles";
 
 const DEMO_EMAIL = "demo@ffos.local";
 const DEMO_PASSWORD = "demo-password-123";
@@ -670,6 +671,12 @@ export async function seedDemoHousehold() {
     cats,
     merchantIds,
     savingsAccountId: sbab.id,
+  });
+
+  await seedVehiclesData({
+    householdId: household.id,
+    asOf,
+    assetAccountId: vehicle.id,
   });
 
   // Ensure no orphan query warnings
