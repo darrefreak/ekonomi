@@ -182,13 +182,13 @@ Legend for layer columns: **C** complete · **P** partial · **S** scaffold · *
 
 | Feature | Status | BE | FE | Test | Mobile | Pri | Deps | Missing / defects |
 |---|---|---|---|---|---|---|---|---|
-| Global search | NOT_STARTED | N | S | N | N | P1 | — | “kommer snart” |
-| Notification center | NOT_STARTED | N | N | N | N | P2 | — | — |
-| Review queue | PARTIAL | P | P | N | B | P1 | Txns | Heuristic; no resolve |
-| Reports / monthly / yearly | NOT_STARTED | N | N | N | N | P2 | Metrics | — |
+| Global search | PARTIAL | P | P | P | B | P1 | — | Cmd/Ctrl+K + GET /search (WS M) |
+| Notification center | PARTIAL | P | P | P | B | P2 | — | List/mark-read (WS M) |
+| Review queue | PARTIAL | P | P | P | B | P1 | Txns | Resolve actions + docs (WS M) |
+| Reports / monthly / yearly | PARTIAL | P | P | P | B | P2 | Metrics | Monthly/yearly APIs + UI (WS M) |
 | Quick actions | NOT_STARTED | N | N | N | N | P2 | — | — |
-| Onboarding | NOT_STARTED | N | N | N | N | P1 | Auth | — |
-| Demo mode / seed | PARTIAL | P | P | P | P | P1 | — | Deterministic seed; load-demo UX thin |
+| Onboarding | PARTIAL | P | P | N | B | P1 | Auth | Wizard + register (WS M) |
+| Demo mode / seed | PARTIAL | P | P | P | P | P1 | — | In-app demo load + seed (WS M) |
 | Accessibility | PARTIAL | — | P | N | P | P2 | — | Skip link, focus; charts limited |
 | Responsive UX | PARTIAL | — | P | N | B | P0 | Mer | Desktop OK; mobile Mer broken |
 | Error/empty/loading | PARTIAL | — | P | N | P | P1 | — | Retry mostly dashboard-only |

@@ -28,3 +28,27 @@ export const reviewResponseSchema = z.object({
 });
 
 export type ReviewResponse = z.infer<typeof reviewResponseSchema>;
+
+export const resolveReviewSchema = z.object({
+  householdId: z.string().uuid(),
+  itemId: z.string().min(1),
+  kind: z.enum([
+    "unknown_transaction",
+    "possible_internal_transfer",
+    "unknown_merchant",
+    "document_field",
+  ]),
+  entityId: z.string().uuid(),
+  action: z.enum([
+    "set_category",
+    "mark_internal_transfer",
+    "set_merchant",
+    "archive_document",
+    "dismiss",
+  ]),
+  categoryId: z.string().uuid().optional(),
+  merchantId: z.string().uuid().optional(),
+  notes: z.string().max(2000).nullable().optional(),
+});
+export type ResolveReviewInput = z.input<typeof resolveReviewSchema>;
+

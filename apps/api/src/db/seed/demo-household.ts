@@ -27,6 +27,7 @@ import {
   merchants,
   rawImportRecords,
 } from "../schema-economic";
+import { householdSettings, notifications } from "../schema-ops";
 import { addDays, eachMonth, formatDate, parseDate } from "./dates";
 import { persistBalancedEvent } from "./persist-event";
 import { createSeededRng, pick, randInt } from "./rng";
@@ -123,6 +124,33 @@ export async function seedDemoHousehold() {
       personalDataPolicy: "FULL_DETAILS",
     })
     .returning();
+
+  await db.insert(householdSettings).values({
+    householdId: household.id,
+    locale: "sv-SE",
+    appearance: "system",
+    minimumCashBalanceMinor: 6_000_000n,
+    emergencyFundTargetMinor: 12_000_000n,
+    safetyMarginMinor: 2_000_000n,
+    currency: "SEK",
+  });
+
+  await db.insert(notifications).values([
+    {
+      householdId: household.id,
+      type: "ACTION_REQUIRED",
+      title: "Granska nya poster",
+      body: "Det finns rader i granskningskön som behöver klassificeras.",
+      href: "/review",
+    },
+    {
+      householdId: household.id,
+      type: "INFO",
+      title: "Demodata laddad",
+      body: "Använd Cmd/Ctrl+K för global sök. Rapporter finns under Rapporter.",
+      href: "/reports",
+    },
+  ]);
 
   const cats = await seedCategories(household.id);
 

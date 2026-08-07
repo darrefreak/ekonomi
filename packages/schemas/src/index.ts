@@ -17,3 +17,8 @@ export * from "./providers";
 export * from "./advisor";
 export * from "./debt";
 export * from "./wealth";
+export * from "./settings";
+export * from "./search";
+export * from "./notifications";
+export * from "./reports";
+

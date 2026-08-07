@@ -188,13 +188,31 @@ export class TransactionsService {
       if (!v) throw new NotFoundException("Vehicle not found");
     }
 
+    if (input.merchantId) {
+      const [m] = await db
+        .select({ id: merchants.id })
+        .from(merchants)
+        .where(
+          and(
+            eq(merchants.id, input.merchantId),
+            eq(merchants.householdId, input.householdId),
+          ),
+        )
+        .limit(1);
+      if (!m) throw new NotFoundException("Merchant not found");
+    }
+
     const patch: Partial<typeof sourceTransactions.$inferInsert> = {
       updatedAt: new Date(),
     };
     if (input.categoryId !== undefined) patch.categoryId = input.categoryId;
+    if (input.merchantId !== undefined) patch.merchantId = input.merchantId;
     if (input.notes !== undefined) patch.notes = input.notes;
     if (input.tags !== undefined) patch.tags = input.tags;
     if (input.isExcluded !== undefined) patch.isExcluded = input.isExcluded;
+    if (input.isInternalTransfer !== undefined) {
+      patch.isInternalTransfer = input.isInternalTransfer;
+    }
     if (input.description !== undefined) patch.description = input.description;
 
     await db
