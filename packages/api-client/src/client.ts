@@ -3,7 +3,10 @@ import {
   accountDetailSchema,
   accountSchema,
   advisorBriefResponseSchema,
+  advisorChatRequestSchema,
+  advisorChatResponseSchema,
   assetsResponseSchema,
+  featureFlagsResponseSchema,
   recommendationOutcomesResponseSchema,
   trackRecommendationOutcomeSchema,
   updateRecommendationOutcomeSchema,
@@ -47,7 +50,10 @@ import {
   type AccountDto,
   type AccountsResponse,
   type AdvisorBriefResponse,
+  type AdvisorChatInput,
+  type AdvisorChatResponse,
   type AssetsResponse,
+  type FeatureFlagsResponse,
   type RecommendationOutcomesResponse,
   type TrackRecommendationOutcomeInput,
   type UpdateRecommendationOutcomeInput,
@@ -592,11 +598,23 @@ export function createApiClient(options: ApiClientOptions) {
       );
       return syncResultSchema.parse(data) as SyncResultDto;
     },
+    getFeatureFlags: async () => {
+      const data = await request<unknown>("/api/v1/feature-flags");
+      return featureFlagsResponseSchema.parse(data) as FeatureFlagsResponse;
+    },
     getAdvisorBrief: async (householdId: string) => {
       const data = await request<unknown>(
         `/api/v1/advisor/brief?householdId=${encodeURIComponent(householdId)}`,
       );
       return advisorBriefResponseSchema.parse(data) as AdvisorBriefResponse;
+    },
+    advisorChat: async (input: AdvisorChatInput) => {
+      const body = advisorChatRequestSchema.parse(input);
+      const data = await request<unknown>("/api/v1/advisor/chat", {
+        method: "POST",
+        body: JSON.stringify(body),
+      });
+      return advisorChatResponseSchema.parse(data) as AdvisorChatResponse;
     },
     getRecommendationOutcomes: async (householdId: string) => {
       const data = await request<unknown>(

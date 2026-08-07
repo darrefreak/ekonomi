@@ -168,13 +168,13 @@ Legend for layer columns: **C** complete · **P** partial · **S** scaffold · *
 
 | Feature | Status | BE | FE | Test | Mobile | Pri | Deps | Missing / defects |
 |---|---|---|---|---|---|---|---|---|
-| Deterministic tool registry | PARTIAL | P | P | P | B | P1 | Core metrics | Brief tools |
-| Advisor chat | NOT_STARTED | N | N | N | N | P2 | Tools | Route shows brief, not chat |
-| Financial brief | PARTIAL | P | P | P | B | P1 | Tools | Template prose |
-| Explainability / citations | PARTIAL | P | P | P | B | P1 | — | Tool trace shown |
+| Deterministic tool registry | PARTIAL | P | P | P | B | P1 | Core metrics | Allowlisted registry + executor (WS L) |
+| Advisor chat | PARTIAL | P | P | P | B | P2 | Tools | Tools-only chat API + UI (WS L) |
+| Financial brief | PARTIAL | P | P | P | B | P1 | Tools | SEK-formatted tool prose (WS L) |
+| Explainability / citations | PARTIAL | P | P | P | B | P1 | — | Citations + evidence hrefs (WS L) |
 | No arbitrary DB | COMPLETE | C | — | P | — | P0 | — | Tools only |
-| Safety boundaries | PARTIAL | P | N | N | N | P0 | — | Read-only tools; no execute |
-| Feature flag gate | BROKEN | B | N | N | N | P1 | Flags | AI flag false but endpoint open |
+| Safety boundaries | PARTIAL | P | P | P | B | P0 | — | Read-only allowlist; flag gate (WS L) |
+| Feature flag gate | PARTIAL | P | P | P | B | P1 | Flags | AI flag enforced on advisor (WS L) |
 
 ---
 

@@ -6,16 +6,28 @@ import {
 import { and, desc, eq } from "drizzle-orm";
 import { money, moneyToJson, type CurrencyCode } from "@ffos/domain";
 import type {
+  AdvisorChatInput,
   TrackRecommendationOutcomeInput,
   UpdateRecommendationOutcomeInput,
 } from "@ffos/schemas";
 import { getDb } from "../db/client";
 import { aiBriefs, recommendationOutcomes } from "../db/schema-ai";
 import { DecisionsService } from "../decisions/decisions.service";
+import { FeatureFlagsService } from "../feature-flags/feature-flags.service";
 import { HouseholdAccessService } from "../households/household-access.service";
+import { HouseholdMetricsService } from "../metrics/household-metrics.service";
 import { PlanningMetricsService } from "../planning/planning-metrics.service";
 import { VehiclesService } from "../vehicles/vehicles.service";
-import { explainFromTools, type ToolResult } from "./ai-tools";
+import {
+  listAdvisorTools,
+  runAdvisorTools,
+  type AdvisorToolContext,
+} from "./ai-tool-registry";
+import {
+  answerFromTools,
+  explainFromTools,
+  selectToolsForMessage,
+} from "./ai-tools";
 
 @Injectable()
 export class AdvisorService {
@@ -24,103 +36,96 @@ export class AdvisorService {
     @Inject(PlanningMetricsService) private readonly planning: PlanningMetricsService,
     @Inject(DecisionsService) private readonly decisions: DecisionsService,
     @Inject(VehiclesService) private readonly vehiclesSvc: VehiclesService,
+    @Inject(HouseholdMetricsService) private readonly metrics: HouseholdMetricsService,
+    @Inject(FeatureFlagsService) private readonly flags: FeatureFlagsService,
   ) {}
 
-  async brief(userId: string, householdId: string) {
+  private async requireAi() {
+    await this.flags.requireEnabled("AI");
+  }
+
+  private async toolContext(
+    userId: string,
+    householdId: string,
+  ): Promise<AdvisorToolContext & { household: { baseCurrency: string | null } }> {
     const { household } = await this.access.requireMembership(userId, householdId);
     const currency = (household.baseCurrency || "SEK") as CurrencyCode;
     const asOf = process.env.DEMO_AS_OF_DATE ?? "2026-08-01";
+    return {
+      userId,
+      householdId,
+      currency,
+      asOf,
+      planning: this.planning,
+      decisions: this.decisions,
+      vehicles: this.vehiclesSvc,
+      metrics: this.metrics,
+      household,
+    };
+  }
 
-    const tools: ToolResult[] = [];
-
-    const budget = await this.planning.getBudget(householdId, currency, asOf);
-    tools.push({
-      tool: "get_budget",
-      ok: !!budget,
-      data: budget
-        ? {
-            period: budget.period.label,
-            remainingMinor: budget.totals.remaining.amountMinor,
-            utilizationPercent: budget.totals.utilizationPercent,
-          }
-        : {},
-    });
-
-    const opps = await this.decisions.opportunities(userId, householdId);
-    const top = opps.items.sort((a, b) => a.priority - b.priority)[0];
-    tools.push({
-      tool: "get_opportunities",
-      ok: true,
-      data: {
-        topTitle: top?.title,
-        annualSavingMinor: top?.estimatedAnnualSaving?.amountMinor,
-        evidence: top?.evidence?.slice(0, 3) ?? [],
-        lifestyleCreep: opps.lifestyleCreep?.creeping ?? false,
-      },
-    });
-
-    const risk = await this.decisions.risk(userId, householdId);
-    const topRisk = risk.signals.sort((a, b) => a.score - b.score)[0];
-    tools.push({
-      tool: "get_risk",
-      ok: true,
-      data: {
-        topTitle: topRisk?.title,
-        level: topRisk?.level,
-        evidence: topRisk?.evidence?.slice(0, 3) ?? [],
-      },
-    });
-
-    const vehicles = await this.vehiclesSvc.list(userId, householdId);
-    const v0 = vehicles.items[0];
-    tools.push({
-      tool: "get_vehicle_equity",
-      ok: vehicles.items.length > 0,
-      data: v0
-        ? {
-            netEquityMinor: v0.netEquity?.amountMinor,
-            negativeEquity: v0.netEquity
-              ? BigInt(v0.netEquity.amountMinor) < 0n
-              : false,
-          }
-        : {},
-    });
-
-    const explained = explainFromTools(tools);
+  async brief(userId: string, householdId: string) {
+    await this.requireAi();
+    const ctx = await this.toolContext(userId, householdId);
+    const tools = await runAdvisorTools("all", ctx);
+    const explained = explainFromTools(tools, ctx.currency);
     const db = getDb();
     const [stored] = await db
       .insert(aiBriefs)
       .values({
         householdId,
-        asOf,
+        asOf: ctx.asOf,
         headline: explained.headline,
         body: explained,
         toolTrace: tools,
       })
       .returning();
 
-    if (top) {
+    const oppsTool = tools.find((t) => t.tool === "get_opportunities");
+    const topId = oppsTool?.data?.topId as string | undefined;
+    const topTitle = oppsTool?.data?.topTitle as string | undefined;
+    const annualSavingMinor = oppsTool?.data?.annualSavingMinor as
+      | string
+      | undefined;
+    if (topId && topTitle) {
       await this.track(userId, {
         householdId,
-        recommendationKey: `opp:${top.id}`,
-        title: top.title,
-        expectedImpactMinor: top.estimatedAnnualSaving?.amountMinor ?? null,
+        recommendationKey: `opp:${topId}`,
+        title: topTitle,
+        expectedImpactMinor: annualSavingMinor ?? null,
         status: "SHOWN",
         notes: "Tracked when shown in AI brief",
       });
     }
 
     return {
-      asOf,
+      asOf: ctx.asOf,
       briefId: stored.id,
       headline: explained.headline,
       disclaimer: explained.disclaimer,
       sections: explained.sections,
       toolTrace: tools,
+      availableTools: listAdvisorTools(),
+    };
+  }
+
+  async chat(userId: string, input: AdvisorChatInput) {
+    await this.requireAi();
+    const ctx = await this.toolContext(userId, input.householdId);
+    const selected = selectToolsForMessage(input.message);
+    const tools = await runAdvisorTools(selected, ctx);
+    const answered = answerFromTools(input.message, tools, ctx.currency);
+    return {
+      asOf: ctx.asOf,
+      reply: answered.reply,
+      citations: answered.citations,
+      toolTrace: tools,
+      usedTools: answered.usedTools,
     };
   }
 
   async outcomes(userId: string, householdId: string) {
+    await this.requireAi();
     const { household } = await this.access.requireMembership(userId, householdId);
     const currency = (household.baseCurrency || "SEK") as CurrencyCode;
     const db = getDb();
@@ -145,6 +150,7 @@ export class AdvisorService {
   }
 
   async track(userId: string, input: TrackRecommendationOutcomeInput) {
+    await this.requireAi();
     await this.access.requireMembership(userId, input.householdId);
     const db = getDb();
     const [existing] = await db
@@ -197,6 +203,7 @@ export class AdvisorService {
     outcomeId: string,
     input: UpdateRecommendationOutcomeInput,
   ) {
+    await this.requireAi();
     await this.access.requireMembership(userId, input.householdId);
     const db = getDb();
     const [existing] = await db
