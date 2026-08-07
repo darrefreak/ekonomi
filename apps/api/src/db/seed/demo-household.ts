@@ -24,6 +24,7 @@ import {
 import { addDays, eachMonth, formatDate, parseDate } from "./dates";
 import { persistBalancedEvent } from "./persist-event";
 import { createSeededRng, pick, randInt } from "./rng";
+import { seedPlanningData } from "./seed-planning";
 
 const DEMO_EMAIL = "demo@ffos.local";
 const DEMO_PASSWORD = "demo-password-123";
@@ -662,6 +663,14 @@ export async function seedDemoHousehold() {
       createdCount: eventCount,
     })
     .where(eq(importBatches.id, batch.id));
+
+  await seedPlanningData({
+    householdId: household.id,
+    asOf,
+    cats,
+    merchantIds,
+    savingsAccountId: sbab.id,
+  });
 
   // Ensure no orphan query warnings
   await db.execute(sql`select 1`);

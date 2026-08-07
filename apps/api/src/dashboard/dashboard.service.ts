@@ -4,6 +4,7 @@ import { calculateNetSavingsRate } from "@ffos/financial-engine";
 import type { DashboardResponse } from "@ffos/schemas";
 import { HouseholdAccessService } from "../households/household-access.service";
 import { HouseholdMetricsService } from "../metrics/household-metrics.service";
+import { PlanningMetricsService } from "../planning/planning-metrics.service";
 import { ReviewService } from "../review/review.service";
 
 @Injectable()
@@ -13,6 +14,8 @@ export class DashboardService {
     @Inject(HouseholdMetricsService)
     private readonly metrics: HouseholdMetricsService,
     @Inject(ReviewService) private readonly review: ReviewService,
+    @Inject(PlanningMetricsService)
+    private readonly planning: PlanningMetricsService,
   ) {}
 
   async getDashboard(userId: string, householdId: string): Promise<DashboardResponse> {
@@ -25,6 +28,7 @@ export class DashboardService {
     const cashflow = await this.metrics.cashflow(householdId, currency, asOf);
     const coverage = await this.metrics.coverage(householdId, asOf);
     const review = await this.review.list(userId, householdId);
+    const budget = await this.planning.getBudget(householdId, currency, asOf);
 
     const incomeMinor = BigInt(cashflow.currentPeriod.income.amountMinor);
     const spendingMinor = BigInt(cashflow.currentPeriod.spending.amountMinor);
@@ -54,12 +58,9 @@ export class DashboardService {
         spending: moneyToJson(money(spendingMinor, currency)),
         savings: moneyToJson(money(savingsMinor, currency)),
         savingsRatePercent: savingsRate,
-        budgetRemaining: moneyToJson(
-          money(
-            spendingMinor > 0n ? 12_000_00n - (spendingMinor % 12_000_00n) : 0n,
-            currency,
-          ),
-        ),
+        budgetRemaining: budget
+          ? budget.totals.remaining
+          : moneyToJson(money(0n, currency)),
       },
       cashRunwayMonths:
         spendingMinor > 0n

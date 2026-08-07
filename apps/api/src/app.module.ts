@@ -8,6 +8,7 @@ import { FinancialCoverageModule } from "./financial-coverage/financial-coverage
 import { HealthModule } from "./health/health.module";
 import { HouseholdsModule } from "./households/households.module";
 import { NetWorthModule } from "./net-worth/net-worth.module";
+import { PlanningModule } from "./planning/planning.module";
 import { ReviewModule } from "./review/review.module";
 import { SettingsModule } from "./settings/settings.module";
 import { TransactionsModule } from "./transactions/transactions.module";
@@ -23,6 +24,7 @@ import { TransactionsModule } from "./transactions/transactions.module";
     NetWorthModule,
     FinancialCoverageModule,
     ReviewModule,
+    PlanningModule,
     DashboardModule,
     FeatureFlagsModule,
     SettingsModule,

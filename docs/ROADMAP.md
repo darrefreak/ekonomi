@@ -45,15 +45,18 @@ Dashboard, accounts, transactions, cashflow, net worth, monthly metrics, freshne
 Detaljer: [phases/PHASE_3.md](./phases/PHASE_3.md).  
 Report: [phase-reports/PHASE_3_REPORT.md](./phase-reports/PHASE_3_REPORT.md).
 
-## Phase 4 — Planning foundation
+## Phase 4 — Planning foundation ✅
 
 Budget, recurring, subscriptions, contracts, sinking funds, goals.
 
-Detaljer: [phases/PHASE_4.md](./phases/PHASE_4.md).
+Detaljer: [phases/PHASE_4.md](./phases/PHASE_4.md).  
+Report: [phase-reports/PHASE_4_REPORT.md](./phase-reports/PHASE_4_REPORT.md).
 
 ## Phase 4B — Vehicle foundation
 
 Vehicles, ownership, financing, mileage, actual costs, economic cost, TCO, equity, vehicle UI, vehicle tests.
+
+Detaljer: [phases/PHASE_4B.md](./phases/PHASE_4B.md).
 
 ## Phase 5 — Decision engines
 

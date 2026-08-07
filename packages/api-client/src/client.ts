@@ -1,21 +1,29 @@
 import {
   accountsResponseSchema,
   accountDetailSchema,
+  budgetResponseSchema,
   cashflowResponseSchema,
+  contractsResponseSchema,
   coverageResponseSchema,
   dashboardResponseSchema,
+  goalsResponseSchema,
   netWorthResponseSchema,
   reviewResponseSchema,
+  subscriptionsResponseSchema,
   transactionsResponseSchema,
   type AccountDetailDto,
   type AccountsResponse,
+  type BudgetResponse,
   type CashflowResponse,
+  type ContractsResponse,
   type CoverageResponse,
   type DashboardResponse,
+  type GoalsResponse,
   type LoginInput,
   type NetWorthResponse,
   type RegisterInput,
   type ReviewResponse,
+  type SubscriptionsResponse,
   type TransactionsResponse,
 } from "@ffos/schemas";
 
@@ -160,6 +168,30 @@ export function createApiClient(options: ApiClientOptions) {
         `/api/v1/review?householdId=${encodeURIComponent(householdId)}`,
       );
       return reviewResponseSchema.parse(data) as ReviewResponse;
+    },
+    getBudget: async (householdId: string) => {
+      const data = await request<unknown>(
+        `/api/v1/budget?householdId=${encodeURIComponent(householdId)}`,
+      );
+      return budgetResponseSchema.parse(data) as BudgetResponse;
+    },
+    getSubscriptions: async (householdId: string) => {
+      const data = await request<unknown>(
+        `/api/v1/subscriptions?householdId=${encodeURIComponent(householdId)}`,
+      );
+      return subscriptionsResponseSchema.parse(data) as SubscriptionsResponse;
+    },
+    getContracts: async (householdId: string) => {
+      const data = await request<unknown>(
+        `/api/v1/contracts?householdId=${encodeURIComponent(householdId)}`,
+      );
+      return contractsResponseSchema.parse(data) as ContractsResponse;
+    },
+    getGoals: async (householdId: string) => {
+      const data = await request<unknown>(
+        `/api/v1/goals?householdId=${encodeURIComponent(householdId)}`,
+      );
+      return goalsResponseSchema.parse(data) as GoalsResponse;
     },
   };
 }
