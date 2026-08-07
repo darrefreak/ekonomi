@@ -1,4 +1,8 @@
-import { buildForecastPoints, healthLevelFromScore } from "@ffos/financial-engine";
+import {
+  buildForecastPoints,
+  estimateMortgageRateSavingMinor,
+  healthLevelFromScore,
+} from "@ffos/financial-engine";
 import { getDb } from "../client";
 import {
   forecastPoints,
@@ -15,8 +19,14 @@ export async function seedDecisionsData(input: {
   startingCashMinor: bigint;
   startingNetWorthMinor: bigint;
   monthlyNetSavingsMinor: bigint;
+  /** Trailing-12m mortgage interest for opportunity sizing. */
+  mortgageInterestAnnualMinor?: bigint;
 }) {
   const db = getDb();
+  const mortgageSaving = estimateMortgageRateSavingMinor(
+    input.mortgageInterestAnnualMinor ?? 96_000_00n,
+  );
+  const mortgageSavingKr = Math.round(Number(mortgageSaving) / 100);
   const [run] = await db
     .insert(forecastRuns)
     .values({
@@ -49,8 +59,8 @@ export async function seedDecisionsData(input: {
     {
       householdId: input.householdId,
       title: "Förhandla bolåneränta",
-      description: "Jämför SBAB-erbjudande och begär räntesänkning. Estimering ~9 800 kr/år.",
-      estimatedAnnualSavingMinor: 9_800_00n,
+      description: `Jämför SBAB-erbjudande och begär räntesänkning. Estimering ~${mortgageSavingKr.toLocaleString("sv-SE")} kr/år (~10 % av räntekostnad).`,
+      estimatedAnnualSavingMinor: mortgageSaving,
       confidence: "0.72",
       effort: "medium",
       risk: "low",

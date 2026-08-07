@@ -23,7 +23,9 @@ test("savings optimizer emits mortgage and subscription ideas", () => {
     mortgageInterestAnnualMinor: 50_000_00n,
     lifestyleOverBudgetMinor: 1_000_00n,
   });
-  assert.ok(items.some((i) => i.id === "rate-negotiate"));
+  const mortgage = items.find((i) => i.id === "rate-negotiate");
+  assert.ok(mortgage);
+  assert.equal(mortgage!.estimatedAnnualSavingMinor, 5_000_00n);
   assert.ok(items.some((i) => i.id === "subs-trim"));
 });
 

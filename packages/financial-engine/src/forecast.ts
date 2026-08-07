@@ -5,6 +5,14 @@ export type ForecastSeed = {
   asOf: string;
 };
 
+/** Estimate annual saving from a modest mortgage rate renegotiation (~10% of interest). */
+export function estimateMortgageRateSavingMinor(
+  mortgageInterestAnnualMinor: bigint,
+): bigint {
+  if (mortgageInterestAnnualMinor <= 0n) return 0n;
+  return mortgageInterestAnnualMinor / 10n;
+}
+
 export type ForecastPoint = {
   onDate: string;
   projectedCashMinor: bigint;
@@ -59,7 +67,9 @@ export function savingsOptimizerSuggestions(input: {
     items.push({
       id: "rate-negotiate",
       title: "Förhandla bolåneränta",
-      estimatedAnnualSavingMinor: 9_800_00n,
+      estimatedAnnualSavingMinor: estimateMortgageRateSavingMinor(
+        input.mortgageInterestAnnualMinor,
+      ),
       effort: "medium",
     });
   }

@@ -272,3 +272,66 @@ export function buildAssetPurchaseAtFairValue(input: {
     0n,
   );
 }
+
+/**
+ * Cash refund / merchant credit.
+ * Expense amount is negative so period spending nets down; NW increases.
+ */
+export function buildCashRefund(input: {
+  cashAccountId: string;
+  expenseAccountId: string;
+  amountMinor: bigint;
+  currency: CurrencyCode;
+}): BalancedLedgerDraft {
+  return draft(
+    FinancialEventType.REFUND,
+    [
+      {
+        accountId: input.cashAccountId,
+        side: "debit",
+        amountMinor: input.amountMinor,
+        currency: input.currency,
+        memo: "refund_in",
+      },
+      {
+        accountId: input.expenseAccountId,
+        side: "credit",
+        amountMinor: input.amountMinor,
+        currency: input.currency,
+        memo: "refund_expense_offset",
+      },
+    ],
+    -input.amountMinor,
+    0n,
+    input.amountMinor,
+  );
+}
+
+/** Employer / third-party reimbursement into cash (income-like, not refund of expense). */
+export function buildCashReimbursement(input: {
+  cashAccountId: string;
+  incomeAccountId: string;
+  amountMinor: bigint;
+  currency: CurrencyCode;
+}): BalancedLedgerDraft {
+  return draft(
+    FinancialEventType.REIMBURSEMENT,
+    [
+      {
+        accountId: input.cashAccountId,
+        side: "debit",
+        amountMinor: input.amountMinor,
+        currency: input.currency,
+      },
+      {
+        accountId: input.incomeAccountId,
+        side: "credit",
+        amountMinor: input.amountMinor,
+        currency: input.currency,
+      },
+    ],
+    0n,
+    0n,
+    input.amountMinor,
+  );
+}

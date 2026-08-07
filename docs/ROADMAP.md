@@ -92,7 +92,8 @@ Accessibility, mobile UX, responsive refinement, testing, performance, security 
 Detaljer: [phases/PHASE_8.md](./phases/PHASE_8.md).  
 Report: [phase-reports/PHASE_8_REPORT.md](./phase-reports/PHASE_8_REPORT.md).
 
-**V1 roadmap status: COMPLETE.**
+**V1 roadmap status: FOUNDATION COMPLETE** (demo/foundation slice).  
+**Not** FEATURE COMPLETE / PRODUCT COMPLETE — see `docs/completion/`.
 
 ## Future (post V1 roadmap notes)
 

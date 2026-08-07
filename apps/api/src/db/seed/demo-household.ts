@@ -1,14 +1,18 @@
 import { createHash } from "node:crypto";
 import * as bcrypt from "bcryptjs";
 import { eq, sql } from "drizzle-orm";
+import { money } from "@ffos/domain";
 import {
   buildCashExpense,
+  buildCashRefund,
   buildCreditCardPayment,
   buildCreditCardPurchase,
   buildIncome,
   buildInternalTransfer,
   buildInvestmentTransfer,
   buildMortgagePayment,
+  calculateNetWorth,
+  reconstructBalances,
 } from "@ffos/financial-engine";
 import { getDb } from "../client";
 import { householdMembers, households, users } from "../schema";
@@ -18,6 +22,7 @@ import {
   categories,
   dataSources,
   importBatches,
+  ledgerPostings,
   merchants,
   rawImportRecords,
 } from "../schema-economic";
@@ -206,13 +211,15 @@ export async function seedDemoHousehold() {
     creditLimitMinor: 50_000_00n,
     currentBalanceMinor: 0n,
   });
+  // Opening includes prior market value; seed transfers add contributions.
+  const avanzaOpening = 1_060_000_00n;
   const avanza = await mkAccount({
     householdId: household.id,
     name: "Avanza ISK",
     provider: "Avanza",
     isShared: true,
     accountType: "INVESTMENT",
-    currentBalanceMinor: 0n,
+    currentBalanceMinor: avanzaOpening,
   });
   const home = await mkAccount({
     householdId: household.id,
@@ -364,11 +371,23 @@ export async function seedDemoHousehold() {
         sourceAmountMinor: -(principal + interest),
         importBatchId: batch.id,
         externalId: `mortgage-${monthKey}`,
+        splits: [
+          {
+            categoryId: cats["housing.mortgage_interest"],
+            amountMinor: interest,
+            memo: "interest",
+          },
+          {
+            categoryId: cats["housing.mortgage_interest"],
+            amountMinor: principal,
+            memo: "principal",
+          },
+        ],
       });
       eventCount += 1;
     }
 
-    // Internal transfer SEB → SBAB on 26th
+    // Internal transfer SEB → SBAB on 26th (both bank legs + reconciliation)
     const transferDate = formatDate(new Date(Date.UTC(y, m, 26)));
     if (parseDate(transferDate) <= asOfDate) {
       const groupId = deterministicUuid(seedKey, `transfer-${monthKey}`);
@@ -388,6 +407,12 @@ export async function seedDemoHousehold() {
         transferGroupId: groupId,
         importBatchId: batch.id,
         externalId: `transfer-out-${monthKey}`,
+        counterpartTx: {
+          accountId: sbab.id,
+          amountMinor: 20_000_00n,
+          externalId: `transfer-in-${monthKey}`,
+        },
+        createReconciliationGroup: true,
       });
       eventCount += 1;
     }
@@ -612,6 +637,26 @@ export async function seedDemoHousehold() {
   });
   eventCount += 1;
 
+  // Refund example — nets spending (expenseAmountMinor negative)
+  await persistBalancedEvent({
+    householdId: household.id,
+    draft: buildCashRefund({
+      cashAccountId: joint.id,
+      expenseAccountId: expenseBook.id,
+      amountMinor: 420_00n,
+      currency: "SEK",
+    }),
+    occurredOn: formatDate(addDays(asOfDate, -9)),
+    description: "ICA retur / återbetalning",
+    categoryId: cats["food.groceries"],
+    merchantId: merchantIds["ICA Maxi"],
+    sourceAccountId: joint.id,
+    sourceAmountMinor: 420_00n,
+    importBatchId: batch.id,
+    externalId: "refund-ica-1",
+  });
+  eventCount += 1;
+
   // Raw record sample
   const payload = { provider: "mock-seb", note: "demo raw payload", asOf };
   const hash = createHash("sha256").update(JSON.stringify(payload)).digest("hex");
@@ -626,37 +671,87 @@ export async function seedDemoHousehold() {
     schemaVersion: "1",
   });
 
-  // Set illustrative ending balances (cache) consistent with product story
-  const ending = [
-    { id: seb.id, bal: 92_400_00n },
-    { id: joint.id, bal: 48_200_00n },
-    { id: sbab.id, bal: 143_400_00n },
-    { id: revolut.id, bal: 8_200_00n },
-    { id: creditCard.id, bal: 6_800_00n },
-    { id: avanza.id, bal: 1_180_000_00n },
-    { id: mortgage.id, bal: 3_742_561_00n },
-    { id: home.id, bal: 6_800_000_00n },
-    { id: vehicle.id, bal: 320_000_00n },
+  // Ending balances = opening + ledger postings (source of truth)
+  const openings = [
+    { accountId: seb.id, accountType: "CHECKING", openingMinor: 0n },
+    { accountId: joint.id, accountType: "CHECKING", openingMinor: 0n },
+    { accountId: sbab.id, accountType: "SAVINGS", openingMinor: 0n },
+    { accountId: revolut.id, accountType: "CHECKING", openingMinor: 0n },
+    { accountId: creditCard.id, accountType: "CREDIT_CARD", openingMinor: 0n },
+    {
+      accountId: avanza.id,
+      accountType: "INVESTMENT",
+      openingMinor: avanzaOpening,
+    },
+    {
+      accountId: mortgage.id,
+      accountType: "MORTGAGE",
+      openingMinor: 3_900_000_00n,
+    },
+    { accountId: home.id, accountType: "ASSET", openingMinor: 6_800_000_00n },
+    { accountId: vehicle.id, accountType: "ASSET", openingMinor: 320_000_00n },
+    { accountId: expenseBook.id, accountType: "EXPENSE", openingMinor: 0n },
+    { accountId: incomeBook.id, accountType: "INCOME", openingMinor: 0n },
   ];
-  for (const row of ending) {
+  const postingRows = await db
+    .select({
+      accountId: ledgerPostings.accountId,
+      side: ledgerPostings.side,
+      amountMinor: ledgerPostings.amountMinor,
+    })
+    .from(ledgerPostings)
+    .where(eq(ledgerPostings.householdId, household.id));
+  const ledgerBalances = reconstructBalances({
+    openings,
+    postings: postingRows.map((p) => ({
+      accountId: p.accountId,
+      side: p.side,
+      amountMinor: p.amountMinor,
+    })),
+  });
+
+  for (const opening of openings) {
+    if (opening.accountType === "EXPENSE" || opening.accountType === "INCOME") {
+      continue;
+    }
+    const bal = ledgerBalances.get(opening.accountId) ?? opening.openingMinor;
     await db
       .update(accounts)
-      .set({ currentBalanceMinor: row.bal, lastSyncedAt: asOfDate, updatedAt: new Date() })
-      .where(eq(accounts.id, row.id));
+      .set({
+        currentBalanceMinor: bal,
+        lastSyncedAt: asOfDate,
+        updatedAt: new Date(),
+      })
+      .where(eq(accounts.id, opening.accountId));
     await db.insert(accountBalanceSnapshots).values({
       householdId: household.id,
-      accountId: row.id,
-      reportedBalanceMinor: row.bal,
-      availableBalanceMinor: row.bal,
-      ledgerCalculatedBalanceMinor: row.bal,
-      reconciledBalanceMinor: row.bal,
+      accountId: opening.accountId,
+      reportedBalanceMinor: bal,
+      availableBalanceMinor: bal,
+      ledgerCalculatedBalanceMinor: bal,
+      reconciledBalanceMinor: bal,
       asOf: asOfDate,
-      source: "seed",
-      confidence: "0.95",
+      source: "ledger_reconstruct",
+      confidence: "1",
       userVerified: true,
       isEstimated: false,
     });
   }
+
+  const sumType = (...types: string[]) =>
+    openings
+      .filter((o) => types.includes(o.accountType))
+      .reduce(
+        (acc, o) => acc + (ledgerBalances.get(o.accountId) ?? o.openingMinor),
+        0n,
+      );
+  const startingCashMinor = sumType("CHECKING", "SAVINGS", "CASH");
+  const startingNetWorth = calculateNetWorth({
+    cash: money(startingCashMinor, "SEK"),
+    investments: money(sumType("INVESTMENT", "PENSION", "CRYPTO"), "SEK"),
+    assets: money(sumType("ASSET"), "SEK"),
+    liabilities: money(sumType("MORTGAGE", "LOAN", "CREDIT_CARD"), "SEK"),
+  });
 
   await db
     .update(importBatches)
@@ -685,8 +780,8 @@ export async function seedDemoHousehold() {
   await seedDecisionsData({
     householdId: household.id,
     asOf,
-    startingCashMinor: 220_000_00n,
-    startingNetWorthMinor: 484_283_900n,
+    startingCashMinor,
+    startingNetWorthMinor: startingNetWorth.amountMinor,
     monthlyNetSavingsMinor: 35_000_00n,
   });
 

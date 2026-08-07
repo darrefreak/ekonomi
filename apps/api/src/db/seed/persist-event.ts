@@ -4,9 +4,23 @@ import {
   financialEvents,
   ledgerEntries,
   ledgerPostings,
+  reconciliationGroups,
   sourceTransactionLinks,
   sourceTransactions,
+  transactionSplits,
 } from "../schema-economic";
+
+export type PersistSplit = {
+  categoryId?: string;
+  amountMinor: bigint;
+  memo?: string;
+};
+
+export type PersistCounterpartTx = {
+  accountId: string;
+  amountMinor: bigint;
+  externalId?: string;
+};
 
 export async function persistBalancedEvent(input: {
   householdId: string;
@@ -22,6 +36,10 @@ export async function persistBalancedEvent(input: {
   transferGroupId?: string;
   importBatchId?: string;
   externalId?: string;
+  /** Destination bank leg for internal transfers. */
+  counterpartTx?: PersistCounterpartTx;
+  splits?: PersistSplit[];
+  createReconciliationGroup?: boolean;
 }) {
   const db = getDb();
   const [event] = await db
@@ -68,6 +86,20 @@ export async function persistBalancedEvent(input: {
     });
   }
 
+  let reconciliationGroupId: string | undefined;
+  if (input.createReconciliationGroup || input.counterpartTx) {
+    const [group] = await db
+      .insert(reconciliationGroups)
+      .values({
+        householdId: input.householdId,
+        kind: input.isInternalTransfer ? "transfer" : "event",
+        status: "matched",
+        confidence: "1",
+      })
+      .returning();
+    reconciliationGroupId = group.id;
+  }
+
   if (input.sourceAccountId && input.sourceAmountMinor !== undefined) {
     const [tx] = await db
       .insert(sourceTransactions)
@@ -87,7 +119,7 @@ export async function persistBalancedEvent(input: {
         status: "BOOKED",
         importBatchId: input.importBatchId,
         isInternalTransfer: input.isInternalTransfer ?? false,
-        transferGroupId: input.transferGroupId,
+        transferGroupId: input.transferGroupId ?? reconciliationGroupId,
         confidence: "1",
       })
       .returning();
@@ -98,6 +130,50 @@ export async function persistBalancedEvent(input: {
       financialEventId: event.id,
       role: "primary",
     });
+  }
+
+  if (input.counterpartTx) {
+    const [tx] = await db
+      .insert(sourceTransactions)
+      .values({
+        householdId: input.householdId,
+        accountId: input.counterpartTx.accountId,
+        externalId:
+          input.counterpartTx.externalId ?? `seed-${event.id}-counterpart`,
+        fingerprint: `fp-${event.id}-counterpart`,
+        bookingDate: input.occurredOn,
+        valueDate: input.occurredOn,
+        amountMinor: input.counterpartTx.amountMinor,
+        currency: "SEK",
+        description: input.description,
+        rawDescription: input.description,
+        status: "BOOKED",
+        importBatchId: input.importBatchId,
+        isInternalTransfer: true,
+        transferGroupId: input.transferGroupId ?? reconciliationGroupId,
+        confidence: "1",
+      })
+      .returning();
+
+    await db.insert(sourceTransactionLinks).values({
+      householdId: input.householdId,
+      sourceTransactionId: tx.id,
+      financialEventId: event.id,
+      role: "counterpart",
+    });
+  }
+
+  if (input.splits?.length) {
+    for (const split of input.splits) {
+      await db.insert(transactionSplits).values({
+        householdId: input.householdId,
+        financialEventId: event.id,
+        categoryId: split.categoryId,
+        amountMinor: split.amountMinor,
+        currency: "SEK",
+        memo: split.memo,
+      });
+    }
   }
 
   return event;

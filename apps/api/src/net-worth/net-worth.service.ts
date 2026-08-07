@@ -1,8 +1,5 @@
 import { Inject, Injectable } from "@nestjs/common";
-import { and, asc, eq } from "drizzle-orm";
 import { money, moneyToJson, type CurrencyCode } from "@ffos/domain";
-import { getDb } from "../db/client";
-import { accountBalanceSnapshots, accounts } from "../db/schema-economic";
 import { HouseholdAccessService } from "../households/household-access.service";
 import { HouseholdMetricsService } from "../metrics/household-metrics.service";
 
@@ -18,95 +15,42 @@ export class NetWorthService {
     const { household } = await this.access.requireMembership(userId, householdId);
     const currency = (household.baseCurrency || "SEK") as CurrencyCode;
     const asOf = process.env.DEMO_AS_OF_DATE ?? "2026-08-01";
-    const accountRows = await this.metrics.getAccountRows(householdId);
-    const position = this.metrics.positionFromAccounts(accountRows, currency);
+    const snap = await this.metrics.getFinancialSnapshot(
+      householdId,
+      currency,
+      asOf,
+    );
 
-    const db = getDb();
-    const snapshots = await db
-      .select({
-        asOf: accountBalanceSnapshots.asOf,
-        accountType: accounts.accountType,
-        balance: accountBalanceSnapshots.reportedBalanceMinor,
-      })
-      .from(accountBalanceSnapshots)
-      .innerJoin(accounts, eq(accountBalanceSnapshots.accountId, accounts.id))
-      .where(
-        and(
-          eq(accountBalanceSnapshots.householdId, householdId),
-          eq(accounts.isSystem, false),
-        ),
-      )
-      .orderBy(asc(accountBalanceSnapshots.asOf));
+    const priorAsOf = previousMonthDate(asOf);
+    const priorNw = snap.position.netWorth.amountMinor - snap.changeMonthMinor;
 
-    // Group snapshots by date for a simple history (seed typically has one asOf).
-    const byDate = new Map<string, typeof position>();
-    for (const snap of snapshots) {
-      const key = snap.asOf.toISOString().slice(0, 10);
-      if (!byDate.has(key)) {
-        byDate.set(key, {
-          availableCash: money(0n, currency),
-          investments: money(0n, currency),
-          assets: money(0n, currency),
-          liabilities: money(0n, currency),
-          netWorth: money(0n, currency),
-        });
-      }
-    }
-
-    const history =
-      byDate.size > 0
-        ? [
-            {
-              asOf,
-              netWorth: moneyToJson(position.netWorth),
-            },
-            {
-              asOf: previousMonthDate(asOf),
-              netWorth: moneyToJson(
-                money(position.netWorth.amountMinor - 63_410_00n, currency),
-              ),
-            },
-          ].sort((a, b) => a.asOf.localeCompare(b.asOf))
-        : [
-            {
-              asOf,
-              netWorth: moneyToJson(position.netWorth),
-            },
-          ];
+    const history = [
+      {
+        asOf: priorAsOf,
+        netWorth: moneyToJson(money(priorNw, currency)),
+      },
+      {
+        asOf,
+        netWorth: moneyToJson(snap.position.netWorth),
+      },
+    ].sort((a, b) => a.asOf.localeCompare(b.asOf));
 
     return {
       asOf,
-      current: moneyToJson(position.netWorth),
+      current: moneyToJson(snap.position.netWorth),
       breakdown: {
-        cash: moneyToJson(position.availableCash),
-        investments: moneyToJson(position.investments),
-        assets: moneyToJson(position.assets),
-        liabilities: moneyToJson(position.liabilities),
+        cash: moneyToJson(snap.position.availableCash),
+        investments: moneyToJson(snap.position.investments),
+        assets: moneyToJson(snap.position.assets),
+        liabilities: moneyToJson(snap.position.liabilities),
       },
-      changeMonth: moneyToJson(money(63_410_00n, currency)),
+      changeMonth: moneyToJson(money(snap.changeMonthMinor, currency)),
       history,
-      attribution: [
-        {
-          key: "savings",
-          label: "Sparande",
-          amount: moneyToJson(money(28_300_00n, currency)),
-        },
-        {
-          key: "investments",
-          label: "Investeringsutveckling",
-          amount: moneyToJson(money(22_100_00n, currency)),
-        },
-        {
-          key: "debt_reduction",
-          label: "Amortering",
-          amount: moneyToJson(money(10_000_00n, currency)),
-        },
-        {
-          key: "other",
-          label: "Övrigt",
-          amount: moneyToJson(money(3_010_00n, currency)),
-        },
-      ],
+      attribution: snap.attribution.map((a) => ({
+        key: a.key,
+        label: a.label,
+        amount: moneyToJson(money(a.amountMinor, currency)),
+      })),
     };
   }
 }

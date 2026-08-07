@@ -2,12 +2,14 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import {
   buildAssetPurchaseAtFairValue,
+  buildCashRefund,
   buildCreditCardPayment,
   buildCreditCardPurchase,
   buildInternalTransfer,
   buildInvestmentTransfer,
   buildMortgagePayment,
 } from "./postings";
+import { findBalanceMismatches, reconstructBalances } from "./reconstruct";
 
 const CASH_A = "cash-a";
 const CASH_B = "cash-b";
@@ -83,4 +85,52 @@ test("vehicle cash purchase at fair value: expense 0, NW unchanged", () => {
   });
   assert.equal(result.expenseAmountMinor, 0n);
   assert.equal(result.netWorthDeltaMinor, 0n);
+});
+
+test("cash refund nets expense and increases NW", () => {
+  const result = buildCashRefund({
+    cashAccountId: CASH_A,
+    expenseAccountId: EXPENSE,
+    amountMinor: 500_00n,
+    currency: "SEK",
+  });
+  assert.equal(result.expenseAmountMinor, -500_00n);
+  assert.equal(result.netWorthDeltaMinor, 500_00n);
+});
+
+test("reconstruct balances: transfer + liability conventions", () => {
+  const transfer = buildInternalTransfer({
+    fromAccountId: CASH_A,
+    toAccountId: CASH_B,
+    amountMinor: 20_000_00n,
+    currency: "SEK",
+  });
+  const purchase = buildCreditCardPurchase({
+    expenseAccountId: EXPENSE,
+    creditCardAccountId: CC,
+    amountMinor: 2_000_00n,
+    currency: "SEK",
+  });
+  const balances = reconstructBalances({
+    openings: [
+      { accountId: CASH_A, accountType: "CHECKING", openingMinor: 100_000_00n },
+      { accountId: CASH_B, accountType: "SAVINGS", openingMinor: 0n },
+      { accountId: CC, accountType: "CREDIT_CARD", openingMinor: 0n },
+      { accountId: EXPENSE, accountType: "EXPENSE", openingMinor: 0n },
+    ],
+    postings: [...transfer.postings, ...purchase.postings],
+  });
+  assert.equal(balances.get(CASH_A), 80_000_00n);
+  assert.equal(balances.get(CASH_B), 20_000_00n);
+  assert.equal(balances.get(CC), 2_000_00n);
+});
+
+test("findBalanceMismatches reports cache drift", () => {
+  const ledger = new Map([[CASH_A, 80_000_00n]]);
+  const mismatches = findBalanceMismatches({
+    cached: [{ accountId: CASH_A, balanceMinor: 92_400_00n }],
+    ledger,
+  });
+  assert.equal(mismatches.length, 1);
+  assert.equal(mismatches[0]!.deltaMinor, 12_400_00n);
 });

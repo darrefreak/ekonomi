@@ -5,5 +5,6 @@ export * from "./cashflow";
 export * from "./coverage";
 export * from "./planning";
 export * from "./vehicle";
+export * from "./period-metrics";
 export * from "./forecast";
 
