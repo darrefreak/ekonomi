@@ -11,6 +11,7 @@ import {
 } from "@nestjs/common";
 import { ApiBearerAuth, ApiTags } from "@nestjs/swagger";
 import {
+  advisorChatRequestSchema,
   trackRecommendationOutcomeSchema,
   updateRecommendationOutcomeSchema,
 } from "@ffos/schemas";
@@ -33,6 +34,17 @@ export class AdvisorController {
     @Query("householdId") householdId: string,
   ) {
     return this.advisor.brief(user.userId, householdId);
+  }
+
+  @Post("chat")
+  chat(
+    @CurrentUser() user: AuthenticatedUser,
+    @Body(new ZodValidationPipe(advisorChatRequestSchema)) body: unknown,
+  ) {
+    return this.advisor.chat(
+      user.userId,
+      advisorChatRequestSchema.parse(body),
+    );
   }
 
   @Get("outcomes")

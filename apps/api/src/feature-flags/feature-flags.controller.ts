@@ -1,16 +1,19 @@
-import { Controller, Get, UseGuards } from "@nestjs/common";
+import { Controller, Get, Inject, UseGuards } from "@nestjs/common";
 import { ApiBearerAuth, ApiTags } from "@nestjs/swagger";
 import { AuthGuard } from "../auth/auth.guard";
-import { getDb } from "../db/client";
-import { featureFlags } from "../db/schema";
+import { FeatureFlagsService } from "./feature-flags.service";
 
 @ApiTags("feature-flags")
 @ApiBearerAuth()
 @UseGuards(AuthGuard)
 @Controller("api/v1/feature-flags")
 export class FeatureFlagsController {
+  constructor(
+    @Inject(FeatureFlagsService) private readonly flags: FeatureFlagsService,
+  ) {}
+
   @Get()
-  async list() {
-    return getDb().select().from(featureFlags);
+  list() {
+    return this.flags.list();
   }
 }

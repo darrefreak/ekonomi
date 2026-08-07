@@ -6,7 +6,7 @@ import { seedDemoHousehold } from "./seed/demo-household";
 async function seedFeatureFlags() {
   const db = getDb();
   const flags = [
-    { key: "AI", enabled: false, description: "AI advisor features" },
+    { key: "AI", enabled: true, description: "AI advisor features (tools-only)" },
     { key: "browserConnectors", enabled: false, description: "Browser connectors" },
     { key: "payments", enabled: false, description: "Payment initiation" },
     { key: "nativeApp", enabled: false, description: "Native app features" },
@@ -32,6 +32,12 @@ async function seedFeatureFlags() {
       .limit(1);
     if (existing.length === 0) {
       await db.insert(featureFlags).values(flag);
+    } else if (flag.key === "AI") {
+      // Workstream L: demo AI path on; endpoints still respect disabled via gate
+      await db
+        .update(featureFlags)
+        .set({ enabled: true, description: flag.description })
+        .where(eq(featureFlags.key, "AI"));
     }
   }
 }
