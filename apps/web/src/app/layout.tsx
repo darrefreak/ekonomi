@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { AppShell } from "@/components/layout/app-shell";
+import { AuthShell } from "@/components/auth/auth-shell";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -27,7 +27,7 @@ export default function RootLayout({
         />
       </head>
       <body>
-        <AppShell>{children}</AppShell>
+        <AuthShell>{children}</AuthShell>
       </body>
     </html>
   );

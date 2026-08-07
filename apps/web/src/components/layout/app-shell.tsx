@@ -1,8 +1,14 @@
+"use client";
+
 import type { ReactNode } from "react";
+import { useRouter } from "next/navigation";
+import { logout } from "@/lib/session";
 import { DesktopSidebar } from "./desktop-sidebar";
 import { MobileNavigation } from "./mobile-navigation";
 
 export function AppShell({ children }: { children: ReactNode }) {
+  const router = useRouter();
+
   return (
     <div className="mx-auto flex min-h-screen max-w-7xl">
       <a href="#main-content" className="skip-link">
@@ -15,9 +21,21 @@ export function AppShell({ children }: { children: ReactNode }) {
           <p className="hidden text-sm text-text-muted md:block">
             Sök med Ctrl/Cmd+K (kommer snart)
           </p>
-          <p className="text-sm text-text-secondary" aria-label="Miljö">
-            Demo
-          </p>
+          <div className="flex items-center gap-3">
+            <p className="text-sm text-text-secondary" aria-label="Miljö">
+              Demo
+            </p>
+            <button
+              type="button"
+              className="min-h-11 rounded-[12px] border border-border px-3 text-sm text-text-secondary hover:text-text-primary"
+              onClick={() => {
+                logout();
+                router.replace("/login");
+              }}
+            >
+              Logga ut
+            </button>
+          </div>
         </header>
         <main
           id="main-content"

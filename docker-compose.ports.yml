@@ -1,9 +1,11 @@
 # Alternate host ports when 3000/3001 are already taken.
+# LAN/VPN access via 192.168.0.30 (rebuild web when changing API host).
+#
 # Usage:
 #   docker compose -f docker-compose.yml -f docker-compose.ports.yml up -d --build
 #
-# Web:  http://localhost:3100
-# API:  http://localhost:3101
+# Web:  http://192.168.0.30:3100
+# API:  http://192.168.0.30:3101
 #
 # Note: `!override` replaces (does not append) the base `ports` lists.
 
@@ -13,16 +15,16 @@ services:
       - "3101:3001"
     environment:
       API_PORT: 3001
-      CORS_ORIGIN: http://localhost:3100
-      WEB_URL: http://localhost:3100
+      CORS_ORIGIN: http://192.168.0.30:3100
+      WEB_URL: http://192.168.0.30:3100
 
   web:
     build:
       context: .
       dockerfile: infrastructure/docker/Dockerfile.web
       args:
-        NEXT_PUBLIC_API_URL: http://localhost:3101
+        NEXT_PUBLIC_API_URL: http://192.168.0.30:3101
     environment:
-      NEXT_PUBLIC_API_URL: http://localhost:3101
+      NEXT_PUBLIC_API_URL: http://192.168.0.30:3101
     ports: !override
       - "3100:3000"

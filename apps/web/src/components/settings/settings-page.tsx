@@ -1,6 +1,11 @@
 "use client";
 
+import { useRouter } from "next/navigation";
+import { DEMO_CREDENTIALS, logout } from "@/lib/session";
+
 export function SettingsPage() {
+  const router = useRouter();
+
   return (
     <div className="space-y-6">
       <div>
@@ -17,17 +22,27 @@ export function SettingsPage() {
         <dl className="mt-4 space-y-2 text-sm">
           <div className="flex justify-between gap-3">
             <dt className="text-text-secondary">E-post</dt>
-            <dd className="font-mono text-xs">demo@ffos.local</dd>
+            <dd className="font-mono text-xs">{DEMO_CREDENTIALS.email}</dd>
           </div>
           <div className="flex justify-between gap-3">
             <dt className="text-text-secondary">Lösenord</dt>
-            <dd className="font-mono text-xs">demo-password-123</dd>
+            <dd className="font-mono text-xs">{DEMO_CREDENTIALS.password}</dd>
           </div>
           <div className="flex justify-between gap-3">
             <dt className="text-text-secondary">As of</dt>
             <dd>2026-08-01</dd>
           </div>
         </dl>
+        <button
+          type="button"
+          className="mt-4 min-h-11 rounded-[12px] border border-border-strong px-4 text-sm"
+          onClick={() => {
+            logout();
+            router.replace("/login");
+          }}
+        >
+          Logga ut
+        </button>
       </section>
 
       <section className="rounded-[16px] bg-surface-elevated p-5">

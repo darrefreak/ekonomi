@@ -1,36 +1,56 @@
 "use client";
 
-import { api, getAccessToken, getHouseholdId, setHouseholdId, setSession } from "./api";
+import {
+  api,
+  clearSession,
+  getAccessToken,
+  getHouseholdId,
+  setHouseholdId,
+  setSession,
+} from "./api";
 
-export async function ensureHouseholdSession(): Promise<string> {
-  let householdId = getHouseholdId();
-  if (getAccessToken() && householdId) return householdId;
+export const DEMO_CREDENTIALS = {
+  email: "demo@ffos.local",
+  password: "demo-password-123",
+} as const;
 
-  try {
-    const loggedIn = await api.login({
-      email: "demo@ffos.local",
-      password: "demo-password-123",
-    });
-    setSession(loggedIn.tokens);
-    const households = await api.listHouseholds();
-    if (households[0]) {
-      setHouseholdId(households[0].id);
-      return households[0].id;
-    }
-  } catch {
-    // fall through
+export class AuthRequiredError extends Error {
+  constructor(message = "Inloggning krävs") {
+    super(message);
+    this.name = "AuthRequiredError";
   }
+}
 
-  const registered = await api.register({
-    email: `demo+${Date.now()}@ffos.local`,
-    password: "demo-password-123",
-    displayName: "Demo-användare",
-  });
-  setSession(registered.tokens);
-  const household = await api.createHousehold({
-    name: "Familjen Demo",
-    baseCurrency: "SEK",
-  });
-  setHouseholdId(household.id);
-  return household.id;
+export function hasSession(): boolean {
+  return Boolean(getAccessToken() && getHouseholdId());
+}
+
+export async function loginWithCredentials(
+  email: string,
+  password: string,
+): Promise<string> {
+  const loggedIn = await api.login({ email, password });
+  setSession(loggedIn.tokens);
+  const households = await api.listHouseholds();
+  if (!households[0]) {
+    clearSession();
+    throw new Error("Inget hushåll kopplat till kontot");
+  }
+  setHouseholdId(households[0].id);
+  return households[0].id;
+}
+
+export async function loginWithDemo(): Promise<string> {
+  return loginWithCredentials(DEMO_CREDENTIALS.email, DEMO_CREDENTIALS.password);
+}
+
+/** Requires an existing browser session. Does not auto-login or register. */
+export async function ensureHouseholdSession(): Promise<string> {
+  const householdId = getHouseholdId();
+  if (getAccessToken() && householdId) return householdId;
+  throw new AuthRequiredError();
+}
+
+export function logout(): void {
+  clearSession();
 }

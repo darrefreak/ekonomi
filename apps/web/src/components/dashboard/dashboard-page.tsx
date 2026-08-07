@@ -1,15 +1,17 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import type { DashboardResponse } from "@ffos/schemas";
 import { api, clearSession } from "@/lib/api";
-import { ensureHouseholdSession } from "@/lib/session";
+import { AuthRequiredError, ensureHouseholdSession } from "@/lib/session";
 import { DashboardView } from "./dashboard-view";
 import { EmptyState } from "../feedback/empty-state";
 import { ErrorState } from "../feedback/error-state";
 import { LoadingState } from "../feedback/loading-state";
 
 export function DashboardPage() {
+  const router = useRouter();
   const [data, setData] = useState<DashboardResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -22,13 +24,21 @@ export function DashboardPage() {
       const dashboard = await api.getDashboard(householdId);
       setData(dashboard);
     } catch (err) {
-      clearSession();
-      setError(err instanceof Error ? err.message : "Något gick fel");
+      const message = err instanceof Error ? err.message : "Något gick fel";
+      if (
+        err instanceof AuthRequiredError ||
+        /unauthorized|jwt|token|401/i.test(message)
+      ) {
+        clearSession();
+        router.replace("/login");
+        return;
+      }
+      setError(message);
       setData(null);
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [router]);
 
   useEffect(() => {
     void load();
