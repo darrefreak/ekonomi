@@ -69,13 +69,13 @@ Legend for layer columns: **C** complete · **P** partial · **S** scaffold · *
 
 | Feature | Status | BE | FE | Test | Mobile | Pri | Deps | Missing / defects |
 |---|---|---|---|---|---|---|---|---|
-| Budgets (simple/detailed) | PARTIAL | P | P | P | B | P1 | Core | Read; limited edit |
+| Budgets (simple/detailed) | PARTIAL | P | P | P | P | P1 | Core | Editable planned; engine actuals (WS D) |
 | Budget forecast | PARTIAL | P | P | P | B | P1 | Forecast | Variance math exists |
 | Recurring | PARTIAL | P | N | N | N | P1 | — | Seed/detection foundation thin |
 | Subscriptions | PARTIAL | P | P | P | B | P1 | — | Read + annualize |
 | Contracts | PARTIAL | P | P | P | B | P1 | — | Read |
-| Sinking funds | PARTIAL | P | P | P | B | P1 | Goals | In planning schema/seed; thin UI |
-| Goals | PARTIAL | P | P | P | B | P1 | — | Read progress |
+| Sinking funds | PARTIAL | P | P | P | P | P1 | Goals | Create/contribute UX (WS D) |
+| Goals | PARTIAL | P | P | P | P | P1 | — | Create/contribute + progress (WS D) |
 | Planned expenses | SCAFFOLD_ONLY | S | N | N | N | P2 | Forecast | — |
 | Forecast horizons | PARTIAL | M/P | P | P | B | P0 | Core | Engine linear + seeded runs; dashboard hardcoded |
 | Forecast backtesting | SCAFFOLD_ONLY | S | N | N | N | P2 | Forecast | Tables/seed thin |

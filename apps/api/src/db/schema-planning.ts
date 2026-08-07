@@ -244,3 +244,47 @@ export const goals = pgTable(
   },
   (t) => [index("goals_household_idx").on(t.householdId)],
 );
+
+export const goalContributions = pgTable(
+  "goal_contributions",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    householdId: uuid("household_id")
+      .notNull()
+      .references(() => households.id, { onDelete: "cascade" }),
+    goalId: uuid("goal_id")
+      .notNull()
+      .references(() => goals.id, { onDelete: "cascade" }),
+    amountMinor: bigint("amount_minor", { mode: "bigint" }).notNull(),
+    currency: varchar("currency", { length: 3 }).notNull().default("SEK"),
+    contributedOn: date("contributed_on").notNull(),
+    note: text("note"),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (t) => [
+    index("goal_contributions_goal_idx").on(t.goalId),
+    index("goal_contributions_household_idx").on(t.householdId),
+  ],
+);
+
+export const sinkingFundContributions = pgTable(
+  "sinking_fund_contributions",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    householdId: uuid("household_id")
+      .notNull()
+      .references(() => households.id, { onDelete: "cascade" }),
+    sinkingFundId: uuid("sinking_fund_id")
+      .notNull()
+      .references(() => sinkingFunds.id, { onDelete: "cascade" }),
+    amountMinor: bigint("amount_minor", { mode: "bigint" }).notNull(),
+    currency: varchar("currency", { length: 3 }).notNull().default("SEK"),
+    contributedOn: date("contributed_on").notNull(),
+    note: text("note"),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (t) => [
+    index("sinking_fund_contributions_fund_idx").on(t.sinkingFundId),
+    index("sinking_fund_contributions_household_idx").on(t.householdId),
+  ],
+);

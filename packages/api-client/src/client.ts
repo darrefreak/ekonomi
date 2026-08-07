@@ -34,8 +34,12 @@ import {
   type CashflowResponse,
   type CategoriesResponse,
   type ContractsResponse,
+  type ContributeGoalInput,
+  type ContributeSinkingFundInput,
   type CoverageResponse,
   type CreateAccountInput,
+  type CreateGoalInput,
+  type CreateSinkingFundInput,
   type DashboardResponse,
   type DocumentsResponse,
   type ForecastResponse,
@@ -54,6 +58,9 @@ import {
   type TransactionDetailDto,
   type TransactionsResponse,
   type UpdateAccountInput,
+  type UpdateBudgetLineInput,
+  type UpdateGoalInput,
+  type UpdateSinkingFundInput,
   type UpdateTransactionInput,
   type VehicleDetailDto,
   type VehicleMarketResponse,
@@ -268,6 +275,16 @@ export function createApiClient(options: ApiClientOptions) {
       );
       return budgetResponseSchema.parse(data) as BudgetResponse;
     },
+    updateBudgetLine: async (lineId: string, input: UpdateBudgetLineInput) => {
+      const data = await request<unknown>(
+        `/api/v1/budget/lines/${encodeURIComponent(lineId)}`,
+        {
+          method: "PATCH",
+          body: JSON.stringify(input),
+        },
+      );
+      return budgetResponseSchema.parse(data) as BudgetResponse;
+    },
     getSubscriptions: async (householdId: string) => {
       const data = await request<unknown>(
         `/api/v1/subscriptions?householdId=${encodeURIComponent(householdId)}`,
@@ -283,6 +300,63 @@ export function createApiClient(options: ApiClientOptions) {
     getGoals: async (householdId: string) => {
       const data = await request<unknown>(
         `/api/v1/goals?householdId=${encodeURIComponent(householdId)}`,
+      );
+      return goalsResponseSchema.parse(data) as GoalsResponse;
+    },
+    createGoal: async (input: CreateGoalInput) => {
+      const data = await request<unknown>("/api/v1/goals", {
+        method: "POST",
+        body: JSON.stringify(input),
+      });
+      return goalsResponseSchema.parse(data) as GoalsResponse;
+    },
+    updateGoal: async (goalId: string, input: UpdateGoalInput) => {
+      const data = await request<unknown>(
+        `/api/v1/goals/${encodeURIComponent(goalId)}`,
+        {
+          method: "PATCH",
+          body: JSON.stringify(input),
+        },
+      );
+      return goalsResponseSchema.parse(data) as GoalsResponse;
+    },
+    contributeGoal: async (goalId: string, input: ContributeGoalInput) => {
+      const data = await request<unknown>(
+        `/api/v1/goals/${encodeURIComponent(goalId)}/contributions`,
+        {
+          method: "POST",
+          body: JSON.stringify(input),
+        },
+      );
+      return goalsResponseSchema.parse(data) as GoalsResponse;
+    },
+    createSinkingFund: async (input: CreateSinkingFundInput) => {
+      const data = await request<unknown>("/api/v1/sinking-funds", {
+        method: "POST",
+        body: JSON.stringify(input),
+      });
+      return goalsResponseSchema.parse(data) as GoalsResponse;
+    },
+    updateSinkingFund: async (fundId: string, input: UpdateSinkingFundInput) => {
+      const data = await request<unknown>(
+        `/api/v1/sinking-funds/${encodeURIComponent(fundId)}`,
+        {
+          method: "PATCH",
+          body: JSON.stringify(input),
+        },
+      );
+      return goalsResponseSchema.parse(data) as GoalsResponse;
+    },
+    contributeSinkingFund: async (
+      fundId: string,
+      input: ContributeSinkingFundInput,
+    ) => {
+      const data = await request<unknown>(
+        `/api/v1/sinking-funds/${encodeURIComponent(fundId)}/contributions`,
+        {
+          method: "POST",
+          body: JSON.stringify(input),
+        },
       );
       return goalsResponseSchema.parse(data) as GoalsResponse;
     },

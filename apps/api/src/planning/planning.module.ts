@@ -8,6 +8,8 @@ import { ContractsService } from "./contracts.service";
 import { GoalsController } from "./goals.controller";
 import { GoalsService } from "./goals.service";
 import { PlanningMetricsService } from "./planning-metrics.service";
+import { SinkingFundsController } from "./sinking-funds.controller";
+import { SinkingFundsService } from "./sinking-funds.service";
 import { SubscriptionsController } from "./subscriptions.controller";
 import { SubscriptionsService } from "./subscriptions.service";
 
@@ -18,6 +20,7 @@ import { SubscriptionsService } from "./subscriptions.service";
     SubscriptionsController,
     ContractsController,
     GoalsController,
+    SinkingFundsController,
   ],
   providers: [
     PlanningMetricsService,
@@ -25,6 +28,7 @@ import { SubscriptionsService } from "./subscriptions.service";
     SubscriptionsService,
     ContractsService,
     GoalsService,
+    SinkingFundsService,
   ],
   exports: [PlanningMetricsService, BudgetService],
 })

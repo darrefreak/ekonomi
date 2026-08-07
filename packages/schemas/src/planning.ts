@@ -1,6 +1,9 @@
 import { z } from "zod";
 import { moneySchema } from "./money";
 
+const minorString = z.string().regex(/^-?\d+$/);
+const positiveMinorString = z.string().regex(/^[1-9]\d*$/);
+
 export const budgetLineSchema = z.object({
   id: z.string(),
   categoryKey: z.string(),
@@ -33,6 +36,12 @@ export const budgetResponseSchema = z.object({
 });
 
 export type BudgetResponse = z.infer<typeof budgetResponseSchema>;
+
+export const updateBudgetLineSchema = z.object({
+  householdId: z.string().uuid(),
+  plannedMinor: minorString,
+});
+export type UpdateBudgetLineInput = z.infer<typeof updateBudgetLineSchema>;
 
 export const subscriptionItemSchema = z.object({
   id: z.string(),
@@ -114,6 +123,7 @@ export const goalItemSchema = z.object({
   requiredMonthly: moneySchema,
   targetDate: z.string().nullable(),
   priority: z.number(),
+  sinkingFundId: z.string().uuid().nullable().optional(),
 });
 
 export const goalsResponseSchema = z.object({
@@ -123,3 +133,101 @@ export const goalsResponseSchema = z.object({
 });
 
 export type GoalsResponse = z.infer<typeof goalsResponseSchema>;
+export type GoalItem = z.infer<typeof goalItemSchema>;
+export type SinkingFundItem = z.infer<typeof sinkingFundSchema>;
+
+export const contributeGoalSchema = z.object({
+  householdId: z.string().uuid(),
+  amountMinor: positiveMinorString,
+  note: z.string().max(500).optional().nullable(),
+  contributedOn: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/)
+    .optional(),
+});
+export type ContributeGoalInput = z.infer<typeof contributeGoalSchema>;
+
+export const updateGoalSchema = z.object({
+  householdId: z.string().uuid(),
+  name: z.string().min(1).max(160).optional(),
+  targetMinor: minorString.optional(),
+  monthlyContributionMinor: minorString.optional(),
+  targetDate: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/)
+    .nullable()
+    .optional(),
+  status: z.enum(["ACTIVE", "PAUSED", "COMPLETED", "CANCELLED"]).optional(),
+  priority: z.number().int().min(1).max(5).optional(),
+});
+export type UpdateGoalInput = z.infer<typeof updateGoalSchema>;
+
+export const createGoalSchema = z.object({
+  householdId: z.string().uuid(),
+  name: z.string().min(1).max(160),
+  goalType: z
+    .enum([
+      "EMERGENCY_FUND",
+      "INVESTMENT_TARGET",
+      "DEBT_FREE",
+      "HOME_PURCHASE",
+      "CAR",
+      "TRAVEL",
+      "EDUCATION",
+      "CUSTOM",
+    ])
+    .optional()
+    .default("CUSTOM"),
+  targetMinor: minorString,
+  currentMinor: minorString.optional().default("0"),
+  monthlyContributionMinor: minorString.optional().default("0"),
+  targetDate: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/)
+    .nullable()
+    .optional(),
+  priority: z.number().int().min(1).max(5).optional().default(3),
+  sinkingFundId: z.string().uuid().nullable().optional(),
+});
+export type CreateGoalInput = z.input<typeof createGoalSchema>;
+
+export const contributeSinkingFundSchema = z.object({
+  householdId: z.string().uuid(),
+  amountMinor: positiveMinorString,
+  note: z.string().max(500).optional().nullable(),
+  contributedOn: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/)
+    .optional(),
+});
+export type ContributeSinkingFundInput = z.infer<typeof contributeSinkingFundSchema>;
+
+export const updateSinkingFundSchema = z.object({
+  householdId: z.string().uuid(),
+  name: z.string().min(1).max(160).optional(),
+  targetMinor: minorString.optional(),
+  monthlyContributionMinor: minorString.optional(),
+  targetDate: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/)
+    .nullable()
+    .optional(),
+  priority: z.number().int().min(1).max(5).optional(),
+});
+export type UpdateSinkingFundInput = z.infer<typeof updateSinkingFundSchema>;
+
+export const createSinkingFundSchema = z.object({
+  householdId: z.string().uuid(),
+  name: z.string().min(1).max(160),
+  targetMinor: minorString,
+  currentReservedMinor: minorString.optional().default("0"),
+  monthlyContributionMinor: minorString.optional().default("0"),
+  targetDate: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/)
+    .nullable()
+    .optional(),
+  priority: z.number().int().min(1).max(5).optional().default(3),
+  categoryKey: z.string().max(80).nullable().optional(),
+});
+export type CreateSinkingFundInput = z.input<typeof createSinkingFundSchema>;

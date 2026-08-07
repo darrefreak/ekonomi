@@ -293,6 +293,7 @@ export class PlanningMetricsService {
           requiredMonthly: moneyToJson(money(required, currency)),
           targetDate: g.targetDate,
           priority: g.priority,
+          sinkingFundId: g.sinkingFundId,
         };
       }),
       sinkingFunds: fundRows.map((f) => {
