@@ -14,6 +14,7 @@ import type { HouseholdAccessService } from "../households/household-access.serv
 import { DebtService } from "../debt/debt.service";
 import { HouseholdMetricsService } from "../metrics/household-metrics.service";
 import { PlanningMetricsService } from "../planning/planning-metrics.service";
+import { VehiclesService } from "../vehicles/vehicles.service";
 import { DecisionsService } from "./decisions.service";
 
 test("createScenarioSchema accepts assumption minors", () => {
@@ -49,6 +50,7 @@ test("live forecast horizons and non-destructive scenario simulate", async () =>
     new HouseholdMetricsService(),
     new PlanningMetricsService(),
     new DebtService(access),
+    new VehiclesService(access),
   );
 
   const forecast = forecastResponseSchema.parse(

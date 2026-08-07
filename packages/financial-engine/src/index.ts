@@ -11,4 +11,7 @@ export * from "./scenarios";
 export * from "./backtest";
 export * from "./debt";
 export * from "./wealth";
+export * from "./lifestyle-creep";
+export * from "./opportunities";
+export * from "./risk";
 

@@ -60,7 +60,7 @@ Legend for layer columns: **C** complete · **P** partial · **S** scaffold · *
 | Cashflow forecast widget | PARTIAL | P | P | P | P | P0 | Forecast | Engine 30/60/90 deltas (WS C) |
 | Financial brief | PARTIAL | P | P | P | P | P1 | AI/Metrics | Opps + cashflow + review (WS C); AI later |
 | Upcoming obligations | PARTIAL | P | P | P | P | P1 | Recurring | Subs/contracts/salary estimate |
-| Opportunities on dashboard | PARTIAL | P | P | P | P | P2 | Opps | Aggregated + widget (WS C); detectors later |
+| Opportunities on dashboard | PARTIAL | P | P | P | P | P2 | Opps | Aggregated live detectors (WS C/I) |
 | Coverage / freshness | PARTIAL | P | P | P | P | P1 | Accounts | Heuristic coverage |
 
 ---
@@ -102,12 +102,12 @@ Legend for layer columns: **C** complete · **P** partial · **S** scaffold · *
 
 | Feature | Status | BE | FE | Test | Mobile | Pri | Deps | Missing / defects |
 |---|---|---|---|---|---|---|---|---|
-| Savings opportunities | MOCK_ONLY | M | P | S | B | P1 | Core | Seed + hardcoded optimizer bits |
-| Subscription analysis | PARTIAL | P | P | P | B | P1 | Subs | Price trend in seed |
-| Contract renewal intel | PARTIAL | P | P | N | B | P1 | Contracts | Dates in seed |
-| Lifestyle creep | NOT_STARTED | N | N | N | N | P2 | Cashflow | — |
+| Savings opportunities | PARTIAL | P | P | P | B | P1 | Core | Live detectors + evidence (WS I) |
+| Subscription analysis | PARTIAL | P | P | P | B | P1 | Subs | Feeds live subs-trim detector |
+| Contract renewal intel | PARTIAL | P | P | P | B | P1 | Contracts | Live renewal detector (WS I) |
+| Lifestyle creep | PARTIAL | P | P | P | B | P2 | Cashflow | 3m vs 12m + drivers (WS I) |
 | Anomaly detection | SCAFFOLD_ONLY | S | N | N | N | P1 | Review | Heuristic review only |
-| Recommendation outcomes | PARTIAL | P | N | N | N | P2 | AI | Table + insert on brief; no UI |
+| Recommendation outcomes | PARTIAL | P | P | P | B | P2 | AI | List + status actions (WS I) |
 
 ---
 
@@ -115,9 +115,9 @@ Legend for layer columns: **C** complete · **P** partial · **S** scaffold · *
 
 | Feature | Status | BE | FE | Test | Mobile | Pri | Deps | Missing / defects |
 |---|---|---|---|---|---|---|---|---|
-| Risk dimensions (liquidity/debt/…) | MOCK_ONLY | M | P | N | B | P1 | Core | Seeded risk rows |
-| Financial health | PARTIAL | M | P | S | B | P1 | — | Trivial bands / seed |
-| Live risk engine jobs | NOT_STARTED | N | N | N | N | P2 | Jobs | — |
+| Risk dimensions (liquidity/debt/…) | PARTIAL | P | P | P | B | P1 | Core | Live scores + evidence (WS I) |
+| Financial health | PARTIAL | P | P | P | B | P1 | — | Live dimension scores (WS I) |
+| Live risk engine jobs | SCAFFOLD_ONLY | S | N | N | N | P2 | Jobs | Request-path live; jobs deferred |
 
 ---
 

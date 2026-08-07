@@ -7,9 +7,20 @@ import { and, desc, eq } from "drizzle-orm";
 import { money, moneyToJson, type CurrencyCode } from "@ffos/domain";
 import {
   annualizeSubscription,
+  assessCoverageRisk,
+  assessDebtRisk,
+  assessFixedCostRisk,
+  assessLiquidityRisk,
+  assessVehicleFinancingRisk,
   backtestLinearForecast,
   buildForecastPoints,
+  calculateLifestyleCreep,
+  detectContractRenewalOpportunity,
+  detectLifestyleCreepOpportunity,
+  detectMortgageRateOpportunity,
+  detectSubscriptionTrimOpportunity,
   parseScenarioAssumptions,
+  rankOpportunities,
   savingsOptimizerSuggestions,
   simulateScenario,
 } from "@ffos/financial-engine";
@@ -18,21 +29,24 @@ import type {
   SimulateScenarioInput,
 } from "@ffos/schemas";
 import { getDb } from "../db/client";
+import { accounts } from "../db/schema-economic";
 import {
   forecastAccuracyMetrics,
   forecastActualComparisons,
   forecastPoints,
   forecastRuns,
-  healthDimensions,
-  opportunities,
-  riskSignals,
   scenarios,
 } from "../db/schema-decisions";
-import { subscriptions } from "../db/schema-planning";
+import { contracts, subscriptions } from "../db/schema-planning";
+import { vehicles } from "../db/schema-vehicles";
 import { DebtService } from "../debt/debt.service";
 import { HouseholdAccessService } from "../households/household-access.service";
-import { HouseholdMetricsService } from "../metrics/household-metrics.service";
+import {
+  HouseholdMetricsService,
+  lastNMonths,
+} from "../metrics/household-metrics.service";
 import { PlanningMetricsService } from "../planning/planning-metrics.service";
+import { VehiclesService } from "../vehicles/vehicles.service";
 
 @Injectable()
 export class DecisionsService {
@@ -43,6 +57,7 @@ export class DecisionsService {
     @Inject(PlanningMetricsService)
     private readonly planning: PlanningMetricsService,
     @Inject(DebtService) private readonly debt: DebtService,
+    @Inject(VehiclesService) private readonly vehicles: VehiclesService,
   ) {}
 
   private async baselineSeed(householdId: string, currency: CurrencyCode, asOf: string) {
@@ -242,43 +257,209 @@ export class DecisionsService {
     const currency = (household.baseCurrency || "SEK") as CurrencyCode;
     const asOf = process.env.DEMO_AS_OF_DATE ?? "2026-08-01";
     const db = getDb();
-    const rows = await db
+
+    const months = lastNMonths(asOf, 15);
+    const monthlyPoints = await this.metrics.monthlyTotals(householdId, months);
+    const recentMonths = months.slice(-3);
+    const baselineMonths = months.slice(0, Math.max(0, months.length - 3)).slice(-12);
+    const categorySpends = await this.metrics.categorySpendComparison(
+      householdId,
+      recentMonths,
+      baselineMonths,
+    );
+    const creep = calculateLifestyleCreep({
+      asOf,
+      monthlyPoints: monthlyPoints.map((p) => ({
+        month: p.month,
+        spendingMinor: p.spendingMinor,
+      })),
+      categorySpends,
+    });
+
+    const subs = await db
       .select()
-      .from(opportunities)
-      .where(eq(opportunities.householdId, householdId));
+      .from(subscriptions)
+      .where(
+        and(
+          eq(subscriptions.householdId, householdId),
+          eq(subscriptions.status, "ACTIVE"),
+        ),
+      );
+    const subscriptionAnnualMinor = subs.reduce(
+      (sum, s) =>
+        sum +
+        annualizeSubscription(
+          s.amountMinor,
+          s.cadence as "WEEKLY" | "MONTHLY" | "QUARTERLY" | "YEARLY",
+        ),
+      0n,
+    );
+    const mortgageInterestAnnualMinor = await this.metrics.mortgageInterestAnnual(
+      householdId,
+      asOf,
+    );
+    const [mortgage] = await db
+      .select({ id: accounts.id })
+      .from(accounts)
+      .where(
+        and(
+          eq(accounts.householdId, householdId),
+          eq(accounts.accountType, "MORTGAGE"),
+        ),
+      )
+      .limit(1);
+    const contractRows = await db
+      .select()
+      .from(contracts)
+      .where(eq(contracts.householdId, householdId));
+
+    const detected = rankOpportunities([
+      detectMortgageRateOpportunity({
+        mortgageInterestAnnualMinor,
+        mortgageAccountId: mortgage?.id ?? null,
+      }),
+      detectSubscriptionTrimOpportunity({
+        subscriptionAnnualMinor,
+        subscriptionIds: subs.map((s) => s.id),
+      }),
+      detectContractRenewalOpportunity({
+        asOf,
+        contracts: contractRows.map((c) => ({
+          id: c.id,
+          name: c.name,
+          renewalDate: c.renewalDate,
+          endDate: c.endDate,
+        })),
+      }),
+      detectLifestyleCreepOpportunity(creep),
+    ]);
+
     return {
       asOf,
-      items: rows.map((o) => ({
+      source: "live-engine" as const,
+      items: detected.map((o) => ({
         id: o.id,
+        detectorKey: o.detectorKey,
         title: o.title,
         description: o.description,
         estimatedAnnualSaving: o.estimatedAnnualSavingMinor
           ? moneyToJson(money(o.estimatedAnnualSavingMinor, currency))
           : null,
-        confidence: o.confidence ? Number(o.confidence) : null,
+        confidence: o.confidence,
         effort: o.effort,
         risk: o.risk,
         priority: o.priority,
         status: o.status,
         category: o.category,
+        evidence: o.evidence,
       })),
+      lifestyleCreep: {
+        creeping: creep.creeping,
+        recentAvgMonthly: moneyToJson(
+          money(creep.recentAvgMonthlyMinor, currency),
+        ),
+        baselineAvgMonthly: moneyToJson(
+          money(creep.baselineAvgMonthlyMinor, currency),
+        ),
+        delta: moneyToJson(money(creep.deltaMinor, currency)),
+        deltaPercent: creep.deltaPercent,
+        drivers: creep.drivers.map((d) => ({
+          categoryKey: d.categoryKey,
+          categoryName: d.categoryName,
+          delta: moneyToJson(money(d.deltaMinor, currency)),
+          deltaPercent: d.deltaPercent,
+          href: `/transactions?q=${encodeURIComponent(d.categoryName)}`,
+        })),
+      },
     };
   }
 
   async risk(userId: string, householdId: string) {
-    await this.access.requireMembership(userId, householdId);
+    const { household } = await this.access.requireMembership(userId, householdId);
+    const currency = (household.baseCurrency || "SEK") as CurrencyCode;
     const asOf = process.env.DEMO_AS_OF_DATE ?? "2026-08-01";
+    const snap = await this.metrics.getFinancialSnapshot(
+      householdId,
+      currency,
+      asOf,
+    );
+    const coverage = await this.metrics.coverage(householdId, asOf);
     const db = getDb();
-    const signals = await db
+    const subs = await db
       .select()
-      .from(riskSignals)
-      .where(eq(riskSignals.householdId, householdId));
-    const health = await db
-      .select()
-      .from(healthDimensions)
-      .where(eq(healthDimensions.householdId, householdId));
+      .from(subscriptions)
+      .where(
+        and(
+          eq(subscriptions.householdId, householdId),
+          eq(subscriptions.status, "ACTIVE"),
+        ),
+      );
+    const subscriptionAnnualMinor = subs.reduce(
+      (sum, s) =>
+        sum +
+        annualizeSubscription(
+          s.amountMinor,
+          s.cadence as "WEEKLY" | "MONTHLY" | "QUARTERLY" | "YEARLY",
+        ),
+      0n,
+    );
+    const [mortgage] = await db
+      .select({ id: accounts.id })
+      .from(accounts)
+      .where(
+        and(
+          eq(accounts.householdId, householdId),
+          eq(accounts.accountType, "MORTGAGE"),
+        ),
+      )
+      .limit(1);
+
+    const liq = assessLiquidityRisk({
+      availableCashMinor: snap.position.availableCash.amountMinor,
+      monthlySpendingMinor: snap.spendingMinor,
+    });
+    const debt = assessDebtRisk({
+      liabilitiesMinor: snap.position.liabilities.amountMinor,
+      monthlyIncomeMinor: snap.incomeMinor,
+      mortgageAccountId: mortgage?.id ?? null,
+    });
+    const fixed = assessFixedCostRisk({
+      fixedAnnualMinor: subscriptionAnnualMinor,
+      monthlyIncomeMinor: snap.incomeMinor,
+    });
+    const cov = assessCoverageRisk({ coveragePercent: coverage.percent });
+
+    let vehicleSignal = null;
+    const [vehicle] = await db
+      .select({ id: vehicles.id })
+      .from(vehicles)
+      .where(eq(vehicles.householdId, householdId))
+      .limit(1);
+    if (vehicle) {
+      try {
+        const detail = await this.vehicles.get(userId, householdId, vehicle.id);
+        vehicleSignal = assessVehicleFinancingRisk({
+          negativeEquity: detail.metrics.negativeEquity,
+          netEquityMinor: BigInt(detail.metrics.netEquity.amountMinor),
+          vehicleId: vehicle.id,
+        });
+      } catch {
+        vehicleSignal = null;
+      }
+    }
+
+    const signals = [
+      liq.signal,
+      debt.signal,
+      fixed.signal,
+      cov.signal,
+      ...(vehicleSignal ? [vehicleSignal] : []),
+    ];
+    const health = [liq.health, debt.health, fixed.health, cov.health];
+
     return {
       asOf,
+      source: "live-engine" as const,
       signals: signals.map((s) => ({
         id: s.id,
         dimension: s.dimension,
@@ -286,13 +467,9 @@ export class DecisionsService {
         title: s.title,
         detail: s.detail,
         score: s.score,
+        evidence: s.evidence,
       })),
-      health: health.map((h) => ({
-        dimension: h.dimension,
-        score: h.score,
-        level: h.level,
-        summary: h.summary,
-      })),
+      health,
     };
   }
 
