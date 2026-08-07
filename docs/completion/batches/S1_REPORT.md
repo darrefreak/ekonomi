@@ -78,9 +78,10 @@ Migration `0018_batch_s1_validation.sql`:
 
 | Suite | Result |
 |---|---|
-| `ledger-invariants.test.ts` (A2) | PASS (see gates) |
-| `depreciation-invariants.test.ts` (A3 + S1 excess) | PASS (see gates) |
+| `ledger-invariants.test.ts` (A2) | **PASS** |
+| `depreciation-invariants.test.ts` (A3 + S1 excess) | **PASS** |
 | Exact money transport | preserved (no float regress) |
+| `privacy-security.test.ts` | **PASS** |
 
 ---
 
@@ -106,11 +107,11 @@ Migration `0018_batch_s1_validation.sql`:
 
 | Gate | Result |
 |---|---|
-| Build | (pending run) |
-| Lint | (pending run) |
-| Typecheck | (pending run) |
-| Tests | (pending run) |
-| Docker | (pending run) |
+| Build | **PASS** |
+| Lint | **PASS** |
+| Typecheck | **PASS** |
+| Tests | **PASS** (`@ffos/schemas` 11 + `@ffos/api` 54) |
+| Docker | **PASS** (`/health/ready` postgres+redis ok) |
 
 ---
 
