@@ -1,5 +1,6 @@
 import { Module } from "@nestjs/common";
 import { AccountsModule } from "./accounts/accounts.module";
+import { AiModule } from "./ai/ai.module";
 import { AuthModule } from "./auth/auth.module";
 import { CashflowModule } from "./cashflow/cashflow.module";
 import { DashboardModule } from "./dashboard/dashboard.module";
@@ -33,6 +34,7 @@ import { VehiclesModule } from "./vehicles/vehicles.module";
     VehicleIntelModule,
     DecisionsModule,
     IntakeModule,
+    AiModule,
     DashboardModule,
     FeatureFlagsModule,
     SettingsModule,
