@@ -102,11 +102,11 @@ Migration `0019_batch_c2_metric_registry.sql`:
 
 | Gate | Result |
 |---|---|
-| Build | (pending) |
-| Lint | (pending) |
-| Typecheck | (pending) |
-| Tests | (pending) |
-| Docker | (pending) |
+| Build | **PASS** |
+| Lint | **PASS** |
+| Typecheck | **PASS** |
+| Tests | **PASS** (engine + api 56 incl. C2 consistency; A2/A3/S1 green) |
+| Docker | **PASS** (`/health/ready`) |
 
 ---
 
