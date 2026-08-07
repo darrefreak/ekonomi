@@ -1,0 +1,28 @@
+# Alternate host ports when 3000/3001 are already taken.
+# Usage:
+#   docker compose -f docker-compose.yml -f docker-compose.ports.yml up -d --build
+#
+# Web:  http://localhost:3100
+# API:  http://localhost:3101
+#
+# Note: `!override` replaces (does not append) the base `ports` lists.
+
+services:
+  api:
+    ports: !override
+      - "3101:3001"
+    environment:
+      API_PORT: 3001
+      CORS_ORIGIN: http://localhost:3100
+      WEB_URL: http://localhost:3100
+
+  web:
+    build:
+      context: .
+      dockerfile: infrastructure/docker/Dockerfile.web
+      args:
+        NEXT_PUBLIC_API_URL: http://localhost:3101
+    environment:
+      NEXT_PUBLIC_API_URL: http://localhost:3101
+    ports: !override
+      - "3100:3000"

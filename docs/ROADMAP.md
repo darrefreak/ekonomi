@@ -85,9 +85,14 @@ Financial advisor, AI brief, insights, explainability, deterministic tool layer,
 
 Report: [phase-reports/PHASE_7_REPORT.md](./phase-reports/PHASE_7_REPORT.md).
 
-## Phase 8 — Polish
+## Phase 8 — Polish ✅
 
 Accessibility, mobile UX, responsive refinement, testing, performance, security review, error/empty states, final documentation.
+
+Detaljer: [phases/PHASE_8.md](./phases/PHASE_8.md).  
+Report: [phase-reports/PHASE_8_REPORT.md](./phase-reports/PHASE_8_REPORT.md).
+
+**V1 roadmap status: COMPLETE.**
 
 ## Future (post V1 roadmap notes)
 

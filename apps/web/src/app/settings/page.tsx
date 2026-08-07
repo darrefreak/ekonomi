@@ -1,10 +1,5 @@
-import { PagePlaceholder } from "@/components/placeholders/page-placeholder";
+import { SettingsPage } from "@/components/settings/settings-page";
 
 export default function Page() {
-  return (
-    <PagePlaceholder
-      title="Settings"
-      description="Den här ytan är förberedd i Phase 1. Funktionalitet byggs i senare faser enligt roadmap."
-    />
-  );
+  return <SettingsPage />;
 }
