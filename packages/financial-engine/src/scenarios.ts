@@ -1,3 +1,6 @@
+import {
+  mortgageRateScenarioMonthlyDeltaMinor,
+} from "./debt";
 import { buildForecastPoints, type ForecastPoint, type ForecastSeed } from "./forecast";
 
 export type ScenarioAssumptions = {
@@ -7,6 +10,13 @@ export type ScenarioAssumptions = {
   monthlyExpenseDeltaMinor?: bigint;
   /** One-time cash / NW adjustment at asOf (e.g. vehicle sale). */
   oneTimeCashDeltaMinor?: bigint;
+  /** Mortgage rate shock in basis points (e.g. 100 = +1%). */
+  mortgageRateDeltaBps?: number;
+};
+
+export type ScenarioMortgageContext = {
+  principalMinor: bigint;
+  currentAnnualRateBps: number;
 };
 
 export type ScenarioSimulation = {
@@ -16,20 +26,38 @@ export type ScenarioSimulation = {
   startingCashMinor: bigint;
   startingNetWorthMinor: bigint;
   points: ForecastPoint[];
+  mortgageRateExpenseDeltaMinor: bigint;
 };
 
 /**
  * Non-destructive scenario engine: adjusts monthly savings + optional one-time
- * cash shock, then projects with the same deterministic forecast horizons.
- * Never mutates ledger state — pure function only.
+ * cash shock + optional mortgage rate shock, then projects with deterministic
+ * forecast horizons. Never mutates ledger state — pure function only.
  */
 export function simulateScenario(input: {
   baseline: ForecastSeed;
   assumptions: ScenarioAssumptions;
+  mortgage?: ScenarioMortgageContext | null;
 }): ScenarioSimulation {
   const incomeDelta = input.assumptions.monthlyIncomeDeltaMinor ?? 0n;
-  const expenseDelta = input.assumptions.monthlyExpenseDeltaMinor ?? 0n;
+  let expenseDelta = input.assumptions.monthlyExpenseDeltaMinor ?? 0n;
   const oneTime = input.assumptions.oneTimeCashDeltaMinor ?? 0n;
+
+  let mortgageRateExpenseDeltaMinor = 0n;
+  if (
+    input.assumptions.mortgageRateDeltaBps != null &&
+    input.assumptions.mortgageRateDeltaBps !== 0 &&
+    input.mortgage &&
+    input.mortgage.principalMinor > 0n &&
+    input.mortgage.currentAnnualRateBps > 0
+  ) {
+    mortgageRateExpenseDeltaMinor = mortgageRateScenarioMonthlyDeltaMinor({
+      principalMinor: input.mortgage.principalMinor,
+      currentAnnualRateBps: input.mortgage.currentAnnualRateBps,
+      rateDeltaBps: input.assumptions.mortgageRateDeltaBps,
+    });
+    expenseDelta += mortgageRateExpenseDeltaMinor;
+  }
 
   const adjustedMonthly =
     input.baseline.monthlyNetSavingsMinor + incomeDelta - expenseDelta;
@@ -51,6 +79,7 @@ export function simulateScenario(input: {
     startingCashMinor,
     startingNetWorthMinor,
     points,
+    mortgageRateExpenseDeltaMinor,
   };
 }
 
@@ -64,9 +93,16 @@ export function parseScenarioAssumptions(
     if (typeof v === "string" && /^-?\d+$/.test(v)) return BigInt(v);
     return undefined;
   };
+  const asNum = (v: unknown): number | undefined => {
+    if (v == null) return undefined;
+    if (typeof v === "number" && Number.isFinite(v)) return Math.trunc(v);
+    if (typeof v === "string" && /^-?\d+$/.test(v)) return Number(v);
+    return undefined;
+  };
   return {
     monthlyIncomeDeltaMinor: asBig(raw.monthlyIncomeDeltaMinor),
     monthlyExpenseDeltaMinor: asBig(raw.monthlyExpenseDeltaMinor),
     oneTimeCashDeltaMinor: asBig(raw.oneTimeCashDeltaMinor),
+    mortgageRateDeltaBps: asNum(raw.mortgageRateDeltaBps),
   };
 }

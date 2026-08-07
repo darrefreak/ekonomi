@@ -11,6 +11,7 @@ import { households } from "../db/schema";
 import { accounts } from "../db/schema-economic";
 import { scenarios } from "../db/schema-decisions";
 import type { HouseholdAccessService } from "../households/household-access.service";
+import { DebtService } from "../debt/debt.service";
 import { HouseholdMetricsService } from "../metrics/household-metrics.service";
 import { PlanningMetricsService } from "../planning/planning-metrics.service";
 import { DecisionsService } from "./decisions.service";
@@ -47,6 +48,7 @@ test("live forecast horizons and non-destructive scenario simulate", async () =>
     access,
     new HouseholdMetricsService(),
     new PlanningMetricsService(),
+    new DebtService(access),
   );
 
   const forecast = forecastResponseSchema.parse(

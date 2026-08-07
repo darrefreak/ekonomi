@@ -107,6 +107,7 @@ export const scenarioAssumptionsSchema = z.object({
   monthlyIncomeDeltaMinor: minorString.optional(),
   monthlyExpenseDeltaMinor: minorString.optional(),
   oneTimeCashDeltaMinor: minorString.optional(),
+  mortgageRateDeltaBps: z.number().int().optional(),
 });
 export type ScenarioAssumptionsInput = z.infer<typeof scenarioAssumptionsSchema>;
 

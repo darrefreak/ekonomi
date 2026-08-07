@@ -195,6 +195,9 @@ export const accounts = pgTable("accounts", {
   currentBalanceMinor: bigint("current_balance_minor", { mode: "bigint" })
     .notNull()
     .default(0n),
+  /** Annual nominal interest rate in basis points (e.g. 240 = 2.40%). */
+  interestRateBps: integer("interest_rate_bps"),
+  bindingEndDate: date("binding_end_date"),
   lastSyncedAt: timestamp("last_synced_at", { withTimezone: true }),
   connectionStatus: connectionStatusEnum("connection_status")
     .notNull()

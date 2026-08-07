@@ -29,6 +29,7 @@ import {
   scenarios,
 } from "../db/schema-decisions";
 import { subscriptions } from "../db/schema-planning";
+import { DebtService } from "../debt/debt.service";
 import { HouseholdAccessService } from "../households/household-access.service";
 import { HouseholdMetricsService } from "../metrics/household-metrics.service";
 import { PlanningMetricsService } from "../planning/planning-metrics.service";
@@ -41,6 +42,7 @@ export class DecisionsService {
     private readonly metrics: HouseholdMetricsService,
     @Inject(PlanningMetricsService)
     private readonly planning: PlanningMetricsService,
+    @Inject(DebtService) private readonly debt: DebtService,
   ) {}
 
   private async baselineSeed(householdId: string, currency: CurrencyCode, asOf: string) {
@@ -327,9 +329,11 @@ export class DecisionsService {
     const asOf = process.env.DEMO_AS_OF_DATE ?? "2026-08-01";
     const assumptions = input.assumptions ?? {};
     const { seed } = await this.baselineSeed(input.householdId, currency, asOf);
+    const mortgage = await this.debt.primaryMortgageContext(input.householdId);
     const sim = simulateScenario({
       baseline: seed,
       assumptions: parseScenarioAssumptions(assumptions as Record<string, unknown>),
+      mortgage,
     });
 
     const db = getDb();
@@ -374,9 +378,11 @@ export class DecisionsService {
       row.assumptions ??
       {}) as Record<string, unknown>;
     const { seed } = await this.baselineSeed(input.householdId, currency, asOf);
+    const mortgage = await this.debt.primaryMortgageContext(input.householdId);
     const sim = simulateScenario({
       baseline: seed,
       assumptions: parseScenarioAssumptions(assumptionsRaw),
+      mortgage,
     });
 
     // Update cached delta on the scenario definition only — never ledger.

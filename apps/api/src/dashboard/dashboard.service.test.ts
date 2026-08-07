@@ -7,6 +7,7 @@ import { buildBrief } from "./dashboard.service";
 import { getDb } from "../db/client";
 import { households } from "../db/schema";
 import { DashboardService } from "./dashboard.service";
+import { DebtService } from "../debt/debt.service";
 import { DecisionsService } from "../decisions/decisions.service";
 import { HouseholdMetricsService } from "../metrics/household-metrics.service";
 import { PlanningMetricsService } from "../planning/planning-metrics.service";
@@ -144,6 +145,7 @@ test("getDashboard aggregates opportunities and forecast from live services", as
       access,
       new HouseholdMetricsService(),
       new PlanningMetricsService(),
+      new DebtService(access),
     ),
   );
 

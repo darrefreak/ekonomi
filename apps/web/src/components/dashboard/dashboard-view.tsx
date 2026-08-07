@@ -66,7 +66,14 @@ export function DashboardView({ data }: { data: DashboardResponse }) {
           <div className="mt-5 grid grid-cols-2 gap-4 md:grid-cols-3">
             <Metric label="Likvida medel" value={<MoneyValue value={data.position.availableCash} />} />
             <Metric label="Investeringar" value={<MoneyValue value={data.position.investments} />} />
-            <Metric label="Skuld" value={<MoneyValue value={data.position.debt} />} />
+            <Metric
+              label="Skuld"
+              value={
+                <Link href="/debt" className="hover:text-accent">
+                  <MoneyValue value={data.position.debt} />
+                </Link>
+              }
+            />
           </div>
         </div>
       </section>
