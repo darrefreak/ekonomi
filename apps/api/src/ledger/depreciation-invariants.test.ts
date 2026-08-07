@@ -147,10 +147,10 @@ test("S1 — depreciation cannot exceed current ledger asset balance", async () 
       }),
     (err: unknown) => {
       assert.ok(err instanceof Error);
+      const withResponse = err as unknown as { getResponse?: () => unknown };
       const body =
-        typeof (err as { getResponse?: () => unknown }).getResponse ===
-        "function"
-          ? (err as { getResponse: () => unknown }).getResponse()
+        typeof withResponse.getResponse === "function"
+          ? withResponse.getResponse()
           : null;
       assert.ok(body && typeof body === "object");
       const fields = (body as { fields?: Record<string, string> }).fields;
