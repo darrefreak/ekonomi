@@ -36,8 +36,15 @@ import {
   investmentsResponseSchema,
   netWorthResponseSchema,
   opportunitiesResponseSchema,
+  monthlyReportSchema,
+  notificationsResponseSchema,
+  resolveReviewSchema,
   reviewResponseSchema,
   riskResponseSchema,
+  searchResponseSchema,
+  settingsResponseSchema,
+  updateSettingsSchema,
+  yearlyReportSchema,
   scenarioSimulationResponseSchema,
   scenariosResponseSchema,
   subscriptionsResponseSchema,
@@ -91,8 +98,15 @@ import {
   type NetWorthResponse,
   type OpportunitiesResponse,
   type RegisterInput,
+  type MonthlyReport,
+  type NotificationsResponse,
+  type ResolveReviewInput,
   type ReviewResponse,
   type RiskResponse,
+  type SearchResponse,
+  type SettingsResponse,
+  type UpdateSettingsInput,
+  type YearlyReport,
   type ScenarioSimulationResponse,
   type ScenariosResponse,
   type SimulateScenarioInput,
@@ -334,6 +348,87 @@ export function createApiClient(options: ApiClientOptions) {
         `/api/v1/review?householdId=${encodeURIComponent(householdId)}`,
       );
       return reviewResponseSchema.parse(data) as ReviewResponse;
+    },
+    resolveReview: async (input: ResolveReviewInput) => {
+      const body = resolveReviewSchema.parse(input);
+      const data = await request<unknown>("/api/v1/review/resolve", {
+        method: "POST",
+        body: JSON.stringify(body),
+      });
+      return reviewResponseSchema.parse(data) as ReviewResponse;
+    },
+    getSettings: async (householdId: string) => {
+      const data = await request<unknown>(
+        `/api/v1/settings?householdId=${encodeURIComponent(householdId)}`,
+      );
+      return settingsResponseSchema.parse(data) as SettingsResponse;
+    },
+    updateSettings: async (input: UpdateSettingsInput) => {
+      const body = updateSettingsSchema.parse(input);
+      const data = await request<unknown>("/api/v1/settings", {
+        method: "PATCH",
+        body: JSON.stringify(body),
+      });
+      return settingsResponseSchema.parse(data) as SettingsResponse;
+    },
+    search: async (householdId: string, q: string) => {
+      const data = await request<unknown>(
+        `/api/v1/search?householdId=${encodeURIComponent(householdId)}&q=${encodeURIComponent(q)}`,
+      );
+      return searchResponseSchema.parse(data) as SearchResponse;
+    },
+    getNotifications: async (householdId: string) => {
+      const data = await request<unknown>(
+        `/api/v1/notifications?householdId=${encodeURIComponent(householdId)}`,
+      );
+      return notificationsResponseSchema.parse(data) as NotificationsResponse;
+    },
+    markNotificationRead: async (householdId: string, id: string) => {
+      const data = await request<unknown>(
+        `/api/v1/notifications/${encodeURIComponent(id)}/read?householdId=${encodeURIComponent(householdId)}`,
+        { method: "POST" },
+      );
+      return notificationsResponseSchema.parse(data) as NotificationsResponse;
+    },
+    markAllNotificationsRead: async (householdId: string) => {
+      const data = await request<unknown>(
+        `/api/v1/notifications/read-all?householdId=${encodeURIComponent(householdId)}`,
+        { method: "POST" },
+      );
+      return notificationsResponseSchema.parse(data) as NotificationsResponse;
+    },
+    getMonthlyReport: async (householdId: string, period?: string) => {
+      const qs = period
+        ? `&period=${encodeURIComponent(period)}`
+        : "";
+      const data = await request<unknown>(
+        `/api/v1/reports/monthly?householdId=${encodeURIComponent(householdId)}${qs}`,
+      );
+      return monthlyReportSchema.parse(data) as MonthlyReport;
+    },
+    getYearlyReport: async (householdId: string, year?: number) => {
+      const qs = year != null ? `&year=${year}` : "";
+      const data = await request<unknown>(
+        `/api/v1/reports/yearly?householdId=${encodeURIComponent(householdId)}${qs}`,
+      );
+      return yearlyReportSchema.parse(data) as YearlyReport;
+    },
+    getDemoInfo: async () => {
+      return request<{
+        email: string;
+        passwordHint: string;
+        asOf: string;
+        reseedAllowed: boolean;
+      }>("/api/v1/demo/info");
+    },
+    loadDemo: async () => {
+      return request<{
+        ok: boolean;
+        householdId: string;
+        email: string;
+        asOf: string;
+        message: string;
+      }>("/api/v1/demo/load", { method: "POST" });
     },
     getBudget: async (householdId: string) => {
       const data = await request<unknown>(

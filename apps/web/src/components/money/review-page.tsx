@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import type { ReviewResponse } from "@ffos/schemas";
+import { useCallback, useEffect, useState } from "react";
+import Link from "next/link";
+import type { CategoriesResponse, ReviewResponse } from "@ffos/schemas";
 import { api } from "@/lib/api";
 import { ensureHouseholdSession } from "@/lib/session";
 import { MoneyValue } from "../financial/money-value";
@@ -10,27 +11,71 @@ import { ErrorState } from "../feedback/error-state";
 import { LoadingState } from "../feedback/loading-state";
 
 export function ReviewPage() {
+  const [householdId, setHouseholdId] = useState<string | null>(null);
   const [data, setData] = useState<ReviewResponse | null>(null);
+  const [categories, setCategories] = useState<CategoriesResponse["items"]>([]);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [busyId, setBusyId] = useState<string | null>(null);
+  const [categoryPick, setCategoryPick] = useState<Record<string, string>>({});
 
-  useEffect(() => {
-    void ensureHouseholdSession()
-      .then((id) => api.getReview(id))
-      .then(setData)
-      .catch((err: Error) => setError(err.message))
-      .finally(() => setLoading(false));
+  const load = useCallback(async () => {
+    const id = await ensureHouseholdSession();
+    setHouseholdId(id);
+    const [review, cats] = await Promise.all([
+      api.getReview(id),
+      api.listCategories(id),
+    ]);
+    setData(review);
+    setCategories(cats.items);
   }, []);
 
+  useEffect(() => {
+    void load()
+      .catch((err: Error) => setError(err.message))
+      .finally(() => setLoading(false));
+  }, [load]);
+
+  async function resolve(
+    item: ReviewResponse["items"][number],
+    action:
+      | "set_category"
+      | "mark_internal_transfer"
+      | "archive_document"
+      | "dismiss",
+  ) {
+    if (!householdId || !item.entityId) return;
+    setBusyId(item.id);
+    setError(null);
+    try {
+      const next = await api.resolveReview({
+        householdId,
+        itemId: item.id,
+        kind: item.kind,
+        entityId: item.entityId,
+        action,
+        categoryId:
+          action === "set_category" ? categoryPick[item.id] : undefined,
+      });
+      setData(next);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Kunde inte lösa post");
+    } finally {
+      setBusyId(null);
+    }
+  }
+
   if (loading) return <LoadingState label="Hämtar granskningskö…" />;
-  if (error || !data) {
+  if (error && !data) {
     return (
       <ErrorState
         title="Kunde inte hämta granskning"
-        description={error ?? "Ingen data"}
+        description={error}
+        onRetry={() => void load()}
       />
     );
   }
+  if (!data) return null;
 
   if (data.total === 0) {
     return (
@@ -52,6 +97,12 @@ export function ReviewPage() {
         </p>
       </div>
 
+      {error ? (
+        <p className="text-sm text-warning" role="alert">
+          {error}
+        </p>
+      ) : null}
+
       <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
         <Count label="Okända transaktioner" value={data.counts.unknownTransactions} />
         <Count label="Möjliga överföringar" value={data.counts.possibleInternalTransfers} />
@@ -62,8 +113,8 @@ export function ReviewPage() {
       <ul className="divide-y divide-border rounded-[16px] bg-surface-elevated">
         {data.items.map((item) => (
           <li key={item.id} className="px-4 py-4">
-            <div className="flex items-start justify-between gap-3">
-              <div>
+            <div className="flex flex-wrap items-start justify-between gap-3">
+              <div className="min-w-0 flex-1">
                 <p className="text-xs uppercase tracking-wide text-text-muted">
                   {item.kind.replaceAll("_", " ")}
                 </p>
@@ -74,6 +125,75 @@ export function ReviewPage() {
                 ) : null}
               </div>
               {item.amount ? <MoneyValue value={item.amount} signed /> : null}
+            </div>
+            <div className="mt-3 flex flex-wrap items-center gap-2">
+              {item.kind === "unknown_transaction" ? (
+                <>
+                  <select
+                    className="min-h-11 rounded-[12px] border border-border bg-surface px-3 text-sm"
+                    value={categoryPick[item.id] ?? ""}
+                    onChange={(e) =>
+                      setCategoryPick((prev) => ({
+                        ...prev,
+                        [item.id]: e.target.value,
+                      }))
+                    }
+                  >
+                    <option value="">Välj kategori</option>
+                    {categories.map((c) => (
+                      <option key={c.id} value={c.id}>
+                        {c.name}
+                      </option>
+                    ))}
+                  </select>
+                  <button
+                    type="button"
+                    disabled={busyId === item.id || !categoryPick[item.id]}
+                    className="min-h-11 rounded-[12px] bg-accent px-3 text-sm text-white disabled:opacity-50"
+                    onClick={() => void resolve(item, "set_category")}
+                  >
+                    Sätt kategori
+                  </button>
+                </>
+              ) : null}
+              {item.kind === "possible_internal_transfer" ? (
+                <button
+                  type="button"
+                  disabled={busyId === item.id}
+                  className="min-h-11 rounded-[12px] bg-accent px-3 text-sm text-white disabled:opacity-50"
+                  onClick={() => void resolve(item, "mark_internal_transfer")}
+                >
+                  Markera överföring
+                </button>
+              ) : null}
+              {item.kind === "document_field" ? (
+                <>
+                  <Link
+                    href="/documents"
+                    className="min-h-11 rounded-[12px] border border-border px-3 text-sm leading-[2.75]"
+                  >
+                    Öppna dokument
+                  </Link>
+                  <button
+                    type="button"
+                    disabled={busyId === item.id}
+                    className="min-h-11 rounded-[12px] bg-accent px-3 text-sm text-white disabled:opacity-50"
+                    onClick={() => void resolve(item, "archive_document")}
+                  >
+                    Arkivera
+                  </button>
+                </>
+              ) : null}
+              {item.kind !== "document_field" ? (
+                <button
+                  type="button"
+                  disabled={busyId === item.id}
+                  className="min-h-11 rounded-[12px] border border-border px-3 text-sm disabled:opacity-50"
+                  onClick={() => void resolve(item, "dismiss")}
+                >
+                  Avfärda
+                </button>
+              ) : null}
             </div>
           </li>
         ))}

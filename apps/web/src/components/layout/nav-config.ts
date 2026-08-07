@@ -28,6 +28,9 @@ export const desktopNav: NavItem[] = [
   { href: "/imports", label: "Importer", section: "Connections" },
   { href: "/advisor", label: "Rådgivare", section: "AI" },
   { href: "/review", label: "Granska", section: "AI" },
+  { href: "/reports", label: "Rapporter", section: "Ops" },
+  { href: "/notifications", label: "Notiser", section: "Ops" },
+  { href: "/onboarding", label: "Onboarding", section: "Ops" },
   { href: "/settings", label: "Inställningar", section: "Settings" },
 ];
 

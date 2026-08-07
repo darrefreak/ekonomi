@@ -6,14 +6,18 @@ import { CashflowModule } from "./cashflow/cashflow.module";
 import { DashboardModule } from "./dashboard/dashboard.module";
 import { DebtModule } from "./debt/debt.module";
 import { DecisionsModule } from "./decisions/decisions.module";
+import { DemoModule } from "./demo/demo.module";
 import { FeatureFlagsModule } from "./feature-flags/feature-flags.module";
 import { FinancialCoverageModule } from "./financial-coverage/financial-coverage.module";
 import { HealthModule } from "./health/health.module";
 import { HouseholdsModule } from "./households/households.module";
 import { IntakeModule } from "./intake/intake.module";
 import { NetWorthModule } from "./net-worth/net-worth.module";
+import { NotificationsModule } from "./notifications/notifications.module";
 import { PlanningModule } from "./planning/planning.module";
+import { ReportsModule } from "./reports/reports.module";
 import { ReviewModule } from "./review/review.module";
+import { SearchModule } from "./search/search.module";
 import { SettingsModule } from "./settings/settings.module";
 import { TransactionsModule } from "./transactions/transactions.module";
 import { VehicleIntelModule } from "./vehicle-intel/vehicle-intel.module";
@@ -42,6 +46,11 @@ import { WealthModule } from "./wealth/wealth.module";
     DashboardModule,
     FeatureFlagsModule,
     SettingsModule,
+    SearchModule,
+    NotificationsModule,
+    ReportsModule,
+    DemoModule,
   ],
 })
 export class AppModule {}
+

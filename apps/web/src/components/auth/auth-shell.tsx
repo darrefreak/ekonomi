@@ -3,19 +3,26 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { AppShell } from "@/components/layout/app-shell";
-import { hasSession } from "@/lib/session";
+import { getHouseholdId, hasSession } from "@/lib/session";
 
 export function AuthShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
   const isLogin = pathname === "/login";
+  const isOnboarding = pathname === "/onboarding";
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
     const authed = hasSession();
+    const householdId = getHouseholdId();
+
     if (isLogin) {
-      if (authed) {
+      if (authed && householdId) {
         router.replace("/");
+        return;
+      }
+      if (authed && !householdId) {
+        router.replace("/onboarding");
         return;
       }
       setReady(true);
@@ -27,8 +34,13 @@ export function AuthShell({ children }: { children: ReactNode }) {
       return;
     }
 
+    if (!householdId && !isOnboarding) {
+      router.replace("/onboarding");
+      return;
+    }
+
     setReady(true);
-  }, [isLogin, pathname, router]);
+  }, [isLogin, isOnboarding, pathname, router]);
 
   if (!ready) {
     return (

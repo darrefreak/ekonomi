@@ -52,12 +52,15 @@ export const transactionsResponseSchema = z.object({
 export const updateTransactionSchema = z.object({
   householdId: z.string().uuid(),
   categoryId: z.string().uuid().nullable().optional(),
+  merchantId: z.string().uuid().nullable().optional(),
   notes: z.string().max(2000).nullable().optional(),
   tags: z.array(z.string().max(40)).max(20).optional(),
   isExcluded: z.boolean().optional(),
+  isInternalTransfer: z.boolean().optional(),
   description: z.string().max(500).nullable().optional(),
   vehicleId: z.string().uuid().nullable().optional(),
 });
+
 
 export const categorySchema = z.object({
   id: z.string().uuid(),

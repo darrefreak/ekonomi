@@ -9,6 +9,8 @@ import {
   setSession,
 } from "./api";
 
+export { getHouseholdId, getAccessToken };
+
 export const DEMO_CREDENTIALS = {
   email: "demo@ffos.local",
   password: "demo-password-123",
@@ -22,6 +24,10 @@ export class AuthRequiredError extends Error {
 }
 
 export function hasSession(): boolean {
+  return Boolean(getAccessToken());
+}
+
+export function hasHouseholdSession(): boolean {
   return Boolean(getAccessToken() && getHouseholdId());
 }
 
@@ -53,4 +59,21 @@ export async function ensureHouseholdSession(): Promise<string> {
 
 export function logout(): void {
   clearSession();
+}
+
+export function setHouseholdAfterCreate(householdId: string): void {
+  setHouseholdId(householdId);
+}
+
+export async function registerWithCredentials(
+  email: string,
+  password: string,
+  displayName: string,
+): Promise<"onboarding" | string> {
+  const registered = await api.register({ email, password, displayName });
+  setSession(registered.tokens);
+  const households = await api.listHouseholds();
+  if (!households[0]) return "onboarding";
+  setHouseholdId(households[0].id);
+  return households[0].id;
 }
