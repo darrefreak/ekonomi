@@ -166,9 +166,10 @@ export async function seedVehiclesData(input: SeedVehiclesInput) {
     {
       kind: "DEPRECIATION",
       occurredOn: "2026-07-31",
-      amountMinor: 18_000_00n,
+      // Matches ledger write-down 300k → 280k (ASSET account / valuation mid).
+      amountMinor: 20_000_00n,
       isEconomicCost: true,
-      description: "Uppskattad värdeminskning 12 mån (ackumulerad demo)",
+      description: "Värdeminskning fordon (ledger-aligned)",
     },
   ];
 

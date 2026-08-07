@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import {
+  buildAssetDepreciation,
   buildAssetPurchaseAtFairValue,
   buildCashRefund,
   buildCreditCardPayment,
@@ -85,6 +86,25 @@ test("vehicle cash purchase at fair value: expense 0, NW unchanged", () => {
   });
   assert.equal(result.expenseAmountMinor, 0n);
   assert.equal(result.netWorthDeltaMinor, 0n);
+});
+
+test("vehicle depreciation 300k→280k: cashflow 0, NW -20k", () => {
+  const result = buildAssetDepreciation({
+    assetAccountId: VEHICLE,
+    expenseAccountId: EXPENSE,
+    amountMinor: 20_000_00n,
+    currency: "SEK",
+  });
+  assert.equal(result.expenseAmountMinor, 0n);
+  assert.equal(result.netWorthDeltaMinor, -20_000_00n);
+  const balances = reconstructBalances({
+    openings: [
+      { accountId: VEHICLE, accountType: "ASSET", openingMinor: 300_000_00n },
+      { accountId: EXPENSE, accountType: "EXPENSE", openingMinor: 0n },
+    ],
+    postings: result.postings,
+  });
+  assert.equal(balances.get(VEHICLE), 280_000_00n);
 });
 
 test("cash refund nets expense and increases NW", () => {

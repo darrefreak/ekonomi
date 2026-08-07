@@ -1,6 +1,7 @@
 import { BadRequestException, Injectable } from "@nestjs/common";
 import { randomUUID } from "node:crypto";
 import {
+  buildAssetDepreciation,
   buildCreditCardPayment,
   buildCreditCardPurchase,
   buildInternalTransfer,
@@ -82,11 +83,13 @@ export class EconomicEventsService {
     incomeAmountMinor?: bigint;
     sourceType?: string;
     externalId?: string;
+    vehicleId?: string;
   }) {
     const event = await persistBalancedEvent({
       ...input,
       sourceType: input.sourceType ?? "api",
       externalId: input.externalId,
+      vehicleId: input.vehicleId,
     });
     await this.afterWrite(
       input.householdId,
@@ -329,6 +332,41 @@ export class EconomicEventsService {
       sourceAccountId: input.cashAccountId,
       sourceAmountMinor: input.amountMinor,
       incomeAmountMinor: 0n,
+    });
+  }
+
+  async createAssetDepreciation(input: {
+    householdId: string;
+    assetAccountId: string;
+    expenseAccountId: string;
+    amountMinor: bigint;
+    occurredOn: string;
+    description?: string;
+    vehicleId?: string;
+    currency?: CurrencyCode;
+    externalId?: string;
+  }) {
+    if (input.amountMinor <= 0n) {
+      throw new BadRequestException("amountMinor must be positive");
+    }
+    await requireAccount(input.householdId, input.assetAccountId, ["ASSET"]);
+    await requireAccount(input.householdId, input.expenseAccountId, ["EXPENSE"]);
+    const draft = buildAssetDepreciation({
+      assetAccountId: input.assetAccountId,
+      expenseAccountId: input.expenseAccountId,
+      amountMinor: input.amountMinor,
+      currency: input.currency ?? "SEK",
+    });
+    return this.persistDraft({
+      householdId: input.householdId,
+      draft,
+      occurredOn: input.occurredOn,
+      description: input.description ?? "Värdeminskning",
+      vehicleId: input.vehicleId,
+      externalId:
+        input.externalId ??
+        `api-depr-${input.assetAccountId}-${input.occurredOn}-${input.amountMinor}`,
+      // No cash source transaction — non-cash write-down (cashflow 0).
     });
   }
 }

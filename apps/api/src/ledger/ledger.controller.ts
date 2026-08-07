@@ -74,6 +74,16 @@ const investmentTransferSchema = z.object({
   description: z.string().max(240).optional(),
 });
 
+const assetDepreciationSchema = z.object({
+  householdId: z.string().uuid(),
+  assetAccountId: z.string().uuid(),
+  expenseAccountId: z.string().uuid(),
+  amountMinor: moneyMinor,
+  occurredOn: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+  description: z.string().max(240).optional(),
+  vehicleId: z.string().uuid().optional(),
+});
+
 @ApiTags("ledger")
 @ApiBearerAuth()
 @UseGuards(AuthGuard)
@@ -217,5 +227,29 @@ export class LedgerController {
       description: input.description,
     });
     return { id: event.id, eventType: event.eventType };
+  }
+
+  @Post("assets/depreciation")
+  async assetDepreciation(
+    @CurrentUser() user: AuthenticatedUser,
+    @Body(new ZodValidationPipe(assetDepreciationSchema)) body: unknown,
+  ) {
+    const input = assetDepreciationSchema.parse(body);
+    await this.access.requireCanWrite(user.userId, input.householdId);
+    const event = await this.events.createAssetDepreciation({
+      householdId: input.householdId,
+      assetAccountId: input.assetAccountId,
+      expenseAccountId: input.expenseAccountId,
+      amountMinor: BigInt(input.amountMinor),
+      occurredOn: input.occurredOn,
+      description: input.description,
+      vehicleId: input.vehicleId,
+    });
+    return {
+      id: event.id,
+      eventType: event.eventType,
+      expenseAmountMinor: event.expenseAmountMinor.toString(),
+      netWorthDeltaMinor: event.netWorthDeltaMinor.toString(),
+    };
   }
 }

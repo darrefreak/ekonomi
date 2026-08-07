@@ -1,16 +1,13 @@
-/** Convert a kronor (major) input string to amountMinor string. */
+import { kronorStringToMinor, minorToKronorString } from "@ffos/domain";
+
+/** Convert a kronor (major) input string to amountMinor string (integer öre). */
 export function kronorToMinorString(value: string): string | null {
-  const normalized = value.trim().replace(/\s/g, "").replace(",", ".");
-  if (!normalized) return null;
-  if (!/^-?\d+(\.\d{1,2})?$/.test(normalized)) return null;
-  const major = Number(normalized);
-  if (!Number.isFinite(major)) return null;
-  return String(Math.round(major * 100));
+  const minor = kronorStringToMinor(value);
+  if (minor == null) return null;
+  return minor.toString();
 }
 
-/** Format amountMinor as kronor string for editable inputs. */
+/** Format amountMinor as kronor string for editable inputs (no float). */
 export function minorToKronorInput(amountMinor: string): string {
-  const n = Number(amountMinor);
-  if (!Number.isFinite(n)) return "0";
-  return (n / 100).toFixed(n % 100 === 0 ? 0 : 2);
+  return minorToKronorString(amountMinor);
 }
