@@ -158,6 +158,4 @@ test("getDashboard aggregates opportunities and forecast from live services", as
   assert.equal(typeof parsed.cashRunwayMonths, "number");
   assert.ok(!JSON.stringify(parsed.brief).includes("9800"));
   assert.ok(!JSON.stringify(parsed.brief).includes("9 800"));
-
-  await getPool().end().catch(() => undefined);
 });
