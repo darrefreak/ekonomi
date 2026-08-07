@@ -131,7 +131,12 @@ test("roles privacy logout and export against real DB", async () => {
 
   // AGGREGATES_ONLY redacts personal accounts from viewer list
   const viewerList = await accountsService.list(viewerUser.id, householdId);
-  const personalHit = viewerList.items.find((a) => a.id === personal[0]!.id);
+  const personalHit = viewerList.items.find((a) => a.id === personal[0]!.id) as
+    | (typeof viewerList.items)[number] & {
+        privacyRedacted?: boolean;
+        privacyLevel?: string;
+      }
+    | undefined;
   if (personalHit) {
     assert.equal(personalHit.privacyRedacted, true);
     assert.equal(personalHit.privacyLevel, "aggregate");
