@@ -98,3 +98,67 @@ test("A3 — vehicle depreciation 300k→280k persisted invariants", async () =>
   assert.equal(row.expenseAmountMinor, 0n);
   assert.equal(row.netWorthDeltaMinor, -20_000_00n);
 });
+
+test("S1 — depreciation cannot exceed current ledger asset balance", async () => {
+  if (!process.env.DATABASE_URL) return;
+  const db = getDb();
+
+  const [household] = await db
+    .insert(households)
+    .values({ name: `S1 Dep Excess ${Date.now()}`, baseCurrency: "SEK" })
+    .returning();
+
+  const [vehicle] = await db
+    .insert(accounts)
+    .values({
+      householdId: household.id,
+      name: "S1 Vehicle",
+      accountType: "ASSET",
+      openingBalanceMinor: 100_000_00n,
+      currentBalanceMinor: 100_000_00n,
+      isShared: true,
+    })
+    .returning();
+  const [expense] = await db
+    .insert(accounts)
+    .values({
+      householdId: household.id,
+      name: "S1 Expense",
+      accountType: "EXPENSE",
+      openingBalanceMinor: 0n,
+      currentBalanceMinor: 0n,
+      isShared: true,
+      isSystem: true,
+    })
+    .returning();
+
+  const audit = new AuditService();
+  const ledger = new LedgerTruthService(audit);
+  const events = new EconomicEventsService(ledger, audit);
+
+  await assert.rejects(
+    () =>
+      events.createAssetDepreciation({
+        householdId: household.id,
+        assetAccountId: vehicle.id,
+        expenseAccountId: expense.id,
+        amountMinor: 900_000_00n,
+        occurredOn: AS_OF,
+      }),
+    (err: unknown) => {
+      assert.ok(err instanceof Error);
+      const body =
+        typeof (err as { getResponse?: () => unknown }).getResponse ===
+        "function"
+          ? (err as { getResponse: () => unknown }).getResponse()
+          : null;
+      assert.ok(body && typeof body === "object");
+      const fields = (body as { fields?: Record<string, string> }).fields;
+      assert.ok(fields?.amountMinor);
+      return true;
+    },
+  );
+
+  const balances = await ledger.reconstructHousehold(household.id);
+  assert.equal(balances.get(vehicle.id), 100_000_00n);
+});

@@ -9,7 +9,11 @@ import {
   UseGuards,
 } from "@nestjs/common";
 import { ApiBearerAuth, ApiTags } from "@nestjs/swagger";
-import { updateBudgetLineSchema } from "@ffos/schemas";
+import {
+  householdIdQuerySchema,
+  lineIdParamSchema,
+  updateBudgetLineSchema,
+} from "@ffos/schemas";
 import { AuthGuard } from "../auth/auth.guard";
 import { CurrentUser } from "../auth/current-user.decorator";
 import type { AuthenticatedUser } from "../auth/auth.types";
@@ -26,21 +30,23 @@ export class BudgetController {
   @Get()
   get(
     @CurrentUser() user: AuthenticatedUser,
-    @Query("householdId") householdId: string,
+    @Query(new ZodValidationPipe(householdIdQuerySchema))
+    query: { householdId: string },
   ) {
-    return this.budget.get(user.userId, householdId);
+    return this.budget.get(user.userId, query.householdId);
   }
 
   @Patch("lines/:lineId")
   updateLine(
     @CurrentUser() user: AuthenticatedUser,
-    @Param("lineId") lineId: string,
+    @Param(new ZodValidationPipe(lineIdParamSchema))
+    params: { lineId: string },
     @Body(new ZodValidationPipe(updateBudgetLineSchema)) body: unknown,
   ) {
     return this.budget.updateLine(
       user.userId,
-      lineId,
-      body as ReturnType<typeof updateBudgetLineSchema.parse>,
+      params.lineId,
+      updateBudgetLineSchema.parse(body),
     );
   }
 }

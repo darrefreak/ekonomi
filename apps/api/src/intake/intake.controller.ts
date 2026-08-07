@@ -13,6 +13,8 @@ import {
 import { ApiBearerAuth, ApiTags } from "@nestjs/swagger";
 import {
   createSourceSchema,
+  householdIdQuerySchema,
+  idParamSchema,
   reconnectSourceSchema,
   syncSourceSchema,
   updateDocumentSchema,
@@ -35,18 +37,20 @@ export class IntakeController {
   @Get("documents")
   documents(
     @CurrentUser() user: AuthenticatedUser,
-    @Query("householdId") householdId: string,
+    @Query(new ZodValidationPipe(householdIdQuerySchema))
+    query: { householdId: string },
   ) {
-    return this.intake.documents(user.userId, householdId);
+    return this.intake.documents(user.userId, query.householdId);
   }
 
   @Get("documents/:id")
   getDocument(
     @CurrentUser() user: AuthenticatedUser,
-    @Query("householdId") householdId: string,
-    @Param("id") id: string,
+    @Query(new ZodValidationPipe(householdIdQuerySchema))
+    query: { householdId: string },
+    @Param(new ZodValidationPipe(idParamSchema)) params: { id: string },
   ) {
-    return this.intake.getDocument(user.userId, householdId, id);
+    return this.intake.getDocument(user.userId, query.householdId, params.id);
   }
 
   @Post("documents/upload")
@@ -63,12 +67,12 @@ export class IntakeController {
   @Patch("documents/:id")
   update(
     @CurrentUser() user: AuthenticatedUser,
-    @Param("id") id: string,
+    @Param(new ZodValidationPipe(idParamSchema)) params: { id: string },
     @Body(new ZodValidationPipe(updateDocumentSchema)) body: unknown,
   ) {
     return this.intake.updateDocument(
       user.userId,
-      id,
+      params.id,
       updateDocumentSchema.parse(body),
     );
   }
@@ -76,18 +80,20 @@ export class IntakeController {
   @Post("documents/:id/extract")
   extract(
     @CurrentUser() user: AuthenticatedUser,
-    @Query("householdId") householdId: string,
-    @Param("id") id: string,
+    @Query(new ZodValidationPipe(householdIdQuerySchema))
+    query: { householdId: string },
+    @Param(new ZodValidationPipe(idParamSchema)) params: { id: string },
   ) {
-    return this.intake.reextract(user.userId, householdId, id);
+    return this.intake.reextract(user.userId, query.householdId, params.id);
   }
 
   @Get("integrations")
   integrations(
     @CurrentUser() user: AuthenticatedUser,
-    @Query("householdId") householdId: string,
+    @Query(new ZodValidationPipe(householdIdQuerySchema))
+    query: { householdId: string },
   ) {
-    return this.intake.integrations(user.userId, householdId);
+    return this.intake.integrations(user.userId, query.householdId);
   }
 
   @Post("sources")
@@ -104,12 +110,12 @@ export class IntakeController {
   @Patch("sources/:id")
   updateSource(
     @CurrentUser() user: AuthenticatedUser,
-    @Param("id") id: string,
+    @Param(new ZodValidationPipe(idParamSchema)) params: { id: string },
     @Body(new ZodValidationPipe(updateSourceSchema)) body: unknown,
   ) {
     return this.intake.updateSource(
       user.userId,
-      id,
+      params.id,
       updateSourceSchema.parse(body),
     );
   }
@@ -117,21 +123,22 @@ export class IntakeController {
   @Delete("sources/:id")
   archiveSource(
     @CurrentUser() user: AuthenticatedUser,
-    @Query("householdId") householdId: string,
-    @Param("id") id: string,
+    @Query(new ZodValidationPipe(householdIdQuerySchema))
+    query: { householdId: string },
+    @Param(new ZodValidationPipe(idParamSchema)) params: { id: string },
   ) {
-    return this.intake.archiveSource(user.userId, householdId, id);
+    return this.intake.archiveSource(user.userId, query.householdId, params.id);
   }
 
   @Post("sources/:id/reconnect")
   reconnectSource(
     @CurrentUser() user: AuthenticatedUser,
-    @Param("id") id: string,
+    @Param(new ZodValidationPipe(idParamSchema)) params: { id: string },
     @Body(new ZodValidationPipe(reconnectSourceSchema)) body: unknown,
   ) {
     return this.intake.reconnectSource(
       user.userId,
-      id,
+      params.id,
       reconnectSourceSchema.parse(body),
     );
   }
@@ -139,26 +146,28 @@ export class IntakeController {
   @Post("sources/:id/sync")
   syncSource(
     @CurrentUser() user: AuthenticatedUser,
-    @Param("id") id: string,
+    @Param(new ZodValidationPipe(idParamSchema)) params: { id: string },
     @Body(new ZodValidationPipe(syncSourceSchema)) body: unknown,
   ) {
     const parsed = syncSourceSchema.parse(body);
-    return this.intake.fakeSync(user.userId, parsed.householdId, id);
+    return this.intake.fakeSync(user.userId, parsed.householdId, params.id);
   }
 
   @Get("imports")
   imports(
     @CurrentUser() user: AuthenticatedUser,
-    @Query("householdId") householdId: string,
+    @Query(new ZodValidationPipe(householdIdQuerySchema))
+    query: { householdId: string },
   ) {
-    return this.intake.imports(user.userId, householdId);
+    return this.intake.imports(user.userId, query.householdId);
   }
 
   @Post("integrations/sync")
   sync(
     @CurrentUser() user: AuthenticatedUser,
-    @Query("householdId") householdId: string,
+    @Query(new ZodValidationPipe(householdIdQuerySchema))
+    query: { householdId: string },
   ) {
-    return this.intake.fakeSync(user.userId, householdId);
+    return this.intake.fakeSync(user.userId, query.householdId);
   }
 }

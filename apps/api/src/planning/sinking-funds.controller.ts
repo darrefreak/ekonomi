@@ -11,6 +11,7 @@ import { ApiBearerAuth, ApiTags } from "@nestjs/swagger";
 import {
   contributeSinkingFundSchema,
   createSinkingFundSchema,
+  fundIdParamSchema,
   updateSinkingFundSchema,
 } from "@ffos/schemas";
 import { AuthGuard } from "../auth/auth.guard";
@@ -35,33 +36,35 @@ export class SinkingFundsController {
   ) {
     return this.funds.create(
       user.userId,
-      body as ReturnType<typeof createSinkingFundSchema.parse>,
+      createSinkingFundSchema.parse(body),
     );
   }
 
   @Patch(":fundId")
   update(
     @CurrentUser() user: AuthenticatedUser,
-    @Param("fundId") fundId: string,
+    @Param(new ZodValidationPipe(fundIdParamSchema))
+    params: { fundId: string },
     @Body(new ZodValidationPipe(updateSinkingFundSchema)) body: unknown,
   ) {
     return this.funds.update(
       user.userId,
-      fundId,
-      body as ReturnType<typeof updateSinkingFundSchema.parse>,
+      params.fundId,
+      updateSinkingFundSchema.parse(body),
     );
   }
 
   @Post(":fundId/contributions")
   contribute(
     @CurrentUser() user: AuthenticatedUser,
-    @Param("fundId") fundId: string,
+    @Param(new ZodValidationPipe(fundIdParamSchema))
+    params: { fundId: string },
     @Body(new ZodValidationPipe(contributeSinkingFundSchema)) body: unknown,
   ) {
     return this.funds.contribute(
       user.userId,
-      fundId,
-      body as ReturnType<typeof contributeSinkingFundSchema.parse>,
+      params.fundId,
+      contributeSinkingFundSchema.parse(body),
     );
   }
 }

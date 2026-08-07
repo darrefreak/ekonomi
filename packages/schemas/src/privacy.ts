@@ -1,8 +1,10 @@
 import { z } from "zod";
 
-export const privacyExportRequestSchema = z.object({
-  householdId: z.string().uuid(),
-});
+export const privacyExportRequestSchema = z
+  .object({
+    householdId: z.string().uuid(),
+  })
+  .strict();
 export type PrivacyExportRequest = z.infer<typeof privacyExportRequestSchema>;
 
 export const privacyExportResponseSchema = z.object({
@@ -13,13 +15,15 @@ export const privacyExportResponseSchema = z.object({
 });
 export type PrivacyExportResponse = z.infer<typeof privacyExportResponseSchema>;
 
-export const privacyDeleteRequestSchema = z.object({
-  householdId: z.string().uuid(),
-  kind: z.enum(["delete_personal", "leave_household", "delete_household"]).default(
-    "delete_personal",
-  ),
-  note: z.string().max(500).optional(),
-});
+export const privacyDeleteRequestSchema = z
+  .object({
+    householdId: z.string().uuid(),
+    kind: z
+      .enum(["delete_personal", "leave_household", "delete_household"])
+      .default("delete_personal"),
+    note: z.string().max(500).optional(),
+  })
+  .strict();
 export type PrivacyDeleteRequest = z.input<typeof privacyDeleteRequestSchema>;
 
 export const privacyDeleteResponseSchema = z.object({

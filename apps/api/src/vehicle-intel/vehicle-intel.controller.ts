@@ -1,8 +1,10 @@
 import { Controller, Get, Inject, Query, UseGuards } from "@nestjs/common";
 import { ApiBearerAuth, ApiTags } from "@nestjs/swagger";
+import { vehicleMarketQuerySchema } from "@ffos/schemas";
 import { AuthGuard } from "../auth/auth.guard";
 import { CurrentUser } from "../auth/current-user.decorator";
 import type { AuthenticatedUser } from "../auth/auth.types";
+import { ZodValidationPipe } from "../common/zod-validation.pipe";
 import { VehicleIntelService } from "./vehicle-intel.service";
 
 @ApiTags("vehicle-intel")
@@ -17,9 +19,13 @@ export class VehicleIntelController {
   @Get()
   market(
     @CurrentUser() user: AuthenticatedUser,
-    @Query("householdId") householdId: string,
-    @Query("vehicleId") vehicleId?: string,
+    @Query(new ZodValidationPipe(vehicleMarketQuerySchema))
+    query: { householdId: string; vehicleId?: string },
   ) {
-    return this.intel.market(user.userId, householdId, vehicleId);
+    return this.intel.market(
+      user.userId,
+      query.householdId,
+      query.vehicleId,
+    );
   }
 }

@@ -1,6 +1,7 @@
 import { Body, Controller, Get, Inject, Post, Query, UseGuards } from "@nestjs/common";
 import { ApiBearerAuth, ApiTags } from "@nestjs/swagger";
 import {
+  householdIdQuerySchema,
   privacyDeleteRequestSchema,
   privacyExportRequestSchema,
 } from "@ffos/schemas";
@@ -38,8 +39,9 @@ export class PrivacyController {
   @Get("requests")
   list(
     @CurrentUser() user: AuthenticatedUser,
-    @Query("householdId") householdId: string,
+    @Query(new ZodValidationPipe(householdIdQuerySchema))
+    query: { householdId: string },
   ) {
-    return this.privacy.listRequests(user.userId, householdId);
+    return this.privacy.listRequests(user.userId, query.householdId);
   }
 }

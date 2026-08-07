@@ -9,7 +9,12 @@ import {
   UseGuards,
 } from "@nestjs/common";
 import { ApiBearerAuth, ApiTags } from "@nestjs/swagger";
-import { updateTransactionSchema } from "@ffos/schemas";
+import {
+  householdIdQuerySchema,
+  idParamSchema,
+  listTransactionsQuerySchema,
+  updateTransactionSchema,
+} from "@ffos/schemas";
 import { AuthGuard } from "../auth/auth.guard";
 import { CurrentUser } from "../auth/current-user.decorator";
 import type { AuthenticatedUser } from "../auth/auth.types";
@@ -28,53 +33,62 @@ export class TransactionsController {
   @Get("categories")
   listCategories(
     @CurrentUser() user: AuthenticatedUser,
-    @Query("householdId") householdId: string,
+    @Query(new ZodValidationPipe(householdIdQuerySchema))
+    query: { householdId: string },
   ) {
-    return this.transactions.listCategories(user.userId, householdId);
+    return this.transactions.listCategories(user.userId, query.householdId);
   }
 
   @Get("transactions")
   list(
     @CurrentUser() user: AuthenticatedUser,
-    @Query("householdId") householdId: string,
-    @Query("limit") limit?: string,
-    @Query("q") q?: string,
-    @Query("accountId") accountId?: string,
-    @Query("from") from?: string,
-    @Query("to") to?: string,
-    @Query("includeExcluded") includeExcluded?: string,
-    @Query("vehicleId") vehicleId?: string,
+    @Query(new ZodValidationPipe(listTransactionsQuerySchema))
+    query: {
+      householdId: string;
+      limit?: string;
+      q?: string;
+      accountId?: string;
+      from?: string;
+      to?: string;
+      includeExcluded?: string;
+      vehicleId?: string;
+    },
   ) {
-    return this.transactions.list(user.userId, householdId, {
-      limit: limit ? Number(limit) : 50,
-      q,
-      accountId,
-      from,
-      to,
+    const limitRaw = query.limit ? Number(query.limit) : 50;
+    const limit = Number.isFinite(limitRaw)
+      ? Math.min(200, Math.max(1, Math.trunc(limitRaw)))
+      : 50;
+    return this.transactions.list(user.userId, query.householdId, {
+      limit,
+      q: query.q,
+      accountId: query.accountId,
+      from: query.from,
+      to: query.to,
       includeExcluded:
-        includeExcluded === "true" || includeExcluded === "1",
-      vehicleId,
+        query.includeExcluded === "true" || query.includeExcluded === "1",
+      vehicleId: query.vehicleId,
     });
   }
 
   @Get("transactions/:id")
   get(
     @CurrentUser() user: AuthenticatedUser,
-    @Query("householdId") householdId: string,
-    @Param("id") id: string,
+    @Query(new ZodValidationPipe(householdIdQuerySchema))
+    query: { householdId: string },
+    @Param(new ZodValidationPipe(idParamSchema)) params: { id: string },
   ) {
-    return this.transactions.get(user.userId, householdId, id);
+    return this.transactions.get(user.userId, query.householdId, params.id);
   }
 
   @Patch("transactions/:id")
   update(
     @CurrentUser() user: AuthenticatedUser,
-    @Param("id") id: string,
+    @Param(new ZodValidationPipe(idParamSchema)) params: { id: string },
     @Body(new ZodValidationPipe(updateTransactionSchema)) body: unknown,
   ) {
     return this.transactions.update(
       user.userId,
-      id,
+      params.id,
       updateTransactionSchema.parse(body),
     );
   }

@@ -42,10 +42,12 @@ export const advisorBriefResponseSchema = z.object({
 });
 export type AdvisorBriefResponse = z.infer<typeof advisorBriefResponseSchema>;
 
-export const advisorChatRequestSchema = z.object({
-  householdId: z.string().uuid(),
-  message: z.string().min(1).max(2000),
-});
+export const advisorChatRequestSchema = z
+  .object({
+    householdId: z.string().uuid(),
+    message: z.string().min(1).max(2000),
+  })
+  .strict();
 export type AdvisorChatInput = z.input<typeof advisorChatRequestSchema>;
 
 export const advisorChatResponseSchema = z.object({

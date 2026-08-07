@@ -1,8 +1,13 @@
 import { Controller, Get, Inject, Param, Query, UseGuards } from "@nestjs/common";
 import { ApiBearerAuth, ApiTags } from "@nestjs/swagger";
+import {
+  accountIdParamSchema,
+  householdIdQuerySchema,
+} from "@ffos/schemas";
 import { AuthGuard } from "../auth/auth.guard";
 import { CurrentUser } from "../auth/current-user.decorator";
 import type { AuthenticatedUser } from "../auth/auth.types";
+import { ZodValidationPipe } from "../common/zod-validation.pipe";
 import { DebtService } from "./debt.service";
 
 @ApiTags("debt")
@@ -15,17 +20,20 @@ export class DebtController {
   @Get()
   list(
     @CurrentUser() user: AuthenticatedUser,
-    @Query("householdId") householdId: string,
+    @Query(new ZodValidationPipe(householdIdQuerySchema))
+    query: { householdId: string },
   ) {
-    return this.debt.list(user.userId, householdId);
+    return this.debt.list(user.userId, query.householdId);
   }
 
   @Get(":accountId")
   detail(
     @CurrentUser() user: AuthenticatedUser,
-    @Param("accountId") accountId: string,
-    @Query("householdId") householdId: string,
+    @Param(new ZodValidationPipe(accountIdParamSchema))
+    params: { accountId: string },
+    @Query(new ZodValidationPipe(householdIdQuerySchema))
+    query: { householdId: string },
   ) {
-    return this.debt.detail(user.userId, householdId, accountId);
+    return this.debt.detail(user.userId, query.householdId, params.accountId);
   }
 }
