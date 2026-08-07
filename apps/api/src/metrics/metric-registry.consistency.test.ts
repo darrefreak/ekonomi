@@ -8,7 +8,6 @@ import {
 import { getDb } from "../db/client";
 import { households } from "../db/schema";
 import { DebtService } from "../debt/debt.service";
-import { DashboardService } from "../dashboard/dashboard.service";
 import type { HouseholdAccessService } from "../households/household-access.service";
 import { NetWorthService } from "../net-worth/net-worth.service";
 import { WealthService } from "../wealth/wealth.service";
@@ -112,7 +111,4 @@ test("C2 — dashboard / net-worth / debt / wealth / registry agree", async () =
   const listed = await registry.listDefinitions();
   assert.equal(listed.bundleVersion, METRIC_BUNDLE_VERSION);
   assert.ok(listed.items.length >= 10);
-
-  // Silence unused import in environments without full Nest DI for dashboard.
-  void DashboardService;
 });
