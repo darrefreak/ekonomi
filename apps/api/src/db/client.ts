@@ -8,6 +8,7 @@ import * as decisions from "./schema-decisions";
 import * as vehicleIntel from "./schema-vehicle-intel";
 import * as intake from "./schema-intake";
 import * as ai from "./schema-ai";
+import * as metrics from "./schema-metrics";
 
 const schema = {
   ...core,
@@ -18,6 +19,7 @@ const schema = {
   ...vehicleIntel,
   ...intake,
   ...ai,
+  ...metrics,
 };
 
 let pool: Pool | null = null;

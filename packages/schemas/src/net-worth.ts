@@ -1,8 +1,10 @@
 import { z } from "zod";
+import { metricMetaSchema } from "./metrics";
 import { moneySchema } from "./money";
 
 export const netWorthResponseSchema = z.object({
   asOf: z.string(),
+  metricMeta: metricMetaSchema.optional(),
   current: moneySchema,
   breakdown: z.object({
     cash: moneySchema,

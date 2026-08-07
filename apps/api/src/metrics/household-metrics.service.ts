@@ -3,6 +3,7 @@ import { and, asc, eq, gte, lte, ne, sql } from "drizzle-orm";
 import { money, moneyToJson, type CurrencyCode } from "@ffos/domain";
 import {
   attributeNetWorthChange,
+  bucketBalancesForNetWorth,
   buildMonthlyCashflow,
   calculateFinancialCoverage,
   computeFreshnessLabel,
@@ -13,6 +14,8 @@ import {
   comparePeriods,
   estimateMortgageRateSavingMinor,
   forecastCashflowDeltas,
+  METRIC_BUNDLE_VERSION,
+  metricInputHash,
   monthEndDates,
   netWorthFromTypedBalances,
   reconstructBalances,
@@ -78,28 +81,21 @@ export class HouseholdMetricsService {
     accountRows: Awaited<ReturnType<HouseholdMetricsService["getAccountRows"]>>,
     currency: CurrencyCode,
   ) {
-    const sumType = (...types: string[]) =>
-      accountRows
-        .filter((a) => types.includes(a.accountType))
-        .reduce((acc, a) => {
-          const bal = a.currentBalanceMinor;
-          if (types.some((t) => ["MORTGAGE", "LOAN", "CREDIT_CARD"].includes(t))) {
-            return acc + (bal < 0n ? -bal : bal);
-          }
-          return acc + bal;
-        }, 0n);
-
-    const availableCash = money(sumType("CHECKING", "SAVINGS", "CASH"), currency);
-    const investments = money(sumType("INVESTMENT", "PENSION", "CRYPTO"), currency);
-    const assets = money(sumType("ASSET"), currency);
-    const liabilities = money(sumType("MORTGAGE", "LOAN", "CREDIT_CARD"), currency);
-    const netWorth = calculateNetWorth({
-      cash: availableCash,
-      investments,
-      assets,
-      liabilities,
-    });
-    return { availableCash, investments, assets, liabilities, netWorth };
+    const buckets = bucketBalancesForNetWorth(
+      accountRows.map((a) => ({
+        accountType: a.accountType,
+        balanceMinor: a.currentBalanceMinor,
+      })),
+      currency,
+    );
+    const netWorth = calculateNetWorth(buckets);
+    return {
+      availableCash: buckets.cash,
+      investments: buckets.investments,
+      assets: buckets.assets,
+      liabilities: buckets.liabilities,
+      netWorth,
+    };
   }
 
   /**
@@ -529,6 +525,21 @@ export class HouseholdMetricsService {
 
     const upcoming = await this.upcomingObligations(householdId, currency, asOf);
 
+    const inputHash = metricInputHash([
+      householdId,
+      asOf,
+      METRIC_BUNDLE_VERSION,
+      accountRows.length,
+      position.netWorth.amountMinor,
+      position.availableCash.amountMinor,
+      position.investments.amountMinor,
+      position.assets.amountMinor,
+      position.liabilities.amountMinor,
+      incomeMinor,
+      spendingMinor,
+      monthLabel,
+    ]);
+
     return {
       asOf,
       currency,
@@ -546,6 +557,13 @@ export class HouseholdMetricsService {
       mortgageSavingMinor,
       upcoming,
       monthLabel,
+      /** Shared registry metadata — all consumers must surface the same bundle. */
+      metricMeta: {
+        bundleVersion: METRIC_BUNDLE_VERSION,
+        calculationVersion: METRIC_BUNDLE_VERSION,
+        inputHash,
+        asOf,
+      },
     };
   }
 

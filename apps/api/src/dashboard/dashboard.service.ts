@@ -69,6 +69,7 @@ export class DashboardService {
       greeting,
       asOf,
       householdName: household.name,
+      metricMeta: snap.metricMeta,
       position: {
         netWorth: moneyToJson(snap.position.netWorth),
         netWorthChangeMonth: moneyToJson(money(snap.changeMonthMinor, currency)),

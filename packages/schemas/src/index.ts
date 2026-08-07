@@ -26,4 +26,5 @@ export * from "./privacy";
 export * from "./ledger";
 export * from "./jobs";
 export * from "./splits";
+export * from "./metrics";
 

@@ -136,6 +136,8 @@ const tools: AdvisorToolDef[] = [
           cashMinor: snap.position.availableCash.amountMinor.toString(),
           investmentsMinor: snap.position.investments.amountMinor.toString(),
           liabilitiesMinor: snap.position.liabilities.amountMinor.toString(),
+          bundleVersion: snap.metricMeta.bundleVersion,
+          inputHash: snap.metricMeta.inputHash,
         },
       };
     },

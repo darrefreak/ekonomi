@@ -20,6 +20,7 @@ import {
   ledgerPostings,
 } from "../db/schema-economic";
 import { HouseholdAccessService } from "../households/household-access.service";
+import { HouseholdMetricsService } from "../metrics/household-metrics.service";
 
 const LIABILITY_TYPES = ["MORTGAGE", "LOAN", "CREDIT_CARD"] as const;
 
@@ -27,6 +28,8 @@ const LIABILITY_TYPES = ["MORTGAGE", "LOAN", "CREDIT_CARD"] as const;
 export class DebtService {
   constructor(
     @Inject(HouseholdAccessService) private readonly access: HouseholdAccessService,
+    @Inject(HouseholdMetricsService)
+    private readonly metrics: HouseholdMetricsService,
   ) {}
 
   private trailingWindow(asOf: string) {
@@ -147,6 +150,14 @@ export class DebtService {
     const asOf = process.env.DEMO_AS_OF_DATE ?? "2026-08-01";
     const { start, end } = this.trailingWindow(asOf);
     const rows = await this.liabilityAccounts(householdId);
+    // Ledger-aligned balances — same path as metric registry debt_total.
+    const [aligned, snap] = await Promise.all([
+      this.metrics.getLedgerAlignedAccountRows(householdId),
+      this.metrics.getFinancialSnapshot(householdId, currency, asOf),
+    ]);
+    const balanceById = new Map(
+      aligned.map((a) => [a.id, a.currentBalanceMinor] as const),
+    );
 
     const items: ReturnType<DebtService["mapItem"]>[] = [];
     for (const row of rows) {
@@ -157,7 +168,14 @@ export class DebtService {
           interestMinor: p.interestMinor,
         })),
       );
-      items.push(this.mapItem(row, currency, trailing));
+      const ledgerBal = balanceById.get(row.id) ?? row.currentBalanceMinor;
+      items.push(
+        this.mapItem(
+          { ...row, currentBalanceMinor: ledgerBal },
+          currency,
+          trailing,
+        ),
+      );
     }
 
     const sumType = (type: string) =>
@@ -165,10 +183,6 @@ export class DebtService {
         .filter((i) => i.accountType === type)
         .reduce((acc, i) => acc + BigInt(i.outstanding.amountMinor), 0n);
 
-    const totalOutstanding = items.reduce(
-      (acc, i) => acc + BigInt(i.outstanding.amountMinor),
-      0n,
-    );
     const trailingPrincipal = items.reduce(
       (acc, i) => acc + BigInt(i.trailingPrincipal.amountMinor),
       0n,
@@ -181,8 +195,10 @@ export class DebtService {
     return {
       asOf,
       currency,
+      metricMeta: snap.metricMeta,
       totals: {
-        outstanding: moneyToJson(money(totalOutstanding, currency)),
+        // Registry debt_total — same value as dashboard/net-worth liabilities.
+        outstanding: moneyToJson(snap.position.liabilities),
         mortgages: moneyToJson(money(sumType("MORTGAGE"), currency)),
         loans: moneyToJson(money(sumType("LOAN"), currency)),
         creditCards: moneyToJson(money(sumType("CREDIT_CARD"), currency)),
