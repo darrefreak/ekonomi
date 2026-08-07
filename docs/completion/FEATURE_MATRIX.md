@@ -142,11 +142,11 @@ Legend for layer columns: **C** complete · **P** partial · **S** scaffold · *
 
 | Feature | Status | BE | FE | Test | Mobile | Pri | Deps | Missing / defects |
 |---|---|---|---|---|---|---|---|---|
-| Financial inbox list | MOCK_ONLY | M | P | N | B | P1 | — | Seed docs |
-| Object storage upload | NOT_STARTED | N | N | N | N | P1 | MinIO | MinIO up; unused |
-| Statuses / review flow | SCAFFOLD_ONLY | S | N | N | N | P1 | — | Status enum in seed |
-| Extraction model | MOCK_ONLY | M | N | N | N | P2 | — | Mock extract notes |
-| Entity linking | NOT_STARTED | N | N | N | N | P2 | — | — |
+| Financial inbox list | PARTIAL | P | P | P | B | P1 | — | List + detail (WS J) |
+| Object storage upload | PARTIAL | P | P | P | B | P1 | MinIO | S3 abstraction + local fallback (WS J) |
+| Statuses / review flow | PARTIAL | P | P | P | B | P1 | — | PATCH transitions + UI (WS J) |
+| Extraction model | PARTIAL | P | P | P | B | P2 | — | Runtime mock extract (WS J) |
+| Entity linking | PARTIAL | P | P | P | B | P2 | — | vehicleId/accountId (WS J) |
 
 ---
 

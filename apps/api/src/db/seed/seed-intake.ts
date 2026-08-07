@@ -2,6 +2,7 @@ import { eq } from "drizzle-orm";
 import { getDb } from "../client";
 import { dataSources } from "../schema-economic";
 import { documents, syncRuns } from "../schema-intake";
+import { vehicles } from "../schema-vehicles";
 
 export async function seedIntakeData(input: { householdId: string; asOf: string }) {
   const db = getDb();
@@ -9,6 +10,11 @@ export async function seedIntakeData(input: { householdId: string; asOf: string 
     .select()
     .from(dataSources)
     .where(eq(dataSources.householdId, input.householdId));
+  const [vehicle] = await db
+    .select()
+    .from(vehicles)
+    .where(eq(vehicles.householdId, input.householdId))
+    .limit(1);
 
   await db.insert(documents).values([
     {
@@ -19,8 +25,10 @@ export async function seedIntakeData(input: { householdId: string; asOf: string 
       issuer: "Vattenfall",
       amountMinor: 1_482_00n,
       sourceName: "Kivra (mock)",
-      extracted: { dueDate: "2026-08-20", ocr: false },
+      extracted: { dueDate: "2026-08-20", ocr: false, mock: true },
       notes: "Ingen riktig OCR — strukturerat mockextrakt",
+      originalFilename: "vattenfall-juli.pdf",
+      contentType: "application/pdf",
     },
     {
       householdId: input.householdId,
@@ -30,7 +38,9 @@ export async function seedIntakeData(input: { householdId: string; asOf: string 
       issuer: "Trygg-Hansa",
       amountMinor: 5_400_00n,
       sourceName: "Kivra (mock)",
-      extracted: { renewalDate: "2027-01-01" },
+      extracted: { renewalDate: "2027-01-01", mock: true },
+      originalFilename: "trygg-hansa.pdf",
+      contentType: "application/pdf",
     },
     {
       householdId: input.householdId,
@@ -40,7 +50,9 @@ export async function seedIntakeData(input: { householdId: string; asOf: string 
       issuer: "Acme AB",
       amountMinor: 42_600_00n,
       sourceName: "Manual upload (mock)",
-      extracted: { payDate: "2026-07-25" },
+      extracted: { payDate: "2026-07-25", mock: true },
+      originalFilename: "lon-juli.pdf",
+      contentType: "application/pdf",
     },
     {
       householdId: input.householdId,
@@ -50,7 +62,13 @@ export async function seedIntakeData(input: { householdId: string; asOf: string 
       issuer: "Bilia",
       amountMinor: 4_890_00n,
       sourceName: "Email forward (mock)",
-      extracted: { odometerKm: 75200 },
+      extracted: { odometerKm: 75200, mock: true },
+      vehicleId: vehicle?.id ?? null,
+      originalFilename: "bilia-service.pdf",
+      contentType: "application/pdf",
+      notes: vehicle
+        ? "Länkad till hushållets fordon"
+        : "Fordonskvitto utan länkad bil",
     },
   ]);
 

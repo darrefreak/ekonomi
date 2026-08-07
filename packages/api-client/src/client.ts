@@ -15,7 +15,10 @@ import {
   dashboardResponseSchema,
   debtDetailResponseSchema,
   debtResponseSchema,
+  documentDetailSchema,
   documentsResponseSchema,
+  updateDocumentSchema,
+  uploadDocumentSchema,
   forecastBacktestResponseSchema,
   forecastResponseSchema,
   goalsResponseSchema,
@@ -57,7 +60,10 @@ import {
   type DashboardResponse,
   type DebtDetailResponse,
   type DebtResponse,
+  type DocumentDetailDto,
   type DocumentsResponse,
+  type UpdateDocumentInput,
+  type UploadDocumentInput,
   type ForecastBacktestResponse,
   type ForecastResponse,
   type GoalsResponse,
@@ -485,6 +491,36 @@ export function createApiClient(options: ApiClientOptions) {
         `/api/v1/documents?householdId=${encodeURIComponent(householdId)}`,
       );
       return documentsResponseSchema.parse(data) as DocumentsResponse;
+    },
+    getDocument: async (householdId: string, documentId: string) => {
+      const data = await request<unknown>(
+        `/api/v1/documents/${encodeURIComponent(documentId)}?householdId=${encodeURIComponent(householdId)}`,
+      );
+      return documentDetailSchema.parse(data) as DocumentDetailDto;
+    },
+    uploadDocument: async (input: UploadDocumentInput) => {
+      const data = await request<unknown>("/api/v1/documents/upload", {
+        method: "POST",
+        body: JSON.stringify(uploadDocumentSchema.parse(input)),
+      });
+      return documentDetailSchema.parse(data) as DocumentDetailDto;
+    },
+    updateDocument: async (documentId: string, input: UpdateDocumentInput) => {
+      const data = await request<unknown>(
+        `/api/v1/documents/${encodeURIComponent(documentId)}`,
+        {
+          method: "PATCH",
+          body: JSON.stringify(updateDocumentSchema.parse(input)),
+        },
+      );
+      return documentDetailSchema.parse(data) as DocumentDetailDto;
+    },
+    reextractDocument: async (householdId: string, documentId: string) => {
+      const data = await request<unknown>(
+        `/api/v1/documents/${encodeURIComponent(documentId)}/extract?householdId=${encodeURIComponent(householdId)}`,
+        { method: "POST" },
+      );
+      return documentDetailSchema.parse(data) as DocumentDetailDto;
     },
     getIntegrations: async (householdId: string) => {
       const data = await request<unknown>(

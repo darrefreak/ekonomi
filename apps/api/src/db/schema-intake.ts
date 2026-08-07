@@ -11,7 +11,8 @@ import {
   varchar,
 } from "drizzle-orm/pg-core";
 import { households } from "./schema";
-import { dataSources } from "./schema-economic";
+import { accounts, dataSources } from "./schema-economic";
+import { vehicles } from "./schema-vehicles";
 
 export const documentStatusEnum = pgEnum("document_status", [
   "NEW",
@@ -51,9 +52,26 @@ export const documents = pgTable(
     extracted: jsonb("extracted").$type<Record<string, unknown>>().default({}),
     sourceName: varchar("source_name", { length: 120 }),
     notes: text("notes"),
+    storageKey: varchar("storage_key", { length: 320 }),
+    bucket: varchar("bucket", { length: 120 }),
+    contentType: varchar("content_type", { length: 120 }),
+    byteSize: integer("byte_size"),
+    checksumSha256: varchar("checksum_sha256", { length: 64 }),
+    originalFilename: varchar("original_filename", { length: 260 }),
+    vehicleId: uuid("vehicle_id").references(() => vehicles.id, {
+      onDelete: "set null",
+    }),
+    accountId: uuid("account_id").references(() => accounts.id, {
+      onDelete: "set null",
+    }),
     createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
   },
-  (t) => [index("documents_household_idx").on(t.householdId, t.status)],
+  (t) => [
+    index("documents_household_idx").on(t.householdId, t.status),
+    index("documents_vehicle_idx").on(t.vehicleId),
+    index("documents_account_idx").on(t.accountId),
+  ],
 );
 
 export const syncRuns = pgTable("sync_runs", {
