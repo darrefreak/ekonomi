@@ -2,7 +2,7 @@
 
 **Date:** 2026-08-07  
 **Branch:** `cursor/workstream-h-vehicles-9c58`  
-**Status:** COMPLETE for scoped H goals (gates pending in this revision)
+**Status:** COMPLETE for scoped H goals
 
 ---
 
@@ -51,15 +51,15 @@
 
 | Gate | Result |
 |---|---|
-| `pnpm build` | pending |
-| `pnpm typecheck` | pending |
-| `pnpm test` | pending |
-| `pnpm lint` | pending |
-| `pnpm db:migrate` | pending |
+| `pnpm build` | ✅ |
+| `pnpm typecheck` | ✅ |
+| `pnpm test` | ✅ (vehicle-intel live analysis test) |
+| `pnpm lint` | ✅ (echo stubs — known) |
+| `pnpm db:migrate` | ✅ (`0012_workstream_h_vehicles`) |
 
 ---
 
 ## STOP
 
-Workstream H complete for its scope once gates pass.  
+Workstream H complete for its scope.  
 Do **not** auto-start I. Await: `START WORKSTREAM I`
