@@ -4,8 +4,21 @@ Ett komplett ekonomiskt operativsystem för hushållet — inte en vanlig budget
 
 ## Status
 
-**Phase 2 — Economic foundation** ✅ (se `docs/phase-reports/PHASE_2_REPORT.md`)  
-Nästa: vänta på `START PHASE 3`.
+**V1 roadmap komplett (Phase 0–8)** ✅
+
+| Phase | Focus | Report |
+|---|---|---|
+| 0 | Architecture | `docs/phase-reports/PHASE_0_REPORT.md` |
+| 1 | Foundation | `docs/phase-reports/PHASE_1_REPORT.md` |
+| 2 | Economic foundation | `docs/phase-reports/PHASE_2_REPORT.md` |
+| 3 | Core product | `docs/phase-reports/PHASE_3_REPORT.md` |
+| 4 | Planning | `docs/phase-reports/PHASE_4_REPORT.md` |
+| 4B | Vehicles | `docs/phase-reports/PHASE_4B_REPORT.md` |
+| 5 | Decision engines | `docs/phase-reports/PHASE_5_REPORT.md` |
+| 5B | Vehicle intelligence | `docs/phase-reports/PHASE_5B_REPORT.md` |
+| 6 | Data intake | `docs/phase-reports/PHASE_6_REPORT.md` |
+| 7 | AI advisor (tool layer) | `docs/phase-reports/PHASE_7_REPORT.md` |
+| 8 | Polish | `docs/phase-reports/PHASE_8_REPORT.md` |
 
 Demo efter seed:
 
@@ -26,11 +39,9 @@ pnpm --filter @ffos/api dev
 pnpm --filter @ffos/web dev
 ```
 
-Full stack via Docker (efter `pnpm build`):
-
-```bash
-docker compose up -d
-```
+API default: `http://localhost:3001`  
+Web default: `http://localhost:3000`  
+Postgres host port i `.env.example` (ofta `5436` om `5432` är upptagen).
 
 ## Commands
 
@@ -43,12 +54,8 @@ docker compose up -d
 | `pnpm typecheck` | Typecheck |
 | `pnpm test` | Tests |
 | `pnpm db:migrate` | Run migrations |
-| `pnpm db:seed` | Seed feature flags |
+| `pnpm db:seed` | Seed demo household |
 | `pnpm db:reset` | Drop schema, migrate, seed |
-
-## Documentation
-
-See [`docs/`](docs/README.md). Phase reports in `docs/phase-reports/`.
 
 ## Principles
 
@@ -57,3 +64,7 @@ See [`docs/`](docs/README.md). Phase reports in `docs/phase-reports/`.
 3. Pengar = `amountMinor: bigint` (aldrig JS float).
 4. Ekonomisk logik i `@ffos/financial-engine` (ingen React/Nest/DB).
 5. Alla frågor är household-scoped.
+
+## Documentation
+
+See [`docs/`](docs/README.md) and [`docs/ROADMAP.md`](docs/ROADMAP.md).

@@ -6,6 +6,7 @@ import type { VehiclesResponse } from "@ffos/schemas";
 import { api } from "@/lib/api";
 import { ensureHouseholdSession } from "@/lib/session";
 import { MoneyValue } from "../financial/money-value";
+import { EmptyState } from "../feedback/empty-state";
 import { ErrorState } from "../feedback/error-state";
 import { LoadingState } from "../feedback/loading-state";
 
@@ -39,6 +40,13 @@ export function VehiclesPage() {
           Ägande, TCO och equity · as of {data.asOf}
         </p>
       </div>
+
+      {data.items.length === 0 ? (
+        <EmptyState
+          title="Inga fordon ännu"
+          description="Lägg till ett fordon för att se TCO, equity och marknadsjämförelser."
+        />
+      ) : null}
 
       <ul className="space-y-3">
         {data.items.map((v) => (
