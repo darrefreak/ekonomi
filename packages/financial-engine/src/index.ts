@@ -9,4 +9,5 @@ export * from "./period-metrics";
 export * from "./forecast";
 export * from "./scenarios";
 export * from "./backtest";
+export * from "./debt";
 

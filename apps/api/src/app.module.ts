@@ -4,6 +4,7 @@ import { AiModule } from "./ai/ai.module";
 import { AuthModule } from "./auth/auth.module";
 import { CashflowModule } from "./cashflow/cashflow.module";
 import { DashboardModule } from "./dashboard/dashboard.module";
+import { DebtModule } from "./debt/debt.module";
 import { DecisionsModule } from "./decisions/decisions.module";
 import { FeatureFlagsModule } from "./feature-flags/feature-flags.module";
 import { FinancialCoverageModule } from "./financial-coverage/financial-coverage.module";
@@ -33,6 +34,7 @@ import { VehiclesModule } from "./vehicles/vehicles.module";
     VehiclesModule,
     VehicleIntelModule,
     DecisionsModule,
+    DebtModule,
     IntakeModule,
     AiModule,
     DashboardModule,

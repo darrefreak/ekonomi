@@ -157,7 +157,6 @@ export async function seedDecisionsData(input: {
       description: "Bolåneräntan stiger 1 procentenhet.",
       assumptions: {
         mortgageRateDeltaBps: 100,
-        monthlyExpenseDeltaMinor: "210000",
       },
       projectedMonthlyDeltaMinor: -2_100_00n,
     },

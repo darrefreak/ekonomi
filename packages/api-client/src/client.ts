@@ -9,6 +9,8 @@ import {
   contractsResponseSchema,
   coverageResponseSchema,
   dashboardResponseSchema,
+  debtDetailResponseSchema,
+  debtResponseSchema,
   documentsResponseSchema,
   forecastBacktestResponseSchema,
   forecastResponseSchema,
@@ -44,6 +46,8 @@ import {
   type CreateScenarioInput,
   type CreateSinkingFundInput,
   type DashboardResponse,
+  type DebtDetailResponse,
+  type DebtResponse,
   type DocumentsResponse,
   type ForecastBacktestResponse,
   type ForecastResponse,
@@ -262,6 +266,18 @@ export function createApiClient(options: ApiClientOptions) {
         `/api/v1/net-worth?householdId=${encodeURIComponent(householdId)}`,
       );
       return netWorthResponseSchema.parse(data) as NetWorthResponse;
+    },
+    getDebt: async (householdId: string) => {
+      const data = await request<unknown>(
+        `/api/v1/debt?householdId=${encodeURIComponent(householdId)}`,
+      );
+      return debtResponseSchema.parse(data) as DebtResponse;
+    },
+    getDebtDetail: async (householdId: string, accountId: string) => {
+      const data = await request<unknown>(
+        `/api/v1/debt/${encodeURIComponent(accountId)}?householdId=${encodeURIComponent(householdId)}`,
+      );
+      return debtDetailResponseSchema.parse(data) as DebtDetailResponse;
     },
     getCoverage: async (householdId: string) => {
       const data = await request<unknown>(

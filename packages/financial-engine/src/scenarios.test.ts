@@ -33,6 +33,27 @@ test("simulateScenario is non-destructive pure projection", () => {
   assert.equal(sim.points.length, 6);
 });
 
+test("simulateScenario applies mortgageRateDeltaBps via mortgage context", () => {
+  const sim = simulateScenario({
+    baseline: {
+      startingCashMinor: 200_000_00n,
+      startingNetWorthMinor: 1_000_000_00n,
+      monthlyNetSavingsMinor: 20_000_00n,
+      asOf: "2026-08-01",
+    },
+    assumptions: { mortgageRateDeltaBps: 100 },
+    mortgage: {
+      principalMinor: 3_900_000_00n,
+      currentAnnualRateBps: 240,
+    },
+  });
+  assert.ok(sim.mortgageRateExpenseDeltaMinor > 0n);
+  assert.equal(
+    sim.adjustedMonthlySavingsMinor,
+    20_000_00n - sim.mortgageRateExpenseDeltaMinor,
+  );
+});
+
 test("parseScenarioAssumptions accepts string minors", () => {
   const a = parseScenarioAssumptions({
     monthlyIncomeDeltaMinor: "-500000",

@@ -192,6 +192,8 @@ export async function seedDemoHousehold() {
     accountType: "MORTGAGE",
     externalReference: "SBAB-DEMO-MTG",
     currentBalanceMinor: 3_900_000_00n,
+    interestRateBps: 240,
+    bindingEndDate: "2027-06-30",
   });
   const revolut = await mkAccount({
     householdId: household.id,

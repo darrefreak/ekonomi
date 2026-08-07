@@ -91,8 +91,8 @@ Legend for layer columns: **C** complete · **P** partial · **S** scaffold · *
 | Net worth page | PARTIAL | M/P | P | N | B | P0 | Metrics | Hardcoded change/attribution |
 | Investments | SCAFFOLD_ONLY | S | S | N | B | P1 | Accounts | Placeholder page |
 | Assets | SCAFFOLD_ONLY | S | S | N | B | P1 | — | Placeholder |
-| Debt dashboard | SCAFFOLD_ONLY | S | S | N | B | P0 | Loans | Placeholder |
-| Mortgages product UX | MOCK_ONLY | M | N | P | N | P1 | Debt | Engine tests only |
+| Debt dashboard | PARTIAL | P | P | P | P | P0 | Loans | List/detail + P vs I (WS F) |
+| Mortgages product UX | PARTIAL | P | P | P | P | P1 | Debt | Rate scenarios + binding (WS F) |
 | Valuation snapshots (assets) | SCAFFOLD_ONLY | S | N | N | N | P2 | — | Vehicle vals exist; housing thin |
 | NW attribution | MOCK_ONLY | M | P | N | B | P1 | Metrics | Hardcoded |
 
