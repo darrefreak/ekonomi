@@ -125,15 +125,15 @@ Legend for layer columns: **C** complete · **P** partial · **S** scaffold · *
 
 | Feature | Status | BE | FE | Test | Mobile | Pri | Deps | Missing / defects |
 |---|---|---|---|---|---|---|---|---|
-| Vehicle list/detail | PARTIAL | P | P | P | B | P1 | — | Seed-backed |
+| Vehicle list/detail | PARTIAL | P | P | P | B | P1 | — | Seed-backed + IA subnav (WS H) |
 | Ownership / financing | PARTIAL | P | P | P | B | P1 | — | Leasing thin |
-| Odometer / maintenance | PARTIAL | P | S | N | B | P1 | — | Maint page placeholder |
-| Vehicle-linked transactions | SCAFFOLD_ONLY | S | N | N | N | P1 | Txns | Field/spec; weak wiring |
+| Odometer / maintenance | PARTIAL | P | P | P | B | P1 | — | Odometer + maint costs UI (WS H) |
+| Vehicle-linked transactions | PARTIAL | P | P | P | B | P1 | Txns | Fuel linked; txn vehicleId filter/update (WS H) |
 | Cash / economic / TCO / mil | PARTIAL | P | P | C | B | P1 | Engine | Engine real on seed inputs |
-| Valuation / equity | PARTIAL | P | M | P | B | P1 | Market | Stored vals + engine equity |
-| Candidates / compare / market | MOCK_ONLY | M | M | P | B | P1 | Market | Thin UI; seed analysis |
-| Household fit | PARTIAL | P | M | P | B | P1 | — | Seed usage profile |
-| Replacement / sell window | PARTIAL | M/P | M | P | B | P1 | Engine | Computed at seed; thin FE |
+| Valuation / equity | PARTIAL | P | P | P | B | P1 | Market | Live equity + mock ask (WS H) |
+| Candidates / compare / market | PARTIAL | P | P | P | B | P1 | Market | Live keepVsReplace over mock listings (WS H) |
+| Household fit | PARTIAL | P | P | P | B | P1 | — | Usage on detail/maintenance |
+| Replacement / sell window | PARTIAL | P | P | P | B | P1 | Engine | Live sellWindowHint (WS H) |
 | Vehicle scenarios | SCAFFOLD_ONLY | S | N | N | N | P2 | — | — |
 
 ---

@@ -1,4 +1,4 @@
-import { redirect } from "next/navigation";
+import { VehicleCostsPage } from "@/components/vehicles/vehicle-costs-page";
 
 export default async function Page({
   params,
@@ -6,5 +6,5 @@ export default async function Page({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  redirect(`/vehicles/${id}`);
+  return <VehicleCostsPage vehicleId={id} />;
 }

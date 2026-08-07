@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto";
 import * as bcrypt from "bcryptjs";
-import { eq, sql } from "drizzle-orm";
+import { and, eq, sql } from "drizzle-orm";
 import { money } from "@ffos/domain";
 import {
   buildCashExpense,
@@ -21,6 +21,7 @@ import {
   accounts,
   categories,
   dataSources,
+  financialEvents,
   importBatches,
   ledgerPostings,
   merchants,
@@ -773,11 +774,24 @@ export async function seedDemoHousehold() {
     savingsAccountId: sbab.id,
   });
 
-  await seedVehiclesData({
+  const vehicleSeed = await seedVehiclesData({
     householdId: household.id,
     asOf,
     assetAccountId: vehicle.id,
   });
+
+  // Link demo fuel expenses to the household vehicle (ledger ↔ vehicleId).
+  if (vehicleSeed?.vehicleId) {
+    await db
+      .update(financialEvents)
+      .set({ vehicleId: vehicleSeed.vehicleId })
+      .where(
+        and(
+          eq(financialEvents.householdId, household.id),
+          eq(financialEvents.description, "Circle K"),
+        ),
+      );
+  }
 
   await seedDecisionsData({
     householdId: household.id,

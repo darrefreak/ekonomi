@@ -76,6 +76,27 @@ export const vehicleDetailSchema = z.object({
     projectedTco36m: moneySchema,
   }),
   recentCosts: z.array(vehicleCostEventSchema),
+  costs: z.array(vehicleCostEventSchema).default([]),
+  odometerHistory: z
+    .array(
+      z.object({
+        id: z.string(),
+        readingKm: z.number(),
+        recordedOn: z.string(),
+        source: z.string(),
+      }),
+    )
+    .default([]),
+  linkedEvents: z
+    .array(
+      z.object({
+        id: z.string(),
+        occurredOn: z.string(),
+        description: z.string().nullable(),
+        amount: moneySchema,
+      }),
+    )
+    .default([]),
 });
 
 export type VehicleDetailDto = z.infer<typeof vehicleDetailSchema>;

@@ -1,12 +1,14 @@
 "use client";
 
 import { useEffect, useState, type ReactNode } from "react";
+import Link from "next/link";
 import type { VehicleDetailDto } from "@ffos/schemas";
 import { api } from "@/lib/api";
 import { ensureHouseholdSession } from "@/lib/session";
 import { MoneyValue } from "../financial/money-value";
 import { ErrorState } from "../feedback/error-state";
 import { LoadingState } from "../feedback/loading-state";
+import { VehicleDetailNav, VehicleHouseholdNav } from "./vehicle-subnav";
 
 export function VehicleDetailPage({ vehicleId }: { vehicleId: string }) {
   const [data, setData] = useState<VehicleDetailDto | null>(null);
@@ -39,6 +41,10 @@ export function VehicleDetailPage({ vehicleId }: { vehicleId: string }) {
           {data.registrationNumber ? ` · ${data.registrationNumber}` : ""}
           {` · ${data.fuelType}`}
         </p>
+        <div className="mt-3 space-y-2">
+          <VehicleHouseholdNav />
+          <VehicleDetailNav vehicleId={vehicleId} active="overview" />
+        </div>
       </div>
 
       <div className="grid gap-4 md:grid-cols-3">
@@ -98,9 +104,15 @@ export function VehicleDetailPage({ vehicleId }: { vehicleId: string }) {
       </section>
 
       <section className="overflow-hidden rounded-[16px] bg-surface-elevated">
-        <h2 className="border-b border-border px-5 py-3 text-sm text-text-secondary">
-          Senaste kostnader
-        </h2>
+        <div className="flex items-center justify-between gap-3 border-b border-border px-5 py-3">
+          <h2 className="text-sm text-text-secondary">Senaste kostnader</h2>
+          <Link
+            href={`/vehicles/${vehicleId}/costs`}
+            className="text-sm text-accent hover:underline"
+          >
+            Alla →
+          </Link>
+        </div>
         <ul className="divide-y divide-border">
           {data.recentCosts.map((c) => (
             <li key={c.id} className="flex items-start justify-between gap-3 px-5 py-3 text-sm">
@@ -116,6 +128,28 @@ export function VehicleDetailPage({ vehicleId }: { vehicleId: string }) {
           ))}
         </ul>
       </section>
+
+      {(data.linkedEvents ?? []).length > 0 ? (
+        <section className="rounded-[16px] bg-surface-elevated p-5">
+          <h2 className="text-sm text-text-secondary">
+            Ledger-kopplade händelser
+          </h2>
+          <ul className="mt-4 divide-y divide-border">
+            {(data.linkedEvents ?? []).slice(0, 8).map((e) => (
+              <li
+                key={e.id}
+                className="flex items-start justify-between gap-3 py-3 text-sm"
+              >
+                <div>
+                  <p className="font-medium">{e.description ?? "Händelse"}</p>
+                  <p className="mt-1 text-xs text-text-muted">{e.occurredOn}</p>
+                </div>
+                <MoneyValue value={e.amount} />
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
     </div>
   );
 }

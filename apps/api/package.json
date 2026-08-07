@@ -10,7 +10,7 @@
     "start:worker": "node dist/worker.js",
     "lint": "echo 'lint ok'",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "test": "tsx --test src/dashboard/dashboard.service.test.ts src/ai/ai-tools.test.ts src/metrics/household-metrics.consistency.test.ts src/accounts/accounts.mutations.test.ts src/planning/planning.mutations.test.ts src/decisions/decisions.mutations.test.ts src/debt/debt.service.test.ts src/wealth/wealth.service.test.ts",
+    "test": "tsx --test src/dashboard/dashboard.service.test.ts src/ai/ai-tools.test.ts src/metrics/household-metrics.consistency.test.ts src/accounts/accounts.mutations.test.ts src/planning/planning.mutations.test.ts src/decisions/decisions.mutations.test.ts src/debt/debt.service.test.ts src/wealth/wealth.service.test.ts src/vehicle-intel/vehicle-intel.service.test.ts",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "tsx src/db/migrate.ts",
     "db:seed": "tsx src/db/seed.ts",

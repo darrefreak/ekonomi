@@ -43,9 +43,9 @@ Partial real path (for contrast): month income/spending/savings rate and account
 |---|---|
 | `/investments`, `/assets`, `/debt` | `PagePlaceholder` — desktop nav still links them |
 | `/more` | Placeholder — **breaks mobile IA** (primary overflow tab) |
-| `/vehicles/[id]/maintenance` | Placeholder |
-| `/vehicles/[id]/costs` | Redirect-only to detail |
-| `/vehicles/market`, `candidates`, `compare`, `[id]/valuation`, `[id]/replacement` | Same thin `VehicleMarketPage` with title swaps; labeled “Mock market intelligence” |
+| `/vehicles/[id]/maintenance` | Real odometer + maint costs (WS H) |
+| `/vehicles/[id]/costs` | Real cost list + linked ledger events (WS H) |
+| `/vehicles/market`, `candidates`, `compare`, `[id]/valuation`, `[id]/replacement` | Focused IA pages; live analysis over mock listings (WS H) |
 | Global search | Header text “Sök med Ctrl/Cmd+K **(kommer snart)**” |
 | Settings | Demo credentials + principles copy — not product settings (§109–110) |
 

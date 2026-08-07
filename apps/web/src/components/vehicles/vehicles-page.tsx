@@ -9,6 +9,7 @@ import { MoneyValue } from "../financial/money-value";
 import { EmptyState } from "../feedback/empty-state";
 import { ErrorState } from "../feedback/error-state";
 import { LoadingState } from "../feedback/loading-state";
+import { VehicleHouseholdNav } from "./vehicle-subnav";
 
 export function VehiclesPage() {
   const [data, setData] = useState<VehiclesResponse | null>(null);
@@ -39,6 +40,9 @@ export function VehiclesPage() {
         <p className="mt-2 text-sm text-text-secondary">
           Ägande, TCO och equity · as of {data.asOf}
         </p>
+        <div className="mt-3">
+          <VehicleHouseholdNav active="/vehicles" />
+        </div>
       </div>
 
       {data.items.length === 0 ? (
