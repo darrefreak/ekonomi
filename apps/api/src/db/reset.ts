@@ -2,8 +2,11 @@ import { getPool } from "./client";
 
 async function main() {
   const pool = getPool();
-  console.log("Resetting public schema...");
-  await pool.query("DROP SCHEMA public CASCADE; CREATE SCHEMA public;");
+  console.log("Resetting public + drizzle schemas...");
+  // Must drop drizzle journal too; otherwise migrate is a no-op on an empty public schema.
+  await pool.query(
+    "DROP SCHEMA IF EXISTS public CASCADE; CREATE SCHEMA public; DROP SCHEMA IF EXISTS drizzle CASCADE;",
+  );
   await pool.end();
 
   // Re-run migrate + seed as child processes to reuse compiled entrypoints

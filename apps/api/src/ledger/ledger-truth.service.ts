@@ -1,5 +1,5 @@
 import { Injectable } from "@nestjs/common";
-import { and, eq } from "drizzle-orm";
+import { and, eq, sql } from "drizzle-orm";
 import {
   reconstructBalances,
   reconcileReportedVsLedger,
@@ -135,7 +135,7 @@ export class LedgerTruthService {
           ),
         );
 
-      // Replace same-day reconcile snapshot for idempotency
+      // Replace same calendar-day reconcile snapshot for idempotency.
       await db
         .delete(accountBalanceSnapshots)
         .where(
@@ -143,7 +143,7 @@ export class LedgerTruthService {
             eq(accountBalanceSnapshots.householdId, householdId),
             eq(accountBalanceSnapshots.accountId, row.accountId),
             eq(accountBalanceSnapshots.source, "ledger_reconcile"),
-            eq(accountBalanceSnapshots.asOf, asOfDate),
+            sql`(${accountBalanceSnapshots.asOf} AT TIME ZONE 'UTC')::date = ${asOf}::date`,
           ),
         );
 

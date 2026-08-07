@@ -20,8 +20,15 @@ const AS_OF = "2026-08-01";
 async function setup() {
   if (!process.env.DATABASE_URL) return null;
   const db = getDb();
-  const [household] = await db.select().from(households).limit(1);
-  if (!household) return null;
+
+  // Isolated household so parallel suite tests cannot race the demo household.
+  const [household] = await db
+    .insert(households)
+    .values({
+      name: `A2 Invariants ${Date.now()}`,
+      baseCurrency: "SEK",
+    })
+    .returning();
 
   const audit = new AuditService();
   const ledger = new LedgerTruthService(audit);
@@ -272,7 +279,6 @@ test("A2 Test 5 — reconciliation mismatch visible, no silent overwrite", async
   const ctx = await setup();
   if (!ctx) return;
 
-  // Intentional provider mismatch: reported ≠ ledger.
   await ctx.db
     .update(accounts)
     .set({ reportedBalanceMinor: 128_850_00n })
@@ -289,7 +295,6 @@ test("A2 Test 5 — reconciliation mismatch visible, no silent overwrite", async
     .from(accounts)
     .where(eq(accounts.id, ctx.bankA.id))
     .limit(1);
-  // Ledger cache refreshed from ledger; reported left alone.
   assert.equal(acct.currentBalanceMinor, 100_000_00n);
   assert.equal(acct.reportedBalanceMinor, 128_850_00n);
   assert.notEqual(acct.reportedBalanceMinor, acct.currentBalanceMinor);
@@ -350,7 +355,6 @@ test("A2 refund reduces expense rather than unrelated income", async () => {
     occurredOn: AS_OF,
   });
 
-  // Pay down card first so cash refund path is clear on bank.
   const refund = await ctx.events.createCashRefund({
     householdId: ctx.household.id,
     cashAccountId: ctx.bankA.id,
