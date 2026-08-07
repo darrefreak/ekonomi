@@ -1,7 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { ForbiddenException } from "@nestjs/common";
-import { eq } from "drizzle-orm";
 import {
   advisorBriefResponseSchema,
   advisorChatRequestSchema,
@@ -13,7 +12,7 @@ import { FeatureFlagsService } from "../feature-flags/feature-flags.service";
 import type { HouseholdAccessService } from "../households/household-access.service";
 import { HouseholdMetricsService } from "../metrics/household-metrics.service";
 import { PlanningMetricsService } from "../planning/planning-metrics.service";
-import { DecisionsService } from "../decisions/decisions.service";
+import type { DecisionsService } from "../decisions/decisions.service";
 import type { VehiclesService } from "../vehicles/vehicles.service";
 import { AdvisorService } from "./advisor.service";
 import { listAdvisorTools } from "./ai-tool-registry";
@@ -128,7 +127,4 @@ test("AI flag gate and tools-only chat/brief", async () => {
 
   if (prev === undefined) delete process.env.FFOS_FEATURE_AI;
   else process.env.FFOS_FEATURE_AI = prev;
-
-  // silence unused
-  void eq;
 });
