@@ -6,6 +6,7 @@ import type {
   AccountsResponse,
   DocumentDetailDto,
   DocumentsResponse,
+  UpdateDocumentInput,
   VehiclesResponse,
 } from "@ffos/schemas";
 import { api } from "@/lib/api";
@@ -111,7 +112,7 @@ export function DocumentsPage() {
   }
 
   async function patchSelected(
-    patch: Parameters<typeof api.updateDocument>[1],
+    patch: Omit<UpdateDocumentInput, "householdId">,
   ) {
     if (!householdId || !selected) return;
     setBusy(true);
