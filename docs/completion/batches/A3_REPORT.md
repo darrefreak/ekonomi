@@ -75,6 +75,7 @@ Clean seed reconciles with **0 mismatches**.
 - Classification/edit UI still does not auto-rebuild every economic meaning change (A2 residual).
 - Cashflow “spending” is still `sum(expenseAmountMinor)`; depreciation correctly contributes 0 there — economic cost lives in vehicle metrics/TCO.
 - P0-5 / P0-8 remain for later batches.
+- Parallel DB suites can create extra households; live decision tests now pin `Familjen Demo` to avoid flakiness.
 
 ---
 
