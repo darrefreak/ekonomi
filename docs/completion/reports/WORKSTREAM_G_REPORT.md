@@ -2,7 +2,7 @@
 
 **Date:** 2026-08-07  
 **Branch:** `cursor/workstream-g-wealth-investments-9c58`  
-**Status:** COMPLETE for scoped G goals (gates pending in this revision)
+**Status:** COMPLETE for scoped G goals
 
 ---
 
@@ -55,14 +55,14 @@
 
 | Gate | Result |
 |---|---|
-| `pnpm build` | pending |
-| `pnpm typecheck` | pending |
-| `pnpm test` | pending |
-| `pnpm lint` | pending |
+| `pnpm build` | ✅ |
+| `pnpm typecheck` | ✅ |
+| `pnpm test` | ✅ (wealth + engine wealth tests) |
+| `pnpm lint` | ✅ (echo stubs — known) |
 
 ---
 
 ## STOP
 
-Workstream G complete for its scope once gates pass.  
+Workstream G complete for its scope.  
 Do **not** auto-start H. Await: `START WORKSTREAM H`
