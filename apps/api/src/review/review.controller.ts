@@ -8,7 +8,7 @@ import {
   UseGuards,
 } from "@nestjs/common";
 import { ApiBearerAuth, ApiTags } from "@nestjs/swagger";
-import { resolveReviewSchema } from "@ffos/schemas";
+import { householdIdQuerySchema, resolveReviewSchema } from "@ffos/schemas";
 import { AuthGuard } from "../auth/auth.guard";
 import { CurrentUser } from "../auth/current-user.decorator";
 import type { AuthenticatedUser } from "../auth/auth.types";
@@ -25,9 +25,10 @@ export class ReviewController {
   @Get()
   list(
     @CurrentUser() user: AuthenticatedUser,
-    @Query("householdId") householdId: string,
+    @Query(new ZodValidationPipe(householdIdQuerySchema)) query: unknown,
   ) {
-    return this.review.list(user.userId, householdId);
+    const q = householdIdQuerySchema.parse(query);
+    return this.review.list(user.userId, q.householdId);
   }
 
   @Post("resolve")

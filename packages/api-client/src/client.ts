@@ -174,14 +174,44 @@ export function createApiClient(options: ApiClientOptions) {
 
     const data = await parseJson(res);
     if (!res.ok) {
+      const envelope =
+        typeof data === "object" && data && "error" in data
+          ? (data as {
+              error?: {
+                message?: unknown;
+                fields?: Record<string, string>;
+                code?: string;
+              };
+            }).error
+          : null;
+      const fields =
+        envelope?.fields && typeof envelope.fields === "object"
+          ? envelope.fields
+          : undefined;
+      const fieldMessages = fields
+        ? Object.values(fields).filter(Boolean).join(" ")
+        : "";
       const message =
-        typeof data === "object" &&
+        (typeof envelope?.message === "string" && envelope.message) ||
+        (typeof data === "object" &&
         data &&
         "message" in data &&
         typeof (data as { message: unknown }).message === "string"
           ? (data as { message: string }).message
-          : `Request failed (${res.status})`;
-      throw new Error(message);
+          : null) ||
+        `Request failed (${res.status})`;
+      const err = new Error(
+        fieldMessages ? `${message} ${fieldMessages}` : message,
+      ) as Error & {
+        code?: string;
+        fields?: Record<string, string>;
+        status?: number;
+      };
+      err.code =
+        typeof envelope?.code === "string" ? envelope.code : undefined;
+      err.fields = fields;
+      err.status = res.status;
+      throw err;
     }
     return data as T;
   }

@@ -49,12 +49,12 @@ These must be resolved (or explicitly accepted with risk) before claiming produc
 
 ---
 
-## P0-5 — Security baseline missing
+## P0-5 — Security baseline / validation breadth
 
-**Status:** ADDRESSED / PARTIAL (Workstream N)  
-**Evidence:** Helmet headers; global Throttler + tighter auth limits; `requireAccessSecret()` fail-closed in production.
+**Status:** FIXED (Workstream N baseline + Batch S1 validation breadth)  
+**Evidence:** Helmet + Throttler + fail-closed secrets (N); S1 Zod on all V1 write/query boundaries; strict financial bodies; job payload validation; depreciation domain guard; consistent `VALIDATION_ERROR` envelope; `docs/completion/batches/S1_VALIDATION_AUDIT.md`.
 
-**Impact:** Baseline hardening in place. Broader Zod on all routes still incomplete (carry to O).
+**Impact:** Malformed / mass-assigned / economically invalid writes are rejected before persistence. Authz remains independent of validation.
 
 **Required:** Throttling on auth, security headers, broaden Zod validation, fail closed without secrets in non-dev.
 

@@ -13,6 +13,8 @@ import { ApiBearerAuth, ApiTags } from "@nestjs/swagger";
 import {
   contributeGoalSchema,
   createGoalSchema,
+  goalIdParamSchema,
+  householdIdQuerySchema,
   updateGoalSchema,
 } from "@ffos/schemas";
 import { AuthGuard } from "../auth/auth.guard";
@@ -31,9 +33,10 @@ export class GoalsController {
   @Get()
   get(
     @CurrentUser() user: AuthenticatedUser,
-    @Query("householdId") householdId: string,
+    @Query(new ZodValidationPipe(householdIdQuerySchema))
+    query: { householdId: string },
   ) {
-    return this.goals.get(user.userId, householdId);
+    return this.goals.get(user.userId, query.householdId);
   }
 
   @Post()
@@ -41,35 +44,34 @@ export class GoalsController {
     @CurrentUser() user: AuthenticatedUser,
     @Body(new ZodValidationPipe(createGoalSchema)) body: unknown,
   ) {
-    return this.goals.create(
-      user.userId,
-      body as ReturnType<typeof createGoalSchema.parse>,
-    );
+    return this.goals.create(user.userId, createGoalSchema.parse(body));
   }
 
   @Patch(":goalId")
   update(
     @CurrentUser() user: AuthenticatedUser,
-    @Param("goalId") goalId: string,
+    @Param(new ZodValidationPipe(goalIdParamSchema))
+    params: { goalId: string },
     @Body(new ZodValidationPipe(updateGoalSchema)) body: unknown,
   ) {
     return this.goals.update(
       user.userId,
-      goalId,
-      body as ReturnType<typeof updateGoalSchema.parse>,
+      params.goalId,
+      updateGoalSchema.parse(body),
     );
   }
 
   @Post(":goalId/contributions")
   contribute(
     @CurrentUser() user: AuthenticatedUser,
-    @Param("goalId") goalId: string,
+    @Param(new ZodValidationPipe(goalIdParamSchema))
+    params: { goalId: string },
     @Body(new ZodValidationPipe(contributeGoalSchema)) body: unknown,
   ) {
     return this.goals.contribute(
       user.userId,
-      goalId,
-      body as ReturnType<typeof contributeGoalSchema.parse>,
+      params.goalId,
+      contributeGoalSchema.parse(body),
     );
   }
 }

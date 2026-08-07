@@ -56,29 +56,38 @@ export const documentDetailSchema = documentSchema.extend({
 });
 export type DocumentDetailDto = z.infer<typeof documentDetailSchema>;
 
-export const uploadDocumentSchema = z.object({
-  householdId: z.string().uuid(),
-  title: z.string().min(1).max(200),
-  documentType: documentTypeSchema.optional().default("OTHER"),
-  filename: z.string().min(1).max(260),
-  contentType: z.string().min(1).max(120).optional().default("application/octet-stream"),
-  /** Base64 file payload (V1; multipart can replace later). */
-  contentBase64: z.string().min(1),
-  vehicleId: z.string().uuid().nullable().optional(),
-  accountId: z.string().uuid().nullable().optional(),
-  notes: z.string().max(2000).nullable().optional(),
-});
+export const uploadDocumentSchema = z
+  .object({
+    householdId: z.string().uuid(),
+    title: z.string().min(1).max(200),
+    documentType: documentTypeSchema.optional().default("OTHER"),
+    filename: z.string().min(1).max(260),
+    contentType: z
+      .string()
+      .min(1)
+      .max(120)
+      .optional()
+      .default("application/octet-stream"),
+    /** Base64 file payload (V1; multipart can replace later). */
+    contentBase64: z.string().min(1).max(10_000_000),
+    vehicleId: z.string().uuid().nullable().optional(),
+    accountId: z.string().uuid().nullable().optional(),
+    notes: z.string().max(2000).nullable().optional(),
+  })
+  .strict();
 export type UploadDocumentInput = z.input<typeof uploadDocumentSchema>;
 
-export const updateDocumentSchema = z.object({
-  householdId: z.string().uuid(),
-  status: documentStatusSchema.optional(),
-  documentType: documentTypeSchema.optional(),
-  notes: z.string().max(2000).nullable().optional(),
-  vehicleId: z.string().uuid().nullable().optional(),
-  accountId: z.string().uuid().nullable().optional(),
-  title: z.string().min(1).max(200).optional(),
-});
+export const updateDocumentSchema = z
+  .object({
+    householdId: z.string().uuid(),
+    status: documentStatusSchema.optional(),
+    documentType: documentTypeSchema.optional(),
+    notes: z.string().max(2000).nullable().optional(),
+    vehicleId: z.string().uuid().nullable().optional(),
+    accountId: z.string().uuid().nullable().optional(),
+    title: z.string().min(1).max(200).optional(),
+  })
+  .strict();
 export type UpdateDocumentInput = z.input<typeof updateDocumentSchema>;
 
 export const connectionStatusSchema = z.enum([
@@ -116,34 +125,42 @@ export const sourceSchema = z.object({
 });
 export type SourceDto = z.infer<typeof sourceSchema>;
 
-export const createSourceSchema = z.object({
-  householdId: z.string().uuid(),
-  providerId: z.string().min(1).max(80),
-  name: z.string().min(1).max(160).optional(),
-  domain: dataSourceDomainSchema.optional(),
-  protocol: z.string().min(1).max(40).optional(),
-  authenticationMethod: z.string().min(1).max(40).optional(),
-  connectionStatus: connectionStatusSchema.optional().default("CONNECTED"),
-});
+export const createSourceSchema = z
+  .object({
+    householdId: z.string().uuid(),
+    providerId: z.string().min(1).max(80),
+    name: z.string().min(1).max(160).optional(),
+    domain: dataSourceDomainSchema.optional(),
+    protocol: z.string().min(1).max(40).optional(),
+    authenticationMethod: z.string().min(1).max(40).optional(),
+    connectionStatus: connectionStatusSchema.optional().default("CONNECTED"),
+  })
+  .strict();
 export type CreateSourceInput = z.input<typeof createSourceSchema>;
 
-export const updateSourceSchema = z.object({
-  householdId: z.string().uuid(),
-  name: z.string().min(1).max(160).optional(),
-  connectionStatus: connectionStatusSchema.optional(),
-  domain: dataSourceDomainSchema.optional(),
-});
+export const updateSourceSchema = z
+  .object({
+    householdId: z.string().uuid(),
+    name: z.string().min(1).max(160).optional(),
+    connectionStatus: connectionStatusSchema.optional(),
+    domain: dataSourceDomainSchema.optional(),
+  })
+  .strict();
 export type UpdateSourceInput = z.input<typeof updateSourceSchema>;
 
-export const reconnectSourceSchema = z.object({
-  householdId: z.string().uuid(),
-});
+export const reconnectSourceSchema = z
+  .object({
+    householdId: z.string().uuid(),
+  })
+  .strict();
 export type ReconnectSourceInput = z.input<typeof reconnectSourceSchema>;
 
-export const syncSourceSchema = z.object({
-  householdId: z.string().uuid(),
-  sourceId: z.string().uuid().optional(),
-});
+export const syncSourceSchema = z
+  .object({
+    householdId: z.string().uuid(),
+    sourceId: z.string().uuid().optional(),
+  })
+  .strict();
 export type SyncSourceInput = z.input<typeof syncSourceSchema>;
 
 export const integrationsResponseSchema = z.object({

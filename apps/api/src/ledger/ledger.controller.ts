@@ -8,7 +8,16 @@ import {
   UseGuards,
 } from "@nestjs/common";
 import { ApiBearerAuth, ApiTags } from "@nestjs/swagger";
-import { z } from "zod";
+import {
+  createAssetDepreciationSchema,
+  createCreditCardPaymentSchema,
+  createCreditCardPurchaseSchema,
+  createInternalTransferSchema,
+  createInvestmentTransferSchema,
+  createMortgagePaymentSchema,
+  ledgerBalancesQuerySchema,
+  ledgerReconcileBodySchema,
+} from "@ffos/schemas";
 import { AuthGuard } from "../auth/auth.guard";
 import { CurrentUser } from "../auth/current-user.decorator";
 import type { AuthenticatedUser } from "../auth/auth.types";
@@ -17,72 +26,6 @@ import { HouseholdAccessService } from "../households/household-access.service";
 import { enqueueReconcileAccountBalances } from "../jobs/queue";
 import { EconomicEventsService } from "./economic-events.service";
 import { LedgerTruthService } from "./ledger-truth.service";
-
-const householdQuery = z.object({
-  householdId: z.string().uuid(),
-  asOf: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
-});
-
-const moneyMinor = z.string().regex(/^\d+$/);
-
-const internalTransferSchema = z.object({
-  householdId: z.string().uuid(),
-  fromAccountId: z.string().uuid(),
-  toAccountId: z.string().uuid(),
-  amountMinor: moneyMinor,
-  occurredOn: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
-  description: z.string().max(240).optional(),
-  externalId: z.string().max(160).optional(),
-});
-
-const creditCardPurchaseSchema = z.object({
-  householdId: z.string().uuid(),
-  creditCardAccountId: z.string().uuid(),
-  expenseAccountId: z.string().uuid(),
-  amountMinor: moneyMinor,
-  occurredOn: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
-  description: z.string().max(240).optional(),
-  categoryId: z.string().uuid().optional(),
-});
-
-const creditCardPaymentSchema = z.object({
-  householdId: z.string().uuid(),
-  cashAccountId: z.string().uuid(),
-  creditCardAccountId: z.string().uuid(),
-  amountMinor: moneyMinor,
-  occurredOn: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
-  description: z.string().max(240).optional(),
-});
-
-const mortgagePaymentSchema = z.object({
-  householdId: z.string().uuid(),
-  cashAccountId: z.string().uuid(),
-  mortgageAccountId: z.string().uuid(),
-  interestExpenseAccountId: z.string().uuid(),
-  principalMinor: moneyMinor,
-  interestMinor: moneyMinor,
-  occurredOn: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
-  description: z.string().max(240).optional(),
-});
-
-const investmentTransferSchema = z.object({
-  householdId: z.string().uuid(),
-  cashAccountId: z.string().uuid(),
-  investmentAccountId: z.string().uuid(),
-  amountMinor: moneyMinor,
-  occurredOn: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
-  description: z.string().max(240).optional(),
-});
-
-const assetDepreciationSchema = z.object({
-  householdId: z.string().uuid(),
-  assetAccountId: z.string().uuid(),
-  expenseAccountId: z.string().uuid(),
-  amountMinor: moneyMinor,
-  occurredOn: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
-  description: z.string().max(240).optional(),
-  vehicleId: z.string().uuid().optional(),
-});
 
 @ApiTags("ledger")
 @ApiBearerAuth()
@@ -100,9 +43,9 @@ export class LedgerController {
   @Get("balances")
   async balances(
     @CurrentUser() user: AuthenticatedUser,
-    @Query(new ZodValidationPipe(householdQuery)) query: unknown,
+    @Query(new ZodValidationPipe(ledgerBalancesQuerySchema)) query: unknown,
   ) {
-    const q = householdQuery.parse(query);
+    const q = ledgerBalancesQuerySchema.parse(query);
     await this.access.requireMembership(user.userId, q.householdId);
     const asOf = q.asOf ?? process.env.DEMO_AS_OF_DATE ?? "2026-08-01";
     const rows = await this.ledger.getAuthoritativeBalances(q.householdId, asOf);
@@ -127,9 +70,9 @@ export class LedgerController {
   @Post("reconcile")
   async reconcile(
     @CurrentUser() user: AuthenticatedUser,
-    @Body(new ZodValidationPipe(householdQuery)) body: unknown,
+    @Body(new ZodValidationPipe(ledgerReconcileBodySchema)) body: unknown,
   ) {
-    const q = householdQuery.parse(body);
+    const q = ledgerReconcileBodySchema.parse(body);
     await this.access.requireCanWrite(user.userId, q.householdId);
     const asOf = q.asOf ?? process.env.DEMO_AS_OF_DATE ?? "2026-08-01";
     await enqueueReconcileAccountBalances(q.householdId, asOf);
@@ -139,9 +82,9 @@ export class LedgerController {
   @Post("transfers/internal")
   async internalTransfer(
     @CurrentUser() user: AuthenticatedUser,
-    @Body(new ZodValidationPipe(internalTransferSchema)) body: unknown,
+    @Body(new ZodValidationPipe(createInternalTransferSchema)) body: unknown,
   ) {
-    const input = internalTransferSchema.parse(body);
+    const input = createInternalTransferSchema.parse(body);
     await this.access.requireCanWrite(user.userId, input.householdId);
     const event = await this.events.createInternalTransfer({
       householdId: input.householdId,
@@ -150,6 +93,7 @@ export class LedgerController {
       amountMinor: BigInt(input.amountMinor),
       occurredOn: input.occurredOn,
       description: input.description,
+      externalId: input.externalId,
     });
     return { id: event.id, eventType: event.eventType };
   }
@@ -157,9 +101,9 @@ export class LedgerController {
   @Post("credit-card/purchase")
   async creditCardPurchase(
     @CurrentUser() user: AuthenticatedUser,
-    @Body(new ZodValidationPipe(creditCardPurchaseSchema)) body: unknown,
+    @Body(new ZodValidationPipe(createCreditCardPurchaseSchema)) body: unknown,
   ) {
-    const input = creditCardPurchaseSchema.parse(body);
+    const input = createCreditCardPurchaseSchema.parse(body);
     await this.access.requireCanWrite(user.userId, input.householdId);
     const event = await this.events.createCreditCardPurchase({
       householdId: input.householdId,
@@ -176,9 +120,9 @@ export class LedgerController {
   @Post("credit-card/payment")
   async creditCardPayment(
     @CurrentUser() user: AuthenticatedUser,
-    @Body(new ZodValidationPipe(creditCardPaymentSchema)) body: unknown,
+    @Body(new ZodValidationPipe(createCreditCardPaymentSchema)) body: unknown,
   ) {
-    const input = creditCardPaymentSchema.parse(body);
+    const input = createCreditCardPaymentSchema.parse(body);
     await this.access.requireCanWrite(user.userId, input.householdId);
     const event = await this.events.createCreditCardPayment({
       householdId: input.householdId,
@@ -194,9 +138,9 @@ export class LedgerController {
   @Post("mortgage/payment")
   async mortgagePayment(
     @CurrentUser() user: AuthenticatedUser,
-    @Body(new ZodValidationPipe(mortgagePaymentSchema)) body: unknown,
+    @Body(new ZodValidationPipe(createMortgagePaymentSchema)) body: unknown,
   ) {
-    const input = mortgagePaymentSchema.parse(body);
+    const input = createMortgagePaymentSchema.parse(body);
     await this.access.requireCanWrite(user.userId, input.householdId);
     const event = await this.events.createMortgagePayment({
       householdId: input.householdId,
@@ -214,9 +158,9 @@ export class LedgerController {
   @Post("investments/transfer")
   async investmentTransfer(
     @CurrentUser() user: AuthenticatedUser,
-    @Body(new ZodValidationPipe(investmentTransferSchema)) body: unknown,
+    @Body(new ZodValidationPipe(createInvestmentTransferSchema)) body: unknown,
   ) {
-    const input = investmentTransferSchema.parse(body);
+    const input = createInvestmentTransferSchema.parse(body);
     await this.access.requireCanWrite(user.userId, input.householdId);
     const event = await this.events.createInvestmentTransfer({
       householdId: input.householdId,
@@ -232,9 +176,9 @@ export class LedgerController {
   @Post("assets/depreciation")
   async assetDepreciation(
     @CurrentUser() user: AuthenticatedUser,
-    @Body(new ZodValidationPipe(assetDepreciationSchema)) body: unknown,
+    @Body(new ZodValidationPipe(createAssetDepreciationSchema)) body: unknown,
   ) {
-    const input = assetDepreciationSchema.parse(body);
+    const input = createAssetDepreciationSchema.parse(body);
     await this.access.requireCanWrite(user.userId, input.householdId);
     const event = await this.events.createAssetDepreciation({
       householdId: input.householdId,

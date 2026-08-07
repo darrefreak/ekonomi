@@ -11,6 +11,8 @@ import {
 import { ApiBearerAuth, ApiTags } from "@nestjs/swagger";
 import {
   createScenarioSchema,
+  householdIdQuerySchema,
+  scenarioIdParamSchema,
   simulateScenarioSchema,
 } from "@ffos/schemas";
 import { AuthGuard } from "../auth/auth.guard";
@@ -29,41 +31,46 @@ export class DecisionsController {
   @Get("forecast")
   forecast(
     @CurrentUser() user: AuthenticatedUser,
-    @Query("householdId") householdId: string,
+    @Query(new ZodValidationPipe(householdIdQuerySchema))
+    query: { householdId: string },
   ) {
-    return this.decisions.forecast(user.userId, householdId);
+    return this.decisions.forecast(user.userId, query.householdId);
   }
 
   @Get("forecast/backtest")
   backtest(
     @CurrentUser() user: AuthenticatedUser,
-    @Query("householdId") householdId: string,
+    @Query(new ZodValidationPipe(householdIdQuerySchema))
+    query: { householdId: string },
   ) {
-    return this.decisions.backtest(user.userId, householdId);
+    return this.decisions.backtest(user.userId, query.householdId);
   }
 
   @Get("opportunities")
   opportunities(
     @CurrentUser() user: AuthenticatedUser,
-    @Query("householdId") householdId: string,
+    @Query(new ZodValidationPipe(householdIdQuerySchema))
+    query: { householdId: string },
   ) {
-    return this.decisions.opportunities(user.userId, householdId);
+    return this.decisions.opportunities(user.userId, query.householdId);
   }
 
   @Get("risk")
   risk(
     @CurrentUser() user: AuthenticatedUser,
-    @Query("householdId") householdId: string,
+    @Query(new ZodValidationPipe(householdIdQuerySchema))
+    query: { householdId: string },
   ) {
-    return this.decisions.risk(user.userId, householdId);
+    return this.decisions.risk(user.userId, query.householdId);
   }
 
   @Get("scenarios")
   scenarios(
     @CurrentUser() user: AuthenticatedUser,
-    @Query("householdId") householdId: string,
+    @Query(new ZodValidationPipe(householdIdQuerySchema))
+    query: { householdId: string },
   ) {
-    return this.decisions.scenarios(user.userId, householdId);
+    return this.decisions.scenarios(user.userId, query.householdId);
   }
 
   @Post("scenarios")
@@ -73,28 +80,30 @@ export class DecisionsController {
   ) {
     return this.decisions.createScenario(
       user.userId,
-      body as ReturnType<typeof createScenarioSchema.parse>,
+      createScenarioSchema.parse(body),
     );
   }
 
   @Post("scenarios/:scenarioId/simulate")
   simulateScenario(
     @CurrentUser() user: AuthenticatedUser,
-    @Param("scenarioId") scenarioId: string,
+    @Param(new ZodValidationPipe(scenarioIdParamSchema))
+    params: { scenarioId: string },
     @Body(new ZodValidationPipe(simulateScenarioSchema)) body: unknown,
   ) {
     return this.decisions.simulateScenario(
       user.userId,
-      scenarioId,
-      body as ReturnType<typeof simulateScenarioSchema.parse>,
+      params.scenarioId,
+      simulateScenarioSchema.parse(body),
     );
   }
 
   @Get("insights")
   insights(
     @CurrentUser() user: AuthenticatedUser,
-    @Query("householdId") householdId: string,
+    @Query(new ZodValidationPipe(householdIdQuerySchema))
+    query: { householdId: string },
   ) {
-    return this.decisions.insights(user.userId, householdId);
+    return this.decisions.insights(user.userId, query.householdId);
   }
 }

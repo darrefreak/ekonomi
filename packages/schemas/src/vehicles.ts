@@ -1,5 +1,111 @@
 import { z } from "zod";
+import {
+  interestRateBpsSchema,
+  isoDateSchema,
+  nonNegativeAmountMinorStringSchema,
+  positiveAmountMinorStringSchema,
+  uuidSchema,
+} from "./common";
 import { moneySchema } from "./money";
+
+export const vehicleFuelTypeSchema = z.enum([
+  "PETROL",
+  "DIESEL",
+  "HYBRID",
+  "PLUGIN_HYBRID",
+  "ELECTRIC",
+  "OTHER",
+]);
+
+export const vehicleOwnershipTypeSchema = z.enum([
+  "OWNED",
+  "FINANCED",
+  "LEASED",
+  "COMPANY",
+  "OTHER",
+]);
+
+/**
+ * Shared write schema for vehicle create/update (seed + future mutations).
+ * Enforces odometer / seats / ISOFIX / date coherence at the boundary.
+ */
+export const vehicleWriteSchema = z
+  .object({
+    householdId: uuidSchema,
+    name: z.string().min(1).max(160),
+    make: z.string().min(1).max(80),
+    model: z.string().min(1).max(80),
+    modelYear: z.number().int().min(1950).max(2100),
+    registrationNumber: z.string().max(20).nullable().optional(),
+    fuelType: vehicleFuelTypeSchema,
+    ownershipType: vehicleOwnershipTypeSchema,
+    purchasePriceMinor: positiveAmountMinorStringSchema.optional(),
+    purchaseDate: isoDateSchema.nullable().optional(),
+    saleDate: isoDateSchema.nullable().optional(),
+    purchaseOdometerKm: z.number().int().min(0).max(2_000_000).optional(),
+    currentOdometerKm: z.number().int().min(0).max(2_000_000).nullable().optional(),
+    seats: z.number().int().min(1).max(20).optional(),
+    isofixCount: z.number().int().min(0).max(20).optional(),
+    estimatedValueMidMinor: nonNegativeAmountMinorStringSchema.optional(),
+    annualKm: z.number().int().min(0).max(500_000).optional(),
+    leaseStartDate: isoDateSchema.nullable().optional(),
+    leaseEndDate: isoDateSchema.nullable().optional(),
+    leaseMileageLimitKm: z.number().int().min(0).max(2_000_000).optional(),
+    financeLender: z.string().max(120).nullable().optional(),
+    financeRemainingMinor: nonNegativeAmountMinorStringSchema.optional(),
+    financeMonthlyPaymentMinor: nonNegativeAmountMinorStringSchema.optional(),
+    financeInterestRateBps: interestRateBpsSchema.optional(),
+    financeEndDate: isoDateSchema.nullable().optional(),
+  })
+  .strict()
+  .superRefine((value, ctx) => {
+    if (
+      value.purchaseOdometerKm != null &&
+      value.currentOdometerKm != null &&
+      value.purchaseOdometerKm > value.currentOdometerKm
+    ) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Inköpsmätarställning får inte överstiga aktuell mätarställning",
+        path: ["currentOdometerKm"],
+      });
+    }
+    if (
+      value.seats != null &&
+      value.isofixCount != null &&
+      value.isofixCount > value.seats
+    ) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "ISOFIX-platser får inte överstiga antalet säten",
+        path: ["isofixCount"],
+      });
+    }
+    if (
+      value.purchaseDate &&
+      value.saleDate &&
+      value.purchaseDate > value.saleDate
+    ) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Försäljningsdatum får inte vara före inköpsdatum",
+        path: ["saleDate"],
+      });
+    }
+    if (
+      value.leaseStartDate &&
+      value.leaseEndDate &&
+      value.leaseStartDate > value.leaseEndDate
+    ) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Leasingens slut får inte vara före start",
+        path: ["leaseEndDate"],
+      });
+    }
+  });
+
+export type VehicleWriteInput = z.infer<typeof vehicleWriteSchema>;
 
 export const vehicleSummarySchema = z.object({
   id: z.string(),

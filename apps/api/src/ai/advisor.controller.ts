@@ -12,6 +12,8 @@ import {
 import { ApiBearerAuth, ApiTags } from "@nestjs/swagger";
 import {
   advisorChatRequestSchema,
+  householdIdQuerySchema,
+  idParamSchema,
   trackRecommendationOutcomeSchema,
   updateRecommendationOutcomeSchema,
 } from "@ffos/schemas";
@@ -31,9 +33,10 @@ export class AdvisorController {
   @Get("brief")
   brief(
     @CurrentUser() user: AuthenticatedUser,
-    @Query("householdId") householdId: string,
+    @Query(new ZodValidationPipe(householdIdQuerySchema))
+    query: { householdId: string },
   ) {
-    return this.advisor.brief(user.userId, householdId);
+    return this.advisor.brief(user.userId, query.householdId);
   }
 
   @Post("chat")
@@ -50,9 +53,10 @@ export class AdvisorController {
   @Get("outcomes")
   outcomes(
     @CurrentUser() user: AuthenticatedUser,
-    @Query("householdId") householdId: string,
+    @Query(new ZodValidationPipe(householdIdQuerySchema))
+    query: { householdId: string },
   ) {
-    return this.advisor.outcomes(user.userId, householdId);
+    return this.advisor.outcomes(user.userId, query.householdId);
   }
 
   @Post("outcomes")
@@ -69,12 +73,12 @@ export class AdvisorController {
   @Patch("outcomes/:id")
   update(
     @CurrentUser() user: AuthenticatedUser,
-    @Param("id") id: string,
+    @Param(new ZodValidationPipe(idParamSchema)) params: { id: string },
     @Body(new ZodValidationPipe(updateRecommendationOutcomeSchema)) body: unknown,
   ) {
     return this.advisor.updateOutcome(
       user.userId,
-      id,
+      params.id,
       updateRecommendationOutcomeSchema.parse(body),
     );
   }

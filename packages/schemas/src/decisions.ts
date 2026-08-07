@@ -1,7 +1,8 @@
 import { z } from "zod";
+import { amountMinorStringSchema } from "./common";
 import { moneySchema } from "./money";
 
-const minorString = z.string().regex(/^-?\d+$/);
+const minorString = amountMinorStringSchema;
 
 export const forecastPointSchema = z.object({
   onDate: z.string(),
@@ -134,12 +135,14 @@ export const riskResponseSchema = z.object({
 });
 export type RiskResponse = z.infer<typeof riskResponseSchema>;
 
-export const scenarioAssumptionsSchema = z.object({
-  monthlyIncomeDeltaMinor: minorString.optional(),
-  monthlyExpenseDeltaMinor: minorString.optional(),
-  oneTimeCashDeltaMinor: minorString.optional(),
-  mortgageRateDeltaBps: z.number().int().optional(),
-});
+export const scenarioAssumptionsSchema = z
+  .object({
+    monthlyIncomeDeltaMinor: minorString.optional(),
+    monthlyExpenseDeltaMinor: minorString.optional(),
+    oneTimeCashDeltaMinor: minorString.optional(),
+    mortgageRateDeltaBps: z.number().int().min(-5000).max(5000).optional(),
+  })
+  .strict();
 export type ScenarioAssumptionsInput = z.infer<typeof scenarioAssumptionsSchema>;
 
 export const scenarioItemSchema = z.object({
@@ -157,19 +160,23 @@ export const scenariosResponseSchema = z.object({
 });
 export type ScenariosResponse = z.infer<typeof scenariosResponseSchema>;
 
-export const createScenarioSchema = z.object({
-  householdId: z.string().uuid(),
-  name: z.string().min(1).max(160),
-  description: z.string().max(2000).optional().default(""),
-  assumptions: scenarioAssumptionsSchema.optional().default({}),
-});
+export const createScenarioSchema = z
+  .object({
+    householdId: z.string().uuid(),
+    name: z.string().min(1).max(160),
+    description: z.string().max(2000).optional().default(""),
+    assumptions: scenarioAssumptionsSchema.optional().default({}),
+  })
+  .strict();
 export type CreateScenarioInput = z.input<typeof createScenarioSchema>;
 
-export const simulateScenarioSchema = z.object({
-  householdId: z.string().uuid(),
-  /** Optional override; defaults to stored scenario assumptions. */
-  assumptions: scenarioAssumptionsSchema.optional(),
-});
+export const simulateScenarioSchema = z
+  .object({
+    householdId: z.string().uuid(),
+    /** Optional override; defaults to stored scenario assumptions. */
+    assumptions: scenarioAssumptionsSchema.optional(),
+  })
+  .strict();
 export type SimulateScenarioInput = z.input<typeof simulateScenarioSchema>;
 
 export const scenarioSimulationResponseSchema = z.object({

@@ -8,7 +8,7 @@ import {
   UseGuards,
 } from "@nestjs/common";
 import { ApiBearerAuth, ApiTags } from "@nestjs/swagger";
-import { updateSettingsSchema } from "@ffos/schemas";
+import { householdIdQuerySchema, updateSettingsSchema } from "@ffos/schemas";
 import { AuthGuard } from "../auth/auth.guard";
 import { CurrentUser } from "../auth/current-user.decorator";
 import type { AuthenticatedUser } from "../auth/auth.types";
@@ -27,9 +27,10 @@ export class SettingsController {
   @Get()
   get(
     @CurrentUser() user: AuthenticatedUser,
-    @Query("householdId") householdId: string,
+    @Query(new ZodValidationPipe(householdIdQuerySchema))
+    query: { householdId: string },
   ) {
-    return this.settings.get(user.userId, householdId);
+    return this.settings.get(user.userId, query.householdId);
   }
 
   @Patch()

@@ -1,8 +1,13 @@
 import { Controller, Get, Inject, Query, UseGuards } from "@nestjs/common";
 import { ApiBearerAuth, ApiTags } from "@nestjs/swagger";
+import {
+  reportsMonthlyQuerySchema,
+  reportsYearlyQuerySchema,
+} from "@ffos/schemas";
 import { AuthGuard } from "../auth/auth.guard";
 import { CurrentUser } from "../auth/current-user.decorator";
 import type { AuthenticatedUser } from "../auth/auth.types";
+import { ZodValidationPipe } from "../common/zod-validation.pipe";
 import { ReportsService } from "./reports.service";
 
 @ApiTags("reports")
@@ -15,22 +20,22 @@ export class ReportsController {
   @Get("monthly")
   monthly(
     @CurrentUser() user: AuthenticatedUser,
-    @Query("householdId") householdId: string,
-    @Query("period") period?: string,
+    @Query(new ZodValidationPipe(reportsMonthlyQuerySchema))
+    query: { householdId: string; period?: string },
   ) {
-    return this.reports.monthly(user.userId, householdId, period);
+    return this.reports.monthly(user.userId, query.householdId, query.period);
   }
 
   @Get("yearly")
   yearly(
     @CurrentUser() user: AuthenticatedUser,
-    @Query("householdId") householdId: string,
-    @Query("year") year?: string,
+    @Query(new ZodValidationPipe(reportsYearlyQuerySchema))
+    query: { householdId: string; year?: string },
   ) {
     return this.reports.yearly(
       user.userId,
-      householdId,
-      year ? Number(year) : undefined,
+      query.householdId,
+      query.year ? Number(query.year) : undefined,
     );
   }
 }

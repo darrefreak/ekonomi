@@ -15,7 +15,7 @@
     "build": "tsc -p tsconfig.json",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "lint": "eslint .",
-    "test": "echo 'no schema tests yet'",
+    "test": "tsx --test src/validation.test.ts",
     "clean": "rm -rf dist"
   },
   "dependencies": {
@@ -23,6 +23,7 @@
     "zod": "^3.25.67"
   },
   "devDependencies": {
+    "tsx": "^4.19.4",
     "typescript": "^5.8.3",
     "@ffos/eslint-config": "workspace:*",
     "eslint": "^9.39.5"

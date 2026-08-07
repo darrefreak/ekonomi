@@ -12,12 +12,13 @@ import {
 import { kronorToMinorString } from "@/lib/money-input";
 
 type Step = 0 | 1 | 2 | 3;
+type SupportedCurrency = "SEK" | "EUR" | "USD" | "NOK" | "DKK";
 
 export function OnboardingPage() {
   const router = useRouter();
   const [step, setStep] = useState<Step>(0);
   const [name, setName] = useState("Mitt hushåll");
-  const [currency, setCurrency] = useState("SEK");
+  const [currency, setCurrency] = useState<SupportedCurrency>("SEK");
   const [buffer, setBuffer] = useState("120000");
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -114,7 +115,9 @@ export function OnboardingPage() {
           <select
             className="min-h-11 w-full rounded-[12px] border border-border bg-surface px-3"
             value={currency}
-            onChange={(e) => setCurrency(e.target.value)}
+            onChange={(e) =>
+              setCurrency(e.target.value as SupportedCurrency)
+            }
           >
             <option value="SEK">SEK</option>
             <option value="EUR">EUR</option>

@@ -1,8 +1,9 @@
 import { z } from "zod";
+import { amountMinorStringSchema, currencyCodeSchema } from "./common";
 
 export const moneySchema = z.object({
-  amountMinor: z.string().regex(/^-?\d+$/),
-  currency: z.enum(["SEK", "EUR", "USD", "NOK", "DKK"]),
+  amountMinor: amountMinorStringSchema,
+  currency: currencyCodeSchema,
 });
 
 export type MoneyDto = z.infer<typeof moneySchema>;

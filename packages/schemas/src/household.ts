@@ -1,9 +1,11 @@
 import { z } from "zod";
 
-export const createHouseholdSchema = z.object({
-  name: z.string().min(1).max(120),
-  baseCurrency: z.enum(["SEK", "EUR", "USD", "NOK", "DKK"]).default("SEK"),
-});
+export const createHouseholdSchema = z
+  .object({
+    name: z.string().min(1).max(120),
+    baseCurrency: z.enum(["SEK", "EUR", "USD", "NOK", "DKK"]).default("SEK"),
+  })
+  .strict();
 
 export const householdRoleSchema = z.enum([
   "OWNER",

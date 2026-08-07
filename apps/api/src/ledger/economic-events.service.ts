@@ -347,10 +347,32 @@ export class EconomicEventsService {
     externalId?: string;
   }) {
     if (input.amountMinor <= 0n) {
-      throw new BadRequestException("amountMinor must be positive");
+      throw new BadRequestException({
+        code: "VALIDATION_ERROR",
+        message: "Kontrollera uppgifterna och försök igen.",
+        fields: { amountMinor: "Belopp måste vara positivt." },
+      });
     }
-    await requireAccount(input.householdId, input.assetAccountId, ["ASSET"]);
+    const asset = await requireAccount(input.householdId, input.assetAccountId, [
+      "ASSET",
+    ]);
     await requireAccount(input.householdId, input.expenseAccountId, ["EXPENSE"]);
+
+    // Domain: V1 assets cannot be written below zero.
+    const balances = await this.ledger.reconstructHousehold(input.householdId);
+    const current =
+      balances.get(input.assetAccountId) ?? asset.openingBalanceMinor;
+    if (input.amountMinor > current) {
+      throw new BadRequestException({
+        code: "VALIDATION_ERROR",
+        message: "Kontrollera uppgifterna och försök igen.",
+        fields: {
+          amountMinor:
+            "Värdeminskning får inte överstiga tillgångens aktuella ledger-saldo.",
+        },
+      });
+    }
+
     const draft = buildAssetDepreciation({
       assetAccountId: input.assetAccountId,
       expenseAccountId: input.expenseAccountId,
