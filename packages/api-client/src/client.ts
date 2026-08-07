@@ -17,6 +17,7 @@ import {
   subscriptionsResponseSchema,
   transactionsResponseSchema,
   vehicleDetailSchema,
+  vehicleMarketResponseSchema,
   vehiclesResponseSchema,
   type AccountDetailDto,
   type AccountsResponse,
@@ -38,6 +39,7 @@ import {
   type SubscriptionsResponse,
   type TransactionsResponse,
   type VehicleDetailDto,
+  type VehicleMarketResponse,
   type VehiclesResponse,
 } from "@ffos/schemas";
 
@@ -248,6 +250,12 @@ export function createApiClient(options: ApiClientOptions) {
         `/api/v1/insights?householdId=${encodeURIComponent(householdId)}`,
       );
       return insightsResponseSchema.parse(data) as InsightsResponse;
+    },
+    getVehicleMarket: async (householdId: string) => {
+      const data = await request<unknown>(
+        `/api/v1/vehicle-market?householdId=${encodeURIComponent(householdId)}`,
+      );
+      return vehicleMarketResponseSchema.parse(data) as VehicleMarketResponse;
     },
   };
 }

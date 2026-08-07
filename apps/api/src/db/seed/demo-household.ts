@@ -27,6 +27,7 @@ import { createSeededRng, pick, randInt } from "./rng";
 import { seedPlanningData } from "./seed-planning";
 import { seedVehiclesData } from "./seed-vehicles";
 import { seedDecisionsData } from "./seed-decisions";
+import { seedVehicleIntelData } from "./seed-vehicle-intel";
 
 const DEMO_EMAIL = "demo@ffos.local";
 const DEMO_PASSWORD = "demo-password-123";
@@ -686,6 +687,11 @@ export async function seedDemoHousehold() {
     startingCashMinor: 220_000_00n,
     startingNetWorthMinor: 484_283_900n,
     monthlyNetSavingsMinor: 35_000_00n,
+  });
+
+  await seedVehicleIntelData({
+    householdId: household.id,
+    asOf,
   });
 
   // Ensure no orphan query warnings

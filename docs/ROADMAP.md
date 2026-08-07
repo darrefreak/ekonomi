@@ -66,11 +66,12 @@ Forecast, backtesting, opportunities, risks, financial health, scenarios, saving
 Detaljer: [phases/PHASE_5.md](./phases/PHASE_5.md).  
 Report: [phase-reports/PHASE_5_REPORT.md](./phase-reports/PHASE_5_REPORT.md).
 
-## Phase 5B — Vehicle intelligence
+## Phase 5B — Vehicle intelligence ✅
 
 Market snapshots, valuation ranges, candidates, comparisons, replacement analysis, sell window, vehicle scenarios, mock market intelligence.
 
-Detaljer: [phases/PHASE_5B.md](./phases/PHASE_5B.md).
+Detaljer: [phases/PHASE_5B.md](./phases/PHASE_5B.md).  
+Report: [phase-reports/PHASE_5B_REPORT.md](./phase-reports/PHASE_5B_REPORT.md).
 
 ## Phase 6 — Data intake
 

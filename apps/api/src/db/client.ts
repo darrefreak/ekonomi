@@ -5,8 +5,16 @@ import * as economic from "./schema-economic";
 import * as planning from "./schema-planning";
 import * as vehicles from "./schema-vehicles";
 import * as decisions from "./schema-decisions";
+import * as vehicleIntel from "./schema-vehicle-intel";
 
-const schema = { ...core, ...economic, ...planning, ...vehicles, ...decisions };
+const schema = {
+  ...core,
+  ...economic,
+  ...planning,
+  ...vehicles,
+  ...decisions,
+  ...vehicleIntel,
+};
 
 let pool: Pool | null = null;
 
