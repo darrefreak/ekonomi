@@ -274,6 +274,42 @@ export function buildAssetPurchaseAtFairValue(input: {
 }
 
 /**
+ * Non-cash asset write-down (e.g. vehicle 300k → 280k).
+ * Cashflow/expenseAmountMinor = 0 (not a cash spend).
+ * Economic cost is tracked separately (vehicle cost events / TCO).
+ * Net worth decreases by the write-down amount.
+ */
+export function buildAssetDepreciation(input: {
+  assetAccountId: string;
+  expenseAccountId: string;
+  amountMinor: bigint;
+  currency: CurrencyCode;
+}): BalancedLedgerDraft {
+  return draft(
+    FinancialEventType.ADJUSTMENT,
+    [
+      {
+        accountId: input.expenseAccountId,
+        side: "debit",
+        amountMinor: input.amountMinor,
+        currency: input.currency,
+        memo: "depreciation",
+      },
+      {
+        accountId: input.assetAccountId,
+        side: "credit",
+        amountMinor: input.amountMinor,
+        currency: input.currency,
+        memo: "asset_write_down",
+      },
+    ],
+    0n,
+    0n,
+    -input.amountMinor,
+  );
+}
+
+/**
  * Cash refund / merchant credit.
  * Expense amount is negative so period spending nets down; NW increases.
  */

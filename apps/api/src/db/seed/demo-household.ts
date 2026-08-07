@@ -3,6 +3,7 @@ import * as bcrypt from "bcryptjs";
 import { and, eq, sql } from "drizzle-orm";
 import { money } from "@ffos/domain";
 import {
+  buildAssetDepreciation,
   buildCashExpense,
   buildCashRefund,
   buildCreditCardPayment,
@@ -354,14 +355,17 @@ export async function seedDemoHousehold() {
     currentBalanceMinor: 6_800_000_00n,
     reportedBalanceMinor: 6_800_000_00n,
   });
+  // Opening fair value before A3 write-down; depreciation event → 280k (= valuation mid).
+  const vehicleOpeningMinor = 300_000_00n;
+  const vehicleDepreciationMinor = 20_000_00n;
   const vehicle = await mkAccount({
     householdId: household.id,
     name: "Familjebil",
     accountType: "ASSET",
     isShared: true,
-    openingBalanceMinor: 320_000_00n,
-    currentBalanceMinor: 320_000_00n,
-    reportedBalanceMinor: 320_000_00n,
+    openingBalanceMinor: vehicleOpeningMinor,
+    currentBalanceMinor: vehicleOpeningMinor,
+    reportedBalanceMinor: vehicleOpeningMinor,
   });
   const expenseBook = await mkAccount({
     householdId: household.id,
@@ -800,6 +804,22 @@ export async function seedDemoHousehold() {
     schemaVersion: "1",
   });
 
+  // Domain invariant: vehicle 300k → 280k (cashflow 0, NW −20k).
+  await persistBalancedEvent({
+    householdId: household.id,
+    draft: buildAssetDepreciation({
+      assetAccountId: vehicle.id,
+      expenseAccountId: expenseBook.id,
+      amountMinor: vehicleDepreciationMinor,
+      currency: "SEK",
+    }),
+    occurredOn: "2026-07-31",
+    description: "Värdeminskning fordon (demo)",
+    externalId: "seed-vehicle-depreciation-2026-07",
+    importBatchId: batch.id,
+  });
+  eventCount += 1;
+
   // Ending balances = opening + ledger postings (source of truth)
   const openings = [
     { accountId: seb.id, accountType: "CHECKING", openingMinor: 0n },
@@ -818,7 +838,11 @@ export async function seedDemoHousehold() {
       openingMinor: 3_900_000_00n,
     },
     { accountId: home.id, accountType: "ASSET", openingMinor: 6_800_000_00n },
-    { accountId: vehicle.id, accountType: "ASSET", openingMinor: 320_000_00n },
+    {
+      accountId: vehicle.id,
+      accountType: "ASSET",
+      openingMinor: vehicleOpeningMinor,
+    },
     { accountId: expenseBook.id, accountType: "EXPENSE", openingMinor: 0n },
     { accountId: incomeBook.id, accountType: "INCOME", openingMinor: 0n },
   ];
