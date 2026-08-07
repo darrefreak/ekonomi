@@ -70,7 +70,10 @@ test("C2 — dashboard / net-worth / debt / wealth / registry agree", async () =
   const snap = materialized.financialSnapshot;
   const netWorthService = new NetWorthService(access, metrics);
   const nw = await netWorthService.get("user-1", household.id);
-  assert.equal(nw.current.amountMinor, snap.position.netWorth.amountMinor);
+  assert.equal(
+    nw.current.amountMinor,
+    String(snap.position.netWorth.amountMinor),
+  );
   assert.equal(nw.current.amountMinor, nwItem!.valueMinor);
   assert.equal(nw.metricMeta?.bundleVersion, METRIC_BUNDLE_VERSION);
   assert.equal(nw.metricMeta?.inputHash, snap.metricMeta.inputHash);
@@ -79,7 +82,7 @@ test("C2 — dashboard / net-worth / debt / wealth / registry agree", async () =
   const debt = await debtService.list("user-1", household.id);
   assert.equal(
     debt.totals.outstanding.amountMinor,
-    snap.position.liabilities.amountMinor,
+    String(snap.position.liabilities.amountMinor),
   );
   assert.equal(debt.totals.outstanding.amountMinor, debtItem!.valueMinor);
 
@@ -88,23 +91,23 @@ test("C2 — dashboard / net-worth / debt / wealth / registry agree", async () =
   const assets = await wealthService.assets("user-1", household.id);
   assert.equal(
     investments.totals.balance.amountMinor,
-    snap.position.investments.amountMinor,
+    String(snap.position.investments.amountMinor),
   );
   assert.equal(investments.totals.balance.amountMinor, invItem!.valueMinor);
   assert.equal(
     assets.totals.estimatedValue.amountMinor,
-    snap.position.assets.amountMinor,
+    String(snap.position.assets.amountMinor),
   );
   assert.equal(assets.totals.estimatedValue.amountMinor, assetsItem!.valueMinor);
 
   // Dashboard position fields via direct snapshot (same as DashboardService).
   assert.equal(
-    snap.position.netWorth.amountMinor,
-    BigInt(nw.current.amountMinor),
+    String(snap.position.netWorth.amountMinor),
+    nw.current.amountMinor,
   );
   assert.equal(
-    snap.position.liabilities.amountMinor,
-    BigInt(debt.totals.outstanding.amountMinor),
+    String(snap.position.liabilities.amountMinor),
+    debt.totals.outstanding.amountMinor,
   );
 
   // Persisted definitions round-trip.
