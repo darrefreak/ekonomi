@@ -1,0 +1,53 @@
+@import "tailwindcss";
+@import "@ffos/design-tokens/css";
+
+@theme {
+  --color-surface: var(--ffos-surface);
+  --color-surface-muted: var(--ffos-surface-muted);
+  --color-surface-elevated: var(--ffos-surface-elevated);
+  --color-border: var(--ffos-border);
+  --color-border-strong: var(--ffos-border-strong);
+  --color-text-primary: var(--ffos-text-primary);
+  --color-text-secondary: var(--ffos-text-secondary);
+  --color-text-muted: var(--ffos-text-muted);
+  --color-positive: var(--ffos-positive);
+  --color-negative: var(--ffos-negative);
+  --color-warning: var(--ffos-warning);
+  --color-info: var(--ffos-info);
+  --color-accent: var(--ffos-accent);
+  --font-sans: var(--ffos-font-sans);
+  --font-display: var(--ffos-font-display);
+}
+
+@font-face {
+  font-family: "Source Sans 3";
+  font-style: normal;
+  font-weight: 400 700;
+  font-display: swap;
+  src: local("Source Sans 3"), local("SourceSans3-Regular");
+}
+
+html,
+body {
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
+  background:
+    radial-gradient(1200px 600px at 10% -10%, rgb(31 77 58 / 8%), transparent 55%),
+    radial-gradient(900px 500px at 100% 0%, rgb(47 93 140 / 7%), transparent 50%),
+    var(--ffos-surface);
+  color: var(--ffos-text-primary);
+  font-family: var(--ffos-font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
+
+:focus-visible {
+  outline: 2px solid var(--ffos-accent);
+  outline-offset: 2px;
+}

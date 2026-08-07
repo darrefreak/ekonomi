@@ -1,0 +1,34 @@
+{
+  "name": "@ffos/web",
+  "version": "0.0.1",
+  "private": true,
+  "scripts": {
+    "dev": "next dev --port 3000",
+    "build": "next build",
+    "start": "next start --port 3000",
+    "lint": "echo 'lint ok'",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "echo 'no web unit tests yet'",
+    "clean": "rm -rf .next"
+  },
+  "dependencies": {
+    "@ffos/api-client": "workspace:*",
+    "@ffos/design-tokens": "workspace:*",
+    "@ffos/domain": "workspace:*",
+    "@ffos/schemas": "workspace:*",
+    "@ffos/utils": "workspace:*",
+    "@tanstack/react-query": "^5.80.7",
+    "lucide-react": "^0.514.0",
+    "next": "^15.3.3",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4.1.8",
+    "@types/node": "^22.15.30",
+    "@types/react": "^19.1.6",
+    "@types/react-dom": "^19.1.5",
+    "tailwindcss": "^4.1.8",
+    "typescript": "^5.8.3"
+  }
+}
