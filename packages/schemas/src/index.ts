@@ -11,3 +11,4 @@ export * from "./review";
 export * from "./planning";
 export * from "./vehicles";
 export * from "./decisions";
+export * from "./vehicle-intel";

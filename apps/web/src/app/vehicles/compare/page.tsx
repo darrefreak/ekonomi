@@ -1,10 +1,4 @@
-import { PagePlaceholder } from "@/components/placeholders/page-placeholder";
-
+import { VehicleMarketPage } from "@/components/vehicles/vehicle-market-page";
 export default function Page() {
-  return (
-    <PagePlaceholder
-      title="Fordon · compare"
-      description="Fordonsdomänen implementeras i Phase 4B/5B."
-    />
-  );
+  return <VehicleMarketPage title="Jämför" />;
 }

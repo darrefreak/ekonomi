@@ -13,6 +13,7 @@ import { PlanningModule } from "./planning/planning.module";
 import { ReviewModule } from "./review/review.module";
 import { SettingsModule } from "./settings/settings.module";
 import { TransactionsModule } from "./transactions/transactions.module";
+import { VehicleIntelModule } from "./vehicle-intel/vehicle-intel.module";
 import { VehiclesModule } from "./vehicles/vehicles.module";
 
 @Module({
@@ -28,6 +29,7 @@ import { VehiclesModule } from "./vehicles/vehicles.module";
     ReviewModule,
     PlanningModule,
     VehiclesModule,
+    VehicleIntelModule,
     DecisionsModule,
     DashboardModule,
     FeatureFlagsModule,

@@ -7,6 +7,7 @@ export default defineConfig({
     "./src/db/schema-planning.ts",
     "./src/db/schema-vehicles.ts",
     "./src/db/schema-decisions.ts",
+    "./src/db/schema-vehicle-intel.ts",
   ],
   out: "./drizzle",
   dialect: "postgresql",
