@@ -1,0 +1,14 @@
+{
+  "name": "@ffos/config",
+  "version": "0.0.1",
+  "private": true,
+  "files": [
+    "tsconfig*.json"
+  ],
+  "scripts": {
+    "build": "echo 'config package'",
+    "lint": "echo 'lint ok'",
+    "typecheck": "echo 'typecheck ok'",
+    "test": "echo 'no tests'"
+  }
+}
