@@ -468,10 +468,10 @@ export function createApiClient(options: ApiClientOptions) {
       );
       return insightsResponseSchema.parse(data) as InsightsResponse;
     },
-    getVehicleMarket: async (householdId: string) => {
-      const data = await request<unknown>(
-        `/api/v1/vehicle-market?householdId=${encodeURIComponent(householdId)}`,
-      );
+    getVehicleMarket: async (householdId: string, vehicleId?: string) => {
+      const qs = new URLSearchParams({ householdId });
+      if (vehicleId) qs.set("vehicleId", vehicleId);
+      const data = await request<unknown>(`/api/v1/vehicle-market?${qs}`);
       return vehicleMarketResponseSchema.parse(data) as VehicleMarketResponse;
     },
     getDocuments: async (householdId: string) => {

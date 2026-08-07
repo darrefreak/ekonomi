@@ -18,6 +18,8 @@ export const transactionSchema = z.object({
   notes: z.string().nullable().optional(),
   tags: z.array(z.string()).optional().default([]),
   status: z.string(),
+  vehicleId: z.string().uuid().nullable().optional(),
+  financialEventId: z.string().uuid().nullable().optional(),
 });
 
 export const relatedTransactionSchema = z.object({
@@ -54,6 +56,7 @@ export const updateTransactionSchema = z.object({
   tags: z.array(z.string().max(40)).max(20).optional(),
   isExcluded: z.boolean().optional(),
   description: z.string().max(500).nullable().optional(),
+  vehicleId: z.string().uuid().nullable().optional(),
 });
 
 export const categorySchema = z.object({

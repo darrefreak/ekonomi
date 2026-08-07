@@ -30,6 +30,7 @@ export async function persistBalancedEvent(input: {
   incomeAmountMinor?: bigint;
   categoryId?: string;
   merchantId?: string;
+  vehicleId?: string;
   sourceAccountId?: string;
   sourceAmountMinor?: bigint;
   isInternalTransfer?: boolean;
@@ -56,6 +57,7 @@ export async function persistBalancedEvent(input: {
       netWorthDeltaMinor: input.draft.netWorthDeltaMinor,
       categoryId: input.categoryId,
       merchantId: input.merchantId,
+      vehicleId: input.vehicleId,
       sourceType: "seed",
       importBatchId: input.importBatchId,
       userVerified: true,
@@ -172,6 +174,7 @@ export async function persistBalancedEvent(input: {
         amountMinor: split.amountMinor,
         currency: "SEK",
         memo: split.memo,
+        vehicleId: input.vehicleId,
       });
     }
   }

@@ -1,10 +1,10 @@
-import { PagePlaceholder } from "@/components/placeholders/page-placeholder";
+import { VehicleMaintenancePage } from "@/components/vehicles/vehicle-maintenance-page";
 
-export default function Page() {
-  return (
-    <PagePlaceholder
-      title="Fordon · maintenance"
-      description="Fordonsdomänen implementeras i Phase 4B/5B."
-    />
-  );
+export default async function Page({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
+  const { id } = await params;
+  return <VehicleMaintenancePage vehicleId={id} />;
 }

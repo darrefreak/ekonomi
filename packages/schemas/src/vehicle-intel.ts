@@ -3,6 +3,9 @@ import { moneySchema } from "./money";
 
 export const vehicleMarketResponseSchema = z.object({
   asOf: z.string(),
+  vehicleId: z.string().uuid().nullable(),
+  analysisSource: z.string(),
+  currentMonthlyEconomic: moneySchema.nullable(),
   snapshot: z
     .object({
       askLow: moneySchema,
@@ -32,6 +35,7 @@ export const vehicleMarketResponseSchema = z.object({
       recommendation: z.string(),
       confidence: z.number().nullable(),
       summary: z.string(),
+      candidateId: z.string().optional(),
     }),
   ),
   replacement: z
@@ -41,6 +45,8 @@ export const vehicleMarketResponseSchema = z.object({
       sellWindowStart: z.string().nullable(),
       sellWindowEnd: z.string().nullable(),
       targetEquity: moneySchema.nullable(),
+      monthsToBindingEnd: z.number().nullable().optional(),
+      currentEquity: moneySchema.nullable().optional(),
     })
     .nullable(),
 });

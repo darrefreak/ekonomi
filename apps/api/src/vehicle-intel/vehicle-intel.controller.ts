@@ -18,7 +18,8 @@ export class VehicleIntelController {
   market(
     @CurrentUser() user: AuthenticatedUser,
     @Query("householdId") householdId: string,
+    @Query("vehicleId") vehicleId?: string,
   ) {
-    return this.intel.market(user.userId, householdId);
+    return this.intel.market(user.userId, householdId, vehicleId);
   }
 }

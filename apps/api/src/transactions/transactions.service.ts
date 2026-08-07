@@ -10,10 +10,12 @@ import { getDb } from "../db/client";
 import {
   accounts,
   categories,
+  financialEvents,
   merchants,
   sourceTransactionLinks,
   sourceTransactions,
 } from "../db/schema-economic";
+import { vehicles } from "../db/schema-vehicles";
 import { HouseholdAccessService } from "../households/household-access.service";
 
 export type TransactionListFilters = {
@@ -23,6 +25,7 @@ export type TransactionListFilters = {
   from?: string;
   to?: string;
   includeExcluded?: boolean;
+  vehicleId?: string;
 };
 
 @Injectable()
@@ -75,6 +78,9 @@ export class TransactionsService {
         )`,
       );
     }
+    if (filters.vehicleId) {
+      conditions.push(eq(financialEvents.vehicleId, filters.vehicleId));
+    }
 
     const rows = await db
       .select({
@@ -95,11 +101,24 @@ export class TransactionsService {
         notes: sourceTransactions.notes,
         tags: sourceTransactions.tags,
         status: sourceTransactions.status,
+        vehicleId: financialEvents.vehicleId,
+        financialEventId: financialEvents.id,
       })
       .from(sourceTransactions)
       .innerJoin(accounts, eq(sourceTransactions.accountId, accounts.id))
       .leftJoin(categories, eq(sourceTransactions.categoryId, categories.id))
       .leftJoin(merchants, eq(sourceTransactions.merchantId, merchants.id))
+      .leftJoin(
+        sourceTransactionLinks,
+        and(
+          eq(sourceTransactionLinks.sourceTransactionId, sourceTransactions.id),
+          eq(sourceTransactionLinks.role, "primary"),
+        ),
+      )
+      .leftJoin(
+        financialEvents,
+        eq(financialEvents.id, sourceTransactionLinks.financialEventId),
+      )
       .where(and(...conditions))
       .orderBy(desc(sourceTransactions.bookingDate), desc(sourceTransactions.createdAt))
       .limit(Math.min(filters.limit ?? 50, 200));
@@ -155,6 +174,20 @@ export class TransactionsService {
       if (!cat) throw new NotFoundException("Category not found");
     }
 
+    if (input.vehicleId) {
+      const [v] = await db
+        .select({ id: vehicles.id })
+        .from(vehicles)
+        .where(
+          and(
+            eq(vehicles.id, input.vehicleId),
+            eq(vehicles.householdId, input.householdId),
+          ),
+        )
+        .limit(1);
+      if (!v) throw new NotFoundException("Vehicle not found");
+    }
+
     const patch: Partial<typeof sourceTransactions.$inferInsert> = {
       updatedAt: new Date(),
     };
@@ -168,6 +201,13 @@ export class TransactionsService {
       .update(sourceTransactions)
       .set(patch)
       .where(eq(sourceTransactions.id, transactionId));
+
+    if (input.vehicleId !== undefined && existing.financialEventId) {
+      await db
+        .update(financialEvents)
+        .set({ vehicleId: input.vehicleId })
+        .where(eq(financialEvents.id, existing.financialEventId));
+    }
 
     return this.get(userId, input.householdId, transactionId);
   }
@@ -193,11 +233,24 @@ export class TransactionsService {
         notes: sourceTransactions.notes,
         tags: sourceTransactions.tags,
         status: sourceTransactions.status,
+        vehicleId: financialEvents.vehicleId,
+        financialEventId: financialEvents.id,
       })
       .from(sourceTransactions)
       .innerJoin(accounts, eq(sourceTransactions.accountId, accounts.id))
       .leftJoin(categories, eq(sourceTransactions.categoryId, categories.id))
       .leftJoin(merchants, eq(sourceTransactions.merchantId, merchants.id))
+      .leftJoin(
+        sourceTransactionLinks,
+        and(
+          eq(sourceTransactionLinks.sourceTransactionId, sourceTransactions.id),
+          eq(sourceTransactionLinks.role, "primary"),
+        ),
+      )
+      .leftJoin(
+        financialEvents,
+        eq(financialEvents.id, sourceTransactionLinks.financialEventId),
+      )
       .where(
         and(
           eq(sourceTransactions.householdId, householdId),
@@ -275,6 +328,8 @@ export class TransactionsService {
     notes: string | null;
     tags: string[] | null;
     status: string;
+    vehicleId?: string | null;
+    financialEventId?: string | null;
   }) {
     return {
       id: row.id,
@@ -296,6 +351,8 @@ export class TransactionsService {
       notes: row.notes,
       tags: row.tags ?? [],
       status: row.status,
+      vehicleId: row.vehicleId ?? null,
+      financialEventId: row.financialEventId ?? null,
     };
   }
 }

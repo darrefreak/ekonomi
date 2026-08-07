@@ -11,6 +11,7 @@ import {
   vehicleNetEquity,
 } from "@ffos/financial-engine";
 import { getDb } from "../db/client";
+import { financialEvents } from "../db/schema-economic";
 import {
   vehicleCostEvents,
   vehicleFinanceAgreements,
@@ -88,12 +89,12 @@ export class VehiclesService {
       .from(vehicleFinanceAgreements)
       .where(eq(vehicleFinanceAgreements.vehicleId, vehicleId))
       .limit(1);
-    const [odo] = await db
+    const odometerRows = await db
       .select()
       .from(vehicleOdometerReadings)
       .where(eq(vehicleOdometerReadings.vehicleId, vehicleId))
-      .orderBy(desc(vehicleOdometerReadings.recordedOn))
-      .limit(1);
+      .orderBy(desc(vehicleOdometerReadings.recordedOn));
+    const odo = odometerRows[0];
 
     const from = new Date(`${asOf}T00:00:00.000Z`);
     from.setUTCFullYear(from.getUTCFullYear() - 1);
@@ -109,6 +110,23 @@ export class VehiclesService {
         ),
       )
       .orderBy(desc(vehicleCostEvents.occurredOn));
+
+    const linkedEventRows = await db
+      .select({
+        id: financialEvents.id,
+        occurredOn: financialEvents.occurredOn,
+        description: financialEvents.description,
+        expenseAmountMinor: financialEvents.expenseAmountMinor,
+      })
+      .from(financialEvents)
+      .where(
+        and(
+          eq(financialEvents.householdId, householdId),
+          eq(financialEvents.vehicleId, vehicleId),
+        ),
+      )
+      .orderBy(desc(financialEvents.occurredOn))
+      .limit(40);
 
     const costInputs = costs.map((c) => ({
       kind: c.kind,
@@ -186,6 +204,27 @@ export class VehiclesService {
         isEconomicCost: c.isEconomicCost,
         description: c.description,
         odometerKm: c.odometerKm,
+      })),
+      costs: costs.map((c) => ({
+        id: c.id,
+        kind: c.kind,
+        occurredOn: c.occurredOn,
+        amount: moneyToJson(money(c.amountMinor, currency)),
+        isEconomicCost: c.isEconomicCost,
+        description: c.description,
+        odometerKm: c.odometerKm,
+      })),
+      odometerHistory: odometerRows.map((r) => ({
+        id: r.id,
+        readingKm: r.readingKm,
+        recordedOn: r.recordedOn,
+        source: r.source,
+      })),
+      linkedEvents: linkedEventRows.map((e) => ({
+        id: e.id,
+        occurredOn: e.occurredOn,
+        description: e.description,
+        amount: moneyToJson(money(e.expenseAmountMinor ?? 0n, currency)),
       })),
     };
   }

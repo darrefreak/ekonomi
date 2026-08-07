@@ -43,6 +43,7 @@ export class TransactionsController {
     @Query("from") from?: string,
     @Query("to") to?: string,
     @Query("includeExcluded") includeExcluded?: string,
+    @Query("vehicleId") vehicleId?: string,
   ) {
     return this.transactions.list(user.userId, householdId, {
       limit: limit ? Number(limit) : 50,
@@ -52,6 +53,7 @@ export class TransactionsController {
       to,
       includeExcluded:
         includeExcluded === "true" || includeExcluded === "1",
+      vehicleId,
     });
   }
 
