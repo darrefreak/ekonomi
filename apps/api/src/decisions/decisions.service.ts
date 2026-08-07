@@ -1,7 +1,10 @@
 import { Inject, Injectable } from "@nestjs/common";
-import { desc, eq } from "drizzle-orm";
+import { and, desc, eq } from "drizzle-orm";
 import { money, moneyToJson, type CurrencyCode } from "@ffos/domain";
-import { savingsOptimizerSuggestions } from "@ffos/financial-engine";
+import {
+  annualizeSubscription,
+  savingsOptimizerSuggestions,
+} from "@ffos/financial-engine";
 import { getDb } from "../db/client";
 import {
   forecastPoints,
@@ -11,12 +14,19 @@ import {
   riskSignals,
   scenarios,
 } from "../db/schema-decisions";
+import { subscriptions } from "../db/schema-planning";
 import { HouseholdAccessService } from "../households/household-access.service";
+import { HouseholdMetricsService } from "../metrics/household-metrics.service";
+import { PlanningMetricsService } from "../planning/planning-metrics.service";
 
 @Injectable()
 export class DecisionsService {
   constructor(
     @Inject(HouseholdAccessService) private readonly access: HouseholdAccessService,
+    @Inject(HouseholdMetricsService)
+    private readonly metrics: HouseholdMetricsService,
+    @Inject(PlanningMetricsService)
+    private readonly planning: PlanningMetricsService,
   ) {}
 
   async forecast(userId: string, householdId: string) {
@@ -36,10 +46,40 @@ export class DecisionsService {
           .from(forecastPoints)
           .where(eq(forecastPoints.forecastRunId, run.id))
       : [];
+
+    const subs = await db
+      .select()
+      .from(subscriptions)
+      .where(
+        and(
+          eq(subscriptions.householdId, householdId),
+          eq(subscriptions.status, "ACTIVE"),
+        ),
+      );
+    const subscriptionAnnualMinor = subs.reduce(
+      (sum, s) =>
+        sum +
+        annualizeSubscription(
+          s.amountMinor,
+          s.cadence as "WEEKLY" | "MONTHLY" | "QUARTERLY" | "YEARLY",
+        ),
+      0n,
+    );
+    const mortgageInterestAnnualMinor = await this.metrics.mortgageInterestAnnual(
+      householdId,
+      asOf,
+    );
+    const budget = await this.planning.getBudget(householdId, currency, asOf);
+    const remainingMinor = budget
+      ? BigInt(budget.totals.remaining.amountMinor)
+      : 0n;
+    const lifestyleOverBudgetMinor =
+      remainingMinor < 0n ? -remainingMinor : 0n;
+
     const optimizer = savingsOptimizerSuggestions({
-      subscriptionAnnualMinor: 4_764_00n,
-      mortgageInterestAnnualMinor: 48_000_00n,
-      lifestyleOverBudgetMinor: 500_00n,
+      subscriptionAnnualMinor,
+      mortgageInterestAnnualMinor,
+      lifestyleOverBudgetMinor,
     });
     return {
       asOf,

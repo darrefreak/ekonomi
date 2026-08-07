@@ -1,6 +1,7 @@
 import { Inject, Injectable } from "@nestjs/common";
 import { money, moneyToJson, type CurrencyCode } from "@ffos/domain";
 import type { DashboardResponse } from "@ffos/schemas";
+import { DecisionsService } from "../decisions/decisions.service";
 import { HouseholdAccessService } from "../households/household-access.service";
 import { HouseholdMetricsService } from "../metrics/household-metrics.service";
 import { PlanningMetricsService } from "../planning/planning-metrics.service";
@@ -15,6 +16,7 @@ export class DashboardService {
     @Inject(ReviewService) private readonly review: ReviewService,
     @Inject(PlanningMetricsService)
     private readonly planning: PlanningMetricsService,
+    @Inject(DecisionsService) private readonly decisions: DecisionsService,
   ) {}
 
   async getDashboard(userId: string, householdId: string): Promise<DashboardResponse> {
@@ -22,22 +24,46 @@ export class DashboardService {
     const currency = (household.baseCurrency || "SEK") as CurrencyCode;
     const asOf = process.env.DEMO_AS_OF_DATE ?? "2026-08-01";
 
-    const snap = await this.metrics.getFinancialSnapshot(
-      householdId,
-      currency,
-      asOf,
-    );
-    const coverage = await this.metrics.coverage(householdId, asOf);
-    const review = await this.review.list(userId, householdId);
-    const budget = await this.planning.getBudget(householdId, currency, asOf);
+    const [snap, coverage, review, budget, opps] = await Promise.all([
+      this.metrics.getFinancialSnapshot(householdId, currency, asOf),
+      this.metrics.coverage(householdId, asOf),
+      this.review.list(userId, householdId),
+      this.planning.getBudget(householdId, currency, asOf),
+      this.decisions.opportunities(userId, householdId),
+    ]);
 
     const hour = new Date().getHours();
     const greeting =
       hour < 12 ? "God morgon" : hour < 18 ? "God eftermiddag" : "God kväll";
 
-    const hasSeedData = (await this.metrics.getAccountRows(householdId)).length > 0;
+    const accountRows = await this.metrics.getAccountRows(householdId);
+    const hasAccounts = accountRows.length > 0;
     const recentPoints = snap.cashflow.points.slice(-6);
-    const mortgageKr = Math.round(Number(snap.mortgageSavingMinor) / 100);
+
+    const opportunities = [...opps.items]
+      .sort((a, b) => a.priority - b.priority)
+      .slice(0, 5)
+      .map((o) => ({
+        id: o.id,
+        title: o.title,
+        description: o.description,
+        estimatedAnnualSaving: o.estimatedAnnualSaving,
+        confidence: o.confidence,
+        effort: o.effort,
+        risk: o.risk,
+        priority: o.priority,
+        status: o.status,
+        category: o.category,
+      }));
+
+    const brief = buildBrief({
+      spendingDeltaPercent: snap.cashflow.comparison.spendingDeltaPercent,
+      currentLabel: snap.cashflow.currentPeriod.label,
+      previousLabel: snap.cashflow.previousPeriod.label,
+      reviewTotal: review.total,
+      opportunities,
+      hasAccounts,
+    });
 
     return {
       greeting,
@@ -65,37 +91,74 @@ export class DashboardService {
         days60: moneyToJson(money(snap.forecastDeltas.days60, currency)),
         days90: moneyToJson(money(snap.forecastDeltas.days90, currency)),
       },
-      brief: {
-        headline: "Tre saker förtjänar din uppmärksamhet",
-        items: [
-          {
-            id: "food",
-            title: "Utgifter jämfört med förra perioden",
-            detail: `Utgifterna i ${snap.cashflow.currentPeriod.label} är ${snap.cashflow.comparison.spendingDeltaPercent}% jämfört med ${snap.cashflow.previousPeriod.label}.`,
-          },
-          {
-            id: "mortgage",
-            title: "Bolåneränta kan ses över",
-            detail:
-              snap.mortgageSavingMinor > 0n
-                ? `En ränteförhandling (~10 % lägre räntekostnad) kan spara ungefär ${mortgageKr.toLocaleString("sv-SE")} kr/år baserat på senaste 12 månaderna.`
-                : "Otillräcklig bolånehistorik för att uppskatta räntebesparing.",
-          },
-          {
-            id: "review",
-            title: `${review.total} poster behöver granskning`,
-            detail: "Okända merchants, möjliga överföringar och saknade kategorier.",
-          },
-        ],
-      },
+      brief,
       upcoming: snap.upcoming,
+      opportunities,
       coveragePercent: coverage.percent,
-      freshnessLabel: hasSeedData
+      freshnessLabel: hasAccounts
         ? coverage.freshness[0]?.freshnessLabel ?? "Seedad demodata"
-        : "Ingen seed",
+        : "Ingen data",
       cashflowPoints: recentPoints,
       coverageAreas: coverage.areas,
       reviewCount: review.total,
+      hasAccounts,
     };
   }
+}
+
+export function buildBrief(input: {
+  spendingDeltaPercent: number;
+  currentLabel: string;
+  previousLabel: string;
+  reviewTotal: number;
+  opportunities: Array<{ id: string; title: string; description: string }>;
+  hasAccounts: boolean;
+}): DashboardResponse["brief"] {
+  if (!input.hasAccounts) {
+    return {
+      headline: "Kom igång med din ekonomi",
+      items: [
+        {
+          id: "empty-accounts",
+          title: "Inga konton ännu",
+          detail:
+            "Lägg till konton eller ladda demodata för att se nettoförmögenhet, kassaflöde och opportunities.",
+        },
+      ],
+    };
+  }
+
+  const items: DashboardResponse["brief"]["items"] = [
+    {
+      id: "cashflow-delta",
+      title: "Utgifter jämfört med förra perioden",
+      detail: `Utgifterna i ${input.currentLabel} är ${input.spendingDeltaPercent}% jämfört med ${input.previousLabel}.`,
+    },
+  ];
+
+  for (const opp of input.opportunities.slice(0, 2)) {
+    items.push({
+      id: `opp-${opp.id}`,
+      title: opp.title,
+      detail: opp.description,
+    });
+  }
+
+  if (input.reviewTotal > 0) {
+    items.push({
+      id: "review",
+      title: `${input.reviewTotal} poster behöver granskning`,
+      detail: "Okända merchants, möjliga överföringar och saknade kategorier.",
+    });
+  }
+
+  const oppCount = input.opportunities.length;
+  const headline =
+    oppCount > 0
+      ? `${oppCount} opportunities och ${input.reviewTotal} granskningsposter`
+      : input.reviewTotal > 0
+        ? `${input.reviewTotal} poster behöver din uppmärksamhet`
+        : "Din finansiella översikt är uppdaterad";
+
+  return { headline, items: items.slice(0, 4) };
 }
