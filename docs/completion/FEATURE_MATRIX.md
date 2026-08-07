@@ -189,8 +189,8 @@ Legend for layer columns: **C** complete · **P** partial · **S** scaffold · *
 | Quick actions | NOT_STARTED | N | N | N | N | P2 | — | — |
 | Onboarding | PARTIAL | P | P | N | B | P1 | Auth | Wizard + register (WS M) |
 | Demo mode / seed | PARTIAL | P | P | P | P | P1 | — | In-app demo load + seed (WS M) |
-| Accessibility | PARTIAL | — | P | N | P | P2 | — | Skip link, focus; charts limited |
-| Responsive UX | PARTIAL | — | P | N | B | P0 | Mer | Desktop OK; mobile Mer broken |
+| Accessibility | PARTIAL | — | P | P | P | P2 | — | Skip link, focus; axe serious/critical on critical pages (WS O) |
+| Responsive UX | PARTIAL | — | P | P | P | P1 | Mer | Desktop OK; Mer overflow IA + mobile E2E (WS O) |
 | Error/empty/loading | PARTIAL | — | P | N | P | P1 | — | Retry mostly dashboard-only |
 | Observability | PARTIAL | P | N | N | N | P2 | — | Structured logs + request IDs |
 | Performance (dashboard) | PARTIAL | P | P | N | P | P1 | — | Aggregated dashboard API exists |
