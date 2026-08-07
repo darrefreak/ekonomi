@@ -1,7 +1,10 @@
 "use client";
 
+import Link from "next/link";
 import type { ReactNode } from "react";
 import type { DashboardResponse } from "@ffos/schemas";
+import { CoverageList } from "../financial/coverage-list";
+import { MiniCashflowChart } from "../financial/mini-cashflow-chart";
 import { MoneyValue } from "../financial/money-value";
 
 export function DashboardView({ data }: { data: DashboardResponse }) {
@@ -47,11 +50,11 @@ export function DashboardView({ data }: { data: DashboardResponse }) {
             <Row label="Sparat" value={<MoneyValue value={data.thisMonth.savings} />} />
             <Row
               label="Sparandegrad"
-              value={<span className="tabular-nums">{data.thisMonth.savingsRatePercent} %</span>}
-            />
-            <Row
-              label="Kvar i budget"
-              value={<MoneyValue value={data.thisMonth.budgetRemaining} />}
+              value={
+                <span className="tabular-nums">
+                  {data.thisMonth.savingsRatePercent.toFixed(1)} %
+                </span>
+              }
             />
           </dl>
           <p className="mt-4 text-sm text-text-muted">
@@ -60,6 +63,14 @@ export function DashboardView({ data }: { data: DashboardResponse }) {
               {data.cashRunwayMonths.toFixed(1)} månader
             </span>
           </p>
+          {data.reviewCount > 0 ? (
+            <Link
+              href="/review"
+              className="mt-4 inline-flex min-h-11 items-center text-sm font-medium text-accent"
+            >
+              {data.reviewCount} poster behöver granskning →
+            </Link>
+          ) : null}
         </section>
 
         <section className="rounded-[18px] bg-surface-elevated p-5 shadow-[var(--ffos-shadow-soft)]">
@@ -80,38 +91,41 @@ export function DashboardView({ data }: { data: DashboardResponse }) {
 
       <div className="grid gap-4 md:grid-cols-2">
         <section className="rounded-[18px] bg-surface-elevated p-5 shadow-[var(--ffos-shadow-soft)]">
-          <h2 className="text-sm font-medium text-text-secondary">
-            Kassaflödesprognos
-          </h2>
-          <dl className="mt-4 space-y-3 text-sm">
-            <Row label="30 dagar" value={<MoneyValue value={data.forecast.days30} signed />} />
-            <Row label="60 dagar" value={<MoneyValue value={data.forecast.days60} signed />} />
-            <Row label="90 dagar" value={<MoneyValue value={data.forecast.days90} signed />} />
-          </dl>
+          <div className="mb-4 flex items-center justify-between gap-3">
+            <h2 className="text-sm font-medium text-text-secondary">Kassaflöde</h2>
+            <Link href="/cashflow" className="text-sm text-accent">
+              Visa mer
+            </Link>
+          </div>
+          <MiniCashflowChart points={data.cashflowPoints ?? []} />
         </section>
 
         <section className="rounded-[18px] bg-surface-elevated p-5 shadow-[var(--ffos-shadow-soft)]">
-          <h2 className="text-sm font-medium text-text-secondary">Kommande</h2>
-          <ul className="mt-4 space-y-3">
-            {data.upcoming.map((item) => (
-              <li key={item.id} className="flex items-center justify-between gap-3 text-sm">
-                <div>
-                  <p className="font-medium text-text-primary">{item.title}</p>
-                  <p className="text-text-muted">{item.date}</p>
-                </div>
-                <MoneyValue
-                  value={item.amount}
-                  signed={item.kind === "income"}
-                  className="text-text-primary"
-                />
-              </li>
-            ))}
-          </ul>
-          <p className="mt-4 text-xs text-text-muted">
-            Datatäckning {data.coveragePercent} %
-          </p>
+          <CoverageList
+            percent={data.coveragePercent}
+            areas={data.coverageAreas ?? []}
+          />
         </section>
       </div>
+
+      <section className="rounded-[18px] bg-surface-elevated p-5 shadow-[var(--ffos-shadow-soft)]">
+        <h2 className="text-sm font-medium text-text-secondary">Kommande</h2>
+        <ul className="mt-4 space-y-3">
+          {data.upcoming.map((item) => (
+            <li key={item.id} className="flex items-center justify-between gap-3 text-sm">
+              <div>
+                <p className="font-medium text-text-primary">{item.title}</p>
+                <p className="text-text-muted">{item.date}</p>
+              </div>
+              <MoneyValue
+                value={item.amount}
+                signed={item.kind === "income"}
+                className="text-text-primary"
+              />
+            </li>
+          ))}
+        </ul>
+      </section>
     </div>
   );
 }

@@ -2,14 +2,8 @@
 
 import { useCallback, useEffect, useState } from "react";
 import type { DashboardResponse } from "@ffos/schemas";
-import {
-  api,
-  clearSession,
-  getAccessToken,
-  getHouseholdId,
-  setHouseholdId,
-  setSession,
-} from "@/lib/api";
+import { api, clearSession } from "@/lib/api";
+import { ensureHouseholdSession } from "@/lib/session";
 import { DashboardView } from "./dashboard-view";
 import { EmptyState } from "../feedback/empty-state";
 import { ErrorState } from "../feedback/error-state";
@@ -24,14 +18,7 @@ export function DashboardPage() {
     setLoading(true);
     setError(null);
     try {
-      let householdId = getHouseholdId();
-      if (!getAccessToken() || !householdId) {
-        await ensureDemoSession();
-        householdId = getHouseholdId();
-      }
-      if (!householdId) {
-        throw new Error("Kunde inte skapa hushåll");
-      }
+      const householdId = await ensureHouseholdSession();
       const dashboard = await api.getDashboard(householdId);
       setData(dashboard);
     } catch (err) {
@@ -68,35 +55,4 @@ export function DashboardPage() {
     );
   }
   return <DashboardView data={data} />;
-}
-
-async function ensureDemoSession() {
-  try {
-    const loggedIn = await api.login({
-      email: "demo@ffos.local",
-      password: "demo-password-123",
-    });
-    setSession(loggedIn.tokens);
-    const households = await api.listHouseholds();
-    if (households[0]) {
-      setHouseholdId(households[0].id);
-      return;
-    }
-  } catch {
-    // fall through to register ephemeral user
-  }
-
-  const email = `demo+${Date.now()}@ffos.local`;
-  const password = "demo-password-123";
-  const registered = await api.register({
-    email,
-    password,
-    displayName: "Demo-användare",
-  });
-  setSession(registered.tokens);
-  const household = await api.createHousehold({
-    name: "Familjen Demo",
-    baseCurrency: "SEK",
-  });
-  setHouseholdId(household.id);
 }

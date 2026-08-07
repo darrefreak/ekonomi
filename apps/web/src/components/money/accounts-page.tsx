@@ -1,8 +1,10 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import type { AccountDto } from "@ffos/schemas";
-import { api, getHouseholdId } from "@/lib/api";
+import { api } from "@/lib/api";
+import { ensureHouseholdSession } from "@/lib/session";
 import { MoneyValue } from "../financial/money-value";
 import { ErrorState } from "../feedback/error-state";
 import { LoadingState } from "../feedback/loading-state";
@@ -13,14 +15,8 @@ export function AccountsPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const householdId = getHouseholdId();
-    if (!householdId) {
-      setError("Ingen hushållssession. Öppna översikten först.");
-      setLoading(false);
-      return;
-    }
-    void api
-      .listAccounts(householdId)
+    void ensureHouseholdSession()
+      .then((householdId) => api.listAccounts(householdId))
       .then((res) => setItems(res.items))
       .catch((err: Error) => setError(err.message))
       .finally(() => setLoading(false));
@@ -28,9 +24,7 @@ export function AccountsPage() {
 
   if (loading) return <LoadingState label="Hämtar konton…" />;
   if (error) {
-    return (
-      <ErrorState title="Kunde inte hämta konton" description={error} />
-    );
+    return <ErrorState title="Kunde inte hämta konton" description={error} />;
   }
 
   return (
@@ -40,19 +34,24 @@ export function AccountsPage() {
           Konton
         </h1>
         <p className="mt-2 text-sm text-text-secondary">
-          Saldo från seedade konton. Ledger är källan bakom händelserna.
+          Saldo, synkstatus och kontohistorik.
         </p>
       </div>
       <ul className="divide-y divide-border rounded-[16px] bg-surface-elevated shadow-[var(--ffos-shadow-soft)]">
         {items.map((account) => (
-          <li key={account.id} className="flex min-h-14 items-center justify-between gap-3 px-4 py-3">
-            <div>
-              <p className="font-medium text-text-primary">{account.name}</p>
-              <p className="text-xs text-text-muted">
-                {account.provider ?? "Manuell"} · {account.accountType}
-              </p>
-            </div>
-            <MoneyValue value={account.currentBalance} className="text-text-primary" />
+          <li key={account.id}>
+            <Link
+              href={`/accounts/${account.id}`}
+              className="flex min-h-14 items-center justify-between gap-3 px-4 py-3"
+            >
+              <div>
+                <p className="font-medium text-text-primary">{account.name}</p>
+                <p className="text-xs text-text-muted">
+                  {account.provider ?? "Manuell"} · {account.accountType}
+                </p>
+              </div>
+              <MoneyValue value={account.currentBalance} className="text-text-primary" />
+            </Link>
           </li>
         ))}
       </ul>

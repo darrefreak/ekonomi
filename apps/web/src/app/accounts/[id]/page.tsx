@@ -1,10 +1,10 @@
-import { PagePlaceholder } from "@/components/placeholders/page-placeholder";
+import { AccountDetailPage } from "@/components/money/account-detail-page";
 
-export default function Page() {
-  return (
-    <PagePlaceholder
-      title="Kontodetalj"
-      description="Kontovy med saldo, historik och synkstatus kommer i Phase 3."
-    />
-  );
+export default async function Page({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
+  const { id } = await params;
+  return <AccountDetailPage accountId={id} />;
 }

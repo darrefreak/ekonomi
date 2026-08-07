@@ -19,11 +19,17 @@ export class TransactionsController {
     @CurrentUser() user: AuthenticatedUser,
     @Query("householdId") householdId: string,
     @Query("limit") limit?: string,
+    @Query("q") q?: string,
+    @Query("accountId") accountId?: string,
+    @Query("from") from?: string,
+    @Query("to") to?: string,
   ) {
-    return this.transactions.list(
-      user.userId,
-      householdId,
-      limit ? Number(limit) : 50,
-    );
+    return this.transactions.list(user.userId, householdId, {
+      limit: limit ? Number(limit) : 50,
+      q,
+      accountId,
+      from,
+      to,
+    });
   }
 }

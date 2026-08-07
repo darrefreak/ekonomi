@@ -1,11 +1,21 @@
 import {
   accountsResponseSchema,
+  accountDetailSchema,
+  cashflowResponseSchema,
+  coverageResponseSchema,
   dashboardResponseSchema,
+  netWorthResponseSchema,
+  reviewResponseSchema,
   transactionsResponseSchema,
+  type AccountDetailDto,
   type AccountsResponse,
+  type CashflowResponse,
+  type CoverageResponse,
   type DashboardResponse,
   type LoginInput,
+  type NetWorthResponse,
   type RegisterInput,
+  type ReviewResponse,
   type TransactionsResponse,
 } from "@ffos/schemas";
 
@@ -106,11 +116,50 @@ export function createApiClient(options: ApiClientOptions) {
       );
       return accountsResponseSchema.parse(data) as AccountsResponse;
     },
-    listTransactions: async (householdId: string, limit = 50) => {
+    getAccount: async (householdId: string, accountId: string) => {
       const data = await request<unknown>(
-        `/api/v1/transactions?householdId=${encodeURIComponent(householdId)}&limit=${limit}`,
+        `/api/v1/accounts/${encodeURIComponent(accountId)}?householdId=${encodeURIComponent(householdId)}`,
       );
+      return accountDetailSchema.parse(data) as AccountDetailDto;
+    },
+    listTransactions: async (
+      householdId: string,
+      opts?: { limit?: number; q?: string; accountId?: string; from?: string; to?: string },
+    ) => {
+      const params = new URLSearchParams({
+        householdId,
+        limit: String(opts?.limit ?? 50),
+      });
+      if (opts?.q) params.set("q", opts.q);
+      if (opts?.accountId) params.set("accountId", opts.accountId);
+      if (opts?.from) params.set("from", opts.from);
+      if (opts?.to) params.set("to", opts.to);
+      const data = await request<unknown>(`/api/v1/transactions?${params}`);
       return transactionsResponseSchema.parse(data) as TransactionsResponse;
+    },
+    getCashflow: async (householdId: string) => {
+      const data = await request<unknown>(
+        `/api/v1/cashflow?householdId=${encodeURIComponent(householdId)}`,
+      );
+      return cashflowResponseSchema.parse(data) as CashflowResponse;
+    },
+    getNetWorth: async (householdId: string) => {
+      const data = await request<unknown>(
+        `/api/v1/net-worth?householdId=${encodeURIComponent(householdId)}`,
+      );
+      return netWorthResponseSchema.parse(data) as NetWorthResponse;
+    },
+    getCoverage: async (householdId: string) => {
+      const data = await request<unknown>(
+        `/api/v1/coverage?householdId=${encodeURIComponent(householdId)}`,
+      );
+      return coverageResponseSchema.parse(data) as CoverageResponse;
+    },
+    getReview: async (householdId: string) => {
+      const data = await request<unknown>(
+        `/api/v1/review?householdId=${encodeURIComponent(householdId)}`,
+      );
+      return reviewResponseSchema.parse(data) as ReviewResponse;
     },
   };
 }

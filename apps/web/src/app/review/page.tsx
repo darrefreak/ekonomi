@@ -1,10 +1,5 @@
-import { PagePlaceholder } from "@/components/placeholders/page-placeholder";
+import { ReviewPage } from "@/components/money/review-page";
 
 export default function Page() {
-  return (
-    <PagePlaceholder
-      title="Review"
-      description="Den här ytan är förberedd i Phase 1. Funktionalitet byggs i senare faser enligt roadmap."
-    />
-  );
+  return <ReviewPage />;
 }

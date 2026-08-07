@@ -46,6 +46,28 @@ export const dashboardResponseSchema = z.object({
   upcoming: z.array(dashboardUpcomingItemSchema),
   coveragePercent: z.number(),
   freshnessLabel: z.string(),
+  cashflowPoints: z
+    .array(
+      z.object({
+        month: z.string(),
+        income: moneySchema,
+        spending: moneySchema,
+        savings: moneySchema,
+      }),
+    )
+    .optional()
+    .default([]),
+  coverageAreas: z
+    .array(
+      z.object({
+        key: z.string(),
+        label: z.string(),
+        status: z.enum(["present", "warning", "missing"]),
+      }),
+    )
+    .optional()
+    .default([]),
+  reviewCount: z.number().optional().default(0),
 });
 
 export type DashboardResponse = z.infer<typeof dashboardResponseSchema>;

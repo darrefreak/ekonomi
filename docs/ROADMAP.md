@@ -38,15 +38,18 @@ Accounts, balance snapshots, source transactions, financial events, ledger entri
 Detaljer: [phases/PHASE_2.md](./phases/PHASE_2.md).  
 Report: [phase-reports/PHASE_2_REPORT.md](./phase-reports/PHASE_2_REPORT.md).
 
-## Phase 3 — Core product
+## Phase 3 — Core product ✅
 
 Dashboard, accounts, transactions, cashflow, net worth, monthly metrics, freshness, coverage, review queue.
 
-Detaljer: [phases/PHASE_3.md](./phases/PHASE_3.md).
+Detaljer: [phases/PHASE_3.md](./phases/PHASE_3.md).  
+Report: [phase-reports/PHASE_3_REPORT.md](./phase-reports/PHASE_3_REPORT.md).
 
 ## Phase 4 — Planning foundation
 
 Budget, recurring, subscriptions, contracts, sinking funds, goals.
+
+Detaljer: [phases/PHASE_4.md](./phases/PHASE_4.md).
 
 ## Phase 4B — Vehicle foundation
 

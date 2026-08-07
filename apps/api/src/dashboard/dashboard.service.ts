@@ -1,101 +1,53 @@
 import { Inject, Injectable } from "@nestjs/common";
-import { and, eq, gte, lte, ne, sql } from "drizzle-orm";
 import { money, moneyToJson, type CurrencyCode } from "@ffos/domain";
-import { calculateNetSavingsRate, calculateNetWorth } from "@ffos/financial-engine";
+import { calculateNetSavingsRate } from "@ffos/financial-engine";
 import type { DashboardResponse } from "@ffos/schemas";
-import { getDb } from "../db/client";
-import { accounts, financialEvents } from "../db/schema-economic";
 import { HouseholdAccessService } from "../households/household-access.service";
+import { HouseholdMetricsService } from "../metrics/household-metrics.service";
+import { ReviewService } from "../review/review.service";
 
 @Injectable()
 export class DashboardService {
   constructor(
     @Inject(HouseholdAccessService) private readonly access: HouseholdAccessService,
+    @Inject(HouseholdMetricsService)
+    private readonly metrics: HouseholdMetricsService,
+    @Inject(ReviewService) private readonly review: ReviewService,
   ) {}
 
   async getDashboard(userId: string, householdId: string): Promise<DashboardResponse> {
     const { household } = await this.access.requireMembership(userId, householdId);
     const currency = (household.baseCurrency || "SEK") as CurrencyCode;
     const asOf = process.env.DEMO_AS_OF_DATE ?? "2026-08-01";
-    const db = getDb();
 
-    const accountRows = await db
-      .select()
-      .from(accounts)
-      .where(and(eq(accounts.householdId, householdId), ne(accounts.isSystem, true)));
+    const accountRows = await this.metrics.getAccountRows(householdId);
+    const position = this.metrics.positionFromAccounts(accountRows, currency);
+    const cashflow = await this.metrics.cashflow(householdId, currency, asOf);
+    const coverage = await this.metrics.coverage(householdId, asOf);
+    const review = await this.review.list(userId, householdId);
 
-    const sumType = (...types: string[]) =>
-      accountRows
-        .filter((a) => types.includes(a.accountType))
-        .reduce((acc, a) => acc + a.currentBalanceMinor, 0n);
-
-    const availableCash = money(sumType("CHECKING", "SAVINGS", "CASH"), currency);
-    const investments = money(sumType("INVESTMENT", "PENSION", "CRYPTO"), currency);
-    const assetAccounts = money(sumType("ASSET"), currency);
-    const debt = money(sumType("MORTGAGE", "LOAN", "CREDIT_CARD"), currency);
-    const netWorth = calculateNetWorth({
-      cash: availableCash,
-      investments,
-      assets: assetAccounts,
-      liabilities: debt,
-    });
-
-    // Prefer calendar month of asOf; if empty (e.g. asOf=1st), fall back to previous month.
-    const monthCandidates = [asOf.slice(0, 7)];
-    const [y, m] = asOf.slice(0, 7).split("-").map(Number);
-    const prev = m === 1 ? `${y - 1}-12` : `${y}-${String(m - 1).padStart(2, "0")}`;
-    monthCandidates.push(prev);
-
-    let incomeMinor = 0n;
-    let spendingMinor = 0n;
-    for (const monthKey of monthCandidates) {
-      const monthStart = `${monthKey}-01`;
-      const monthEnd =
-        monthKey === asOf.slice(0, 7) ? asOf : lastDayOfMonth(monthKey);
-      const [totals] = await db
-        .select({
-          income: sql<string>`coalesce(sum(${financialEvents.incomeAmountMinor}), 0)`,
-          spending: sql<string>`coalesce(sum(${financialEvents.expenseAmountMinor}), 0)`,
-        })
-        .from(financialEvents)
-        .where(
-          and(
-            eq(financialEvents.householdId, householdId),
-            gte(financialEvents.occurredOn, monthStart),
-            lte(financialEvents.occurredOn, monthEnd),
-          ),
-        );
-      incomeMinor = BigInt(totals?.income ?? "0");
-      spendingMinor = BigInt(totals?.spending ?? "0");
-      if (incomeMinor > 0n || spendingMinor > 0n) break;
-    }
-
+    const incomeMinor = BigInt(cashflow.currentPeriod.income.amountMinor);
+    const spendingMinor = BigInt(cashflow.currentPeriod.spending.amountMinor);
     const savingsMinor = incomeMinor - spendingMinor;
-    const savingsRate = calculateNetSavingsRate({
-      incomeMinor,
-      spendingMinor,
-    });
+    const savingsRate = calculateNetSavingsRate({ incomeMinor, spendingMinor });
 
     const hour = new Date().getHours();
     const greeting =
       hour < 12 ? "God morgon" : hour < 18 ? "God eftermiddag" : "God kväll";
 
     const hasSeedData = accountRows.length > 0;
+    const recentPoints = cashflow.points.slice(-6);
 
     return {
       greeting,
       asOf,
       householdName: household.name,
       position: {
-        netWorth: moneyToJson(hasSeedData ? netWorth : money(4_821_439_00n, currency)),
+        netWorth: moneyToJson(position.netWorth),
         netWorthChangeMonth: moneyToJson(money(63_410_00n, currency)),
-        availableCash: moneyToJson(
-          hasSeedData ? availableCash : money(284_000_00n, currency),
-        ),
-        investments: moneyToJson(
-          hasSeedData ? investments : money(1_180_000_00n, currency),
-        ),
-        debt: moneyToJson(hasSeedData ? debt : money(3_942_561_00n, currency)),
+        availableCash: moneyToJson(position.availableCash),
+        investments: moneyToJson(position.investments),
+        debt: moneyToJson(position.liabilities),
       },
       thisMonth: {
         income: moneyToJson(money(incomeMinor, currency)),
@@ -104,14 +56,14 @@ export class DashboardService {
         savingsRatePercent: savingsRate,
         budgetRemaining: moneyToJson(
           money(
-            spendingMinor > 0n ? 12_000_00n - (spendingMinor % 12_000_00n) : 6_200_00n,
+            spendingMinor > 0n ? 12_000_00n - (spendingMinor % 12_000_00n) : 0n,
             currency,
           ),
         ),
       },
       cashRunwayMonths:
         spendingMinor > 0n
-          ? Number(availableCash.amountMinor) / Number(spendingMinor)
+          ? Number(position.availableCash.amountMinor) / Number(spendingMinor)
           : 0,
       forecast: {
         days30: moneyToJson(money(18_400_00n, currency)),
@@ -124,8 +76,7 @@ export class DashboardService {
           {
             id: "food",
             title: "Matutgifter över normalnivå",
-            detail:
-              "Mat är cirka 14 % över din 12-månadersnivå den här månaden (seedad säsongs-/creep-signal).",
+            detail: `Utgifterna i ${cashflow.currentPeriod.label} är ${cashflow.comparison.spendingDeltaPercent}% jämfört med ${cashflow.previousPeriod.label}.`,
           },
           {
             id: "mortgage",
@@ -133,9 +84,9 @@ export class DashboardService {
             detail: "En ränteförhandling kan spara ungefär 9 800 kr/år.",
           },
           {
-            id: "buffer",
-            title: "Över likviditetsmål",
-            detail: "Cirka 38 000 kr ligger över din konfigurerade likviditetsbuffert.",
+            id: "review",
+            title: `${review.total} poster behöver granskning`,
+            detail: "Okända merchants, möjliga överföringar och saknade kategorier.",
           },
         ],
       },
@@ -162,16 +113,13 @@ export class DashboardService {
           kind: "income",
         },
       ],
-      coveragePercent: hasSeedData ? 94 : 40,
+      coveragePercent: coverage.percent,
       freshnessLabel: hasSeedData
-        ? "Seedad demodata · deterministisk"
-        : "Ingen seed — placeholder",
+        ? coverage.freshness[0]?.freshnessLabel ?? "Seedad demodata"
+        : "Ingen seed",
+      cashflowPoints: recentPoints,
+      coverageAreas: coverage.areas,
+      reviewCount: review.total,
     };
   }
-}
-
-function lastDayOfMonth(yyyyMm: string): string {
-  const [y, m] = yyyyMm.split("-").map(Number);
-  const date = new Date(Date.UTC(y, m, 0));
-  return date.toISOString().slice(0, 10);
 }

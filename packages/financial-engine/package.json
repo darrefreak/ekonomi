@@ -15,7 +15,7 @@
     "build": "tsc -p tsconfig.json",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "lint": "echo 'lint ok'",
-    "test": "tsx --test src/net-worth.test.ts src/ledger/ledger.test.ts",
+    "test": "tsx --test src/net-worth.test.ts src/ledger/ledger.test.ts src/cashflow.test.ts src/coverage.test.ts",
     "clean": "rm -rf dist"
   },
   "dependencies": {

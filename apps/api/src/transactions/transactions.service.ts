@@ -1,5 +1,5 @@
 import { Inject, Injectable } from "@nestjs/common";
-import { and, desc, eq } from "drizzle-orm";
+import { and, desc, eq, gte, lte, sql, type SQL } from "drizzle-orm";
 import { moneyToJson } from "@ffos/domain";
 import { getDb } from "../db/client";
 import {
@@ -10,15 +10,45 @@ import {
 } from "../db/schema-economic";
 import { HouseholdAccessService } from "../households/household-access.service";
 
+export type TransactionListFilters = {
+  limit?: number;
+  q?: string;
+  accountId?: string;
+  from?: string;
+  to?: string;
+};
+
 @Injectable()
 export class TransactionsService {
   constructor(
     @Inject(HouseholdAccessService) private readonly access: HouseholdAccessService,
   ) {}
 
-  async list(userId: string, householdId: string, limit = 50) {
+  async list(userId: string, householdId: string, filters: TransactionListFilters = {}) {
     await this.access.requireMembership(userId, householdId);
     const db = getDb();
+    const conditions: SQL[] = [eq(sourceTransactions.householdId, householdId)];
+
+    if (filters.accountId) {
+      conditions.push(eq(sourceTransactions.accountId, filters.accountId));
+    }
+    if (filters.from) {
+      conditions.push(gte(sourceTransactions.bookingDate, filters.from));
+    }
+    if (filters.to) {
+      conditions.push(lte(sourceTransactions.bookingDate, filters.to));
+    }
+    if (filters.q?.trim()) {
+      const q = `%${filters.q.trim()}%`;
+      conditions.push(
+        sql`(
+          ${sourceTransactions.description} ilike ${q}
+          or ${merchants.canonicalName} ilike ${q}
+          or ${categories.name} ilike ${q}
+        )`,
+      );
+    }
+
     const rows = await db
       .select({
         id: sourceTransactions.id,
@@ -37,9 +67,9 @@ export class TransactionsService {
       .innerJoin(accounts, eq(sourceTransactions.accountId, accounts.id))
       .leftJoin(categories, eq(sourceTransactions.categoryId, categories.id))
       .leftJoin(merchants, eq(sourceTransactions.merchantId, merchants.id))
-      .where(eq(sourceTransactions.householdId, householdId))
+      .where(and(...conditions))
       .orderBy(desc(sourceTransactions.bookingDate), desc(sourceTransactions.createdAt))
-      .limit(Math.min(limit, 200));
+      .limit(Math.min(filters.limit ?? 50, 200));
 
     return {
       items: rows.map((row) => ({
@@ -57,6 +87,12 @@ export class TransactionsService {
         isInternalTransfer: row.isInternalTransfer,
         status: row.status,
       })),
+      filters: {
+        q: filters.q ?? null,
+        accountId: filters.accountId ?? null,
+        from: filters.from ?? null,
+        to: filters.to ?? null,
+      },
     };
   }
 }

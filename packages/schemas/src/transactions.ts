@@ -16,6 +16,14 @@ export const transactionSchema = z.object({
 
 export const transactionsResponseSchema = z.object({
   items: z.array(transactionSchema),
+  filters: z
+    .object({
+      q: z.string().nullable().optional(),
+      accountId: z.string().nullable().optional(),
+      from: z.string().nullable().optional(),
+      to: z.string().nullable().optional(),
+    })
+    .optional(),
 });
 
 export type TransactionDto = z.infer<typeof transactionSchema>;

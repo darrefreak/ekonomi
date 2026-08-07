@@ -8,7 +8,10 @@ build/
 .next/
 .turbo/
 out/
-coverage/
+# Test coverage output (not Nest modules named *coverage*)
+/coverage/
+**/coverage/lcov-report/
+**/coverage/coverage-final.json
 
 # Env / secrets
 .env
