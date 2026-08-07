@@ -56,19 +56,32 @@ test("investments and assets APIs return ledger-backed wealth", async () => {
 test("net worth history comes from account_balance_snapshots", async () => {
   if (!process.env.DATABASE_URL) return;
   const db = getDb();
-  const [row] = await db.select().from(households).limit(1);
-  if (!row) return;
+  const [inv] = await db
+    .select()
+    .from(accounts)
+    .where(eq(accounts.accountType, "INVESTMENT"))
+    .limit(1);
+  if (!inv) return;
+
+  const [household] = await db
+    .select()
+    .from(households)
+    .where(eq(households.id, inv.householdId))
+    .limit(1);
+  if (!household) return;
 
   const access = {
     requireMembership: async () => ({
-      household: row,
+      household,
       member: { id: "member", role: "OWNER" },
     }),
   } as unknown as HouseholdAccessService;
 
   const metrics = new HouseholdMetricsService();
   const service = new NetWorthService(access, metrics);
-  const nw = netWorthResponseSchema.parse(await service.get("user-1", row.id));
+  const nw = netWorthResponseSchema.parse(
+    await service.get("user-1", household.id),
+  );
   assert.ok(nw.history.length >= 2);
   assert.ok(nw.history.every((h) => h.source === "account_balance_snapshots"));
   assert.ok(nw.attribution.length >= 1);
