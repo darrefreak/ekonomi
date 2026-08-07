@@ -1,10 +1,5 @@
-import { PagePlaceholder } from "@/components/placeholders/page-placeholder";
+import { AssetsPage } from "@/components/money/assets-page";
 
 export default function Page() {
-  return (
-    <PagePlaceholder
-      title="Assets"
-      description="Den här ytan är förberedd i Phase 1. Funktionalitet byggs i senare faser enligt roadmap."
-    />
-  );
+  return <AssetsPage />;
 }

@@ -21,19 +21,11 @@ export class NetWorthService {
       asOf,
     );
 
-    const priorAsOf = previousMonthDate(asOf);
-    const priorNw = snap.position.netWorth.amountMinor - snap.changeMonthMinor;
-
-    const history = [
-      {
-        asOf: priorAsOf,
-        netWorth: moneyToJson(money(priorNw, currency)),
-      },
-      {
-        asOf,
-        netWorth: moneyToJson(snap.position.netWorth),
-      },
-    ].sort((a, b) => a.asOf.localeCompare(b.asOf));
+    const history = await this.metrics.netWorthHistoryFromSnapshots(
+      householdId,
+      currency,
+      asOf,
+    );
 
     return {
       asOf,
@@ -53,11 +45,4 @@ export class NetWorthService {
       })),
     };
   }
-}
-
-function previousMonthDate(asOf: string): string {
-  const [y, m] = asOf.slice(0, 7).split("-").map(Number);
-  const year = m === 1 ? y - 1 : y;
-  const month = m === 1 ? 12 : m - 1;
-  return `${year}-${String(month).padStart(2, "0")}-01`;
 }

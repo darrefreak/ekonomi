@@ -15,6 +15,7 @@ export const netWorthResponseSchema = z.object({
     z.object({
       asOf: z.string(),
       netWorth: moneySchema,
+      source: z.string().optional(),
     }),
   ),
   attribution: z.array(

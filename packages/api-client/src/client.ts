@@ -3,6 +3,7 @@ import {
   accountDetailSchema,
   accountSchema,
   advisorBriefResponseSchema,
+  assetsResponseSchema,
   budgetResponseSchema,
   cashflowResponseSchema,
   categoriesResponseSchema,
@@ -18,6 +19,7 @@ import {
   importsResponseSchema,
   insightsResponseSchema,
   integrationsResponseSchema,
+  investmentsResponseSchema,
   netWorthResponseSchema,
   opportunitiesResponseSchema,
   reviewResponseSchema,
@@ -34,6 +36,7 @@ import {
   type AccountDto,
   type AccountsResponse,
   type AdvisorBriefResponse,
+  type AssetsResponse,
   type BudgetResponse,
   type CashflowResponse,
   type CategoriesResponse,
@@ -55,6 +58,7 @@ import {
   type ImportsResponse,
   type InsightsResponse,
   type IntegrationsResponse,
+  type InvestmentsResponse,
   type LoginInput,
   type NetWorthResponse,
   type OpportunitiesResponse,
@@ -266,6 +270,18 @@ export function createApiClient(options: ApiClientOptions) {
         `/api/v1/net-worth?householdId=${encodeURIComponent(householdId)}`,
       );
       return netWorthResponseSchema.parse(data) as NetWorthResponse;
+    },
+    getInvestments: async (householdId: string) => {
+      const data = await request<unknown>(
+        `/api/v1/investments?householdId=${encodeURIComponent(householdId)}`,
+      );
+      return investmentsResponseSchema.parse(data) as InvestmentsResponse;
+    },
+    getAssets: async (householdId: string) => {
+      const data = await request<unknown>(
+        `/api/v1/assets?householdId=${encodeURIComponent(householdId)}`,
+      );
+      return assetsResponseSchema.parse(data) as AssetsResponse;
     },
     getDebt: async (householdId: string) => {
       const data = await request<unknown>(
