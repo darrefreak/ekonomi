@@ -3,14 +3,18 @@
 Priority model: **P0 before P1**.  
 These must be resolved (or explicitly accepted with risk) before claiming product completeness of downstream analytics.
 
+> **Adversarial P0 financial acceptance (2026-08-07): FAIL — FINANCIAL CORE NOT ACCEPTED.**  
+> See `docs/acceptance/p0/P0_FINANCIAL_ACCEPTANCE.md` and `P0_REMAINING_FIXES.md`.  
+> **P0 REMAINING: > 0** · **FINANCIAL CORE ACCEPTED: NO**
+
 ---
 
 ## P0-1 — Ledger balances are not the source of truth
 
-**Status:** BROKEN relative to master invariants  
-**Evidence:** Seed writes `ledger_postings` but APIs use `accounts.currentBalanceMinor` and illustrative snapshots. Phase 2 report admits cache not recomputed.
+**Status:** PARTIAL (A2 progress; residuals remain)  
+**Evidence:** Metrics/dashboard/NW reconstruct from postings; reconcile job/API no silent overwrite. Residuals: accounts list + debt detail still cache-first; NW history snapshots not refreshed after mutations. See `docs/acceptance/p0/P0_REVERIFICATION.md`.
 
-**Impact:** Net worth / cash / debt can diverge from events; transfers/CC/mortgage demos look correct only because seed is handcrafted.
+**Impact:** Core analytics usually ledger-aligned; some list/detail/history paths can diverge.
 
 **Required:** Reconstruct balances from postings (or maintain postings + verified cache with reconciliation job); snapshot `ledgerCalculatedBalance` for real.
 
@@ -73,23 +77,23 @@ These must be resolved (or explicitly accepted with risk) before claiming produc
 
 ## P0-7 — Transaction splits / reconciliation / refunds not operational
 
-**Status:** SCAFFOLD_ONLY / NOT_STARTED  
-**Evidence:** Empty `transaction_splits`, unused `reconciliation_groups`, no refund builders despite METRICS rules.
+**Status:** PARTIAL (runtime builders/APIs for transfer/CC/mortgage/invest; product gaps remain)  
+**Evidence:** Mortgage splits + recon groups persist; refund service+test exist but **no HTTP refund**; no general category-split write API; persist not transactional. Acceptance audit: PARTIAL. See `P0_REMAINING_FIXES.md` P0-A4/A1.
 
-**Impact:** Cannot correctly represent multi-category expenses or refund netting; transfer pairing incomplete.
+**Impact:** Core economic events work; multi-category split product path and refund API incomplete; corruption risk on partial writes.
 
-**Required:** At least: refund builders + metrics netting; transfer dual-leg or reconciliation group usage; category splits persistence path.
+**Required:** At least: refund HTTP + metrics netting; transfer dual-leg or reconciliation group usage; category splits persistence path; DB transaction around multi-write.
 
 ---
 
 ## P0-8 — Metric consistency / registry absent
 
-**Status:** FIXED (Batch C2)  
-**Evidence:** Code-first `METRIC_DEFINITIONS` + `METRIC_BUNDLE_VERSION` in `@ffos/financial-engine`; `metric_definitions` / `metric_snapshots` tables; `MetricRegistryService`; dashboard/net-worth/debt/wealth/reports/AI consume shared snapshot + `metricMeta`; consistency test on demo household. See `docs/completion/batches/C2_REPORT.md`.
+**Status:** PARTIAL (Batch C2 foundation; integrity gaps)  
+**Evidence:** Registry + shared consumers + demo consistency test. Gaps: weak `inputHash`, hardcoded asOf, yearly fake meta, no historical version serve, NW history stale risk. Acceptance audit: PARTIAL. See `METRIC_REGISTRY_VERIFICATION.md`.
 
-**Impact:** Mitigated — same `(householdId, asOf)` yields identical core position/debt/investment totals across surfaces with version + inputHash.
+**Impact:** Core totals agree across main surfaces for demo asOf; reproducibility/versioning claims not fully met.
 
-**Required:** Shared metric calculation path with `asOf` + version; all surfaces consume it.
+**Required:** Shared metric calculation path with `asOf` + version; all surfaces consume it; meaningful inputHash; coherent asOf.
 
 ---
 
