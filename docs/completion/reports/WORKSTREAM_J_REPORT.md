@@ -2,7 +2,7 @@
 
 **Date:** 2026-08-07  
 **Branch:** `cursor/workstream-j-documents-9c58`  
-**Status:** COMPLETE for scoped J goals (gates pending in this revision)
+**Status:** COMPLETE
 
 ---
 
@@ -49,17 +49,18 @@
 
 ## Gate results
 
-| Gate | Result |
-|---|---|
-| `pnpm build` | pending |
-| `pnpm typecheck` | pending |
-| `pnpm test` | pending |
-| `pnpm lint` | pending |
-| `pnpm db:migrate` | pending |
+| Gate | Result | Notes |
+|---|---|---|
+| `pnpm db:migrate` | ✅ | Applied `0013_workstream_j_documents` |
+| `pnpm db:seed` | ✅ | Demo documents + vehicle-linked receipt |
+| `pnpm build` | ✅ | After UI patch type fix (`Omit` householdId) |
+| `pnpm typecheck` | ✅ | |
+| `pnpm lint` | ✅ | |
+| `pnpm test` | ✅ | With `FFOS_STORAGE_DRIVER=local`; intake mutation + mock-extract tests |
 
 ---
 
 ## STOP
 
-Workstream J complete for its scope once gates pass.  
+Workstream J complete.  
 Do **not** auto-start K. Await: `START WORKSTREAM K`
