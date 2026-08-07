@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import { eq } from "drizzle-orm";
 import { createAccountSchema, updateTransactionSchema } from "@ffos/schemas";
-import { getDb, getPool } from "../db/client";
+import { getDb } from "../db/client";
 import { households } from "../db/schema";
 import { accounts, sourceTransactions } from "../db/schema-economic";
 import { AccountsService } from "./accounts.service";
@@ -32,12 +32,10 @@ test("updateTransactionSchema accepts classification fields", () => {
 });
 
 test("account create update archive and transaction patch against DB", async () => {
+  if (!process.env.DATABASE_URL) return;
   const db = getDb();
   const [household] = await db.select().from(households).limit(1);
-  if (!household) {
-    await getPool().end().catch(() => undefined);
-    return; // skip if DB empty in CI without seed
-  }
+  if (!household) return; // skip if DB empty in CI without seed
 
   const access = {
     requireMembership: async () => ({
@@ -95,5 +93,4 @@ test("account create update archive and transaction patch against DB", async () 
   );
 
   await db.delete(accounts).where(eq(accounts.id, created.id));
-  await getPool().end().catch(() => undefined);
 });

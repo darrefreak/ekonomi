@@ -8,7 +8,7 @@ import {
 } from "@ffos/schemas";
 import { getDb } from "../db/client";
 import { households } from "../db/schema";
-import { goals, sinkingFunds } from "../db/schema-planning";
+import { budgetPeriods, goals, sinkingFunds } from "../db/schema-planning";
 import type { HouseholdAccessService } from "../households/household-access.service";
 import { BudgetService } from "./budget.service";
 import { GoalsService } from "./goals.service";
@@ -45,7 +45,13 @@ test("createGoalSchema defaults type and current", () => {
 test("budget line update and goal/fund contributions against DB", async () => {
   if (!process.env.DATABASE_URL) return;
   const db = getDb();
-  const [household] = await db.select().from(households).limit(1);
+  const [periodRow] = await db.select().from(budgetPeriods).limit(1);
+  if (!periodRow) return;
+  const [household] = await db
+    .select()
+    .from(households)
+    .where(eq(households.id, periodRow.householdId))
+    .limit(1);
   if (!household) return;
 
   const access = {

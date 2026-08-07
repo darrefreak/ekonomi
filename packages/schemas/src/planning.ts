@@ -189,7 +189,7 @@ export const createGoalSchema = z.object({
   priority: z.number().int().min(1).max(5).optional().default(3),
   sinkingFundId: z.string().uuid().nullable().optional(),
 });
-export type CreateGoalInput = z.infer<typeof createGoalSchema>;
+export type CreateGoalInput = z.input<typeof createGoalSchema>;
 
 export const contributeSinkingFundSchema = z.object({
   householdId: z.string().uuid(),
@@ -230,4 +230,4 @@ export const createSinkingFundSchema = z.object({
   priority: z.number().int().min(1).max(5).optional().default(3),
   categoryKey: z.string().max(80).nullable().optional(),
 });
-export type CreateSinkingFundInput = z.infer<typeof createSinkingFundSchema>;
+export type CreateSinkingFundInput = z.input<typeof createSinkingFundSchema>;
