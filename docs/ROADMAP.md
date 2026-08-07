@@ -19,17 +19,17 @@ När en phase är komplett:
 
 **STOPPA.** Starta nästa phase först efter explicit instruktion: `START PHASE X+1`.
 
-## Phase 0 — Architecture (nu)
+## Phase 0 — Architecture ✅
 
-Dokumentation, ADR:er, invariants, phase boundaries. Ingen större implementation.
+Dokumentation, ADR:er, invariants, phase boundaries.  
+Report: [phase-reports/PHASE_0_REPORT.md](./phase-reports/PHASE_0_REPORT.md).
 
-Deliverables: core docs + ADRs + `PHASE_1.md` + `PHASE_0_REPORT.md`.
-
-## Phase 1 — Foundation
+## Phase 1 — Foundation ✅
 
 Monorepo, Docker (web/api/worker/postgres/redis/minio/mailpit), NestJS, Next.js, shared packages, auth foundation, households/members/permissions, design tokens, app shell, navigation, basic dashboard shell, placeholder data via backend, health endpoints, structured logging.
 
-Detaljer: [phases/PHASE_1.md](./phases/PHASE_1.md).
+Detaljer: [phases/PHASE_1.md](./phases/PHASE_1.md).  
+Report: [phase-reports/PHASE_1_REPORT.md](./phase-reports/PHASE_1_REPORT.md).
 
 ## Phase 2 — Economic foundation
 
