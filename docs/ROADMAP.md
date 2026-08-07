@@ -73,9 +73,11 @@ Market snapshots, valuation ranges, candidates, comparisons, replacement analysi
 Detaljer: [phases/PHASE_5B.md](./phases/PHASE_5B.md).  
 Report: [phase-reports/PHASE_5B_REPORT.md](./phase-reports/PHASE_5B_REPORT.md).
 
-## Phase 6 — Data intake
+## Phase 6 — Data intake ✅
 
 Documents, financial inbox, integration UI, import UI, fake sync, connector states, source health, financial coverage.
+
+Report: [phase-reports/PHASE_6_REPORT.md](./phase-reports/PHASE_6_REPORT.md).
 
 ## Phase 7 — AI
 

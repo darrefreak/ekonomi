@@ -6,9 +6,12 @@ import {
   contractsResponseSchema,
   coverageResponseSchema,
   dashboardResponseSchema,
+  documentsResponseSchema,
   forecastResponseSchema,
   goalsResponseSchema,
+  importsResponseSchema,
   insightsResponseSchema,
+  integrationsResponseSchema,
   netWorthResponseSchema,
   opportunitiesResponseSchema,
   reviewResponseSchema,
@@ -26,9 +29,12 @@ import {
   type ContractsResponse,
   type CoverageResponse,
   type DashboardResponse,
+  type DocumentsResponse,
   type ForecastResponse,
   type GoalsResponse,
+  type ImportsResponse,
   type InsightsResponse,
+  type IntegrationsResponse,
   type LoginInput,
   type NetWorthResponse,
   type OpportunitiesResponse,
@@ -256,6 +262,30 @@ export function createApiClient(options: ApiClientOptions) {
         `/api/v1/vehicle-market?householdId=${encodeURIComponent(householdId)}`,
       );
       return vehicleMarketResponseSchema.parse(data) as VehicleMarketResponse;
+    },
+    getDocuments: async (householdId: string) => {
+      const data = await request<unknown>(
+        `/api/v1/documents?householdId=${encodeURIComponent(householdId)}`,
+      );
+      return documentsResponseSchema.parse(data) as DocumentsResponse;
+    },
+    getIntegrations: async (householdId: string) => {
+      const data = await request<unknown>(
+        `/api/v1/integrations?householdId=${encodeURIComponent(householdId)}`,
+      );
+      return integrationsResponseSchema.parse(data) as IntegrationsResponse;
+    },
+    getImports: async (householdId: string) => {
+      const data = await request<unknown>(
+        `/api/v1/imports?householdId=${encodeURIComponent(householdId)}`,
+      );
+      return importsResponseSchema.parse(data) as ImportsResponse;
+    },
+    triggerFakeSync: async (householdId: string) => {
+      return request<{ ok: boolean; syncRunId: string }>(
+        `/api/v1/integrations/sync?householdId=${encodeURIComponent(householdId)}`,
+        { method: "POST" },
+      );
     },
   };
 }

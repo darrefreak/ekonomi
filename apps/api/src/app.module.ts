@@ -8,6 +8,7 @@ import { FeatureFlagsModule } from "./feature-flags/feature-flags.module";
 import { FinancialCoverageModule } from "./financial-coverage/financial-coverage.module";
 import { HealthModule } from "./health/health.module";
 import { HouseholdsModule } from "./households/households.module";
+import { IntakeModule } from "./intake/intake.module";
 import { NetWorthModule } from "./net-worth/net-worth.module";
 import { PlanningModule } from "./planning/planning.module";
 import { ReviewModule } from "./review/review.module";
@@ -31,6 +32,7 @@ import { VehiclesModule } from "./vehicles/vehicles.module";
     VehiclesModule,
     VehicleIntelModule,
     DecisionsModule,
+    IntakeModule,
     DashboardModule,
     FeatureFlagsModule,
     SettingsModule,
