@@ -2,7 +2,7 @@
 
 **Date:** 2026-08-07  
 **Branch:** `cursor/workstream-i-opportunities-risk-9c58`  
-**Status:** COMPLETE for scoped I goals (gates pending in this revision)
+**Status:** COMPLETE for scoped I goals
 
 ---
 
@@ -55,14 +55,14 @@
 
 | Gate | Result |
 |---|---|
-| `pnpm build` | pending |
-| `pnpm typecheck` | pending |
-| `pnpm test` | pending |
-| `pnpm lint` | pending |
+| `pnpm build` | ✅ |
+| `pnpm typecheck` | ✅ |
+| `pnpm test` | ✅ (live decisions + engine detectors/creep/risk) |
+| `pnpm lint` | ✅ (echo stubs — known) |
 
 ---
 
 ## STOP
 
-Workstream I complete for its scope once gates pass.  
+Workstream I complete for its scope.  
 Do **not** auto-start J. Await: `START WORKSTREAM J`

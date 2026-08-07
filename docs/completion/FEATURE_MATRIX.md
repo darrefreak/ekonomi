@@ -60,7 +60,7 @@ Legend for layer columns: **C** complete · **P** partial · **S** scaffold · *
 | Cashflow forecast widget | PARTIAL | P | P | P | P | P0 | Forecast | Engine 30/60/90 deltas (WS C) |
 | Financial brief | PARTIAL | P | P | P | P | P1 | AI/Metrics | Opps + cashflow + review (WS C); AI later |
 | Upcoming obligations | PARTIAL | P | P | P | P | P1 | Recurring | Subs/contracts/salary estimate |
-| Opportunities on dashboard | PARTIAL | P | P | P | P | P2 | Opps | Aggregated + widget (WS C); detectors later |
+| Opportunities on dashboard | PARTIAL | P | P | P | P | P2 | Opps | Aggregated live detectors (WS C/I) |
 | Coverage / freshness | PARTIAL | P | P | P | P | P1 | Accounts | Heuristic coverage |
 
 ---
