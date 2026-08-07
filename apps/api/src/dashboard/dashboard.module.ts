@@ -1,5 +1,6 @@
 import { Module } from "@nestjs/common";
 import { AuthModule } from "../auth/auth.module";
+import { DecisionsModule } from "../decisions/decisions.module";
 import { HouseholdsModule } from "../households/households.module";
 import { MetricsModule } from "../metrics/metrics.module";
 import { PlanningModule } from "../planning/planning.module";
@@ -14,6 +15,7 @@ import { DashboardService } from "./dashboard.service";
     MetricsModule,
     ReviewModule,
     PlanningModule,
+    DecisionsModule,
   ],
   controllers: [DashboardController],
   providers: [DashboardService],

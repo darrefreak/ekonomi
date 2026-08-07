@@ -15,6 +15,19 @@ export const dashboardUpcomingItemSchema = z.object({
   kind: z.enum(["bill", "income", "transfer", "other"]),
 });
 
+export const dashboardOpportunitySchema = z.object({
+  id: z.string(),
+  title: z.string(),
+  description: z.string(),
+  estimatedAnnualSaving: moneySchema.nullable(),
+  confidence: z.number().nullable(),
+  effort: z.string(),
+  risk: z.string(),
+  priority: z.number(),
+  status: z.string(),
+  category: z.string(),
+});
+
 export const dashboardResponseSchema = z.object({
   greeting: z.string(),
   asOf: z.string(),
@@ -44,6 +57,7 @@ export const dashboardResponseSchema = z.object({
     items: z.array(dashboardBriefItemSchema),
   }),
   upcoming: z.array(dashboardUpcomingItemSchema),
+  opportunities: z.array(dashboardOpportunitySchema).optional().default([]),
   coveragePercent: z.number(),
   freshnessLabel: z.string(),
   cashflowPoints: z
@@ -68,6 +82,8 @@ export const dashboardResponseSchema = z.object({
     .optional()
     .default([]),
   reviewCount: z.number().optional().default(0),
+  hasAccounts: z.boolean().optional().default(false),
 });
 
 export type DashboardResponse = z.infer<typeof dashboardResponseSchema>;
+export type DashboardOpportunity = z.infer<typeof dashboardOpportunitySchema>;
