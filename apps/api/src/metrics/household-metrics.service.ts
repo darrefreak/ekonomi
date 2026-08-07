@@ -1,5 +1,5 @@
 import { Injectable } from "@nestjs/common";
-import { and, eq, gte, lte, ne, sql } from "drizzle-orm";
+import { and, asc, eq, gte, lte, ne, sql } from "drizzle-orm";
 import { money, moneyToJson, type CurrencyCode } from "@ffos/domain";
 import {
   attributeNetWorthChange,
@@ -11,14 +11,22 @@ import {
   comparePeriods,
   estimateMortgageRateSavingMinor,
   forecastCashflowDeltas,
+  monthEndDates,
+  netWorthFromTypedBalances,
+  postingBalanceDelta,
+  accountBalanceClass,
+  reconstructBalances,
   summarizePeriod,
 } from "@ffos/financial-engine";
 import { getDb } from "../db/client";
 import {
+  accountBalanceSnapshots,
   accounts,
   categories,
   dataSources,
   financialEvents,
+  ledgerEntries,
+  ledgerPostings,
 } from "../db/schema-economic";
 import { contracts, subscriptions } from "../db/schema-planning";
 
@@ -38,7 +46,13 @@ export class HouseholdMetricsService {
     const sumType = (...types: string[]) =>
       accountRows
         .filter((a) => types.includes(a.accountType))
-        .reduce((acc, a) => acc + a.currentBalanceMinor, 0n);
+        .reduce((acc, a) => {
+          const bal = a.currentBalanceMinor;
+          if (types.some((t) => ["MORTGAGE", "LOAN", "CREDIT_CARD"].includes(t))) {
+            return acc + (bal < 0n ? -bal : bal);
+          }
+          return acc + bal;
+        }, 0n);
 
     const availableCash = money(sumType("CHECKING", "SAVINGS", "CASH"), currency);
     const investments = money(sumType("INVESTMENT", "PENSION", "CRYPTO"), currency);
@@ -51,6 +65,148 @@ export class HouseholdMetricsService {
       liabilities,
     });
     return { availableCash, investments, assets, liabilities, netWorth };
+  }
+
+  /**
+   * Build / refresh NW history from account_balance_snapshots.
+   * If sparse, reconstruct balances at month-ends from ledger and persist snapshots.
+   */
+  async ensureNetWorthHistorySnapshots(
+    householdId: string,
+    asOf: string,
+    monthsBack = 6,
+  ) {
+    const db = getDb();
+    const accountRows = await this.getAccountRows(householdId);
+    if (!accountRows.length) return;
+
+    const dates = monthEndDates(asOf, monthsBack);
+    const existing = await db
+      .select({
+        asOf: accountBalanceSnapshots.asOf,
+        accountId: accountBalanceSnapshots.accountId,
+      })
+      .from(accountBalanceSnapshots)
+      .where(eq(accountBalanceSnapshots.householdId, householdId));
+
+    const existingKeys = new Set(
+      existing.map(
+        (e) => `${e.accountId}:${e.asOf.toISOString().slice(0, 10)}`,
+      ),
+    );
+
+    const postingRows = await db
+      .select({
+        accountId: ledgerPostings.accountId,
+        side: ledgerPostings.side,
+        amountMinor: ledgerPostings.amountMinor,
+        bookedOn: ledgerEntries.bookedOn,
+      })
+      .from(ledgerPostings)
+      .innerJoin(ledgerEntries, eq(ledgerPostings.ledgerEntryId, ledgerEntries.id))
+      .where(eq(ledgerPostings.householdId, householdId));
+
+    // Reverse-engineer openings from current balances − all posting deltas.
+    const openings = accountRows.map((a) => {
+      const klass = accountBalanceClass(a.accountType);
+      let delta = 0n;
+      for (const p of postingRows) {
+        if (p.accountId !== a.id) continue;
+        delta += postingBalanceDelta({
+          side: p.side as "debit" | "credit",
+          amountMinor: p.amountMinor,
+          balanceClass: klass,
+        });
+      }
+      return {
+        accountId: a.id,
+        accountType: a.accountType,
+        openingMinor: a.currentBalanceMinor - delta,
+      };
+    });
+
+    for (const date of dates) {
+      const needWrite = accountRows.some(
+        (a) => !existingKeys.has(`${a.id}:${date}`),
+      );
+      if (!needWrite) continue;
+
+      const postingsToDate = postingRows
+        .filter((p) => p.bookedOn <= date)
+        .map((p) => ({
+          accountId: p.accountId,
+          side: p.side as "debit" | "credit",
+          amountMinor: p.amountMinor,
+        }));
+      const balances = reconstructBalances({ openings, postings: postingsToDate });
+      const asOfDate = new Date(`${date}T12:00:00.000Z`);
+
+      for (const a of accountRows) {
+        if (a.accountType === "EXPENSE" || a.accountType === "INCOME") continue;
+        const key = `${a.id}:${date}`;
+        if (existingKeys.has(key)) continue;
+        const bal = balances.get(a.id) ?? openings.find((o) => o.accountId === a.id)!.openingMinor;
+        await db.insert(accountBalanceSnapshots).values({
+          householdId,
+          accountId: a.id,
+          reportedBalanceMinor: bal,
+          availableBalanceMinor: bal,
+          ledgerCalculatedBalanceMinor: bal,
+          reconciledBalanceMinor: bal,
+          asOf: asOfDate,
+          source: "nw_history_reconstruct",
+          confidence: "1",
+          userVerified: false,
+          isEstimated: date !== asOf.slice(0, 10),
+        });
+        existingKeys.add(key);
+      }
+    }
+  }
+
+  async netWorthHistoryFromSnapshots(
+    householdId: string,
+    currency: CurrencyCode,
+    asOf: string,
+  ) {
+    await this.ensureNetWorthHistorySnapshots(householdId, asOf, 6);
+    const db = getDb();
+    const rows = await db
+      .select({
+        asOf: accountBalanceSnapshots.asOf,
+        accountId: accountBalanceSnapshots.accountId,
+        balanceMinor: accountBalanceSnapshots.ledgerCalculatedBalanceMinor,
+        accountType: accounts.accountType,
+      })
+      .from(accountBalanceSnapshots)
+      .innerJoin(accounts, eq(accountBalanceSnapshots.accountId, accounts.id))
+      .where(
+        and(
+          eq(accountBalanceSnapshots.householdId, householdId),
+          ne(accounts.isSystem, true),
+        ),
+      )
+      .orderBy(asc(accountBalanceSnapshots.asOf));
+
+    const byDate = new Map<string, Array<{ accountType: string; balanceMinor: bigint }>>();
+    for (const row of rows) {
+      if (row.accountType === "EXPENSE" || row.accountType === "INCOME") continue;
+      const key = row.asOf.toISOString().slice(0, 10);
+      const list = byDate.get(key) ?? [];
+      list.push({
+        accountType: row.accountType,
+        balanceMinor: row.balanceMinor ?? 0n,
+      });
+      byDate.set(key, list);
+    }
+
+    return [...byDate.entries()]
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([date, balances]) => ({
+        asOf: date,
+        netWorth: moneyToJson(netWorthFromTypedBalances(balances, currency)),
+        source: "account_balance_snapshots" as const,
+      }));
   }
 
   async periodEventTotals(

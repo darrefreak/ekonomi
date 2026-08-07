@@ -88,13 +88,13 @@ Legend for layer columns: **C** complete · **P** partial · **S** scaffold · *
 
 | Feature | Status | BE | FE | Test | Mobile | Pri | Deps | Missing / defects |
 |---|---|---|---|---|---|---|---|---|
-| Net worth page | PARTIAL | M/P | P | N | B | P0 | Metrics | Hardcoded change/attribution |
-| Investments | SCAFFOLD_ONLY | S | S | N | B | P1 | Accounts | Placeholder page |
-| Assets | SCAFFOLD_ONLY | S | S | N | B | P1 | — | Placeholder |
+| Net worth page | PARTIAL | P | P | P | B | P0 | Metrics | Snapshot history + engine attribution (WS G) |
+| Investments | PARTIAL | P | P | P | B | P1 | Accounts | List + trailing contributions (WS G) |
+| Assets | PARTIAL | P | P | P | B | P1 | — | ASSET accounts + vehicle link (WS G) |
 | Debt dashboard | PARTIAL | P | P | P | P | P0 | Loans | List/detail + P vs I (WS F) |
 | Mortgages product UX | PARTIAL | P | P | P | P | P1 | Debt | Rate scenarios + binding (WS F) |
-| Valuation snapshots (assets) | SCAFFOLD_ONLY | S | N | N | N | P2 | — | Vehicle vals exist; housing thin |
-| NW attribution | MOCK_ONLY | M | P | N | B | P1 | Metrics | Hardcoded |
+| Valuation snapshots (assets) | SCAFFOLD_ONLY | S | P | N | N | P2 | — | Vehicle vals linked; housing thin |
+| NW attribution | PARTIAL | P | P | P | B | P1 | Metrics | Engine-driven (WS A/G); MTM deferred |
 
 ---
 

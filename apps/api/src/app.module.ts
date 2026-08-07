@@ -18,6 +18,7 @@ import { SettingsModule } from "./settings/settings.module";
 import { TransactionsModule } from "./transactions/transactions.module";
 import { VehicleIntelModule } from "./vehicle-intel/vehicle-intel.module";
 import { VehiclesModule } from "./vehicles/vehicles.module";
+import { WealthModule } from "./wealth/wealth.module";
 
 @Module({
   imports: [
@@ -35,6 +36,7 @@ import { VehiclesModule } from "./vehicles/vehicles.module";
     VehicleIntelModule,
     DecisionsModule,
     DebtModule,
+    WealthModule,
     IntakeModule,
     AiModule,
     DashboardModule,
