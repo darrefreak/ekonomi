@@ -1,0 +1,26 @@
+FROM node:20-alpine AS base
+RUN corepack enable && corepack prepare pnpm@9.15.0 --activate
+WORKDIR /app
+
+FROM base AS deps
+COPY package.json pnpm-workspace.yaml pnpm-lock.yaml* turbo.json tsconfig.base.json ./
+COPY packages ./packages
+COPY apps/web ./apps/web
+RUN pnpm install --frozen-lockfile || pnpm install
+
+FROM deps AS build
+ARG NEXT_PUBLIC_API_URL=http://localhost:3001
+ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
+RUN pnpm --filter @ffos/domain build \
+ && pnpm --filter @ffos/utils build \
+ && pnpm --filter @ffos/schemas build \
+ && pnpm --filter @ffos/design-tokens build \
+ && pnpm --filter @ffos/api-client build \
+ && pnpm --filter @ffos/web build
+
+FROM base AS runner
+ENV NODE_ENV=production
+WORKDIR /app
+COPY --from=build /app /app
+EXPOSE 3000
+CMD ["pnpm", "--filter", "@ffos/web", "start"]
