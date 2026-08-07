@@ -1,0 +1,62 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1754572800000,
+      "tag": "0000_phase1_foundation",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1754576400000,
+      "tag": "0001_phase2_economic",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1754580000000,
+      "tag": "0002_phase4_planning",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+ "when": 1754583600000,
+      "tag": "0003_phase4b_vehicles",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1754587200000,
+      "tag": "0004_phase5_decisions",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1754590800000,
+      "tag": "0005_phase5b_vehicle_intel",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1754594400000,
+      "tag": "0006_phase6_data_intake",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1754598000000,
+      "tag": "0007_phase7_ai",
+      "breakpoints": true
+    }
+  ]
+}
