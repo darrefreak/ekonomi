@@ -7,16 +7,13 @@ import { getDb } from "../db/client";
 import { accounts, ledgerPostings } from "../db/schema-economic";
 
 /**
- * Reconstruct balances from opening (accounts table currently holds cache)
- * is wrong for openings — seed must pass openings separately OR we store
- * openings elsewhere. For runtime after seed sync, openings are encoded as:
- * currentBalance - sum(posting deltas) ... chicken and egg.
+ * Legacy helpers — prefer `LedgerTruthService` for runtime reconciliation.
  *
- * Convention after Workstream A seed:
- * - `accounts.currentBalanceMinor` is ledger-derived ending balance
- * - Reconstruction uses stored opening snapshot via optional openings map
- *
- * For reconcile-after-seed we reconstruct from explicit openings + postings.
+ * Batch A2 convention:
+ * - `accounts.openingBalanceMinor` is authoritative opening
+ * - `accounts.currentBalanceMinor` is derived cache of ledger ending balance
+ * - `accounts.reportedBalanceMinor` is provider evidence (may mismatch)
+ * - Authoritative position = reconstruct(openings, postings)
  */
 export async function loadLedgerPostings(householdId: string) {
   const db = getDb();

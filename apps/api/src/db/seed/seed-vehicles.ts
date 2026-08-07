@@ -27,7 +27,9 @@ export async function seedVehiclesData(input: SeedVehiclesInput) {
       accountType: "LOAN",
       isShared: true,
       currency: "SEK",
+      openingBalanceMinor: 195_000_00n,
       currentBalanceMinor: 195_000_00n,
+      reportedBalanceMinor: 195_000_00n,
       interestRateBps: 495,
       externalReference: "CAR-LOAN-DEMO",
     })

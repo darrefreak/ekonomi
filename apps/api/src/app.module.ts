@@ -15,6 +15,7 @@ import { FinancialCoverageModule } from "./financial-coverage/financial-coverage
 import { HealthModule } from "./health/health.module";
 import { HouseholdsModule } from "./households/households.module";
 import { IntakeModule } from "./intake/intake.module";
+import { LedgerModule } from "./ledger/ledger.module";
 import { NetWorthModule } from "./net-worth/net-worth.module";
 import { NotificationsModule } from "./notifications/notifications.module";
 import { PlanningModule } from "./planning/planning.module";
@@ -42,6 +43,7 @@ import { WealthModule } from "./wealth/wealth.module";
     AuthModule,
     HouseholdsModule,
     AccountsModule,
+    LedgerModule,
     TransactionsModule,
     CashflowModule,
     NetWorthModule,

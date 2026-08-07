@@ -15,8 +15,6 @@ import {
   forecastCashflowDeltas,
   monthEndDates,
   netWorthFromTypedBalances,
-  postingBalanceDelta,
-  accountBalanceClass,
   reconstructBalances,
   summarizePeriod,
 } from "@ffos/financial-engine";
@@ -39,6 +37,41 @@ export class HouseholdMetricsService {
       .select()
       .from(accounts)
       .where(and(eq(accounts.householdId, householdId), ne(accounts.isSystem, true)));
+  }
+
+  /**
+   * Account rows with balances forced to ledger reconstruction
+   * (openings + postings). Cache fields are ignored for financial truth.
+   */
+  async getLedgerAlignedAccountRows(householdId: string) {
+    const accountRows = await this.getAccountRows(householdId);
+    const db = getDb();
+    const postingRows = await db
+      .select({
+        accountId: ledgerPostings.accountId,
+        side: ledgerPostings.side,
+        amountMinor: ledgerPostings.amountMinor,
+      })
+      .from(ledgerPostings)
+      .where(eq(ledgerPostings.householdId, householdId));
+
+    const ledger = reconstructBalances({
+      openings: accountRows.map((a) => ({
+        accountId: a.id,
+        accountType: a.accountType,
+        openingMinor: a.openingBalanceMinor,
+      })),
+      postings: postingRows.map((p) => ({
+        accountId: p.accountId,
+        side: p.side as "debit" | "credit",
+        amountMinor: p.amountMinor,
+      })),
+    });
+
+    return accountRows.map((a) => ({
+      ...a,
+      currentBalanceMinor: ledger.get(a.id) ?? a.openingBalanceMinor,
+    }));
   }
 
   positionFromAccounts(
@@ -108,24 +141,12 @@ export class HouseholdMetricsService {
       .innerJoin(ledgerEntries, eq(ledgerPostings.ledgerEntryId, ledgerEntries.id))
       .where(eq(ledgerPostings.householdId, householdId));
 
-    // Reverse-engineer openings from current balances − all posting deltas.
-    const openings = accountRows.map((a) => {
-      const klass = accountBalanceClass(a.accountType);
-      let delta = 0n;
-      for (const p of postingRows) {
-        if (p.accountId !== a.id) continue;
-        delta += postingBalanceDelta({
-          side: p.side as "debit" | "credit",
-          amountMinor: p.amountMinor,
-          balanceClass: klass,
-        });
-      }
-      return {
-        accountId: a.id,
-        accountType: a.accountType,
-        openingMinor: a.currentBalanceMinor - delta,
-      };
-    });
+    // Authoritative openings from persisted account.openingBalanceMinor.
+    const openings = accountRows.map((a) => ({
+      accountId: a.id,
+      accountType: a.accountType,
+      openingMinor: a.openingBalanceMinor,
+    }));
 
     for (const date of dates) {
       const needWrite = accountRows.some(
@@ -472,7 +493,7 @@ export class HouseholdMetricsService {
    * Shared financial snapshot for dashboard + net-worth (same asOf / definitions).
    */
   async getFinancialSnapshot(householdId: string, currency: CurrencyCode, asOf: string) {
-    const accountRows = await this.getAccountRows(householdId);
+    const accountRows = await this.getLedgerAlignedAccountRows(householdId);
     const position = this.positionFromAccounts(accountRows, currency);
     const cashflow = await this.cashflow(householdId, currency, asOf);
     const monthLabel = cashflow.currentPeriod.label;
