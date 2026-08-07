@@ -43,6 +43,13 @@
       "when": 1754590800000,
       "tag": "0005_phase5b_vehicle_intel",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1754594400000,
+      "tag": "0006_phase6_data_intake",
+      "breakpoints": true
     }
   ]
 }

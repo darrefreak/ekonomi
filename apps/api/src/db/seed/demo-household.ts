@@ -28,6 +28,7 @@ import { seedPlanningData } from "./seed-planning";
 import { seedVehiclesData } from "./seed-vehicles";
 import { seedDecisionsData } from "./seed-decisions";
 import { seedVehicleIntelData } from "./seed-vehicle-intel";
+import { seedIntakeData } from "./seed-intake";
 
 const DEMO_EMAIL = "demo@ffos.local";
 const DEMO_PASSWORD = "demo-password-123";
@@ -690,6 +691,11 @@ export async function seedDemoHousehold() {
   });
 
   await seedVehicleIntelData({
+    householdId: household.id,
+    asOf,
+  });
+
+  await seedIntakeData({
     householdId: household.id,
     asOf,
   });

@@ -1,10 +1,4 @@
-import { PagePlaceholder } from "@/components/placeholders/page-placeholder";
-
+import { ImportsPage } from "@/components/intake/imports-page";
 export default function Page() {
-  return (
-    <PagePlaceholder
-      title="Imports"
-      description="Den här ytan är förberedd i Phase 1. Funktionalitet byggs i senare faser enligt roadmap."
-    />
-  );
+  return <ImportsPage />;
 }
