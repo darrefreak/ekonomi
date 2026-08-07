@@ -9,6 +9,8 @@ import {
   setSession,
 } from "./api";
 
+export { getHouseholdId, getAccessToken };
+
 export const DEMO_CREDENTIALS = {
   email: "demo@ffos.local",
   password: "demo-password-123",
