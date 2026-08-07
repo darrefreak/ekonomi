@@ -79,9 +79,11 @@ Documents, financial inbox, integration UI, import UI, fake sync, connector stat
 
 Report: [phase-reports/PHASE_6_REPORT.md](./phase-reports/PHASE_6_REPORT.md).
 
-## Phase 7 — AI
+## Phase 7 — AI ✅
 
 Financial advisor, AI brief, insights, explainability, deterministic tool layer, recommendation tracking.
+
+Report: [phase-reports/PHASE_7_REPORT.md](./phase-reports/PHASE_7_REPORT.md).
 
 ## Phase 8 — Polish
 

@@ -1,6 +1,7 @@
 import {
   accountsResponseSchema,
   accountDetailSchema,
+  advisorBriefResponseSchema,
   budgetResponseSchema,
   cashflowResponseSchema,
   contractsResponseSchema,
@@ -24,6 +25,7 @@ import {
   vehiclesResponseSchema,
   type AccountDetailDto,
   type AccountsResponse,
+  type AdvisorBriefResponse,
   type BudgetResponse,
   type CashflowResponse,
   type ContractsResponse,
@@ -286,6 +288,12 @@ export function createApiClient(options: ApiClientOptions) {
         `/api/v1/integrations/sync?householdId=${encodeURIComponent(householdId)}`,
         { method: "POST" },
       );
+    },
+    getAdvisorBrief: async (householdId: string) => {
+      const data = await request<unknown>(
+        `/api/v1/advisor/brief?householdId=${encodeURIComponent(householdId)}`,
+      );
+      return advisorBriefResponseSchema.parse(data) as AdvisorBriefResponse;
     },
   };
 }
