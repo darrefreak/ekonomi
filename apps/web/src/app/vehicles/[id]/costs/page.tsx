@@ -1,10 +1,10 @@
-import { PagePlaceholder } from "@/components/placeholders/page-placeholder";
+import { redirect } from "next/navigation";
 
-export default function Page() {
-  return (
-    <PagePlaceholder
-      title="Fordon · costs"
-      description="Fordonsdomänen implementeras i Phase 4B/5B."
-    />
-  );
+export default async function Page({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
+  const { id } = await params;
+  redirect(`/vehicles/${id}`);
 }

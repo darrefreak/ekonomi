@@ -3,8 +3,9 @@ import { Pool } from "pg";
 import * as core from "./schema";
 import * as economic from "./schema-economic";
 import * as planning from "./schema-planning";
+import * as vehicles from "./schema-vehicles";
 
-const schema = { ...core, ...economic, ...planning };
+const schema = { ...core, ...economic, ...planning, ...vehicles };
 
 let pool: Pool | null = null;
 

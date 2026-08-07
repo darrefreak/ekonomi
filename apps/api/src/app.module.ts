@@ -12,6 +12,7 @@ import { PlanningModule } from "./planning/planning.module";
 import { ReviewModule } from "./review/review.module";
 import { SettingsModule } from "./settings/settings.module";
 import { TransactionsModule } from "./transactions/transactions.module";
+import { VehiclesModule } from "./vehicles/vehicles.module";
 
 @Module({
   imports: [
@@ -25,6 +26,7 @@ import { TransactionsModule } from "./transactions/transactions.module";
     FinancialCoverageModule,
     ReviewModule,
     PlanningModule,
+    VehiclesModule,
     DashboardModule,
     FeatureFlagsModule,
     SettingsModule,

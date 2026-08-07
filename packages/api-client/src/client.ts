@@ -11,6 +11,8 @@ import {
   reviewResponseSchema,
   subscriptionsResponseSchema,
   transactionsResponseSchema,
+  vehicleDetailSchema,
+  vehiclesResponseSchema,
   type AccountDetailDto,
   type AccountsResponse,
   type BudgetResponse,
@@ -25,6 +27,8 @@ import {
   type ReviewResponse,
   type SubscriptionsResponse,
   type TransactionsResponse,
+  type VehicleDetailDto,
+  type VehiclesResponse,
 } from "@ffos/schemas";
 
 export type ApiClientOptions = {
@@ -192,6 +196,18 @@ export function createApiClient(options: ApiClientOptions) {
         `/api/v1/goals?householdId=${encodeURIComponent(householdId)}`,
       );
       return goalsResponseSchema.parse(data) as GoalsResponse;
+    },
+    listVehicles: async (householdId: string) => {
+      const data = await request<unknown>(
+        `/api/v1/vehicles?householdId=${encodeURIComponent(householdId)}`,
+      );
+      return vehiclesResponseSchema.parse(data) as VehiclesResponse;
+    },
+    getVehicle: async (householdId: string, vehicleId: string) => {
+      const data = await request<unknown>(
+        `/api/v1/vehicles/${encodeURIComponent(vehicleId)}?householdId=${encodeURIComponent(householdId)}`,
+      );
+      return vehicleDetailSchema.parse(data) as VehicleDetailDto;
     },
   };
 }
