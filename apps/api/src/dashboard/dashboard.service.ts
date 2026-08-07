@@ -96,10 +96,13 @@ export class DashboardService {
       opportunities,
       coveragePercent: coverage.percent,
       freshnessLabel: hasAccounts
-        ? coverage.freshness[0]?.freshnessLabel ?? "Seedad demodata"
+        ? coverage.freshnessSummary ??
+          coverage.freshness[0]?.freshnessLabel ??
+          "Ingen synkad källa"
         : "Ingen data",
       cashflowPoints: recentPoints,
       coverageAreas: coverage.areas,
+      coverageFreshness: coverage.freshness,
       reviewCount: review.total,
       hasAccounts,
     };

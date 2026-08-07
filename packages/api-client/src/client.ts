@@ -22,9 +22,14 @@ import {
   forecastBacktestResponseSchema,
   forecastResponseSchema,
   goalsResponseSchema,
+  createSourceSchema,
   importsResponseSchema,
   insightsResponseSchema,
   integrationsResponseSchema,
+  reconnectSourceSchema,
+  sourceSchema,
+  syncResultSchema,
+  updateSourceSchema,
   investmentsResponseSchema,
   netWorthResponseSchema,
   opportunitiesResponseSchema,
@@ -67,9 +72,14 @@ import {
   type ForecastBacktestResponse,
   type ForecastResponse,
   type GoalsResponse,
+  type CreateSourceInput,
   type ImportsResponse,
   type InsightsResponse,
   type IntegrationsResponse,
+  type ReconnectSourceInput,
+  type SourceDto,
+  type SyncResultDto,
+  type UpdateSourceInput,
   type InvestmentsResponse,
   type LoginInput,
   type NetWorthResponse,
@@ -528,6 +538,47 @@ export function createApiClient(options: ApiClientOptions) {
       );
       return integrationsResponseSchema.parse(data) as IntegrationsResponse;
     },
+    createSource: async (input: CreateSourceInput) => {
+      const body = createSourceSchema.parse(input);
+      const data = await request<unknown>("/api/v1/sources", {
+        method: "POST",
+        body: JSON.stringify(body),
+      });
+      return sourceSchema.parse(data) as SourceDto;
+    },
+    updateSource: async (sourceId: string, input: UpdateSourceInput) => {
+      const body = updateSourceSchema.parse(input);
+      const data = await request<unknown>(
+        `/api/v1/sources/${encodeURIComponent(sourceId)}`,
+        { method: "PATCH", body: JSON.stringify(body) },
+      );
+      return sourceSchema.parse(data) as SourceDto;
+    },
+    archiveSource: async (householdId: string, sourceId: string) => {
+      const data = await request<unknown>(
+        `/api/v1/sources/${encodeURIComponent(sourceId)}?householdId=${encodeURIComponent(householdId)}`,
+        { method: "DELETE" },
+      );
+      return sourceSchema.parse(data) as SourceDto;
+    },
+    reconnectSource: async (sourceId: string, input: ReconnectSourceInput) => {
+      const body = reconnectSourceSchema.parse(input);
+      const data = await request<unknown>(
+        `/api/v1/sources/${encodeURIComponent(sourceId)}/reconnect`,
+        { method: "POST", body: JSON.stringify(body) },
+      );
+      return syncResultSchema.parse(data) as SyncResultDto;
+    },
+    syncSource: async (householdId: string, sourceId: string) => {
+      const data = await request<unknown>(
+        `/api/v1/sources/${encodeURIComponent(sourceId)}/sync`,
+        {
+          method: "POST",
+          body: JSON.stringify({ householdId }),
+        },
+      );
+      return syncResultSchema.parse(data) as SyncResultDto;
+    },
     getImports: async (householdId: string) => {
       const data = await request<unknown>(
         `/api/v1/imports?householdId=${encodeURIComponent(householdId)}`,
@@ -535,10 +586,11 @@ export function createApiClient(options: ApiClientOptions) {
       return importsResponseSchema.parse(data) as ImportsResponse;
     },
     triggerFakeSync: async (householdId: string) => {
-      return request<{ ok: boolean; syncRunId: string }>(
+      const data = await request<unknown>(
         `/api/v1/integrations/sync?householdId=${encodeURIComponent(householdId)}`,
         { method: "POST" },
       );
+      return syncResultSchema.parse(data) as SyncResultDto;
     },
     getAdvisorBrief: async (householdId: string) => {
       const data = await request<unknown>(

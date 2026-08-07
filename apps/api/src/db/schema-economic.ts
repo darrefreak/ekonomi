@@ -101,6 +101,7 @@ export const dataSources = pgTable("data_sources", {
   lastSyncedAt: timestamp("last_synced_at", { withTimezone: true }),
   freshnessLabel: varchar("freshness_label", { length: 80 }),
   metadata: jsonb("metadata").$type<Record<string, unknown>>().default({}),
+  archivedAt: timestamp("archived_at", { withTimezone: true }),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
 });

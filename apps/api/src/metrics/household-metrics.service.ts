@@ -5,6 +5,8 @@ import {
   attributeNetWorthChange,
   buildMonthlyCashflow,
   calculateFinancialCoverage,
+  computeFreshnessLabel,
+  summarizeFreshness,
   calculateNetSavingsRate,
   calculateNetWorth,
   cashRunwayMonths,
@@ -350,6 +352,20 @@ export class HouseholdMetricsService {
       )
       .limit(1);
 
+    const sources = await db
+      .select()
+      .from(dataSources)
+      .where(eq(dataSources.householdId, householdId));
+
+    const activeSources = sources.filter((s) => !s.archivedAt);
+    const hasCsn =
+      accountRows.some(
+        (a) =>
+          (a.accountType === "LOAN" || a.accountType === "OTHER") &&
+          `${a.provider ?? ""} ${a.name}`.toLowerCase().includes("csn"),
+      ) ||
+      activeSources.some((s) => s.providerId.toLowerCase().includes("csn"));
+
     const result = calculateFinancialCoverage({
       hasChecking: types.has("CHECKING"),
       hasSavings: types.has("SAVINGS"),
@@ -359,24 +375,36 @@ export class HouseholdMetricsService {
       hasTaxAccount: types.has("TAX_ACCOUNT"),
       hasPension: types.has("PENSION"),
       hasInsuranceSignal: Boolean(insurance),
-      hasCsn: false,
+      hasCsn,
     });
 
-    const sources = await db
-      .select()
-      .from(dataSources)
-      .where(eq(dataSources.householdId, householdId));
+    const freshness = activeSources.map((s) => {
+      const label = computeFreshnessLabel({
+        lastSyncedAt: s.lastSyncedAt,
+        connectionStatus: s.connectionStatus,
+        asOf,
+      });
+      return {
+        sourceName: s.name,
+        status: s.connectionStatus,
+        freshnessLabel: label,
+        lastSyncedAt: s.lastSyncedAt?.toISOString() ?? null,
+      };
+    });
 
     return {
       percent: result.percent,
       asOf,
       areas: result.areas,
-      freshness: sources.map((s) => ({
-        sourceName: s.name,
-        status: s.connectionStatus,
-        freshnessLabel: s.freshnessLabel,
-        lastSyncedAt: s.lastSyncedAt?.toISOString() ?? null,
-      })),
+      freshness,
+      freshnessSummary: summarizeFreshness(
+        activeSources.map((s) => ({
+          connectionStatus: s.connectionStatus,
+          freshnessLabel: null,
+          lastSyncedAt: s.lastSyncedAt,
+        })),
+        asOf,
+      ),
     };
   }
 

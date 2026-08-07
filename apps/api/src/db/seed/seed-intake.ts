@@ -72,15 +72,28 @@ export async function seedIntakeData(input: { householdId: string; asOf: string 
     },
   ]);
 
-  if (sources[0]) {
+  const seb = sources.find((s) => s.providerId === "mock-seb") ?? sources[0];
+  const avanza = sources.find((s) => s.providerId === "mock-avanza");
+  if (seb) {
     await db.insert(syncRuns).values({
       householdId: input.householdId,
-      sourceId: sources[0].id,
+      sourceId: seb.id,
       startedAt: new Date(`${input.asOf}T10:00:00.000Z`),
       completedAt: new Date(`${input.asOf}T10:00:12.000Z`),
       status: "COMPLETED",
       recordsFetched: 42,
       message: "Fake sync OK — inga riktiga connectors",
+    });
+  }
+  if (avanza) {
+    await db.insert(syncRuns).values({
+      householdId: input.householdId,
+      sourceId: avanza.id,
+      startedAt: new Date(`${input.asOf}T08:00:00.000Z`),
+      completedAt: new Date(`${input.asOf}T08:00:05.000Z`),
+      status: "COMPLETED",
+      recordsFetched: 5,
+      message: "Avanza mock sync",
     });
   }
 }

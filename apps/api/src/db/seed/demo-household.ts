@@ -133,13 +133,60 @@ export async function seedDemoHousehold() {
       providerId: "mock-seb",
       name: "SEB",
       domain: "BANKING",
-      protocol: "MANUAL",
-      authenticationMethod: "NONE",
+      protocol: "OPEN_BANKING_MOCK",
+      authenticationMethod: "BANKID_MOCK",
       connectionStatus: "CONNECTED",
-      lastSyncedAt: parseDate(asOf),
-      freshnessLabel: "2 min sedan",
+      lastSyncedAt: new Date(`${asOf}T10:00:00.000Z`),
+      freshnessLabel: null,
     })
     .returning();
+
+  const [sbabSource] = await db
+    .insert(dataSources)
+    .values({
+      householdId: household.id,
+      providerId: "mock-sbab",
+      name: "SBAB",
+      domain: "BANKING",
+      protocol: "OPEN_BANKING_MOCK",
+      authenticationMethod: "BANKID_MOCK",
+      connectionStatus: "AUTH_REQUIRED",
+      lastSyncedAt: new Date(`${asOf}T12:00:00.000Z`),
+      freshnessLabel: null,
+    })
+    .returning();
+  // Stale sync before asOf (for honest freshness after reconnect/seed)
+  await db
+    .update(dataSources)
+    .set({ lastSyncedAt: addDays(parseDate(asOf), -14) })
+    .where(eq(dataSources.id, sbabSource.id));
+
+  const [avanzaSource] = await db
+    .insert(dataSources)
+    .values({
+      householdId: household.id,
+      providerId: "mock-avanza",
+      name: "Avanza",
+      domain: "INVESTMENTS",
+      protocol: "API_MOCK",
+      authenticationMethod: "OAUTH_MOCK",
+      connectionStatus: "CONNECTED",
+      lastSyncedAt: addDays(parseDate(asOf), -2),
+      freshnessLabel: null,
+    })
+    .returning();
+
+  await db.insert(dataSources).values({
+    householdId: household.id,
+    providerId: "mock-kivra",
+    name: "Kivra",
+    domain: "DOCUMENTS",
+    protocol: "API_MOCK",
+    authenticationMethod: "OAUTH_MOCK",
+    connectionStatus: "DISCONNECTED",
+    lastSyncedAt: null,
+    freshnessLabel: null,
+  });
 
   const [batch] = await db
     .insert(importBatches)
@@ -149,6 +196,32 @@ export async function seedDemoHousehold() {
       status: "RUNNING",
     })
     .returning();
+
+  await db.insert(importBatches).values({
+    householdId: household.id,
+    sourceId: sbabSource.id,
+    startedAt: addDays(parseDate(asOf), -14),
+    completedAt: addDays(parseDate(asOf), -14),
+    status: "PARTIAL",
+    totalRecords: 12,
+    createdCount: 8,
+    updatedCount: 2,
+    ignoredCount: 1,
+    failedCount: 1,
+  });
+
+  await db.insert(importBatches).values({
+    householdId: household.id,
+    sourceId: avanzaSource.id,
+    startedAt: addDays(parseDate(asOf), -2),
+    completedAt: addDays(parseDate(asOf), -2),
+    status: "COMPLETED",
+    totalRecords: 5,
+    createdCount: 5,
+    updatedCount: 0,
+    ignoredCount: 0,
+    failedCount: 0,
+  });
 
   const mkAccount = async (values: typeof accounts.$inferInsert) => {
     const [row] = await db.insert(accounts).values(values).returning();
@@ -183,7 +256,9 @@ export async function seedDemoHousehold() {
     isShared: true,
     accountType: "SAVINGS",
     externalReference: "SBAB-DEMO-SAV",
+    sourceId: sbabSource.id,
     currentBalanceMinor: 0n,
+    connectionStatus: "AUTH_REQUIRED",
   });
   const mortgage = await mkAccount({
     householdId: household.id,
@@ -192,9 +267,11 @@ export async function seedDemoHousehold() {
     isShared: true,
     accountType: "MORTGAGE",
     externalReference: "SBAB-DEMO-MTG",
+    sourceId: sbabSource.id,
     currentBalanceMinor: 3_900_000_00n,
     interestRateBps: 240,
     bindingEndDate: "2027-06-30",
+    connectionStatus: "AUTH_REQUIRED",
   });
   const revolut = await mkAccount({
     householdId: household.id,
@@ -222,6 +299,7 @@ export async function seedDemoHousehold() {
     provider: "Avanza",
     isShared: true,
     accountType: "INVESTMENT",
+    sourceId: avanzaSource.id,
     currentBalanceMinor: avanzaOpening,
   });
   const home = await mkAccount({

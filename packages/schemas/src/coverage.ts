@@ -18,6 +18,7 @@ export const coverageResponseSchema = z.object({
       lastSyncedAt: z.string().nullable(),
     }),
   ),
+  freshnessSummary: z.string().optional(),
 });
 
 export type CoverageResponse = z.infer<typeof coverageResponseSchema>;
