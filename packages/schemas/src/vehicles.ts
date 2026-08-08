@@ -149,6 +149,8 @@ export const vehicleDetailSchema = z.object({
   ownershipType: z.string(),
   purchasePrice: moneySchema.nullable(),
   purchaseDate: z.string().nullable(),
+  linkedAssetAccountId: z.string().uuid().nullable(),
+  linkedLoanAccountId: z.string().uuid().nullable(),
   valuation: z.object({
     low: moneySchema.nullable(),
     mid: moneySchema.nullable(),

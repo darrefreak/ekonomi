@@ -1,5 +1,4 @@
 import { getDb } from "../client";
-import { accounts } from "../schema-economic";
 import {
   vehicleCostEvents,
   vehicleFinanceAgreements,
@@ -13,27 +12,12 @@ type SeedVehiclesInput = {
   householdId: string;
   asOf: string;
   assetAccountId: string;
+  /** LOAN account already created + financed via ledger in demo-household. */
+  loanAccountId: string;
 };
 
 export async function seedVehiclesData(input: SeedVehiclesInput) {
   const db = getDb();
-
-  const [loanAccount] = await db
-    .insert(accounts)
-    .values({
-      householdId: input.householdId,
-      name: "Billån Santander",
-      provider: "Santander",
-      accountType: "LOAN",
-      isShared: true,
-      currency: "SEK",
-      openingBalanceMinor: 195_000_00n,
-      currentBalanceMinor: 195_000_00n,
-      reportedBalanceMinor: 195_000_00n,
-      interestRateBps: 495,
-      externalReference: "CAR-LOAN-DEMO",
-    })
-    .returning();
 
   const [vehicle] = await db
     .insert(vehicles)
@@ -52,7 +36,7 @@ export async function seedVehiclesData(input: SeedVehiclesInput) {
       estimatedValueHighMinor: 305_000_00n,
       valuationAsOf: input.asOf,
       linkedAssetAccountId: input.assetAccountId,
-      linkedLoanAccountId: loanAccount.id,
+      linkedLoanAccountId: input.loanAccountId,
       notes: "Demo-fordon för TCO/equity",
     })
     .returning();
@@ -166,8 +150,8 @@ export async function seedVehiclesData(input: SeedVehiclesInput) {
     {
       kind: "DEPRECIATION",
       occurredOn: "2026-07-31",
-      // Matches ledger write-down 300k → 280k (ASSET account / valuation mid).
-      amountMinor: 20_000_00n,
+      // Matches ledger write-down 389k → 280k (ASSET account / valuation mid).
+      amountMinor: 109_000_00n,
       isEconomicCost: true,
       description: "Värdeminskning fordon (ledger-aligned)",
     },
@@ -216,5 +200,5 @@ export async function seedVehiclesData(input: SeedVehiclesInput) {
     })),
   );
 
-  return { vehicleId: vehicle.id, loanAccountId: loanAccount.id };
+  return { vehicleId: vehicle.id, loanAccountId: input.loanAccountId };
 }

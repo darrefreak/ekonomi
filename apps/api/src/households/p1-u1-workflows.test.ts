@@ -3,7 +3,7 @@ import { test } from "node:test";
 import { eq } from "drizzle-orm";
 import { getDb } from "../db/client";
 import { households, householdMembers, users } from "../db/schema";
-import { categories } from "../db/schema-economic";
+import { categories, merchants } from "../db/schema-economic";
 import { AuditService } from "../audit/audit.service";
 import { AccountsService } from "../accounts/accounts.service";
 import { TransactionsService } from "../transactions/transactions.service";
@@ -120,6 +120,48 @@ test("P1-U1: merchants list is scoped to household", async () => {
 
   const result = await transactions.listMerchants(owner.id, household.id);
   assert.deepEqual(result.items, []);
+});
+
+test("P1-U3: merchants q matches canonical name or aliases", async () => {
+  const ctx = await setup();
+  if (!ctx) return;
+  const { household, owner, db } = ctx;
+
+  await db.insert(merchants).values([
+    {
+      householdId: household.id,
+      canonicalName: "ICA Maxi",
+      aliases: ["ICA MAXI HANINGE", "ICA MAXI 1234"],
+    },
+    {
+      householdId: household.id,
+      canonicalName: "Netflix",
+      aliases: ["NETFLIX.COM"],
+    },
+  ]);
+
+  const access = new HouseholdAccessService();
+  const audit = new AuditService();
+  const transactions = new TransactionsService(access, audit);
+
+  const byName = await transactions.listMerchants(
+    owner.id,
+    household.id,
+    "netflix",
+  );
+  assert.equal(byName.items.length, 1);
+  assert.equal(byName.items[0]?.canonicalName, "Netflix");
+
+  const byAlias = await transactions.listMerchants(
+    owner.id,
+    household.id,
+    "HANINGE",
+  );
+  assert.equal(byAlias.items.length, 1);
+  assert.equal(byAlias.items[0]?.canonicalName, "ICA Maxi");
+
+  const all = await transactions.listMerchants(owner.id, household.id);
+  assert.equal(all.items.length, 2);
 });
 
 test("P1-U1: AccountsService sets/validates ownerMemberId and audits changes", async () => {

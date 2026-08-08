@@ -48,6 +48,8 @@ import {
   createCreditCardPaymentSchema,
   createMortgagePaymentSchema,
   createInvestmentTransferSchema,
+  createAssetPurchaseSchema,
+  createFinancedAssetPurchaseSchema,
   investmentsResponseSchema,
   netWorthResponseSchema,
   opportunitiesResponseSchema,
@@ -104,6 +106,8 @@ import {
   type CreateCreditCardPaymentInput,
   type CreateMortgagePaymentInput,
   type CreateInvestmentTransferInput,
+  type CreateAssetPurchaseInput,
+  type CreateFinancedAssetPurchaseInput,
   type DashboardResponse,
   type DebtDetailResponse,
   type DebtResponse,
@@ -555,19 +559,21 @@ export function createApiClient(options: ApiClientOptions) {
       );
       return data;
     },
-    createAssetPurchase: async (input: {
-      householdId: string;
-      cashAccountId: string;
-      assetAccountId: string;
-      amountMinor: string;
-      occurredOn: string;
-      description?: string;
-      vehicleId?: string;
-      externalId?: string;
-    }) => {
+    createAssetPurchase: async (input: CreateAssetPurchaseInput) => {
+      const body = createAssetPurchaseSchema.parse(input);
       const data = await request<{ id: string; eventType: string; status: string }>(
         "/api/v1/ledger/assets/purchase",
-        { method: "POST", body: JSON.stringify(input) },
+        { method: "POST", body: JSON.stringify(body) },
+      );
+      return data;
+    },
+    createFinancedAssetPurchase: async (
+      input: CreateFinancedAssetPurchaseInput,
+    ) => {
+      const body = createFinancedAssetPurchaseSchema.parse(input);
+      const data = await request<{ id: string; eventType: string; status: string }>(
+        "/api/v1/ledger/assets/financed-purchase",
+        { method: "POST", body: JSON.stringify(body) },
       );
       return data;
     },

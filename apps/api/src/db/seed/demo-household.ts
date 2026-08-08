@@ -4,11 +4,11 @@ import { and, eq, sql } from "drizzle-orm";
 import { money } from "@ffos/domain";
 import {
   buildAssetDepreciation,
-  buildAssetPurchaseAtFairValue,
   buildCashExpense,
   buildCashRefund,
   buildCreditCardPayment,
   buildCreditCardPurchase,
+  buildFinancedAssetPurchase,
   buildIncome,
   buildInternalTransfer,
   buildInvestmentTransfer,
@@ -271,9 +271,14 @@ export async function seedDemoHousehold() {
     currentBalanceMinor: 0n,
     reportedBalanceMinor: 0n,
   });
-  // Vehicle purchase cash is funded via joint opening (historical, not period income).
-  const vehiclePurchaseMinor = 300_000_00n;
-  const vehicleDepreciationMinor = 20_000_00n;
+  // Vehicle financed purchase: down payment + later principal paydown funded via joint opening
+  // (historical, not period income). Price/finance match seed-vehicles metadata.
+  const vehiclePurchasePriceMinor = 389_000_00n;
+  const vehicleDownPaymentMinor = 109_000_00n; // 389k − 280k financed principal
+  const vehicleLoanPaydownMinor = 85_000_00n; // 280k → 195k remaining
+  const vehicleCashFundingMinor =
+    vehicleDownPaymentMinor + vehicleLoanPaydownMinor;
+  const vehicleDepreciationMinor = 109_000_00n; // 389k → valuation mid 280k
   const joint = await mkAccount({
     householdId: household.id,
     name: "Gemensamt konto",
@@ -282,9 +287,9 @@ export async function seedDemoHousehold() {
     accountType: "CHECKING",
     externalReference: "SEB-DEMO-JOINT",
     sourceId: sebSource.id,
-    openingBalanceMinor: vehiclePurchaseMinor,
-    currentBalanceMinor: vehiclePurchaseMinor,
-    reportedBalanceMinor: vehiclePurchaseMinor,
+    openingBalanceMinor: vehicleCashFundingMinor,
+    currentBalanceMinor: vehicleCashFundingMinor,
+    reportedBalanceMinor: vehicleCashFundingMinor,
   });
   const sbab = await mkAccount({
     householdId: household.id,
@@ -359,7 +364,7 @@ export async function seedDemoHousehold() {
     currentBalanceMinor: 6_800_000_00n,
     reportedBalanceMinor: 6_800_000_00n,
   });
-  // Vehicle: opening 0 + purchase event 300k → depreciation 20k (= valuation mid 280k).
+  // Vehicle: opening 0 + financed purchase 389k → depreciation 109k (= valuation mid 280k).
   const vehicle = await mkAccount({
     householdId: household.id,
     name: "Familjebil",
@@ -368,6 +373,18 @@ export async function seedDemoHousehold() {
     openingBalanceMinor: 0n,
     currentBalanceMinor: 0n,
     reportedBalanceMinor: 0n,
+  });
+  const carLoan = await mkAccount({
+    householdId: household.id,
+    name: "Billån Santander",
+    provider: "Santander",
+    isShared: true,
+    accountType: "LOAN",
+    externalReference: "CAR-LOAN-DEMO",
+    openingBalanceMinor: 0n,
+    currentBalanceMinor: 0n,
+    reportedBalanceMinor: 0n,
+    interestRateBps: 495,
   });
   const expenseBook = await mkAccount({
     householdId: household.id,
@@ -806,22 +823,43 @@ export async function seedDemoHousehold() {
     schemaVersion: "1",
   });
 
-  // Cash vehicle purchase (runtime path), then non-cash write-down 300k → 280k.
+  // Financed vehicle purchase (runtime path), historical principal paydown, then write-down 389k → 280k.
   await persistBalancedEvent({
     householdId: household.id,
-    draft: buildAssetPurchaseAtFairValue({
+    draft: buildFinancedAssetPurchase({
       cashAccountId: joint.id,
       assetAccountId: vehicle.id,
-      amountMinor: vehiclePurchaseMinor,
+      loanAccountId: carLoan.id,
+      purchasePriceMinor: vehiclePurchasePriceMinor,
+      downPaymentMinor: vehicleDownPaymentMinor,
       currency: "SEK",
     }),
-    occurredOn: "2024-06-15",
-    description: "Köp familjebil (demo)",
+    occurredOn: "2022-04-15",
+    description: "Köp familjebil finansierat (demo)",
     sourceAccountId: joint.id,
-    sourceAmountMinor: -vehiclePurchaseMinor,
-    externalId: "seed-vehicle-purchase-2024-06",
+    sourceAmountMinor: -vehicleDownPaymentMinor,
+    externalId: "seed-vehicle-financed-purchase-2022-04",
     importBatchId: batch.id,
     vehicleId: undefined,
+  });
+  eventCount += 1;
+
+  await persistBalancedEvent({
+    householdId: household.id,
+    draft: buildMortgagePayment({
+      cashAccountId: joint.id,
+      mortgageAccountId: carLoan.id,
+      interestExpenseAccountId: expenseBook.id,
+      principalMinor: vehicleLoanPaydownMinor,
+      interestMinor: 0n,
+      currency: "SEK",
+    }),
+    occurredOn: "2026-03-15",
+    description: "Billån amortering historisk (demo)",
+    sourceAccountId: joint.id,
+    sourceAmountMinor: -vehicleLoanPaydownMinor,
+    externalId: "seed-vehicle-loan-paydown-2026-03",
+    importBatchId: batch.id,
   });
   eventCount += 1;
 
@@ -846,7 +884,7 @@ export async function seedDemoHousehold() {
     {
       accountId: joint.id,
       accountType: "CHECKING",
-      openingMinor: vehiclePurchaseMinor,
+      openingMinor: vehicleCashFundingMinor,
     },
     { accountId: sbab.id, accountType: "SAVINGS", openingMinor: 0n },
     { accountId: revolut.id, accountType: "CHECKING", openingMinor: 0n },
@@ -865,6 +903,11 @@ export async function seedDemoHousehold() {
     {
       accountId: vehicle.id,
       accountType: "ASSET",
+      openingMinor: 0n,
+    },
+    {
+      accountId: carLoan.id,
+      accountType: "LOAN",
       openingMinor: 0n,
     },
     { accountId: expenseBook.id, accountType: "EXPENSE", openingMinor: 0n },
@@ -956,9 +999,10 @@ export async function seedDemoHousehold() {
     householdId: household.id,
     asOf,
     assetAccountId: vehicle.id,
+    loanAccountId: carLoan.id,
   });
 
-  // Link demo fuel expenses to the household vehicle (ledger ↔ vehicleId).
+  // Link demo fuel expenses + financed purchase to the household vehicle (ledger ↔ vehicleId).
   if (vehicleSeed?.vehicleId) {
     await db
       .update(financialEvents)
@@ -967,6 +1011,18 @@ export async function seedDemoHousehold() {
         and(
           eq(financialEvents.householdId, household.id),
           eq(financialEvents.description, "Circle K"),
+        ),
+      );
+    await db
+      .update(financialEvents)
+      .set({ vehicleId: vehicleSeed.vehicleId })
+      .where(
+        and(
+          eq(financialEvents.householdId, household.id),
+          eq(
+            financialEvents.externalId,
+            "seed-vehicle-financed-purchase-2022-04",
+          ),
         ),
       );
   }

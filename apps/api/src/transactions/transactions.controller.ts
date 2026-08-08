@@ -16,6 +16,7 @@ import {
   householdIdQuerySchema,
   idParamSchema,
   listCategoriesQuerySchema,
+  listMerchantsQuerySchema,
   listTransactionsQuerySchema,
   updateCategorySchema,
   updateTransactionSchema,
@@ -88,10 +89,14 @@ export class TransactionsController {
   @Get("merchants")
   listMerchants(
     @CurrentUser() user: AuthenticatedUser,
-    @Query(new ZodValidationPipe(householdIdQuerySchema))
-    query: { householdId: string },
+    @Query(new ZodValidationPipe(listMerchantsQuerySchema))
+    query: { householdId: string; q?: string },
   ) {
-    return this.transactions.listMerchants(user.userId, query.householdId);
+    return this.transactions.listMerchants(
+      user.userId,
+      query.householdId,
+      query.q,
+    );
   }
 
   @Get("transactions")

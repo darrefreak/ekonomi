@@ -10,6 +10,7 @@ import { queryKeys } from "@/lib/query-keys";
 import { MoneyValue } from "../financial/money-value";
 import { ErrorState } from "../feedback/error-state";
 import { LoadingState } from "../feedback/loading-state";
+import { MerchantPicker } from "./merchant-picker";
 import { SplitEditor } from "./split-editor";
 
 export function TransactionDetailPage({ transactionId }: { transactionId: string }) {
@@ -34,13 +35,6 @@ export function TransactionDetailPage({ transactionId }: { transactionId: string
     queryKey: householdId ? queryKeys.accounts.all(householdId) : ["accounts", "pending"],
     queryFn: () => api.listAccounts(householdId!),
     enabled: Boolean(householdId),
-  });
-
-  const merchantsQuery = useQuery({
-    queryKey: householdId ? queryKeys.merchants.all(householdId) : ["merchants", "pending"],
-    queryFn: () => api.listMerchants(householdId!),
-    enabled: Boolean(householdId),
-    retry: false,
   });
 
   const data = detailQuery.data;
@@ -182,7 +176,6 @@ export function TransactionDetailPage({ transactionId }: { transactionId: string
   }
 
   const categories = categoriesQuery.data?.items ?? [];
-  const merchants = merchantsQuery.data?.items ?? [];
   const accounts = accountsQuery.data?.items ?? [];
   const sourceAmountMinor =
     BigInt(data.amount.amountMinor) < 0n
@@ -225,26 +218,15 @@ export function TransactionDetailPage({ transactionId }: { transactionId: string
           </select>
         </label>
 
-        {merchants.length > 0 ? (
-          <label className="block text-sm">
-            <span className="text-text-secondary">Butik/motpart</span>
-            <select
-              value={merchantId}
-              onChange={(e) => setMerchantId(e.target.value)}
-              className="mt-1 min-h-11 w-full rounded-[12px] border border-border bg-surface px-3"
-            >
-              <option value="">Ingen butik</option>
-              {merchants.map((m) => (
-                <option key={m.id} value={m.id}>
-                  {m.canonicalName}
-                </option>
-              ))}
-            </select>
-          </label>
+        {householdId ? (
+          <MerchantPicker
+            householdId={householdId}
+            value={merchantId}
+            onChange={setMerchantId}
+          />
         ) : (
           <div className="rounded-[12px] border border-dashed border-border px-3 py-2 text-sm text-text-muted">
             Butik: {data.merchantName ?? "okänd"}
-            {merchantsQuery.isError ? " · Merchant-listan är inte tillgänglig ännu." : ""}
           </div>
         )}
 
