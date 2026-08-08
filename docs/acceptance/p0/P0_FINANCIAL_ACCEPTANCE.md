@@ -11,6 +11,8 @@
 Batch reports A2/A3/S1/C2 are **substantially real** and many invariants pass as persisted tests.  
 Acceptance criteria require **zero** unresolved P0 and **zero** known unsafe money paths in V1 flows. That bar is **not** met.
 
+**R1 update (2026-08-08):** P0-A1 atomic persist and P0-A2 depreciation idempotency are **FIXED**. Core acceptance remains **FAIL** while P0-A3…A8 remain.
+
 ---
 
 ## Scorecard
@@ -46,13 +48,13 @@ Acceptance criteria require **zero** unresolved P0 and **zero** known unsafe mon
 | 8 | Investment transfer | PASS | NW unchanged |
 | 9 | Cash vehicle purchase runtime | FAIL / PARTIAL | seed opening only; no purchase API |
 | 10 | Financed vehicle purchase | FAIL | missing ledger path |
-| 11 | Depreciation 300→280 | PASS economics | FAIL idempotency |
+| 11 | Depreciation 300→280 | PASS economics | PASS idempotency (R1) |
 | 12 | Loan principal/interest (mortgage) | PASS | financed vehicle loan payments not full product path |
 | 13 | Refund | PARTIAL | service+test; no HTTP |
 | 14 | Reversal/correction | FAIL | enum only |
-| 15 | Split atomicity | FAIL | no `db.transaction`; no general split API |
+| 15 | Split atomicity | PASS (R1 persist/replace) | product split API still P0-A4 |
 | 16 | Reconciliation mismatch | PASS | A2 Test 5 |
-| 17 | Idempotency | PARTIAL | transfer OK; depreciation NOT |
+| 17 | Idempotency | PASS (R1) | transfer + depreciation + CC payment; payload conflict |
 | 18 | Cross-household writes | PASS | requireCanWrite + household account filter |
 | 19 | Validation adversarial | PASS | S1 suite |
 | 20–24 | Metric registry depth | FAIL | see METRIC_REGISTRY_VERIFICATION.md |

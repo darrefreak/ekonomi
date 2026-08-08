@@ -4,6 +4,7 @@ Priority model: **P0 before P1**.
 These must be resolved (or explicitly accepted with risk) before claiming product completeness of downstream analytics.
 
 > **Adversarial P0 financial acceptance (2026-08-07): FAIL — FINANCIAL CORE NOT ACCEPTED.**  
+> **R1 (2026-08-08):** P0-A1 atomic persist + P0-A2 depreciation idempotency **FIXED**; acceptance still **FAIL**.  
 > See `docs/acceptance/p0/P0_FINANCIAL_ACCEPTANCE.md` and `P0_REMAINING_FIXES.md`.  
 > **P0 REMAINING: > 0** · **FINANCIAL CORE ACCEPTED: NO**
 
