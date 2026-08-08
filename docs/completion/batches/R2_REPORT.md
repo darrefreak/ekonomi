@@ -2,6 +2,7 @@
 
 **Status:** COMPLETE (batch scope)  
 **Branch:** `cursor/batch-r2-money-ledger-truth-9c58`  
+**PR:** https://github.com/darrefreak/ekonomi/pull/36  
 **Base:** `cursor/batch-r1-atomic-idempotency-9c58`  
 **Date:** 2026-08-08  
 
@@ -73,6 +74,6 @@ Regression: R1 / A2 / A3 / S1 suites remain green.
 | Debt detail ledger-aligned | **PASS** |
 | NW history refresh after mutation | **PASS** |
 | R1 regressions | **PASS** |
-| Build / Lint / Typecheck / Tests / Docker | *(see stop report)* |
+| Build / Lint / Typecheck / Tests (71) / Docker | **PASS** / healthy |
 
 **FINANCIAL CORE ACCEPTED: NO**
