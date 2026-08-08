@@ -13,12 +13,37 @@ test("netWorthFromTypedBalances matches cash + inv + assets − liabilities", ()
       { accountType: "INVESTMENT", balanceMinor: 500_000_00n },
       { accountType: "ASSET", balanceMinor: 1_000_000_00n },
       { accountType: "MORTGAGE", balanceMinor: 400_000_00n },
-      { accountType: "LOAN", balanceMinor: -50_000_00n },
+      { accountType: "LOAN", balanceMinor: 50_000_00n },
     ],
     "SEK",
   );
   // 100k + 500k + 1M − 400k − 50k = 1_150_000
   assert.equal(nw.amountMinor, 1_150_000_00n);
+});
+
+test("a liability credit balance adds to net worth", () => {
+  // The card is overpaid by 2 000 kr, so the bank owes the household that much.
+  // Before RT2-001 this was counted as 2 000 kr of debt and net worth came out
+  // 4 000 kr low — the magnitude of the error is always twice the credit.
+  const nw = netWorthFromTypedBalances(
+    [
+      { accountType: "CHECKING", balanceMinor: 97_000_00n },
+      { accountType: "CREDIT_CARD", balanceMinor: -2_000_00n },
+    ],
+    "SEK",
+  );
+  assert.equal(nw.amountMinor, 99_000_00n);
+});
+
+test("liability buckets carry the signed position, not a magnitude", () => {
+  const buckets = bucketBalancesForNetWorth(
+    [
+      { accountType: "MORTGAGE", balanceMinor: 400_000_00n },
+      { accountType: "CREDIT_CARD", balanceMinor: -16_002_68n },
+    ],
+    "SEK",
+  );
+  assert.equal(buckets.liabilities.amountMinor, 383_997_32n);
 });
 
 test("bucketBalancesForNetWorth groups investment types", () => {

@@ -7,9 +7,17 @@ import {
   summarizePrincipalInterest,
 } from "./debt";
 
-test("outstandingLiabilityMinor uses absolute value", () => {
+test("outstandingLiabilityMinor reports what is owed, clamped at zero", () => {
   assert.equal(outstandingLiabilityMinor(100_00n), 100_00n);
-  assert.equal(outstandingLiabilityMinor(-195_000_00n), 195_000_00n);
+  // A credit balance means the lender owes the household. Nothing is owed, so
+  // nothing is reported as debt. Taking the magnitude here was RT2-001.
+  assert.equal(outstandingLiabilityMinor(-195_000_00n), 0n);
+  assert.equal(outstandingLiabilityMinor(0n), 0n);
+});
+
+test("no interest accrues on a liability holding a credit balance", () => {
+  const principal = outstandingLiabilityMinor(-20_000_00n);
+  assert.equal(monthlyInterestFromRateMinor(principal, 240), 0n);
 });
 
 test("monthlyInterestFromRateMinor is principal × rate / 12", () => {

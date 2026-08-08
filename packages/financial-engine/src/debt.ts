@@ -1,6 +1,15 @@
-/** Outstanding liability for display: balances may be stored + or −. */
+import { outstandingDebtMinor } from "./account-sign";
+
+/**
+ * Outstanding liability: what the household still owes on this account.
+ *
+ * A liability balance is positive-is-owed (see `account-sign.ts`), so a credit
+ * balance means nothing is owed and this clamps to zero. It used to take the
+ * absolute value, which reported an overpaid card as debt and invented interest
+ * on it (RT2-001).
+ */
 export function outstandingLiabilityMinor(balanceMinor: bigint): bigint {
-  return balanceMinor < 0n ? -balanceMinor : balanceMinor;
+  return outstandingDebtMinor(balanceMinor);
 }
 
 /**

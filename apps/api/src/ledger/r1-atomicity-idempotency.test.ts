@@ -79,8 +79,9 @@ async function setupHousehold(label: string) {
     householdId: household.id,
     name: "R1 Mortgage",
     accountType: "MORTGAGE",
-    openingBalanceMinor: -2_000_000_00n,
-    currentBalanceMinor: -2_000_000_00n,
+    // Positive is owed, per the canonical convention in `account-sign.ts`.
+    openingBalanceMinor: 2_000_000_00n,
+    currentBalanceMinor: 2_000_000_00n,
     isShared: true,
   });
 
