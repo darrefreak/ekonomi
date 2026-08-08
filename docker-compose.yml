@@ -74,6 +74,9 @@ services:
       S3_REGION: us-east-1
       DEMO_AS_OF_DATE: "2026-08-01"
       DEMO_RANDOM_SEED: family-financial-os-demo-v1
+      # An end-to-end run drives the whole application from one address; the
+      # product default of 120/minute is what production uses.
+      FFOS_RATE_LIMIT: "2000"
     ports:
       - "3001:3001"
     depends_on:

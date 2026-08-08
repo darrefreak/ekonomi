@@ -1,5 +1,10 @@
+import type { Metadata } from "next";
 import { Suspense } from "react";
 import { InviteAcceptPage } from "@/components/auth/invite-accept-page";
+
+export const metadata: Metadata = {
+  title: "Inbjudan",
+};
 
 export default function InviteRoute() {
   return (

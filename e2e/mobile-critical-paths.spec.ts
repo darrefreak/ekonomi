@@ -1,4 +1,9 @@
 import { test, expect, type Page } from "@playwright/test";
+import {
+  expectNotFoundPage,
+  expectRouteRendered,
+  gotoRoute,
+} from "./helpers/route-identity";
 
 /**
  * Mobile-web acceptance for the critical paths a household actually uses.
@@ -27,10 +32,10 @@ test.describe("mobile critical paths", () => {
     page,
   }) => {
     for (const path of ["/", "/transactions", "/more", "/settings", "/review"]) {
-      await page.goto(path);
+      // gotoRoute proves this route rendered: not the not-found page, and this
+      // page's own heading rather than any heading the shell provides.
+      await gotoRoute(page, path);
       await expect(page.locator("#main-content")).toBeVisible();
-      // A 404 shell also renders #main-content, so assert the real page landed.
-      await expect(page.getByRole("heading").first()).toBeVisible();
       await expectNoHorizontalOverflow(page);
     }
   });
@@ -38,23 +43,26 @@ test.describe("mobile critical paths", () => {
   test("bottom navigation is reachable and More opens overflow IA", async ({
     page,
   }) => {
-    await page.goto("/");
+    await gotoRoute(page, "/");
     const bottomNav = page.getByRole("navigation").first();
     await expect(bottomNav).toBeVisible();
 
-    await page.goto("/more");
+    await gotoRoute(page, "/more");
     const moreNav = page.getByRole("navigation", { name: /fler sidor/i });
     await expect(moreNav).toBeVisible();
     const firstLink = moreNav.getByRole("link").first();
     await expect(firstLink).toBeVisible();
+    const target = await firstLink.getAttribute("href");
     await firstLink.click();
-    await expect(page.locator("main")).toBeVisible();
+    // The More menu is the mobile route into everything else, so a dead link
+    // here hides most of the product. Prove the destination itself rendered.
+    await expectRouteRendered(page, target ?? "");
     await expectNoHorizontalOverflow(page);
   });
 
   test("core money mutation: create an account from mobile", async ({ page }) => {
     const name = `Mobil konto ${Date.now()}`;
-    await page.goto("/accounts");
+    await gotoRoute(page, "/accounts");
     const form = page.locator("form").filter({ hasText: /nytt konto/i });
     await form
       .locator("label")
@@ -72,12 +80,19 @@ test.describe("mobile critical paths", () => {
   });
 
   test("transaction detail opens and stays usable", async ({ page }) => {
-    await page.goto("/transactions");
+    await gotoRoute(page, "/transactions");
     const firstTx = page.locator('a[href^="/transactions/"]').first();
     await expect(firstTx).toBeVisible({ timeout: 15_000 });
     await firstTx.click();
-    await expect(page).toHaveURL(/\/transactions\//);
-    await expect(page.locator("main")).toBeVisible();
+    await expect(page).toHaveURL(/\/transactions\/[0-9a-f-]{36}/);
+    await expectNotFoundPage(page, false);
+    await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
+    // Unique to a transaction's own page: the back link and its classification
+    // section. The shell has neither.
+    await expect(page.getByRole("link", { name: /← Transaktioner/ })).toBeVisible();
+    await expect(page.getByText(/^Klassificering$/)).toBeVisible({
+      timeout: 15_000,
+    });
     await expectNoHorizontalOverflow(page);
   });
 
@@ -85,7 +100,7 @@ test.describe("mobile critical paths", () => {
     page,
   }) => {
     const name = `Mobilbil ${Date.now()}`;
-    await page.goto("/vehicles");
+    await gotoRoute(page, "/vehicles");
     await page.getByRole("button", { name: /lägg till fordon/i }).click();
 
     const form = page.getByRole("form", { name: /lägg till fordon/i });

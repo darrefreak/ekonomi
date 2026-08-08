@@ -1,4 +1,9 @@
+import type { Metadata } from "next";
 import { AccountDetailPage } from "@/components/money/account-detail-page";
+
+export const metadata: Metadata = {
+  title: "Konto",
+};
 
 export default async function Page({
   params,
