@@ -18,6 +18,7 @@ import { minorToKronorInput, kronorToMinorString } from "@/lib/money-input";
 import { CURRENCIES, MEMBER_ROLE_LABELS, PRIVACY_POLICY_LABELS } from "@/lib/account-labels";
 import { ErrorState } from "../feedback/error-state";
 import { LoadingState } from "../feedback/loading-state";
+import { writeStoredAppearance } from "../providers/theme-applicator";
 
 const POLICY_OPTIONS = [
   "FULL_DETAILS",
@@ -1076,6 +1077,13 @@ function AppearanceSection({
   const saveMutation = useMutation({
     mutationFn: async () => {
       const id = await ensureHouseholdSession();
+      writeStoredAppearance(appearance);
+      document.documentElement.classList.toggle(
+        "dark",
+        appearance === "dark" ||
+          (appearance === "system" &&
+            window.matchMedia("(prefers-color-scheme: dark)").matches),
+      );
       return api.updateSettings({ householdId: id, appearance });
     },
     onSuccess: async () => {
@@ -1091,7 +1099,7 @@ function AppearanceSection({
     <section className="space-y-3 rounded-[16px] bg-surface-elevated p-5">
       <h2 className="text-sm text-text-secondary">Utseende</h2>
       <p className="text-xs text-text-muted">
-        Sparas på hushållet nu; temat tillämpas visuellt i en senare version.
+        Tillämpas direkt på ytor och text via design tokens (system följer OS).
       </p>
       <select
         className="min-h-11 w-full max-w-xs rounded-[12px] border border-border bg-surface px-3 text-sm"

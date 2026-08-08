@@ -239,9 +239,24 @@ export class TransactionsService {
     return this.toCategoryDto(row);
   }
 
-  async listMerchants(userId: string, householdId: string) {
+  async listMerchants(userId: string, householdId: string, q?: string) {
     await this.access.requireMembership(userId, householdId);
     const db = getDb();
+    const filters: SQL[] = [eq(merchants.householdId, householdId)];
+    const needle = q?.trim();
+    if (needle) {
+      const pattern = `%${needle.replace(/[%_]/g, "\\$&")}%`;
+      filters.push(
+        sql`(
+          ${merchants.canonicalName} ilike ${pattern}
+          or exists (
+            select 1
+            from jsonb_array_elements_text(coalesce(${merchants.aliases}, '[]'::jsonb)) as alias(value)
+            where alias.value ilike ${pattern}
+          )
+        )`,
+      );
+    }
     const rows = await db
       .select({
         id: merchants.id,
@@ -251,7 +266,7 @@ export class TransactionsService {
         country: merchants.country,
       })
       .from(merchants)
-      .where(eq(merchants.householdId, householdId))
+      .where(and(...filters))
       .orderBy(asc(merchants.canonicalName));
     return {
       items: rows.map((row) => ({

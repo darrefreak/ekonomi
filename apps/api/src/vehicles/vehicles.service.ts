@@ -156,6 +156,8 @@ export class VehiclesService {
         ? moneyToJson(money(v.purchasePriceMinor, currency))
         : null,
       purchaseDate: v.purchaseDate,
+      linkedAssetAccountId: v.linkedAssetAccountId ?? null,
+      linkedLoanAccountId: v.linkedLoanAccountId ?? null,
       valuation: {
         low: v.estimatedValueLowMinor
           ? moneyToJson(money(v.estimatedValueLowMinor, currency))

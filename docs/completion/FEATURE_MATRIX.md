@@ -21,7 +21,7 @@ Legend for layer columns: **C** complete · **P** partial · **S** scaffold · *
 | Audit logging | PARTIAL | C | N | P | N | P1 | Auth | Account/policy/member/category audited (P1-U1); no UI |
 | Settings (product) | COMPLETE | C | C | P | P | P1 | — | Full V1 sections + policies/categories/members (P1-U1) |
 | Localization sv-SE | PARTIAL | P | P | P | P | P2 | — | Swedish copy; en-US not wired |
-| Appearance / dark mode | SCAFFOLD_ONLY | S | S | N | S | P2 | Tokens | Tokens mention dark; UI light-only |
+| Appearance / dark mode | PARTIAL | C | C | P | P | P2 | Tokens | Settings appearance applied via `.dark` (P1-U3); polish residual |
 | Feature flags | SCAFFOLD_ONLY | S | N | N | N | P2 | — | Not enforced |
 
 ---
@@ -41,7 +41,7 @@ Legend for layer columns: **C** complete · **P** partial · **S** scaffold · *
 | Credit card handling | COMPLETE | C | C | C | P | P1 | Ledger | Purchase/payment product forms (P1-U2) |
 | Mortgage handling | COMPLETE | C | C | C | P | P1 | Ledger | Mortgage payment form + splits (P1-U2) |
 | Refunds / reimbursements | COMPLETE | C | C | C | P | P0 | Ledger | HTTP + UI (R3/U1) |
-| Merchant normalization | PARTIAL | P | P | P | P | P2 | — | List + assign (P1-U1); alias engine deferred |
+| Merchant normalization | PARTIAL | P | P | C | P | P2 | — | List `q` + alias search + searchable assign (P1-U3); import normalizer deferred |
 | Categories | COMPLETE | C | C | C | P | P1 | — | User CRUD + archive (P1-U1) |
 | Transaction editing | COMPLETE | C | C | P | P | P1 | Txns | Metadata + economic creates (P1-U1) |
 | Transaction filtering/search | COMPLETE | C | C | P | P | P1 | — | Filters + search (P1-U1) |
@@ -125,8 +125,8 @@ Legend for layer columns: **C** complete · **P** partial · **S** scaffold · *
 
 | Feature | Status | BE | FE | Test | Mobile | Pri | Deps | Missing / defects |
 |---|---|---|---|---|---|---|---|---|
-| Vehicle list/detail | PARTIAL | P | P | P | B | P1 | — | Seed-backed + IA subnav (WS H) |
-| Ownership / financing | PARTIAL | P | P | P | B | P1 | — | Leasing thin |
+| Vehicle list/detail | PARTIAL | P | P | P | B | P1 | — | Seed-backed + IA + purchase form + E2E (P1-U3) |
+| Ownership / financing | PARTIAL | P | P | P | B | P1 | — | Financed seed/ledger coherent + cash/financed UX (P1-U3); leasing thin |
 | Odometer / maintenance | PARTIAL | P | P | P | B | P1 | — | Odometer + maint costs UI (WS H) |
 | Vehicle-linked transactions | PARTIAL | P | P | P | B | P1 | Txns | Fuel linked; txn vehicleId filter/update (WS H) |
 | Cash / economic / TCO / mil | PARTIAL | P | P | C | B | P1 | Engine | Engine real on seed inputs |

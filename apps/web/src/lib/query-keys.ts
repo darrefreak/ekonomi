@@ -54,6 +54,8 @@ export const queryKeys = {
   },
   merchants: {
     all: (householdId: string) => ["merchants", householdId] as const,
+    search: (householdId: string, q?: string) =>
+      ["merchants", householdId, { q: q ?? "" }] as const,
   },
   privacy: {
     requests: (householdId: string) => ["privacy", householdId, "requests"] as const,

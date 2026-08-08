@@ -9,6 +9,7 @@ import { MoneyValue } from "../financial/money-value";
 import { ErrorState } from "../feedback/error-state";
 import { LoadingState } from "../feedback/loading-state";
 import { VehicleDetailNav, VehicleHouseholdNav } from "./vehicle-subnav";
+import { VehiclePurchaseForm } from "./vehicle-purchase-form";
 
 export function VehicleDetailPage({ vehicleId }: { vehicleId: string }) {
   const [data, setData] = useState<VehicleDetailDto | null>(null);
@@ -93,6 +94,8 @@ export function VehicleDetailPage({ vehicleId }: { vehicleId: string }) {
           </dl>
         </section>
       </div>
+
+      <VehiclePurchaseForm vehicle={data} />
 
       <section className="rounded-[16px] bg-surface-elevated p-5">
         <h2 className="text-sm text-text-secondary">Projektterad TCO</h2>
