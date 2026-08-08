@@ -3,7 +3,7 @@ import {
   Injectable,
   NotFoundException,
 } from "@nestjs/common";
-import { and, desc, eq } from "drizzle-orm";
+import { and, desc, eq, ne } from "drizzle-orm";
 import { money, moneyToJson, type CurrencyCode } from "@ffos/domain";
 import {
   annualizeSubscription,
@@ -15,14 +15,11 @@ import {
   backtestLinearForecast,
   buildForecastPoints,
   calculateLifestyleCreep,
-  detectContractRenewalOpportunity,
-  detectLifestyleCreepOpportunity,
-  detectMortgageRateOpportunity,
-  detectSubscriptionTrimOpportunity,
   parseScenarioAssumptions,
-  rankOpportunities,
   savingsOptimizerSuggestions,
   simulateScenario,
+  vehicleNetEquity,
+  type OptimizerSuggestion,
 } from "@ffos/financial-engine";
 import type {
   CreateScenarioInput,
@@ -35,10 +32,11 @@ import {
   forecastActualComparisons,
   forecastPoints,
   forecastRuns,
+  opportunities,
   scenarios,
 } from "../db/schema-decisions";
-import { contracts, subscriptions } from "../db/schema-planning";
-import { vehicles } from "../db/schema-vehicles";
+import { subscriptions } from "../db/schema-planning";
+import { vehicleFinanceAgreements, vehicles } from "../db/schema-vehicles";
 import { DebtService } from "../debt/debt.service";
 import { HouseholdAccessService } from "../households/household-access.service";
 import {
@@ -47,6 +45,12 @@ import {
 } from "../metrics/household-metrics.service";
 import { PlanningMetricsService } from "../planning/planning-metrics.service";
 import { VehiclesService } from "../vehicles/vehicles.service";
+import {
+  OpportunitiesGeneratorService,
+  resolveHouseholdCurrency,
+} from "./opportunities-generator.service";
+
+const DEMO_AS_OF = () => process.env.DEMO_AS_OF_DATE ?? "2026-08-01";
 
 @Injectable()
 export class DecisionsService {
@@ -58,6 +62,8 @@ export class DecisionsService {
     private readonly planning: PlanningMetricsService,
     @Inject(DebtService) private readonly debt: DebtService,
     @Inject(VehiclesService) private readonly vehicles: VehiclesService,
+    @Inject(OpportunitiesGeneratorService)
+    private readonly generator: OpportunitiesGeneratorService = new OpportunitiesGeneratorService(),
   ) {}
 
   private async baselineSeed(householdId: string, currency: CurrencyCode, asOf: string) {
@@ -77,48 +83,34 @@ export class DecisionsService {
     };
   }
 
-  private async optimizer(householdId: string, currency: CurrencyCode, asOf: string) {
-    const db = getDb();
-    const subs = await db
-      .select()
-      .from(subscriptions)
-      .where(
-        and(
-          eq(subscriptions.householdId, householdId),
-          eq(subscriptions.status, "ACTIVE"),
-        ),
-      );
-    const subscriptionAnnualMinor = subs.reduce(
-      (sum, s) =>
-        sum +
-        annualizeSubscription(
-          s.amountMinor,
-          s.cadence as "WEEKLY" | "MONTHLY" | "QUARTERLY" | "YEARLY",
-        ),
-      0n,
-    );
-    const mortgageInterestAnnualMinor = await this.metrics.mortgageInterestAnnual(
-      householdId,
-      asOf,
-    );
-    const budget = await this.planning.getBudget(householdId, currency, asOf);
-    const remainingMinor = budget
-      ? BigInt(budget.totals.remaining.amountMinor)
-      : 0n;
-    const lifestyleOverBudgetMinor =
-      remainingMinor < 0n ? -remainingMinor : 0n;
-
-    return savingsOptimizerSuggestions({
-      subscriptionAnnualMinor,
-      mortgageInterestAnnualMinor,
-      lifestyleOverBudgetMinor,
-    });
+  /** Optimizer suggestions are the deterministic opportunities with positive annual impact. */
+  private async optimizer(
+    householdId: string,
+    currency: CurrencyCode,
+    asOf: string,
+  ): Promise<OptimizerSuggestion[]> {
+    const detected = await this.generator.detectAll(householdId, currency, asOf);
+    const items: OptimizerSuggestion[] = detected
+      .filter(
+        (o) =>
+          o.estimatedAnnualImpactMinor != null && o.estimatedAnnualImpactMinor > 0n,
+      )
+      .slice(0, 5)
+      .map((o) => ({
+        id: o.identityKey,
+        title: o.title,
+        estimatedAnnualSavingMinor: o.estimatedAnnualImpactMinor!,
+        effort: o.effort,
+        estimateBasis: o.estimateBasis,
+      }));
+    return savingsOptimizerSuggestions({ items });
   }
 
-  async forecast(userId: string, householdId: string) {
-    const { household } = await this.access.requireMembership(userId, householdId);
-    const currency = (household.baseCurrency || "SEK") as CurrencyCode;
-    const asOf = process.env.DEMO_AS_OF_DATE ?? "2026-08-01";
+  private async computeForecast(
+    householdId: string,
+    currency: CurrencyCode,
+    asOf: string,
+  ) {
     const { snap, seed } = await this.baselineSeed(householdId, currency, asOf);
     const points = buildForecastPoints(seed);
     const optimizer = await this.optimizer(householdId, currency, asOf);
@@ -168,14 +160,29 @@ export class DecisionsService {
           money(o.estimatedAnnualSavingMinor, currency),
         ),
         effort: o.effort,
+        estimateBasis: o.estimateBasis ?? null,
       })),
     };
+  }
+
+  async forecast(userId: string, householdId: string) {
+    const { household } = await this.access.requireMembership(userId, householdId);
+    const currency = (household.baseCurrency || "SEK") as CurrencyCode;
+    const asOf = DEMO_AS_OF();
+    return this.computeForecast(householdId, currency, asOf);
+  }
+
+  /** Job-path entry — no userId / request access check (caller already validated the job). */
+  async generateForecast(householdId: string) {
+    const currency = await resolveHouseholdCurrency(householdId);
+    const asOf = DEMO_AS_OF();
+    return this.computeForecast(householdId, currency, asOf);
   }
 
   async backtest(userId: string, householdId: string) {
     const { household } = await this.access.requireMembership(userId, householdId);
     const currency = (household.baseCurrency || "SEK") as CurrencyCode;
-    const asOf = process.env.DEMO_AS_OF_DATE ?? "2026-08-01";
+    const asOf = DEMO_AS_OF();
     const lookbackDays = 30;
     const { seed } = await this.baselineSeed(householdId, currency, asOf);
     const result = backtestLinearForecast({
@@ -252,12 +259,92 @@ export class DecisionsService {
     };
   }
 
+  /**
+   * Detect + persist opportunities, then serve from the persisted rows (source
+   * of truth for lifecycle status: NEW/ACTIVE/VIEWED/ACCEPTED/DISMISSED/EXPIRED).
+   */
   async opportunities(userId: string, householdId: string) {
     const { household } = await this.access.requireMembership(userId, householdId);
     const currency = (household.baseCurrency || "SEK") as CurrencyCode;
-    const asOf = process.env.DEMO_AS_OF_DATE ?? "2026-08-01";
-    const db = getDb();
+    const asOf = DEMO_AS_OF();
+    return this.computeOpportunities(householdId, currency, asOf);
+  }
 
+  /** Job-path entry — no userId / request access check. */
+  async generateOpportunities(householdId: string) {
+    const currency = await resolveHouseholdCurrency(householdId);
+    const asOf = DEMO_AS_OF();
+    return this.computeOpportunities(householdId, currency, asOf);
+  }
+
+  private async computeOpportunities(
+    householdId: string,
+    currency: CurrencyCode,
+    asOf: string,
+  ) {
+    await this.generator.generate(householdId, currency, asOf);
+
+    const db = getDb();
+    const rows = await db
+      .select()
+      .from(opportunities)
+      .where(
+        and(
+          eq(opportunities.householdId, householdId),
+          ne(opportunities.status, "DISMISSED"),
+          ne(opportunities.status, "EXPIRED"),
+        ),
+      )
+      .orderBy(desc(opportunities.priorityScore));
+
+    return {
+      asOf,
+      source: "live-engine" as const,
+      items: rows.map((row) => ({
+        id: row.id,
+        type: row.type,
+        detectorKey: row.detectorKey,
+        title: row.title,
+        description: row.description,
+        estimatedAnnualSaving: row.estimatedAnnualSavingMinor
+          ? moneyToJson(money(row.estimatedAnnualSavingMinor, currency))
+          : null,
+        estimatedMonthlyImpact: row.estimatedMonthlyImpactMinor
+          ? moneyToJson(money(row.estimatedMonthlyImpactMinor, currency))
+          : null,
+        estimateBasis: row.estimateBasis,
+        assumptions: row.assumptions ?? [],
+        facts: row.facts ?? [],
+        dataSources: row.dataSources ?? [],
+        confidence: row.confidenceScore != null ? Number(row.confidenceScore) : null,
+        confidenceLabel: (row.confidenceLabel ?? undefined) as
+          | "low"
+          | "medium"
+          | "high"
+          | undefined,
+        priorityScore: row.priorityScore != null ? Number(row.priorityScore) : undefined,
+        effort: row.effort,
+        risk: row.risk,
+        priority: row.priority,
+        status: row.status,
+        category: row.category,
+        evidence: row.evidence ?? [],
+        calculationVersion: row.calculationVersion,
+        inputHash: row.inputHash,
+        lastCalculatedAt: row.lastCalculatedAt
+          ? row.lastCalculatedAt.toISOString()
+          : null,
+        analysisStatus: "live" as const,
+      })),
+      lifestyleCreep: await this.lifestyleCreepSummary(householdId, currency, asOf),
+    };
+  }
+
+  private async lifestyleCreepSummary(
+    householdId: string,
+    currency: CurrencyCode,
+    asOf: string,
+  ) {
     const months = lastNMonths(asOf, 15);
     const monthlyPoints = await this.metrics.monthlyTotals(householdId, months);
     const recentMonths = months.slice(-3);
@@ -275,115 +362,50 @@ export class DecisionsService {
       })),
       categorySpends,
     });
-
-    const subs = await db
-      .select()
-      .from(subscriptions)
-      .where(
-        and(
-          eq(subscriptions.householdId, householdId),
-          eq(subscriptions.status, "ACTIVE"),
-        ),
-      );
-    const subscriptionAnnualMinor = subs.reduce(
-      (sum, s) =>
-        sum +
-        annualizeSubscription(
-          s.amountMinor,
-          s.cadence as "WEEKLY" | "MONTHLY" | "QUARTERLY" | "YEARLY",
-        ),
-      0n,
-    );
-    const mortgageInterestAnnualMinor = await this.metrics.mortgageInterestAnnual(
-      householdId,
-      asOf,
-    );
-    const [mortgage] = await db
-      .select({ id: accounts.id })
-      .from(accounts)
-      .where(
-        and(
-          eq(accounts.householdId, householdId),
-          eq(accounts.accountType, "MORTGAGE"),
-        ),
-      )
-      .limit(1);
-    const contractRows = await db
-      .select()
-      .from(contracts)
-      .where(eq(contracts.householdId, householdId));
-
-    const detected = rankOpportunities([
-      detectMortgageRateOpportunity({
-        mortgageInterestAnnualMinor,
-        mortgageAccountId: mortgage?.id ?? null,
-      }),
-      detectSubscriptionTrimOpportunity({
-        subscriptionAnnualMinor,
-        subscriptionIds: subs.map((s) => s.id),
-      }),
-      detectContractRenewalOpportunity({
-        asOf,
-        contracts: contractRows.map((c) => ({
-          id: c.id,
-          name: c.name,
-          renewalDate: c.renewalDate,
-          endDate: c.endDate,
-        })),
-      }),
-      detectLifestyleCreepOpportunity(creep),
-    ]);
-
     return {
-      asOf,
-      source: "live-engine" as const,
-      items: detected.map((o) => ({
-        id: o.id,
-        detectorKey: o.detectorKey,
-        title: o.title,
-        description: o.description,
-        estimatedAnnualSaving: o.estimatedAnnualSavingMinor
-          ? moneyToJson(money(o.estimatedAnnualSavingMinor, currency))
-          : null,
-        estimateBasis: o.estimateBasis,
-        confidence: o.confidence,
-        effort: o.effort,
-        risk: o.risk,
-        priority: o.priority,
-        status: o.status,
-        category: o.category,
-        evidence: o.evidence,
+      creeping: creep.creeping,
+      recentAvgMonthly: moneyToJson(money(creep.recentAvgMonthlyMinor, currency)),
+      baselineAvgMonthly: moneyToJson(money(creep.baselineAvgMonthlyMinor, currency)),
+      delta: moneyToJson(money(creep.deltaMinor, currency)),
+      deltaPercent: creep.deltaPercent,
+      drivers: creep.drivers.map((d) => ({
+        categoryKey: d.categoryKey,
+        categoryName: d.categoryName,
+        delta: moneyToJson(money(d.deltaMinor, currency)),
+        deltaPercent: d.deltaPercent,
+        href: `/transactions?q=${encodeURIComponent(d.categoryName)}`,
       })),
-      lifestyleCreep: {
-        creeping: creep.creeping,
-        recentAvgMonthly: moneyToJson(
-          money(creep.recentAvgMonthlyMinor, currency),
-        ),
-        baselineAvgMonthly: moneyToJson(
-          money(creep.baselineAvgMonthlyMinor, currency),
-        ),
-        delta: moneyToJson(money(creep.deltaMinor, currency)),
-        deltaPercent: creep.deltaPercent,
-        drivers: creep.drivers.map((d) => ({
-          categoryKey: d.categoryKey,
-          categoryName: d.categoryName,
-          delta: moneyToJson(money(d.deltaMinor, currency)),
-          deltaPercent: d.deltaPercent,
-          href: `/transactions?q=${encodeURIComponent(d.categoryName)}`,
-        })),
-      },
     };
   }
 
-  async risk(userId: string, householdId: string) {
-    const { household } = await this.access.requireMembership(userId, householdId);
-    const currency = (household.baseCurrency || "SEK") as CurrencyCode;
-    const asOf = process.env.DEMO_AS_OF_DATE ?? "2026-08-01";
-    const snap = await this.metrics.getFinancialSnapshot(
-      householdId,
-      currency,
-      asOf,
-    );
+  /** Vehicle financing risk signal without a userId — direct DB + engine math. */
+  private async vehicleFinancingSignal(householdId: string) {
+    const db = getDb();
+    const [vehicle] = await db
+      .select()
+      .from(vehicles)
+      .where(eq(vehicles.householdId, householdId))
+      .limit(1);
+    if (!vehicle) return null;
+    const [finance] = await db
+      .select()
+      .from(vehicleFinanceAgreements)
+      .where(eq(vehicleFinanceAgreements.vehicleId, vehicle.id))
+      .limit(1);
+    const equity = vehicleNetEquity({
+      estimatedValueMidMinor: vehicle.estimatedValueMidMinor ?? 0n,
+      remainingDebtMinor: finance?.remainingMinor ?? 0n,
+      sellingCostMinor: 5_000_00n,
+    });
+    return assessVehicleFinancingRisk({
+      negativeEquity: equity.negativeEquity,
+      netEquityMinor: equity.netEquityMinor,
+      vehicleId: vehicle.id,
+    });
+  }
+
+  private async computeRisk(householdId: string, currency: CurrencyCode, asOf: string) {
+    const snap = await this.metrics.getFinancialSnapshot(householdId, currency, asOf);
     const coverage = await this.metrics.coverage(householdId, asOf);
     const db = getDb();
     const subs = await db
@@ -429,25 +451,7 @@ export class DecisionsService {
       monthlyIncomeMinor: snap.incomeMinor,
     });
     const cov = assessCoverageRisk({ coveragePercent: coverage.percent });
-
-    let vehicleSignal = null;
-    const [vehicle] = await db
-      .select({ id: vehicles.id })
-      .from(vehicles)
-      .where(eq(vehicles.householdId, householdId))
-      .limit(1);
-    if (vehicle) {
-      try {
-        const detail = await this.vehicles.get(userId, householdId, vehicle.id);
-        vehicleSignal = assessVehicleFinancingRisk({
-          negativeEquity: detail.metrics.negativeEquity,
-          netEquityMinor: BigInt(detail.metrics.netEquity.amountMinor),
-          vehicleId: vehicle.id,
-        });
-      } catch {
-        vehicleSignal = null;
-      }
-    }
+    const vehicleSignal = await this.vehicleFinancingSignal(householdId);
 
     const signals = [
       liq.signal,
@@ -474,10 +478,24 @@ export class DecisionsService {
     };
   }
 
+  async risk(userId: string, householdId: string) {
+    const { household } = await this.access.requireMembership(userId, householdId);
+    const currency = (household.baseCurrency || "SEK") as CurrencyCode;
+    const asOf = DEMO_AS_OF();
+    return this.computeRisk(householdId, currency, asOf);
+  }
+
+  /** Job-path entry — no userId / request access check. */
+  async runRiskAnalysis(householdId: string) {
+    const currency = await resolveHouseholdCurrency(householdId);
+    const asOf = DEMO_AS_OF();
+    return this.computeRisk(householdId, currency, asOf);
+  }
+
   async scenarios(userId: string, householdId: string) {
     const { household } = await this.access.requireMembership(userId, householdId);
     const currency = (household.baseCurrency || "SEK") as CurrencyCode;
-    const asOf = process.env.DEMO_AS_OF_DATE ?? "2026-08-01";
+    const asOf = DEMO_AS_OF();
     const db = getDb();
     const rows = await db
       .select()
@@ -504,7 +522,7 @@ export class DecisionsService {
       input.householdId,
     );
     const currency = (household.baseCurrency || "SEK") as CurrencyCode;
-    const asOf = process.env.DEMO_AS_OF_DATE ?? "2026-08-01";
+    const asOf = DEMO_AS_OF();
     const assumptions = input.assumptions ?? {};
     const { seed } = await this.baselineSeed(input.householdId, currency, asOf);
     const mortgage = await this.debt.primaryMortgageContext(input.householdId);
@@ -538,7 +556,7 @@ export class DecisionsService {
       input.householdId,
     );
     const currency = (household.baseCurrency || "SEK") as CurrencyCode;
-    const asOf = process.env.DEMO_AS_OF_DATE ?? "2026-08-01";
+    const asOf = DEMO_AS_OF();
     const db = getDb();
     const [row] = await db
       .select()
@@ -593,29 +611,33 @@ export class DecisionsService {
     };
   }
 
-  async insights(userId: string, householdId: string) {
-    const [forecast, opps, risk] = await Promise.all([
-      this.forecast(userId, householdId),
-      this.opportunities(userId, householdId),
-      this.risk(userId, householdId),
+  private async computeInsights(
+    householdId: string,
+    currency: CurrencyCode,
+    asOf: string,
+  ) {
+    const [forecastRes, riskRes, detected] = await Promise.all([
+      this.computeForecast(householdId, currency, asOf),
+      this.computeRisk(householdId, currency, asOf),
+      this.generator.generate(householdId, currency, asOf),
     ]);
     return {
-      asOf: forecast.asOf,
+      asOf,
       headline: "Deterministiska insikter från forecast, risk och opportunities",
       items: [
-        ...opps.items.slice(0, 2).map((o) => ({
-          id: `opp-${o.id}`,
+        ...detected.slice(0, 2).map((o) => ({
+          id: `opp-${o.identityKey}`,
           title: o.title,
           detail: o.description,
           kind: "opportunity",
         })),
-        ...risk.signals.slice(0, 2).map((s) => ({
+        ...riskRes.signals.slice(0, 2).map((s) => ({
           id: `risk-${s.id}`,
           title: s.title,
           detail: s.detail,
           kind: "risk",
         })),
-        ...forecast.optimizer.slice(0, 1).map((o) => ({
+        ...forecastRes.optimizer.slice(0, 1).map((o) => ({
           id: `opt-${o.id}`,
           title: o.title,
           detail: `Uppskattad årsbesparing via savings optimizer.`,
@@ -623,5 +645,19 @@ export class DecisionsService {
         })),
       ],
     };
+  }
+
+  async insights(userId: string, householdId: string) {
+    const { household } = await this.access.requireMembership(userId, householdId);
+    const currency = (household.baseCurrency || "SEK") as CurrencyCode;
+    const asOf = DEMO_AS_OF();
+    return this.computeInsights(householdId, currency, asOf);
+  }
+
+  /** Job-path entry — no userId / request access check. */
+  async generateInsights(householdId: string) {
+    const currency = await resolveHouseholdCurrency(householdId);
+    const asOf = DEMO_AS_OF();
+    return this.computeInsights(householdId, currency, asOf);
   }
 }
