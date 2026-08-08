@@ -2,6 +2,7 @@
 
 **Status:** COMPLETE (batch scope)  
 **Branch:** `cursor/batch-r3-financial-runtime-9c58`  
+**PR:** https://github.com/darrefreak/ekonomi/pull/37  
 **Base:** `cursor/batch-r2-money-ledger-truth-9c58`  
 **Date:** 2026-08-08  
 
@@ -112,6 +113,6 @@ V1 rejects aggregating mixed currencies in `positionFromAccounts`. No FX engine.
 | Period semantics | **PASS** |
 | No-double-counting scenario | **PASS** |
 | Ledger truth / money exactness / R1–R2 regressions | **PASS** (suite) |
-| Build / Lint / Typecheck / Tests / Docker | *(stop report)* |
+| Build / Lint / Typecheck / Tests (78) / Docker | **PASS** / healthy |
 
 **FINANCIAL CORE ACCEPTED: NO** — wait for R4 (metric registry semantics).
