@@ -55,6 +55,9 @@ export async function seedDecisionsData(input: {
     })),
   );
 
+  // Pre-U4 illustrative seed rows. Each needs a unique (householdId, identityKey) —
+  // they are superseded on first live run by OpportunitiesGeneratorService, which
+  // expires any row not re-detected under its own deterministic identityKey.
   await db.insert(opportunities).values([
     {
       householdId: input.householdId,
@@ -67,6 +70,7 @@ export async function seedDecisionsData(input: {
       priority: 1,
       status: "ACTIVE",
       category: "mortgage",
+      identityKey: `legacy-seed:mortgage:${input.householdId}`,
     },
     {
       householdId: input.householdId,
@@ -79,6 +83,7 @@ export async function seedDecisionsData(input: {
       priority: 2,
       status: "NEW",
       category: "contracts",
+      identityKey: `legacy-seed:contracts:${input.householdId}`,
     },
     {
       householdId: input.householdId,
@@ -91,6 +96,7 @@ export async function seedDecisionsData(input: {
       priority: 3,
       status: "NEW",
       category: "subscriptions",
+      identityKey: `legacy-seed:subscriptions:${input.householdId}`,
     },
   ]);
 
