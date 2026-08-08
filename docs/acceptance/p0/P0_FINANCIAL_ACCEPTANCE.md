@@ -11,7 +11,8 @@
 Batch reports A2/A3/S1/C2 are **substantially real** and many invariants pass as persisted tests.  
 Acceptance criteria require **zero** unresolved P0 and **zero** known unsafe money paths in V1 flows. That bar is **not** met.
 
-**R1 update (2026-08-08):** P0-A1 atomic persist and P0-A2 depreciation idempotency are **FIXED**. Core acceptance remains **FAIL** while P0-A3…A8 remain.
+**R1 update (2026-08-08):** P0-A1 atomic persist and P0-A2 depreciation idempotency are **FIXED**.  
+**R2 update (2026-08-08):** P0-A3 exact document money + P0-A5 ledger-truth residuals are **FIXED**. Core acceptance remains **FAIL** while P0-A4/A6/A7/A8 remain.
 
 ---
 
@@ -21,8 +22,8 @@ Acceptance criteria require **zero** unresolved P0 and **zero** known unsafe mon
 |---|---|
 | P0 remaining | **> 0** |
 | Financial correctness | **FAIL** |
-| Money exactness | **FAIL** (core writes OK; document extract float path remains) |
-| Ledger truth | **PARTIAL → FAIL** for acceptance (list/detail/history residuals) |
+| Money exactness | **PASS** (R2; core writes + document extract exact) |
+| Ledger truth | **PASS** (R2 list/detail/history residuals addressed; ledger SoT) |
 | Persisted invariants (A2 transfer/CC/mortgage/invest/recon) | **PASS** |
 | Validation (S1) | **PASS** |
 | Reconciliation (no silent overwrite) | **PASS** |
@@ -41,7 +42,7 @@ Acceptance criteria require **zero** unresolved P0 and **zero** known unsafe mon
 | # | Scenario | Result | Notes |
 |---|---|---|---|
 | 3–4 | Exact money roundtrip (forms/ledger) | PASS | bigint string path |
-| 3 | Document mock extract money | FAIL | `Number * 100` float |
+| 3 | Document mock extract money | PASS (R2) | `kronorStringToMinor` |
 | 5 | Internal transfer | PASS | A2 persisted |
 | 6 | Credit card purchase+payment | PASS | spending once |
 | 7 | Mortgage split | PASS | interest expense / principal debtReduction |
@@ -58,7 +59,7 @@ Acceptance criteria require **zero** unresolved P0 and **zero** known unsafe mon
 | 18 | Cross-household writes | PASS | requireCanWrite + household account filter |
 | 19 | Validation adversarial | PASS | S1 suite |
 | 20–24 | Metric registry depth | FAIL | see METRIC_REGISTRY_VERIFICATION.md |
-| 25–26 | Cache / snapshot invalidation | PARTIAL | live metrics OK; NW history stale risk |
+| 25–26 | Cache / snapshot invalidation | PASS (R2) | NW history invalidate + upsert |
 | 27 | Demo seed reconcile | PASS | 0 mismatches |
 | 28 | Hardcoded analytics | PASS | no 9800 tip |
 | 29 | AI tool consistency | PASS | uses snapshot |
@@ -73,9 +74,9 @@ See `P0_REMAINING_FIXES.md`:
 
 - **P0-A1** — ~~Multi-write ledger persist lacks DB transactions~~ **FIXED (R1)**  
 - **P0-A2** — ~~Depreciation not idempotent (double write-down)~~ **FIXED (R1)**  
-- **P0-A3** — Document mock-extract float kronor→öre  
+- **P0-A3** — ~~Document mock-extract float kronor→öre~~ **FIXED (R2)**  
 - **P0-A4** — P0-7 product gaps (refund HTTP, general splits API/UI)  
-- **P0-A5** — P0-1 residuals (accounts list / debt detail / NW history stale)  
+- **P0-A5** — ~~P0-1 residuals (accounts list / debt detail / NW history stale)~~ **FIXED (R2)**  
 - **P0-A6** — Metric registry integrity (weak inputHash, asOf hardcoding, no historical serve)  
 - **P0-A7** — Vehicle purchase / financed purchase runtime paths missing  
 - **P0-A8** — Reversal/correction statuses non-operational  

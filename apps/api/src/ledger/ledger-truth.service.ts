@@ -168,6 +168,16 @@ export class LedgerTruthService {
       if (row.reconcile.status === "MISMATCH") mismatches += 1;
     }
 
+    // Invalidate reconstructed NW history so the next history read rebuilds from ledger.
+    await db
+      .delete(accountBalanceSnapshots)
+      .where(
+        and(
+          eq(accountBalanceSnapshots.householdId, householdId),
+          eq(accountBalanceSnapshots.source, "nw_history_reconstruct"),
+        ),
+      );
+
     logger.info("ledger_cache_refreshed", {
       householdId,
       asOf,

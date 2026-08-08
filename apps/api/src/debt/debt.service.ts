@@ -236,9 +236,18 @@ export class DebtService {
       })),
     );
 
+    const aligned = await this.metrics.getLedgerAlignedAccountRows(householdId);
+    const ledgerBal =
+      aligned.find((a) => a.id === accountId)?.currentBalanceMinor ??
+      row.currentBalanceMinor;
+
     return {
       asOf,
-      item: this.mapItem(row, currency, trailing),
+      item: this.mapItem(
+        { ...row, currentBalanceMinor: ledgerBal },
+        currency,
+        trailing,
+      ),
       payments: payments.slice(0, 24).map((p) => ({
         id: p.eventId,
         occurredOn: p.occurredOn,
@@ -259,8 +268,12 @@ export class DebtService {
       (r) => r.accountType === "MORTGAGE" && r.interestRateBps != null,
     );
     if (!mortgage || mortgage.interestRateBps == null) return null;
+    const aligned = await this.metrics.getLedgerAlignedAccountRows(householdId);
+    const ledgerBal =
+      aligned.find((a) => a.id === mortgage.id)?.currentBalanceMinor ??
+      mortgage.currentBalanceMinor;
     return {
-      principalMinor: outstandingLiabilityMinor(mortgage.currentBalanceMinor),
+      principalMinor: outstandingLiabilityMinor(ledgerBal),
       currentAnnualRateBps: mortgage.interestRateBps,
     };
   }
