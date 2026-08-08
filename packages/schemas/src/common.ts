@@ -87,6 +87,8 @@ export const fundIdParamSchema = z.object({ fundId: uuidSchema });
 export const lineIdParamSchema = z.object({ lineId: uuidSchema });
 export const scenarioIdParamSchema = z.object({ scenarioId: uuidSchema });
 export const accountIdParamSchema = z.object({ accountId: uuidSchema });
+export const anomalyIdParamSchema = z.object({ anomalyId: uuidSchema });
+export const recurringIdParamSchema = z.object({ recurringId: uuidSchema });
 
 export const searchQuerySchema = z.object({
   householdId: uuidSchema,

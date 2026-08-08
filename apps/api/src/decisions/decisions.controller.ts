@@ -10,7 +10,9 @@ import {
 } from "@nestjs/common";
 import { ApiBearerAuth, ApiTags } from "@nestjs/swagger";
 import {
+  anomalyIdParamSchema,
   createScenarioSchema,
+  dismissAnomalySchema,
   householdIdQuerySchema,
   scenarioIdParamSchema,
   simulateScenarioSchema,
@@ -19,6 +21,8 @@ import { AuthGuard } from "../auth/auth.guard";
 import { CurrentUser } from "../auth/current-user.decorator";
 import type { AuthenticatedUser } from "../auth/auth.types";
 import { ZodValidationPipe } from "../common/zod-validation.pipe";
+import { AnalysisRunsService } from "./analysis-runs.service";
+import { AnomalyService } from "./anomaly.service";
 import { DecisionsService } from "./decisions.service";
 
 @ApiTags("decisions")
@@ -26,7 +30,11 @@ import { DecisionsService } from "./decisions.service";
 @UseGuards(AuthGuard)
 @Controller("api/v1")
 export class DecisionsController {
-  constructor(@Inject(DecisionsService) private readonly decisions: DecisionsService) {}
+  constructor(
+    @Inject(DecisionsService) private readonly decisions: DecisionsService,
+    @Inject(AnomalyService) private readonly anomalies: AnomalyService,
+    @Inject(AnalysisRunsService) private readonly analysisRuns: AnalysisRunsService,
+  ) {}
 
   @Get("forecast")
   forecast(
@@ -105,5 +113,34 @@ export class DecisionsController {
     query: { householdId: string },
   ) {
     return this.decisions.insights(user.userId, query.householdId);
+  }
+
+  @Get("anomalies")
+  listAnomalies(
+    @CurrentUser() user: AuthenticatedUser,
+    @Query(new ZodValidationPipe(householdIdQuerySchema))
+    query: { householdId: string },
+  ) {
+    return this.anomalies.listForUser(user.userId, query.householdId);
+  }
+
+  @Post("anomalies/:anomalyId/dismiss")
+  dismissAnomaly(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param(new ZodValidationPipe(anomalyIdParamSchema))
+    params: { anomalyId: string },
+    @Body(new ZodValidationPipe(dismissAnomalySchema)) body: unknown,
+  ) {
+    const input = dismissAnomalySchema.parse(body);
+    return this.anomalies.dismiss(user.userId, input.householdId, params.anomalyId);
+  }
+
+  @Get("analysis-runs")
+  listAnalysisRuns(
+    @CurrentUser() user: AuthenticatedUser,
+    @Query(new ZodValidationPipe(householdIdQuerySchema))
+    query: { householdId: string },
+  ) {
+    return this.analysisRuns.listForUser(user.userId, query.householdId);
   }
 }

@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import type { CategoriesResponse, ReviewResponse } from "@ffos/schemas";
+import type { AnomaliesResponse, CategoriesResponse, ReviewResponse } from "@ffos/schemas";
 import { api } from "@/lib/api";
 import { ensureHouseholdSession } from "@/lib/session";
 import { MoneyValue } from "../financial/money-value";
@@ -13,6 +13,7 @@ import { LoadingState } from "../feedback/loading-state";
 export function ReviewPage() {
   const [householdId, setHouseholdId] = useState<string | null>(null);
   const [data, setData] = useState<ReviewResponse | null>(null);
+  const [anomalies, setAnomalies] = useState<AnomaliesResponse | null>(null);
   const [categories, setCategories] = useState<CategoriesResponse["items"]>([]);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -22,12 +23,14 @@ export function ReviewPage() {
   const load = useCallback(async () => {
     const id = await ensureHouseholdSession();
     setHouseholdId(id);
-    const [review, cats] = await Promise.all([
+    const [review, cats, anomalyList] = await Promise.all([
       api.getReview(id),
       api.listCategories(id),
+      api.getAnomalies(id),
     ]);
     setData(review);
     setCategories(cats.items);
+    setAnomalies(anomalyList);
   }, []);
 
   useEffect(() => {
@@ -77,7 +80,9 @@ export function ReviewPage() {
   }
   if (!data) return null;
 
-  if (data.total === 0) {
+  const anomalyCount = anomalies?.items.length ?? 0;
+
+  if (data.total === 0 && anomalyCount === 0) {
     return (
       <EmptyState
         title="Inget att granska"
@@ -94,6 +99,7 @@ export function ReviewPage() {
         </h1>
         <p className="mt-2 text-sm text-text-secondary">
           {data.total} poster behöver uppmärksamhet
+          {anomalyCount > 0 ? ` · ${anomalyCount} avvikelser` : ""}
         </p>
       </div>
 
@@ -101,6 +107,34 @@ export function ReviewPage() {
         <p className="text-sm text-warning" role="alert">
           {error}
         </p>
+      ) : null}
+
+      {anomalyCount > 0 ? (
+        <section className="rounded-[16px] bg-surface-elevated p-5">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <h2 className="font-medium">Avvikelser</h2>
+              <p className="mt-1 text-sm text-text-secondary">
+                {anomalyCount} aktiva signaler från regelmotorn.
+              </p>
+            </div>
+            <Link
+              href="/insights"
+              className="inline-flex min-h-11 items-center rounded-[12px] border border-border-strong px-4 text-sm"
+            >
+              Hantera i Insights
+            </Link>
+          </div>
+          <ul className="mt-4 space-y-2">
+            {anomalies!.items.slice(0, 3).map((item) => (
+              <li key={item.id} className="text-sm">
+                <span className="text-text-muted">{item.severity}</span>
+                {" · "}
+                {item.title}
+              </li>
+            ))}
+          </ul>
+        </section>
       ) : null}
 
       <div className="grid grid-cols-2 gap-3 md:grid-cols-4">

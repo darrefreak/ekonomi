@@ -238,3 +238,57 @@ export const insightsResponseSchema = z.object({
   ),
 });
 export type InsightsResponse = z.infer<typeof insightsResponseSchema>;
+
+export const anomalyFactSchema = z.object({
+  key: z.string(),
+  label: z.string(),
+  value: z.string(),
+});
+
+export const anomalyItemSchema = z.object({
+  id: z.string().uuid(),
+  ruleKey: z.string(),
+  title: z.string(),
+  detail: z.string(),
+  severity: z.string(),
+  entityId: z.string().uuid().nullable(),
+  entityKind: z.string().nullable(),
+  amountMinor: minorString.nullable(),
+  asOf: z.string(),
+  facts: z.array(anomalyFactSchema).default([]),
+  identityKey: z.string(),
+  href: z.string().nullable(),
+  createdAt: z.string(),
+});
+
+export const anomaliesResponseSchema = z.object({
+  asOf: z.string(),
+  items: z.array(anomalyItemSchema),
+});
+export type AnomaliesResponse = z.infer<typeof anomaliesResponseSchema>;
+
+export const dismissAnomalySchema = z
+  .object({
+    householdId: z.string().uuid(),
+  })
+  .strict();
+export type DismissAnomalyInput = z.infer<typeof dismissAnomalySchema>;
+
+export const analysisRunItemSchema = z.object({
+  id: z.string().uuid(),
+  kind: z.string(),
+  status: z.string(),
+  asOf: z.string(),
+  calculationVersion: z.string().nullable(),
+  jobId: z.string().nullable(),
+  errorCode: z.string().nullable(),
+  summary: z.record(z.unknown()),
+  startedAt: z.string(),
+  finishedAt: z.string().nullable(),
+  createdAt: z.string(),
+});
+
+export const analysisRunsResponseSchema = z.object({
+  items: z.array(analysisRunItemSchema),
+});
+export type AnalysisRunsResponse = z.infer<typeof analysisRunsResponseSchema>;

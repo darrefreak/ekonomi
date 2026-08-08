@@ -34,7 +34,7 @@ test("AnomalyService detects deterministically and upserts by identity key", asy
 
   await anomaly.run(household.id, asOf);
   const persisted = await anomaly.list(household.id);
-  const persistedKeys = new Set(persisted.map((r) => r.identityKey));
+  const persistedKeys = new Set(persisted.items.map((r) => r.identityKey));
   for (const f of detected) {
     assert.ok(persistedKeys.has(f.id));
   }

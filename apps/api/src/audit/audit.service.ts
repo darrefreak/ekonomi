@@ -1,4 +1,5 @@
 import { Injectable } from "@nestjs/common";
+import { and, desc, eq, isNotNull } from "drizzle-orm";
 import { getDb } from "../db/client";
 import { auditLogs } from "../db/schema";
 
@@ -33,5 +34,39 @@ export class AuditService {
       })
       .returning();
     return row;
+  }
+
+  async list(householdId: string, limit = 50) {
+    const db = getDb();
+    const rows = await db
+      .select({
+        id: auditLogs.id,
+        action: auditLogs.action,
+        entity: auditLogs.entity,
+        entityId: auditLogs.entityId,
+        actorUserId: auditLogs.actorUserId,
+        requestId: auditLogs.requestId,
+        source: auditLogs.source,
+        createdAt: auditLogs.createdAt,
+      })
+      .from(auditLogs)
+      .where(
+        and(eq(auditLogs.householdId, householdId), isNotNull(auditLogs.householdId)),
+      )
+      .orderBy(desc(auditLogs.createdAt))
+      .limit(limit);
+
+    return {
+      items: rows.map((r) => ({
+        id: r.id,
+        action: r.action,
+        entity: r.entity,
+        entityId: r.entityId,
+        actorUserId: r.actorUserId,
+        requestId: r.requestId,
+        source: r.source,
+        createdAt: r.createdAt.toISOString(),
+      })),
+    };
   }
 }

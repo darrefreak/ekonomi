@@ -1,5 +1,5 @@
-import { Injectable } from "@nestjs/common";
-import { and, desc, eq, ne } from "drizzle-orm";
+import { Inject, Injectable, NotFoundException, Optional } from "@nestjs/common";
+import { and, desc, eq, isNull, ne } from "drizzle-orm";
 import {
   ANOMALY_CALCULATION_VERSION,
   detectDuplicateCandidate,
@@ -11,11 +11,30 @@ import { getDb } from "../db/client";
 import { anomalyFindings } from "../db/schema-decisions";
 import { financialEvents } from "../db/schema-economic";
 import { recurringItems } from "../db/schema-planning";
+import { HouseholdAccessService } from "../households/household-access.service";
 
 function addDaysIso(dateStr: string, days: number): string {
   const d = new Date(`${dateStr.slice(0, 10)}T00:00:00.000Z`);
   d.setUTCDate(d.getUTCDate() + days);
   return d.toISOString().slice(0, 10);
+}
+
+function anomalyHref(
+  entityKind: string | null,
+  entityId: string | null,
+): string | null {
+  if (!entityId || !entityKind) return null;
+  if (entityKind === "transaction" || entityKind === "financial_event") {
+    return `/transactions/${entityId}`;
+  }
+  if (
+    entityKind === "recurring" ||
+    entityKind === "recurring_item" ||
+    entityKind === "income"
+  ) {
+    return "/subscriptions";
+  }
+  return null;
 }
 
 /**
@@ -24,6 +43,12 @@ function addDaysIso(dateStr: string, days: number): string {
  */
 @Injectable()
 export class AnomalyService {
+  constructor(
+    @Optional()
+    @Inject(HouseholdAccessService)
+    private readonly access?: HouseholdAccessService,
+  ) {}
+
   async run(householdId: string, asOf: string): Promise<AnomalyFinding[]> {
     const detected = await this.detectAll(householdId, asOf);
     await this.persist(householdId, asOf, detected);
@@ -166,8 +191,8 @@ export class AnomalyService {
       }
     }
 
-    // Findings are transient signals (not user-owned lifecycle records like
-    // opportunities) — anything no longer detected is simply removed.
+    // Drop findings that are no longer detected (including dismissed ones so
+    // the same signal can resurface later if it reappears).
     for (const row of existingRows) {
       if (!detectedKeys.has(row.identityKey)) {
         await db.delete(anomalyFindings).where(eq(anomalyFindings.id, row.id));
@@ -177,12 +202,69 @@ export class AnomalyService {
     return { calculationVersion: ANOMALY_CALCULATION_VERSION, count: detected.length, at: now };
   }
 
+  async listForUser(userId: string, householdId: string) {
+    if (this.access) {
+      await this.access.requireMembership(userId, householdId);
+    }
+    return this.list(householdId);
+  }
+
   async list(householdId: string) {
     const db = getDb();
-    return db
+    const asOf = process.env.DEMO_AS_OF_DATE ?? "2026-08-01";
+    const rows = await db
       .select()
       .from(anomalyFindings)
-      .where(eq(anomalyFindings.householdId, householdId))
+      .where(
+        and(
+          eq(anomalyFindings.householdId, householdId),
+          isNull(anomalyFindings.dismissedAt),
+        ),
+      )
       .orderBy(desc(anomalyFindings.createdAt));
+
+    return {
+      asOf,
+      items: rows.map((r) => ({
+        id: r.id,
+        ruleKey: r.ruleKey,
+        title: r.title,
+        detail: r.detail,
+        severity: r.severity,
+        entityId: r.entityId,
+        entityKind: r.entityKind,
+        amountMinor: r.amountMinor != null ? r.amountMinor.toString() : null,
+        asOf: r.asOf,
+        facts: r.facts ?? [],
+        identityKey: r.identityKey,
+        href: anomalyHref(r.entityKind, r.entityId),
+        createdAt: r.createdAt.toISOString(),
+      })),
+    };
+  }
+
+  async dismiss(userId: string, householdId: string, anomalyId: string) {
+    if (this.access) {
+      await this.access.requireCanWrite(userId, householdId);
+    }
+    const db = getDb();
+    const [row] = await db
+      .select()
+      .from(anomalyFindings)
+      .where(
+        and(
+          eq(anomalyFindings.id, anomalyId),
+          eq(anomalyFindings.householdId, householdId),
+        ),
+      )
+      .limit(1);
+    if (!row) throw new NotFoundException("Anomaly not found");
+
+    await db
+      .update(anomalyFindings)
+      .set({ dismissedAt: new Date() })
+      .where(eq(anomalyFindings.id, anomalyId));
+
+    return this.list(householdId);
   }
 }

@@ -47,6 +47,15 @@ export const queryKeys = {
   },
   settings: {
     all: (householdId: string) => ["settings", householdId] as const,
+    auditLogs: (householdId: string) => ["settings", householdId, "audit"] as const,
+    analysisRuns: (householdId: string) =>
+      ["settings", householdId, "analysis-runs"] as const,
+  },
+  anomalies: {
+    all: (householdId: string) => ["anomalies", householdId] as const,
+  },
+  subscriptions: {
+    all: (householdId: string) => ["subscriptions", householdId] as const,
   },
   categories: {
     all: (householdId: string, includeArchived?: boolean) =>

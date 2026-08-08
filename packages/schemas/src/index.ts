@@ -30,5 +30,5 @@ export * from "./metrics";
 export * from "./categories";
 export * from "./members";
 export * from "./merchants";
-export * from "./merchants";
+export * from "./audit";
 
