@@ -90,10 +90,10 @@ Do **not** expand into full recon UX beyond making mismatch already shown remain
 
 ## Suggested fix order
 
-1. **P0-A1** atomicity (prevents corruption class)  
-2. **P0-A2** depreciation idempotency  
-3. **P0-A3** float extract  
-4. **P0-A5** ledger-aligned reads / history invalidation  
+1. ~~**P0-A1** atomicity~~ **FIXED (R1)**  
+2. ~~**P0-A2** depreciation idempotency~~ **FIXED (R1)**  
+3. ~~**P0-A3** float extract~~ **FIXED (R2)**  
+4. ~~**P0-A5** ledger-aligned reads / history invalidation~~ **FIXED (R2)**  
 5. **P0-A4** refund HTTP + split persist  
 6. **P0-A6** metric hash/asOf  
 7. **P0-A7** vehicle purchase paths  
