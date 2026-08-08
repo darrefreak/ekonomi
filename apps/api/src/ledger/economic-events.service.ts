@@ -41,6 +41,8 @@ import {
 } from "../db/seed/persist-event";
 import { LedgerTruthService } from "./ledger-truth.service";
 import { AuditService } from "../audit/audit.service";
+import { invalidateAfterEconomicMutation } from "../jobs/invalidation";
+import { logger } from "../common/logger";
 
 async function requireAccount(
   householdId: string,
@@ -92,6 +94,15 @@ export class EconomicEventsService {
   /** Post-commit derived cache only — never inside the financial txn. */
   private async afterCommit(householdId: string, asOf: string) {
     await this.ledger.refreshDerivedCaches(householdId, asOf);
+    // Fire-and-forget: never let job enqueue failures affect a completed
+    // financial write. Each job is individually caught inside the helper.
+    void invalidateAfterEconomicMutation(householdId, asOf).catch((err) => {
+      logger.warn("invalidate_after_commit_failed", {
+        householdId,
+        asOf,
+        error: err instanceof Error ? err.message : String(err),
+      });
+    });
   }
 
   async persistDraft(input: {
