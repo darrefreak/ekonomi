@@ -210,28 +210,57 @@ record(
 )
 
 # The same defect on the shipped demo seed, computed independently from positions.
-rows = sql(
-    "select a.account_type, a.current_balance_minor from accounts a "
-    f"join households h on h.id = a.household_id where a.household_id = '{DEMO_HH}' "
-    "and a.is_system is not true and a.account_type not in ('EXPENSE','INCOME')"
-)
-assets = 0
-liabilities = 0
-for line in rows.splitlines():
+#
+# The position is rebuilt here from opening balances plus the postings booked on
+# or before the date the surface reports. Reading accounts.current_balance_minor
+# instead would be a different question: that column is the position *now*, so
+# once anything is booked after the demo freeze (an end-to-end run does exactly
+# that) it legitimately disagrees with a frozen asOf, and the oracle would
+# accuse the product of a sign bug it does not have.
+demo_nw, demo_nw_body = net_worth_minor(DEMO_TOKEN, DEMO_HH)
+demo_as_of = demo_nw_body["asOf"]
+
+positions = {}
+kinds = {}
+for line in sql(
+    "select id, account_type, coalesce(opening_balance_minor, 0) from accounts "
+    f"where household_id = '{DEMO_HH}' and is_system is not true "
+    "and account_type not in ('EXPENSE','INCOME')"
+).splitlines():
     if not line.strip():
         continue
-    account_type, balance = line.split("|")
-    if account_type in ("MORTGAGE", "LOAN", "CREDIT_CARD"):
-        liabilities += int(balance)
-    else:
-        assets += int(balance)
+    account_id, account_type, opening = line.split("|")
+    positions[account_id] = int(opening)
+    kinds[account_id] = account_type
+
+for line in sql(
+    "select p.account_id, p.side, p.amount_minor from ledger_postings p "
+    "join ledger_entries e on e.id = p.ledger_entry_id "
+    "join financial_events f on f.id = e.financial_event_id "
+    f"where p.household_id = '{DEMO_HH}' and f.status = 'ACTIVE' "
+    f"and e.booked_on <= '{demo_as_of}'"
+).splitlines():
+    if not line.strip():
+        continue
+    account_id, side, amount = line.split("|")
+    if account_id not in positions:
+        continue  # system or nominal account, outside the balance sheet
+    signed = int(amount) if side == "debit" else -int(amount)
+    if kinds[account_id] in ("MORTGAGE", "LOAN", "CREDIT_CARD"):
+        # A credit raises what is owed; the result stays signed, which is the
+        # whole point of RT2-001.
+        signed = -signed
+    positions[account_id] += signed
+
+assets = sum(b for a, b in positions.items() if kinds[a] not in ("MORTGAGE", "LOAN", "CREDIT_CARD"))
+liabilities = sum(b for a, b in positions.items() if kinds[a] in ("MORTGAGE", "LOAN", "CREDIT_CARD"))
 expected_demo_nw = assets - liabilities
-demo_nw, _ = net_worth_minor(DEMO_TOKEN, DEMO_HH)
 record(
     "RT2-001e",
     "demo net worth equals independently computed positions",
     demo_nw == expected_demo_nw,
-    f"product {demo_nw} independent {expected_demo_nw} delta {demo_nw - expected_demo_nw}",
+    f"asOf {demo_as_of} product {demo_nw} independent {expected_demo_nw} "
+    f"delta {demo_nw - expected_demo_nw}",
 )
 
 

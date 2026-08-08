@@ -119,11 +119,11 @@ Current run:
 ▶ @ffos/utils              1 test
 ▶ @ffos/schemas           16 tests
 ▶ @ffos/financial-engine 101 tests
-▶ @ffos/api              150 tests
-▶ Database-backed tests executed: 101
+▶ @ffos/api              155 tests
+▶ Database-backed tests executed: 106
 ✔ All required suites ran and passed.
 
-272 tests, 0 failed, 0 skipped
+277 tests, 0 failed, 0 skipped
 Playwright: 63 tests, 53 executed per run, 10 skipped by viewport
 ```
 

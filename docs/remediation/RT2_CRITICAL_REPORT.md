@@ -35,7 +35,7 @@ Independent verification, all against the running stack and direct SQL:
 python3 scripts/rt-repro.py           TOTAL 13  PASS 13  FAIL 0   (original findings)
 python3 scripts/rt2-repro.py          TOTAL 21  PASS 21  FAIL 0   (RT2 findings)
 python3 scripts/financial-oracle.py   TOTAL 15  PASS 15  FAIL 0   (independent oracle)
-pnpm test                             272 tests, 0 failed, 0 skipped, 101 DB-backed executed
+pnpm test                             277 tests, 0 failed, 0 skipped, 106 DB-backed executed
 pnpm test:e2e:docker                  53 passed, 10 skipped by viewport, 0 failed
 ```
 
@@ -112,8 +112,9 @@ household two million.
 - Independent oracle, three levels: arithmetic, ledger, and the running stack. See
   [`docs/testing/FINANCIAL_ORACLE.md`](../testing/FINANCIAL_ORACLE.md).
 - **Five surfaces plus the oracle** — dashboard, `/net-worth`, the history series' final
-  point, the metric registry, and the AI `get_net_worth` tool — all equal `549 791 368` öre,
-  independently recomputed from positions in SQL (`ORACLE-001…005`).
+  point, the metric registry, and the AI `get_net_worth` tool — all equal the value
+  independently recomputed from positions in SQL (`ORACLE-001…005`): `549 791 368` öre on the
+  freshly seeded demo, and still exactly equal after end-to-end runs move the number.
 - Liability matrix over the real ledger: mortgage, vehicle loan and credit card; opening,
   purchase, repayment, overpayment, payoff, principal and interest. Principal neutrality is
   proven by holding interest constant and varying the principal ninefold: both payments cost
@@ -340,10 +341,10 @@ Full topology in [`docs/testing/TEST_TOPOLOGY.md`](../testing/TEST_TOPOLOGY.md).
 ### Execution counts
 
 ```
-▶ @ffos/domain             4 tests    ▶ @ffos/api   150 tests
-▶ @ffos/utils              1 test     ▶ Database-backed tests executed: 101
+▶ @ffos/domain             4 tests    ▶ @ffos/api   155 tests
+▶ @ffos/utils              1 test     ▶ Database-backed tests executed: 106
 ▶ @ffos/schemas           16 tests
-▶ @ffos/financial-engine 101 tests    272 tests, 0 failed, 0 skipped
+▶ @ffos/financial-engine 101 tests    277 tests, 0 failed, 0 skipped
 ```
 
 Playwright: 63 tests, 53 executed per run; the 10 skips are mobile-only specs in the desktop
@@ -455,7 +456,34 @@ correct.
 Fixed by bounding the reconstruction with `booked_on <= asOf` and threading `asOf` through
 the debt, wealth, decisions and opportunity callers. A position is now a position **at a
 date** everywhere. `RT-004` and `RT-004b` pass, with the final history point, current net
-worth and the registry all at `549 791 368`.
+worth and the registry all at `549 791 368` on the freshly seeded demo.
+
+---
+
+## Two harness defects found by the final regression
+
+Both reproduction scripts passed on a freshly seeded database and then failed when re-run
+against one that end-to-end tests and the scripts themselves had written to. In both cases
+the product was right and the script's expectation was wrong, which is worth recording:
+an oracle is only independent if it asks the same question as the surface it audits.
+
+**`RT-001` compared against the machine's date.** `datetime.date.today()` is the host's
+calendar date, but a household's "today" is resolved in `APP_TIME_ZONE`
+(`apps/api/src/common/as-of.ts`). On a UTC host between 22:00 and midnight the two differ,
+so the API's correct `2026-08-09` was checked against `2026-08-08`. The script now computes
+the expected date in the application timezone.
+
+**`RT2-001e` compared an `asOf` answer against a "now" column.** The check summed
+`accounts.current_balance_minor`, which is the position *now*, while `/net-worth` reported
+the demo household's frozen `2026-08-01`. One posting booked after the freeze — an
+end-to-end run books several — made them differ by 4 000 kr and the script reported a sign
+bug that did not exist. The check now rebuilds the position the way the oracle in
+`scripts/financial-oracle.py` always did: opening balance plus the postings booked on or
+before the date the surface itself reports. That is also why the oracle stayed green
+throughout while this check went red.
+
+After both corrections all three scripts pass against a database carrying end-to-end and
+reproduction residue, which is a stronger result than a pass on a clean seed.
 
 ---
 
@@ -471,7 +499,7 @@ worth and the registry all at `549 791 368`.
 | Two legitimate same-shape actions | PASS |
 | RT2-004 mobile 404 guard | PASS |
 | 404 mutation test | PASS (both mutations fail as required) |
-| RT2-005 `pnpm test` executes the DB suite | PASS (101 DB-backed tests, counted) |
+| RT2-005 `pnpm test` executes the DB suite | PASS (106 DB-backed tests, counted) |
 | Dedicated test database | PASS (`ffos_test`) |
 | Test/dev isolation | PASS (0 contention failures in 4 concurrent runs) |
 | RT2-006 `db:reset` guard | PASS |

@@ -22,11 +22,17 @@ import urllib.error
 import urllib.parse
 import urllib.request
 import uuid
+import zoneinfo
 
 API = os.environ.get("RT_API_URL", "http://localhost:3001/api/v1")
 DEMO_EMAIL = os.environ.get("RT_DEMO_EMAIL", "demo@ffos.local")
 DEMO_PASSWORD = os.environ.get("RT_DEMO_PASSWORD", "demo-password-123")
 DEMO_AS_OF = os.environ.get("RT_DEMO_AS_OF", "2026-08-01")
+# A household's "today" is its own calendar date, not the machine's: the product
+# resolves it in APP_TIME_ZONE (apps/api/src/common/as-of.ts). Between midnight
+# CEST and midnight UTC those differ, and comparing against the host date turned
+# a correct answer into a red RT-001.
+APP_TIME_ZONE = os.environ.get("APP_TIME_ZONE", "Europe/Stockholm")
 
 results = []
 
@@ -130,7 +136,7 @@ NEW_TOKEN = (registered.get("tokens") or {}).get("accessToken")
 _, new_household = call("POST", "/households", NEW_TOKEN, {"name": "RT Repro HH"})
 NEW_HH = new_household["id"]
 
-today = datetime.date.today().isoformat()
+today = datetime.datetime.now(zoneinfo.ZoneInfo(APP_TIME_ZONE)).date().isoformat()
 _, new_dash = call("GET", "/dashboard", NEW_TOKEN, query={"householdId": NEW_HH})
 record(
     "RT-001",
