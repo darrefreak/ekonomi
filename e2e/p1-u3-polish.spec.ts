@@ -48,21 +48,19 @@ test.describe("P1-U3 product polish", () => {
       return;
     }
 
-    const dismiss = page.getByRole("button", { name: /avfärda/i }).first();
-    await expect(dismiss).toBeVisible();
-    const beforeCount = await page
+    const firstItem = page
       .locator("ul li")
       .filter({ has: page.getByRole("button", { name: /avfärda/i }) })
-      .count();
-    await dismiss.click();
-    await expect
-      .poll(async () => {
-        return page
-          .locator("ul li")
-          .filter({ has: page.getByRole("button", { name: /avfärda/i }) })
-          .count();
-      }, { timeout: 15_000 })
-      .toBeLessThan(beforeCount);
+      .first();
+    await expect(firstItem).toBeVisible();
+    // Title is the second paragraph in the item body (kind label is first).
+    const title = (
+      await firstItem.locator("p.font-medium, p.mt-1.font-medium").first().textContent()
+    )?.trim();
+    expect(title && title.length > 0).toBeTruthy();
+    await firstItem.getByRole("button", { name: /avfärda/i }).click();
+    // Queue is capped; total count may stay stable while this entity leaves.
+    await expect(firstItem).not.toContainText(title!, { timeout: 15_000 });
   });
 
   test("vehicles — list to detail with purchase form", async ({ page }) => {

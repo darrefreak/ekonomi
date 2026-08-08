@@ -41,6 +41,7 @@ export class ReviewService {
           eq(sourceTransactions.householdId, householdId),
           isNull(sourceTransactions.merchantId),
           eq(sourceTransactions.isInternalTransfer, false),
+          eq(sourceTransactions.isExcluded, false),
           sql`${sourceTransactions.amountMinor} < 0`,
         ),
       )
@@ -62,6 +63,7 @@ export class ReviewService {
         and(
           eq(sourceTransactions.householdId, householdId),
           eq(sourceTransactions.isInternalTransfer, false),
+          eq(sourceTransactions.isExcluded, false),
           or(
             sql`${sourceTransactions.description} ilike '%överföring%'`,
             sql`${sourceTransactions.description} ilike '%transfer%'`,
@@ -86,6 +88,7 @@ export class ReviewService {
           eq(sourceTransactions.householdId, householdId),
           isNull(sourceTransactions.categoryId),
           eq(sourceTransactions.isInternalTransfer, false),
+          eq(sourceTransactions.isExcluded, false),
         ),
       )
       .orderBy(desc(sourceTransactions.bookingDate))
