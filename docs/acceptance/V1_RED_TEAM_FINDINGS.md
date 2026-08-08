@@ -5,6 +5,29 @@
 **Mode:** Adversarial runtime/product audit — **no product fixes applied**  
 **API base:** `http://localhost:3001/api/v1` (householdId required on scoped routes)
 
+> **Remediation note (2026-08-08).** The original findings below are preserved
+> verbatim as the historical audit record. A **Status** row has been appended to
+> each finding addressed by the BLOCKER/HIGH remediation batch
+> (`cursor/v1-rt-blocker-high-remediation-9c58`). `VERIFIED_FIXED` is claimed
+> only where the finding's own reproduction above no longer reproduces on a
+> clean-room database — replay them with `pnpm db:reset && python3 scripts/rt-repro.py`.
+> See [`../remediation/V1_RT_BLOCKER_HIGH_REPORT.md`](../remediation/V1_RT_BLOCKER_HIGH_REPORT.md).
+> Untouched findings carry no Status row and remain **OPEN**.
+
+### Remediation status index
+
+| ID | Severity | Status |
+|---|---|---|
+| RT-002 | BLOCKER | VERIFIED_FIXED |
+| RT-001 | HIGH | VERIFIED_FIXED |
+| RT-004 | HIGH | VERIFIED_FIXED |
+| RT-012 | HIGH | VERIFIED_FIXED |
+| RT-003 | MEDIUM | VERIFIED_FIXED (incidental — same boundary as RT-002) |
+| Skipped mobile E2E (§1) | process | VERIFIED_FIXED — runs and passes in the `mobile` project |
+| RT-005, RT-006, RT-007, RT-008, RT-011, RT-013 | MEDIUM | OPEN (deferred by instruction) |
+| RT-009, RT-010, RT-015 | LOW | OPEN (deferred by instruction) |
+| RT-014 | COSMETIC | OPEN (deferred by instruction) |
+
 ---
 
 ## Skipped E2E (§1)
@@ -21,6 +44,7 @@
 | Re-run this audit | Blocked by environment: Playwright Chromium missing `libatk-1.0.so.0`; root-owned `test-results/` |
 | Classification | **INTENTIONALLY_OUT_OF_SCOPE** for chromium-only CI/default script; covered by `pnpm test:e2e:mobile` |
 | Hides V1-critical failure? | **No** — not a product gap; run mobile project to execute |
+| **Status (2026-08-08)** | **VERIFIED_FIXED** — `pnpm test:e2e` now runs `--project=chromium --project=mobile` and the test **passes** in the mobile project. Host browser deps resolved via `pnpm test:e2e:docker`. New `e2e/mobile-critical-paths.spec.ts` covers mobile critical paths at iPhone-12 width. A false pass was found and fixed in the process: the first mobile spec navigated to `/money`, which 404s (the Money tab is `/transactions`), and Next's not-found page still renders the app shell. |
 
 ---
 
@@ -38,6 +62,7 @@
 | **Surface** | `apps/api/src/common/as-of.ts` (`resolveAsOf`); also jobs, advisor, anomaly, subscriptions, vehicle-intel |
 | **Financial impact** | Period metrics, budget, forecast, decisions, advisor briefs anchored to demo freeze date — wrong “this month” for real pilot data |
 | **Suggested fix** | Default to today; restrict `DEMO_AS_OF_DATE` to demo seed/tests |
+| **Status (2026-08-08)** | **VERIFIED_FIXED** — original repro now returns today's date for a new household. Rule is `explicit asOf → household demo asOf → real clock`; demo households carry their own `households.demo_as_of` and `DEMO_AS_OF_DATE` is seed-only. Two further defects were found and fixed while verifying: six controllers pre-resolved `asOf` (defeating the household lookup), and the resolver swallowed its read error, silently moving a household's date. A controller-scanning test guards the first. |
 
 ### RT-002 — BLOCKER
 
@@ -51,6 +76,7 @@
 | **Surface** | Ledger expense create; web client generally does not send `externalId` on ordinary expenses (only some refunds) |
 | **Financial impact** | Double-tap / retry duplicates spending and cash — duplicate economic effect |
 | **Suggested fix** | Honor `Idempotency-Key` server-side (household+key store) and/or require client `externalId` on all money mutations |
+| **Status (2026-08-08)** | **VERIFIED_FIXED** — original repro now returns the same event id twice. `idempotencyKey` is a first-class command identity separate from source `externalId`, keyed `(household, command type, key source, key)` with a DB unique index so concurrent duplicates collapse to one effect. Same key + different payload → `409 IDEMPOTENCY_CONFLICT`. Covered by B1–B4b unit tests and B5/B5b E2E on desktop and mobile; B5b was mutation-tested by stripping the header, which makes it fail. |
 
 ### RT-003 — MEDIUM
 
@@ -64,6 +90,7 @@
 | **Surface** | API ledger controllers / middleware |
 | **Financial impact** | Clients following common idempotency patterns remain unprotected |
 | **Suggested fix** | Idempotency middleware; document contract if header unsupported |
+| **Status (2026-08-08)** | **VERIFIED_FIXED (incidental)** — same root cause and same fix as RT-002; not worked as a separate item. The header is now read by an `IdempotencyKey` param decorator and participates in dedupe on every money-mutating route. |
 
 ### RT-004 — HIGH
 
@@ -77,6 +104,7 @@
 | **Surface** | Net-worth history / `account_balance_snapshots` join for DEMO_AS_OF day |
 | **Financial impact** | Wealth chart / trend wrong; current headline NW remains correct |
 | **Suggested fix** | Stop double-counting opening+ledger (or demo snapshot) on asOf day |
+| **Status (2026-08-08)** | **VERIFIED_FIXED** — original repro now shows the final bucket equal to current net worth with no duplicate dates. Cause was multiple snapshot writers each producing a full per-account set on the `asOf` day; history now selects exactly one snapshot per `(account, calendar day)` and migration `0026` removes historical duplicates. Canonical rule: each bucket appears exactly once and no separate current value is appended. Covered by NW1–NW5; net worth agrees across `/net-worth`, history tail, Metric Registry, dashboard and AI `get_net_worth`. |
 
 ### RT-005 — MEDIUM
 
@@ -181,6 +209,7 @@
 | **Surface** | `vehicles.controller.ts`, `vehicles-page.tsx`, seed-only insert |
 | **Financial impact** | Vehicle intelligence / TCO / decisions unusable without demo seed |
 | **Suggested fix** | Add create (and minimal edit) vehicle API + UI form |
+| **Status (2026-08-08)** | **VERIFIED_FIXED** — `POST /api/v1/vehicles` returns `201` and `/vehicles` has an “Lägg till fordon” CTA with a mobile-first progressive-disclosure form; `PATCH /api/v1/vehicles/:id` covers name, odometer and valuation. Cash purchase moves cash into the asset (not consumption), financed purchase books debt (not income), and onboarding an already-owned vehicle uses opening positions so current-period spending and income stay `0`. Covered by `vehicles.create.test.ts` and `e2e/vehicle-create.spec.ts` on desktop and mobile. |
 
 ### RT-013 — MEDIUM
 
@@ -263,6 +292,8 @@ Limited by time/environment (not claimed PASS):
 
 ## Severity totals
 
+As found by the original audit (2026-08-08):
+
 | Severity | Count |
 |---|---|
 | BLOCKER | 1 |
@@ -270,3 +301,16 @@ Limited by time/environment (not claimed PASS):
 | MEDIUM | 7 |
 | LOW | 3 |
 | COSMETIC | 1 |
+
+After the BLOCKER/HIGH remediation batch:
+
+| Severity | Fixed | Remaining |
+|---|---|---|
+| BLOCKER | 1 | 0 |
+| HIGH | 3 | 0 |
+| MEDIUM | 1 (RT-003, incidental) | 6 |
+| LOW | 0 | 3 |
+| COSMETIC | 0 | 1 |
+
+Remaining counts are deferred by instruction, not re-assessed. The Red Team
+verdict is decided by re-running V1 Red Team Acceptance, not by this batch.

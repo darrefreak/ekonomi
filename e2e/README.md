@@ -12,19 +12,23 @@ Critical-path + axe checks for Workstream O.
 ## Commands
 
 ```bash
-pnpm test:e2e            # chromium project
-pnpm test:e2e:mobile     # mobile viewport project
+pnpm test:e2e             # chromium + mobile (acceptance default)
+pnpm test:e2e:desktop     # chromium only
+pnpm test:e2e:mobile      # mobile viewport only (iPhone 12)
 ```
 
-Docker fallback when host libs are missing:
+Mobile is part of the default run on purpose: mobile-only tests are gated with
+`test.skip(testInfo.project.name !== "mobile")`, so a chromium-only default
+reports them as skipped and silently drops mobile coverage.
+
+Docker fallback when host libs are missing (e.g. `libatk-1.0.so.0`):
 
 ```bash
-docker run --rm --network host \
-  -v "$PWD":/work -w /work \
-  -e PLAYWRIGHT_BASE_URL=http://localhost:3000 \
-  -e PLAYWRIGHT_API_URL=http://localhost:3001 \
-  mcr.microsoft.com/playwright:v1.62.1-jammy \
-  bash -lc 'npx --yes playwright@1.62.1 test --config=playwright.config.ts'
+pnpm test:e2e:docker         # both projects
+pnpm test:e2e:docker:mobile  # mobile only
 ```
+
+Note that a Next.js 404 still renders the app shell, so `main` / `#main-content`
+being visible does not prove a route exists. Assert page-specific content too.
 
 Auth uses API login once (`e2e/auth.setup.ts`) and stores `e2e/.auth/demo.json`.

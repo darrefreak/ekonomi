@@ -23,7 +23,7 @@ test.describe("mobile critical paths", () => {
     expect(overflow.scrollWidth).toBeLessThanOrEqual(overflow.clientWidth + 1);
   }
 
-  test("home, money, more and settings render without horizontal overflow", async ({
+  test("home, transactions, more, settings and review render without horizontal overflow", async ({
     page,
   }) => {
     for (const path of ["/", "/transactions", "/more", "/settings", "/review"]) {

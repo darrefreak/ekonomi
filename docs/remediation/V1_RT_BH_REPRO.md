@@ -104,6 +104,37 @@ export function resolveAsOf(asOf?: string | null): string {
 
 ---
 
+### RT-001b — second-order defect found by the clean-room test
+
+The first RT-001 fix moved clock resolution into services
+(`resolveHouseholdAsOf(householdId, asOfInput)`), but the clean-room re-run
+(`pnpm db:reset` → `python3 scripts/rt-repro.py`) showed the demo household
+reporting `asOf: 2026-08-08` instead of its own `2026-08-01`.
+
+**Root cause:** six controllers still resolved the clock *before* calling the
+service:
+
+```ts
+// apps/api/src/dashboard/dashboard.controller.ts (before)
+return this.dashboard.getDashboard(user.userId, query.householdId, resolveAsOf(query.asOf));
+```
+
+`resolveAsOf` has no household context, so a missing `asOf` became today's date
+and the service's household lookup could never run — the inverse of the original
+bug, and equally wrong. Affected: `dashboard`, `net-worth`, `wealth`, `debt`,
+`reports`, `metrics` controllers, plus `reports.service.ts` which used the
+context-free resolver directly.
+
+A second hazard was found in the same pass: `resolveHouseholdAsOf` wrapped its
+household read in `try { … } catch { demoAsOf = null }`, so any transient read
+failure silently moved a household's financial date to today.
+
+**Guard added:** `rt-blocker-high.test.ts` now walks every `*.controller.ts` and
+fails if any of them calls `resolveAsOf`, because a unit test of the resolver
+cannot see this class of defect.
+
+---
+
 ## RT-004 — HIGH — Net Worth history doubles on the `asOf` day
 
 **Severity:** HIGH
