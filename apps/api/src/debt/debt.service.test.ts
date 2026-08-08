@@ -6,6 +6,7 @@ import { getDb } from "../db/client";
 import { households } from "../db/schema";
 import { accounts } from "../db/schema-economic";
 import type { HouseholdAccessService } from "../households/household-access.service";
+import { HouseholdMetricsService } from "../metrics/household-metrics.service";
 import { DebtService } from "./debt.service";
 
 test("debt list exposes principal vs interest and rate scenarios", async () => {
@@ -32,7 +33,7 @@ test("debt list exposes principal vs interest and rate scenarios", async () => {
     }),
   } as unknown as HouseholdAccessService;
 
-  const service = new DebtService(access);
+  const service = new DebtService(access, new HouseholdMetricsService());
   const list = debtResponseSchema.parse(
     await service.list("user-1", household.id),
   );

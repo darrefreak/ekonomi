@@ -44,11 +44,12 @@ test("opportunities and risk are live-engine with evidence", async () => {
     }),
   } as unknown as HouseholdAccessService;
 
+  const metrics = new HouseholdMetricsService();
   const service = new DecisionsService(
     access,
-    new HouseholdMetricsService(),
+    metrics,
     new PlanningMetricsService(),
-    new DebtService(access),
+    new DebtService(access, metrics),
     new VehiclesService(access),
   );
 

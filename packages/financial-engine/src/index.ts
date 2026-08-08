@@ -15,4 +15,6 @@ export * from "./wealth";
 export * from "./lifestyle-creep";
 export * from "./opportunities";
 export * from "./risk";
+export * from "./metric-registry";
+
 

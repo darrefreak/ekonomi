@@ -38,7 +38,8 @@ test("investments and assets APIs return ledger-backed wealth", async () => {
     }),
   } as unknown as HouseholdAccessService;
 
-  const wealth = new WealthService(access);
+  const metrics = new HouseholdMetricsService();
+  const wealth = new WealthService(access, metrics);
   const investments = investmentsResponseSchema.parse(
     await wealth.investments("user-1", household.id),
   );

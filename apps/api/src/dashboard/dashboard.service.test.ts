@@ -137,16 +137,17 @@ test("getDashboard aggregates opportunities and forecast from live services", as
     }),
   } as unknown as HouseholdAccessService;
 
+  const metrics = new HouseholdMetricsService();
   const service = new DashboardService(
     access,
-    new HouseholdMetricsService(),
+    metrics,
     new ReviewService(access),
     new PlanningMetricsService(),
     new DecisionsService(
       access,
-      new HouseholdMetricsService(),
+      metrics,
       new PlanningMetricsService(),
-      new DebtService(access),
+      new DebtService(access, metrics),
       new VehiclesService(access),
     ),
   );

@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { metricMetaSchema } from "./metrics";
 import { moneySchema } from "./money";
 
 export const investmentItemSchema = z.object({
@@ -14,6 +15,7 @@ export const investmentItemSchema = z.object({
 export const investmentsResponseSchema = z.object({
   asOf: z.string(),
   currency: z.enum(["SEK", "EUR", "USD", "NOK", "DKK"]),
+  metricMeta: metricMetaSchema.optional(),
   totals: z.object({
     balance: moneySchema,
     trailingContributions: moneySchema,
@@ -46,6 +48,7 @@ export const assetItemSchema = z.object({
 export const assetsResponseSchema = z.object({
   asOf: z.string(),
   currency: z.enum(["SEK", "EUR", "USD", "NOK", "DKK"]),
+  metricMeta: metricMetaSchema.optional(),
   totals: z.object({
     estimatedValue: moneySchema,
   }),

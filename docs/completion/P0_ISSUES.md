@@ -84,10 +84,10 @@ These must be resolved (or explicitly accepted with risk) before claiming produc
 
 ## P0-8 — Metric consistency / registry absent
 
-**Status:** NOT_STARTED  
-**Evidence:** No `MetricDefinition` / snapshots; dashboard vs pages can disagree.
+**Status:** FIXED (Batch C2)  
+**Evidence:** Code-first `METRIC_DEFINITIONS` + `METRIC_BUNDLE_VERSION` in `@ffos/financial-engine`; `metric_definitions` / `metric_snapshots` tables; `MetricRegistryService`; dashboard/net-worth/debt/wealth/reports/AI consume shared snapshot + `metricMeta`; consistency test on demo household. See `docs/completion/batches/C2_REPORT.md`.
 
-**Impact:** Same label (savings rate, NW, TCO) can show different numbers — violates master §33 / completion §13.
+**Impact:** Mitigated — same `(householdId, asOf)` yields identical core position/debt/investment totals across surfaces with version + inputHash.
 
 **Required:** Shared metric calculation path with `asOf` + version; all surfaces consume it.
 

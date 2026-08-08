@@ -29,6 +29,7 @@ export class NetWorthService {
 
     return {
       asOf,
+      metricMeta: snap.metricMeta,
       current: moneyToJson(snap.position.netWorth),
       breakdown: {
         cash: moneyToJson(snap.position.availableCash),

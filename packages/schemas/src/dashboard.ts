@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { metricMetaSchema } from "./metrics";
 import { moneySchema } from "./money";
 
 export const dashboardBriefItemSchema = z.object({
@@ -32,6 +33,7 @@ export const dashboardResponseSchema = z.object({
   greeting: z.string(),
   asOf: z.string(),
   householdName: z.string(),
+  metricMeta: metricMetaSchema.optional(),
   position: z.object({
     netWorth: moneySchema,
     netWorthChangeMonth: moneySchema,

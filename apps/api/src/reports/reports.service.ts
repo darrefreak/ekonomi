@@ -1,6 +1,10 @@
 import { Inject, Injectable } from "@nestjs/common";
 import { money, moneyToJson, type CurrencyCode } from "@ffos/domain";
-import { calculateNetSavingsRate } from "@ffos/financial-engine";
+import {
+  METRIC_BUNDLE_VERSION,
+  calculateNetSavingsRate,
+  getMetricDefinition,
+} from "@ffos/financial-engine";
 import { HouseholdAccessService } from "../households/household-access.service";
 import { HouseholdMetricsService } from "../metrics/household-metrics.service";
 
@@ -39,16 +43,22 @@ export class ReportsService {
       [month],
     );
 
+    const savingsRateDef = getMetricDefinition("net_savings_rate");
     return {
       period: month,
       asOf,
+      metricMeta: snap.metricMeta,
       income: moneyToJson(money(incomeMinor, currency)),
       spending: moneyToJson(money(spendingMinor, currency)),
       savings: moneyToJson(money(savingsMinor, currency)),
+      // Same engine formula as registry net_savings_rate (period may differ from snap month).
       savingsRatePercent: calculateNetSavingsRate({
         incomeMinor,
         spendingMinor,
       }),
+      savingsRateMetricKey: "net_savings_rate",
+      savingsRateCalculationVersion:
+        savingsRateDef?.calculationVersion ?? METRIC_BUNDLE_VERSION,
       netWorth: moneyToJson(snap.position.netWorth),
       netWorthChange: moneyToJson(money(snap.changeMonthMinor, currency)),
       topCategories: cats
@@ -85,9 +95,16 @@ export class ReportsService {
       };
     });
     const savingsMinor = incomeMinor - spendingMinor;
+    const savingsRateDef = getMetricDefinition("net_savings_rate");
     return {
       year: y,
       asOf,
+      metricMeta: {
+        bundleVersion: METRIC_BUNDLE_VERSION,
+        calculationVersion: METRIC_BUNDLE_VERSION,
+        inputHash: `yearly-${y}`,
+        asOf,
+      },
       income: moneyToJson(money(incomeMinor, currency)),
       spending: moneyToJson(money(spendingMinor, currency)),
       savings: moneyToJson(money(savingsMinor, currency)),
@@ -95,6 +112,9 @@ export class ReportsService {
         incomeMinor,
         spendingMinor,
       }),
+      savingsRateMetricKey: "net_savings_rate",
+      savingsRateCalculationVersion:
+        savingsRateDef?.calculationVersion ?? METRIC_BUNDLE_VERSION,
       months: monthRows,
     };
   }

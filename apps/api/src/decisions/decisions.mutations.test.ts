@@ -56,11 +56,12 @@ test("live forecast horizons and non-destructive scenario simulate", async () =>
     projectTransactionItem: <T>(item: T) => item,
   } as unknown as HouseholdAccessService;
 
+  const metrics = new HouseholdMetricsService();
   const service = new DecisionsService(
     access,
-    new HouseholdMetricsService(),
+    metrics,
     new PlanningMetricsService(),
-    new DebtService(access),
+    new DebtService(access, metrics),
     new VehiclesService(access),
   );
 

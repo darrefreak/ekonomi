@@ -10,6 +10,7 @@ import {
 } from "../db/schema-economic";
 import { vehicles } from "../db/schema-vehicles";
 import { HouseholdAccessService } from "../households/household-access.service";
+import { HouseholdMetricsService } from "../metrics/household-metrics.service";
 
 const INVESTMENT_TYPES = ["INVESTMENT", "PENSION", "CRYPTO"] as const;
 
@@ -17,6 +18,8 @@ const INVESTMENT_TYPES = ["INVESTMENT", "PENSION", "CRYPTO"] as const;
 export class WealthService {
   constructor(
     @Inject(HouseholdAccessService) private readonly access: HouseholdAccessService,
+    @Inject(HouseholdMetricsService)
+    private readonly metrics: HouseholdMetricsService,
   ) {}
 
   private trailingWindow(asOf: string) {
@@ -32,6 +35,13 @@ export class WealthService {
     const asOf = process.env.DEMO_AS_OF_DATE ?? "2026-08-01";
     const { start, end } = this.trailingWindow(asOf);
     const db = getDb();
+    const [aligned, snap] = await Promise.all([
+      this.metrics.getLedgerAlignedAccountRows(householdId),
+      this.metrics.getFinancialSnapshot(householdId, currency, asOf),
+    ]);
+    const balanceById = new Map(
+      aligned.map((a) => [a.id, a.currentBalanceMinor] as const),
+    );
 
     const rows = await db
       .select()
@@ -84,21 +94,18 @@ export class WealthService {
 
     const items = rows.map((row) => {
       const contrib = contribByAccount.get(row.id) ?? { amount: 0n, count: 0 };
+      const bal = balanceById.get(row.id) ?? row.currentBalanceMinor;
       return {
         id: row.id,
         name: row.name,
         provider: row.provider,
         accountType: row.accountType,
-        balance: moneyToJson(money(row.currentBalanceMinor, currency)),
+        balance: moneyToJson(money(bal, currency)),
         trailingContributions: moneyToJson(money(contrib.amount, currency)),
         contributionCount: contrib.count,
       };
     });
 
-    const totalBalance = items.reduce(
-      (acc, i) => acc + BigInt(i.balance.amountMinor),
-      0n,
-    );
     const totalContrib = items.reduce(
       (acc, i) => acc + BigInt(i.trailingContributions.amountMinor),
       0n,
@@ -107,8 +114,10 @@ export class WealthService {
     return {
       asOf,
       currency,
+      metricMeta: snap.metricMeta,
       totals: {
-        balance: moneyToJson(money(totalBalance, currency)),
+        // Registry investments_total
+        balance: moneyToJson(snap.position.investments),
         trailingContributions: moneyToJson(money(totalContrib, currency)),
       },
       items,
@@ -127,6 +136,13 @@ export class WealthService {
     const currency = (household.baseCurrency || "SEK") as CurrencyCode;
     const asOf = process.env.DEMO_AS_OF_DATE ?? "2026-08-01";
     const db = getDb();
+    const [aligned, snap] = await Promise.all([
+      this.metrics.getLedgerAlignedAccountRows(householdId),
+      this.metrics.getFinancialSnapshot(householdId, currency, asOf),
+    ]);
+    const balanceById = new Map(
+      aligned.map((a) => [a.id, a.currentBalanceMinor] as const),
+    );
 
     const rows = await db
       .select()
@@ -153,12 +169,13 @@ export class WealthService {
 
     const items = rows.map((row) => {
       const vehicle = vehicleByAsset.get(row.id);
+      const bal = balanceById.get(row.id) ?? row.currentBalanceMinor;
       return {
         id: row.id,
         name: row.name,
         provider: row.provider,
         accountType: row.accountType,
-        estimatedValue: moneyToJson(money(row.currentBalanceMinor, currency)),
+        estimatedValue: moneyToJson(money(bal, currency)),
         vehicleId: vehicle?.id ?? null,
         vehicleName: vehicle
           ? `${vehicle.make} ${vehicle.model}`.trim()
@@ -172,16 +189,13 @@ export class WealthService {
       };
     });
 
-    const total = items.reduce(
-      (acc, i) => acc + BigInt(i.estimatedValue.amountMinor),
-      0n,
-    );
-
     return {
       asOf,
       currency,
+      metricMeta: snap.metricMeta,
       totals: {
-        estimatedValue: moneyToJson(money(total, currency)),
+        // Registry assets_total
+        estimatedValue: moneyToJson(snap.position.assets),
       },
       items,
     };
