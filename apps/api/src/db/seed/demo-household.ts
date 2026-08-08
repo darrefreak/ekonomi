@@ -4,6 +4,7 @@ import { and, eq, sql } from "drizzle-orm";
 import { money } from "@ffos/domain";
 import {
   buildAssetDepreciation,
+  buildAssetPurchaseAtFairValue,
   buildCashExpense,
   buildCashRefund,
   buildCreditCardPayment,
@@ -270,6 +271,9 @@ export async function seedDemoHousehold() {
     currentBalanceMinor: 0n,
     reportedBalanceMinor: 0n,
   });
+  // Vehicle purchase cash is funded via joint opening (historical, not period income).
+  const vehiclePurchaseMinor = 300_000_00n;
+  const vehicleDepreciationMinor = 20_000_00n;
   const joint = await mkAccount({
     householdId: household.id,
     name: "Gemensamt konto",
@@ -278,9 +282,9 @@ export async function seedDemoHousehold() {
     accountType: "CHECKING",
     externalReference: "SEB-DEMO-JOINT",
     sourceId: sebSource.id,
-    openingBalanceMinor: 0n,
-    currentBalanceMinor: 0n,
-    reportedBalanceMinor: 0n,
+    openingBalanceMinor: vehiclePurchaseMinor,
+    currentBalanceMinor: vehiclePurchaseMinor,
+    reportedBalanceMinor: vehiclePurchaseMinor,
   });
   const sbab = await mkAccount({
     householdId: household.id,
@@ -355,17 +359,15 @@ export async function seedDemoHousehold() {
     currentBalanceMinor: 6_800_000_00n,
     reportedBalanceMinor: 6_800_000_00n,
   });
-  // Opening fair value before A3 write-down; depreciation event → 280k (= valuation mid).
-  const vehicleOpeningMinor = 300_000_00n;
-  const vehicleDepreciationMinor = 20_000_00n;
+  // Vehicle: opening 0 + purchase event 300k → depreciation 20k (= valuation mid 280k).
   const vehicle = await mkAccount({
     householdId: household.id,
     name: "Familjebil",
     accountType: "ASSET",
     isShared: true,
-    openingBalanceMinor: vehicleOpeningMinor,
-    currentBalanceMinor: vehicleOpeningMinor,
-    reportedBalanceMinor: vehicleOpeningMinor,
+    openingBalanceMinor: 0n,
+    currentBalanceMinor: 0n,
+    reportedBalanceMinor: 0n,
   });
   const expenseBook = await mkAccount({
     householdId: household.id,
@@ -804,7 +806,25 @@ export async function seedDemoHousehold() {
     schemaVersion: "1",
   });
 
-  // Domain invariant: vehicle 300k → 280k (cashflow 0, NW −20k).
+  // Cash vehicle purchase (runtime path), then non-cash write-down 300k → 280k.
+  await persistBalancedEvent({
+    householdId: household.id,
+    draft: buildAssetPurchaseAtFairValue({
+      cashAccountId: joint.id,
+      assetAccountId: vehicle.id,
+      amountMinor: vehiclePurchaseMinor,
+      currency: "SEK",
+    }),
+    occurredOn: "2024-06-15",
+    description: "Köp familjebil (demo)",
+    sourceAccountId: joint.id,
+    sourceAmountMinor: -vehiclePurchaseMinor,
+    externalId: "seed-vehicle-purchase-2024-06",
+    importBatchId: batch.id,
+    vehicleId: undefined,
+  });
+  eventCount += 1;
+
   await persistBalancedEvent({
     householdId: household.id,
     draft: buildAssetDepreciation({
@@ -823,7 +843,11 @@ export async function seedDemoHousehold() {
   // Ending balances = opening + ledger postings (source of truth)
   const openings = [
     { accountId: seb.id, accountType: "CHECKING", openingMinor: 0n },
-    { accountId: joint.id, accountType: "CHECKING", openingMinor: 0n },
+    {
+      accountId: joint.id,
+      accountType: "CHECKING",
+      openingMinor: vehiclePurchaseMinor,
+    },
     { accountId: sbab.id, accountType: "SAVINGS", openingMinor: 0n },
     { accountId: revolut.id, accountType: "CHECKING", openingMinor: 0n },
     { accountId: creditCard.id, accountType: "CREDIT_CARD", openingMinor: 0n },
@@ -841,7 +865,7 @@ export async function seedDemoHousehold() {
     {
       accountId: vehicle.id,
       accountType: "ASSET",
-      openingMinor: vehicleOpeningMinor,
+      openingMinor: 0n,
     },
     { accountId: expenseBook.id, accountType: "EXPENSE", openingMinor: 0n },
     { accountId: incomeBook.id, accountType: "INCOME", openingMinor: 0n },

@@ -148,6 +148,13 @@
       "when": 1754644800000,
       "tag": "0020_batch_r1_command_idempotency",
       "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "7",
+      "when": 1754648400000,
+      "tag": "0021_batch_r3_event_status",
+      "breakpoints": true
     }
   ]
 }

@@ -6,6 +6,7 @@ import {
   buildCashRefund,
   buildCreditCardPayment,
   buildCreditCardPurchase,
+  buildFinancedAssetPurchase,
   buildInternalTransfer,
   buildInvestmentTransfer,
   buildMortgagePayment,
@@ -86,6 +87,31 @@ test("vehicle cash purchase at fair value: expense 0, NW unchanged", () => {
   });
   assert.equal(result.expenseAmountMinor, 0n);
   assert.equal(result.netWorthDeltaMinor, 0n);
+});
+
+test("financed vehicle purchase: asset + down + loan, NW unchanged", () => {
+  const LOAN = "loan";
+  const result = buildFinancedAssetPurchase({
+    cashAccountId: CASH_A,
+    assetAccountId: VEHICLE,
+    loanAccountId: LOAN,
+    purchasePriceMinor: 300_000_00n,
+    downPaymentMinor: 50_000_00n,
+    currency: "SEK",
+  });
+  assert.equal(result.expenseAmountMinor, 0n);
+  assert.equal(result.netWorthDeltaMinor, 0n);
+  const balances = reconstructBalances({
+    openings: [
+      { accountId: CASH_A, accountType: "CHECKING", openingMinor: 100_000_00n },
+      { accountId: VEHICLE, accountType: "ASSET", openingMinor: 0n },
+      { accountId: LOAN, accountType: "LOAN", openingMinor: 0n },
+    ],
+    postings: result.postings,
+  });
+  assert.equal(balances.get(VEHICLE), 300_000_00n);
+  assert.equal(balances.get(CASH_A), 50_000_00n);
+  assert.equal(balances.get(LOAN), 250_000_00n);
 });
 
 test("vehicle depreciation 300k→280k: cashflow 0, NW -20k", () => {

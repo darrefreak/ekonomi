@@ -359,6 +359,85 @@ export function createApiClient(options: ApiClientOptions) {
       );
       return transactionDetailSchema.parse(data) as TransactionDetailDto;
     },
+    createCashRefund: async (input: {
+      householdId: string;
+      cashAccountId: string;
+      expenseAccountId?: string;
+      amountMinor: string;
+      occurredOn: string;
+      description?: string;
+      externalId?: string;
+    }) => {
+      const data = await request<{
+        id: string;
+        eventType: string;
+        status: string;
+        expenseAmountMinor: string;
+      }>("/api/v1/ledger/refunds", {
+        method: "POST",
+        body: JSON.stringify(input),
+      });
+      return data;
+    },
+    createInternalTransfer: async (input: {
+      householdId: string;
+      fromAccountId: string;
+      toAccountId: string;
+      amountMinor: string;
+      occurredOn: string;
+      description?: string;
+      externalId?: string;
+    }) => {
+      const data = await request<{ id: string; eventType: string; status: string }>(
+        "/api/v1/ledger/transfers/internal",
+        { method: "POST", body: JSON.stringify(input) },
+      );
+      return data;
+    },
+    createAssetPurchase: async (input: {
+      householdId: string;
+      cashAccountId: string;
+      assetAccountId: string;
+      amountMinor: string;
+      occurredOn: string;
+      description?: string;
+      vehicleId?: string;
+      externalId?: string;
+    }) => {
+      const data = await request<{ id: string; eventType: string; status: string }>(
+        "/api/v1/ledger/assets/purchase",
+        { method: "POST", body: JSON.stringify(input) },
+      );
+      return data;
+    },
+    replaceEventSplits: async (
+      eventId: string,
+      input: {
+        householdId: string;
+        sourceAmountMinor: string;
+        splits: Array<{
+          categoryId?: string;
+          amountMinor: string;
+          memo?: string;
+        }>;
+      },
+    ) => {
+      const data = await request<{ id: string; eventType: string; status: string }>(
+        `/api/v1/ledger/events/${encodeURIComponent(eventId)}/splits`,
+        { method: "POST", body: JSON.stringify(input) },
+      );
+      return data;
+    },
+    reverseFinancialEvent: async (input: {
+      householdId: string;
+      financialEventId: string;
+    }) => {
+      const data = await request<{ id: string; eventType: string; status: string }>(
+        "/api/v1/ledger/events/reverse",
+        { method: "POST", body: JSON.stringify(input) },
+      );
+      return data;
+    },
     getCashflow: async (householdId: string) => {
       const data = await request<unknown>(
         `/api/v1/cashflow?householdId=${encodeURIComponent(householdId)}`,

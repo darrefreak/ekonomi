@@ -33,14 +33,10 @@ Narrow, acceptance-blocking fixes only. No P1 product expansion.
 
 ## P0-A4 — P0-7 product path gaps
 
-**Problem:** Refund exists only as service; general category splits have schema but no write API; no UI/client for ledger mutations.
+**Status:** FIXED (Batch R3 — 2026-08-08)  
+**Evidence:** `POST /ledger/refunds`, `POST /ledger/events/:id/splits`, api-client + transaction-detail refund UI; see `R3_REPORT.md`.
 
-**Fix scope (minimum):**
-1. `POST /api/v1/ledger/refunds` (or equivalent) wired to `createCashRefund` with Zod + authz.
-2. Persist/read path for category splits that uses `transactionSplitsSchema` and runs inside the P0-A1 transaction.
-3. At least one api-client method + one UI or E2E path that exercises split or refund (minimal).
-
-Do **not** expand into full recon UX beyond making mismatch already shown remain correct.
+**Problem (historical):** Refund service-only; splits schema unused for writes; no client/UI.
 
 ---
 
@@ -68,23 +64,19 @@ Do **not** expand into full recon UX beyond making mismatch already shown remain
 
 ## P0-A7 — Vehicle purchase / financed purchase runtime
 
-**Problem:** Cash purchase builder is unit-only; seed uses openings; financed purchase has no ledger builder.
+**Status:** FIXED (Batch R3 — 2026-08-08)  
+**Evidence:** `createAssetPurchase` + financed builder/API; demo seed posts purchase event; see `R3_REPORT.md`.
 
-**Fix scope:**
-- Runtime `createAssetPurchase` (cash) via domain command + API.
-- Financed purchase builder: vehicle asset + cash down + loan liability in one balanced event (or documented two-step with invariants).
-- Seed should prefer events over silent openings where claiming purchase semantics.
+**Problem (historical):** Cash purchase unit-only; seed openings; no financed builder.
 
 ---
 
 ## P0-A8 — Reversal / correction
 
-**Problem:** Status enum unused for economics.
+**Status:** FIXED (Batch R3 — 2026-08-08)  
+**Evidence:** `financial_events.status`; reverse API; reconstruct + period totals exclude non-ACTIVE; see `R3_REPORT.md`.
 
-**Fix scope (minimum V1):**
-- Define behavior: REVERSED/CORRECTED excluded from reconstruct **or** paired reversing postings.
-- Enforce in reconstruct + metrics period totals.
-- Tests: reverse must not leave spend; correct must not double-count.
+**Problem (historical):** Status enum unused for economics.
 
 ---
 
@@ -94,9 +86,9 @@ Do **not** expand into full recon UX beyond making mismatch already shown remain
 2. ~~**P0-A2** depreciation idempotency~~ **FIXED (R1)**  
 3. ~~**P0-A3** float extract~~ **FIXED (R2)**  
 4. ~~**P0-A5** ledger-aligned reads / history invalidation~~ **FIXED (R2)**  
-5. **P0-A4** refund HTTP + split persist  
-6. **P0-A6** metric hash/asOf  
-7. **P0-A7** vehicle purchase paths  
-8. **P0-A8** reversal semantics  
+5. ~~**P0-A4** refund HTTP + split persist~~ **FIXED (R3)**  
+6. **P0-A6** metric hash/asOf → **R4**  
+7. ~~**P0-A7** vehicle purchase paths~~ **FIXED (R3)**  
+8. ~~**P0-A8** reversal semantics~~ **FIXED (R3)**  
 
 Stop after listing. Implement only when a dedicated fix batch is instructed.

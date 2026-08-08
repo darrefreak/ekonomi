@@ -274,6 +274,55 @@ export function buildAssetPurchaseAtFairValue(input: {
 }
 
 /**
+ * Financed asset purchase: asset at full price, cash down payment, loan for remainder.
+ * Expense 0; NW unchanged at purchase (asset +P, cash −D, liability +(P−D)).
+ */
+export function buildFinancedAssetPurchase(input: {
+  cashAccountId: string;
+  assetAccountId: string;
+  loanAccountId: string;
+  purchasePriceMinor: bigint;
+  downPaymentMinor: bigint;
+  currency: CurrencyCode;
+}): BalancedLedgerDraft {
+  if (input.downPaymentMinor < 0n) {
+    throw new Error("downPaymentMinor must be non-negative");
+  }
+  if (input.downPaymentMinor > input.purchasePriceMinor) {
+    throw new Error("downPaymentMinor cannot exceed purchasePriceMinor");
+  }
+  const financedMinor = input.purchasePriceMinor - input.downPaymentMinor;
+  const postings: LedgerPostingDraft[] = [
+    {
+      accountId: input.assetAccountId,
+      side: "debit",
+      amountMinor: input.purchasePriceMinor,
+      currency: input.currency,
+      memo: "asset_purchase",
+    },
+  ];
+  if (input.downPaymentMinor > 0n) {
+    postings.push({
+      accountId: input.cashAccountId,
+      side: "credit",
+      amountMinor: input.downPaymentMinor,
+      currency: input.currency,
+      memo: "down_payment",
+    });
+  }
+  if (financedMinor > 0n) {
+    postings.push({
+      accountId: input.loanAccountId,
+      side: "credit",
+      amountMinor: financedMinor,
+      currency: input.currency,
+      memo: "loan_principal",
+    });
+  }
+  return draft(FinancialEventType.ASSET_PURCHASE, postings, 0n, 0n, 0n);
+}
+
+/**
  * Non-cash asset write-down (e.g. vehicle 300k → 280k).
  * Cashflow/expenseAmountMinor = 0 (not a cash spend).
  * Economic cost is tracked separately (vehicle cost events / TCO).

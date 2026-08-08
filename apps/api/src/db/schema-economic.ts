@@ -324,6 +324,8 @@ export const financialEvents = pgTable("financial_events", {
   confidence: numeric("confidence", { precision: 5, scale: 4 }).default("1"),
   userVerified: boolean("user_verified").notNull().default(false),
   sourceType: varchar("source_type", { length: 40 }).default("seed"),
+  /** ACTIVE | REVERSED | CORRECTED — only ACTIVE participates in reconstruct/period totals. */
+  status: varchar("status", { length: 40 }).notNull().default("ACTIVE"),
   importBatchId: uuid("import_batch_id").references(() => importBatches.id, {
     onDelete: "set null",
   }),

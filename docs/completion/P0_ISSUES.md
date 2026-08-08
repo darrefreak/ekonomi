@@ -5,7 +5,8 @@ These must be resolved (or explicitly accepted with risk) before claiming produc
 
 > **Adversarial P0 financial acceptance (2026-08-07): FAIL — FINANCIAL CORE NOT ACCEPTED.**  
 > **R1 (2026-08-08):** P0-A1 atomic persist + P0-A2 depreciation idempotency **FIXED**.  
-> **R2 (2026-08-08):** P0-A3 exact extract money + P0-A5 ledger-truth residuals **FIXED**; acceptance still **FAIL**.  
+> **R2 (2026-08-08):** P0-A3 exact extract money + P0-A5 ledger-truth residuals **FIXED**.  
+> **R3 (2026-08-08):** P0-A4/A7/A8 runtime financial paths **FIXED**; **P0-A6** remains for R4; acceptance still **FAIL**.  
 > See `docs/acceptance/p0/P0_FINANCIAL_ACCEPTANCE.md` and `P0_REMAINING_FIXES.md`.  
 > **P0 REMAINING: > 0** · **FINANCIAL CORE ACCEPTED: NO**
 
@@ -79,10 +80,10 @@ These must be resolved (or explicitly accepted with risk) before claiming produc
 
 ## P0-7 — Transaction splits / reconciliation / refunds not operational
 
-**Status:** PARTIAL (R1 fixed atomic multi-write + command idempotency; product gaps remain)  
-**Evidence:** Mortgage splits + recon groups persist; persist is transactional (R1 / P0-A1); depreciation/transfer/CC payment idempotent (R1 / P0-A2). Refund service+test exist but **no HTTP refund**; no general category-split product API/UI. See `P0_REMAINING_FIXES.md` P0-A4.
+**Status:** FIXED for tracked product-path gaps (Batch R3; R1 atomicity retained)  
+**Evidence:** Refund HTTP + api-client + UI; event splits replace API; transfer/CC/mortgage/invest/purchase/depreciation/reverse routes; see `R3_REPORT.md`.
 
-**Impact:** Core economic events work with atomic persistence; multi-category split product path and refund API incomplete.
+**Impact:** V1 ledger mutation product surface complete for acceptance-tracked paths.
 
 **Required:** At least: refund HTTP + metrics netting; category splits product persistence path (beyond R1 atomic helpers).
 

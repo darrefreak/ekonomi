@@ -12,7 +12,8 @@ Batch reports A2/A3/S1/C2 are **substantially real** and many invariants pass as
 Acceptance criteria require **zero** unresolved P0 and **zero** known unsafe money paths in V1 flows. That bar is **not** met.
 
 **R1 update (2026-08-08):** P0-A1 atomic persist and P0-A2 depreciation idempotency are **FIXED**.  
-**R2 update (2026-08-08):** P0-A3 exact document money + P0-A5 ledger-truth residuals are **FIXED**. Core acceptance remains **FAIL** while P0-A4/A6/A7/A8 remain.
+**R2 update (2026-08-08):** P0-A3 exact document money + P0-A5 ledger-truth residuals are **FIXED**.  
+**R3 update (2026-08-08):** P0-A4/A7/A8 runtime product paths + reverse/purchase **FIXED**. Core acceptance remains **FAIL** while **P0-A6** (metric registry semantics) remains for R4.
 
 ---
 
@@ -47,13 +48,13 @@ Acceptance criteria require **zero** unresolved P0 and **zero** known unsafe mon
 | 6 | Credit card purchase+payment | PASS | spending once |
 | 7 | Mortgage split | PASS | interest expense / principal debtReduction |
 | 8 | Investment transfer | PASS | NW unchanged |
-| 9 | Cash vehicle purchase runtime | FAIL / PARTIAL | seed opening only; no purchase API |
-| 10 | Financed vehicle purchase | FAIL | missing ledger path |
+| 9 | Cash vehicle purchase runtime | PASS (R3) | API + seed purchase event |
+| 10 | Financed vehicle purchase | PASS (R3) | builder + API |
 | 11 | Depreciation 300→280 | PASS economics | PASS idempotency (R1) |
 | 12 | Loan principal/interest (mortgage) | PASS | financed vehicle loan payments not full product path |
-| 13 | Refund | PARTIAL | service+test; no HTTP |
-| 14 | Reversal/correction | FAIL | enum only |
-| 15 | Split atomicity | PASS (R1 persist/replace) | product split API still P0-A4 |
+| 13 | Refund | PASS (R3) | HTTP + client + UI |
+| 14 | Reversal/correction | PASS (R3) | status + reverse API |
+| 15 | Split atomicity | PASS (R1+R3) | replace API wired |
 | 16 | Reconciliation mismatch | PASS | A2 Test 5 |
 | 17 | Idempotency | PASS (R1) | transfer + depreciation + CC payment; payload conflict |
 | 18 | Cross-household writes | PASS | requireCanWrite + household account filter |
@@ -75,11 +76,11 @@ See `P0_REMAINING_FIXES.md`:
 - **P0-A1** — ~~Multi-write ledger persist lacks DB transactions~~ **FIXED (R1)**  
 - **P0-A2** — ~~Depreciation not idempotent (double write-down)~~ **FIXED (R1)**  
 - **P0-A3** — ~~Document mock-extract float kronor→öre~~ **FIXED (R2)**  
-- **P0-A4** — P0-7 product gaps (refund HTTP, general splits API/UI)  
-- **P0-A5** — ~~P0-1 residuals (accounts list / debt detail / NW history stale)~~ **FIXED (R2)**  
-- **P0-A6** — Metric registry integrity (weak inputHash, asOf hardcoding, no historical serve)  
-- **P0-A7** — Vehicle purchase / financed purchase runtime paths missing  
-- **P0-A8** — Reversal/correction statuses non-operational  
+- **P0-A4** — ~~P0-7 product gaps~~ **FIXED (R3)**  
+- **P0-A5** — ~~P0-1 residuals~~ **FIXED (R2)**  
+- **P0-A6** — Metric registry integrity (weak inputHash, asOf hardcoding, no historical serve) → **R4**  
+- **P0-A7** — ~~Vehicle purchase / financed purchase~~ **FIXED (R3)**  
+- **P0-A8** — ~~Reversal/correction~~ **FIXED (R3)**  
 
 ---
 
