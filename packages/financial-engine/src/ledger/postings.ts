@@ -155,31 +155,41 @@ export function buildMortgagePayment(input: {
   interestMinor: bigint;
   currency: CurrencyCode;
 }): BalancedLedgerDraft {
+  if (input.principalMinor < 0n || input.interestMinor < 0n) {
+    throw new Error("principalMinor and interestMinor must be non-negative");
+  }
+  if (input.principalMinor === 0n && input.interestMinor === 0n) {
+    throw new Error("mortgage payment requires principal or interest");
+  }
   const total = input.principalMinor + input.interestMinor;
+  const postings: LedgerPostingDraft[] = [];
+  if (input.principalMinor > 0n) {
+    postings.push({
+      accountId: input.mortgageAccountId,
+      side: "debit",
+      amountMinor: input.principalMinor,
+      currency: input.currency,
+      memo: "principal",
+    });
+  }
+  if (input.interestMinor > 0n) {
+    postings.push({
+      accountId: input.interestExpenseAccountId,
+      side: "debit",
+      amountMinor: input.interestMinor,
+      currency: input.currency,
+      memo: "interest",
+    });
+  }
+  postings.push({
+    accountId: input.cashAccountId,
+    side: "credit",
+    amountMinor: total,
+    currency: input.currency,
+  });
   return draft(
     FinancialEventType.LOAN_PRINCIPAL,
-    [
-      {
-        accountId: input.mortgageAccountId,
-        side: "debit",
-        amountMinor: input.principalMinor,
-        currency: input.currency,
-        memo: "principal",
-      },
-      {
-        accountId: input.interestExpenseAccountId,
-        side: "debit",
-        amountMinor: input.interestMinor,
-        currency: input.currency,
-        memo: "interest",
-      },
-      {
-        accountId: input.cashAccountId,
-        side: "credit",
-        amountMinor: total,
-        currency: input.currency,
-      },
-    ],
+    postings,
     input.interestMinor,
     input.principalMinor,
     -input.interestMinor,

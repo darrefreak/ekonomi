@@ -78,6 +78,22 @@ test("mortgage payment principal+interest", () => {
   assert.equal(result.netWorthDeltaMinor, -8_000_00n);
 });
 
+test("mortgage payment principal-only omits zero interest posting", () => {
+  const result = buildMortgagePayment({
+    cashAccountId: CASH_A,
+    mortgageAccountId: MORTGAGE,
+    interestExpenseAccountId: INTEREST,
+    principalMinor: 85_000_00n,
+    interestMinor: 0n,
+    currency: "SEK",
+  });
+  assert.equal(result.expenseAmountMinor, 0n);
+  assert.equal(result.debtReductionMinor, 85_000_00n);
+  assert.equal(result.netWorthDeltaMinor, 0n);
+  assert.equal(result.postings.length, 2);
+  assert.ok(result.postings.every((p) => p.amountMinor > 0n));
+});
+
 test("vehicle cash purchase at fair value: expense 0, NW unchanged", () => {
   const result = buildAssetPurchaseAtFairValue({
     cashAccountId: CASH_A,
