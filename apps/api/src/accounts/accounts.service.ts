@@ -63,11 +63,18 @@ export class AccountsService {
       .where(and(...conditions))
       .orderBy(asc(accounts.name));
 
+    // Acceptance: list balances are ledger-aligned (opening + postings), not stale cache.
+    const ledgerById = this.ledger
+      ? await this.ledger.reconstructHousehold(householdId)
+      : null;
+
     const items = [];
     for (const row of rows) {
       const visibility = await this.access.accountVisibility(viewer, row);
+      const ledgerBalance =
+        ledgerById?.get(row.id) ?? row.currentBalanceMinor;
       const projected = this.access.projectAccountListItem(
-        this.toListItem(row),
+        this.toListItem({ ...row, currentBalanceMinor: ledgerBalance }),
         visibility,
       );
       if (projected) items.push(projected);
@@ -383,7 +390,7 @@ export class AccountsService {
       accountType: row.accountType,
       currency: row.currency,
       isShared: row.isShared,
-      // Display uses derived cache; detail overlays ledger when available.
+      // Caller overlays ledger-calculated balance before mapping when available.
       currentBalance: moneyToJson({
         amountMinor: row.currentBalanceMinor,
         currency: row.currency as "SEK",

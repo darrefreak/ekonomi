@@ -4,6 +4,8 @@ Priority model: **P0 before P1**.
 These must be resolved (or explicitly accepted with risk) before claiming product completeness of downstream analytics.
 
 > **Adversarial P0 financial acceptance (2026-08-07): FAIL — FINANCIAL CORE NOT ACCEPTED.**  
+> **R1 (2026-08-08):** P0-A1 atomic persist + P0-A2 depreciation idempotency **FIXED**.  
+> **R2 (2026-08-08):** P0-A3 exact extract money + P0-A5 ledger-truth residuals **FIXED**; acceptance still **FAIL**.  
 > See `docs/acceptance/p0/P0_FINANCIAL_ACCEPTANCE.md` and `P0_REMAINING_FIXES.md`.  
 > **P0 REMAINING: > 0** · **FINANCIAL CORE ACCEPTED: NO**
 
@@ -11,10 +13,10 @@ These must be resolved (or explicitly accepted with risk) before claiming produc
 
 ## P0-1 — Ledger balances are not the source of truth
 
-**Status:** PARTIAL (A2 progress; residuals remain)  
-**Evidence:** Metrics/dashboard/NW reconstruct from postings; reconcile job/API no silent overwrite. Residuals: accounts list + debt detail still cache-first; NW history snapshots not refreshed after mutations. See `docs/acceptance/p0/P0_REVERIFICATION.md`.
+**Status:** FIXED for tracked residuals (Batch R2; A2 foundation retained)  
+**Evidence:** Metrics/dashboard/NW reconstruct from postings; accounts **list** ledger-aligned; debt **detail** + mortgage context ledger-aligned; NW history invalidate/upsert after mutations. Reconcile does not silent-overwrite reported. See `R2_REPORT.md`.
 
-**Impact:** Core analytics usually ledger-aligned; some list/detail/history paths can diverge.
+**Impact:** List/detail/history residuals from acceptance audit addressed; ledger remains SoT.
 
 **Required:** Reconstruct balances from postings (or maintain postings + verified cache with reconciliation job); snapshot `ledgerCalculatedBalance` for real.
 

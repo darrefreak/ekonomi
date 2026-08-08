@@ -24,14 +24,10 @@ Narrow, acceptance-blocking fixes only. No P1 product expansion.
 
 ## P0-A3 — Document extract float money
 
-**Problem:** `mock-extract.ts` uses `BigInt(Math.round(Number(raw) * 100))` and persists `amountMinor`.
+**Status:** FIXED (Batch R2 — 2026-08-08)  
+**Evidence:** `parseExtractAmountToken` + `kronorStringToMinor`; scientific/malformed rejected; see `R2_REPORT.md`.
 
-**Fix scope:**
-- Parse major units with `kronorStringToMinor` (or equivalent digit split).
-- Reject malformed OCR amounts rather than float-round.
-- Add negative test for scientific / float strings.
-
-**Files:** `apps/api/src/intake/mock-extract.ts`
+**Problem (historical):** `BigInt(Math.round(Number(raw) * 100))` in mock extract.
 
 ---
 
@@ -50,12 +46,10 @@ Do **not** expand into full recon UX beyond making mismatch already shown remain
 
 ## P0-A5 — Ledger truth residuals (P0-1)
 
-**Problem:** Some read surfaces still trust cache or stale history.
+**Status:** FIXED (Batch R2 — 2026-08-08)  
+**Evidence:** Accounts list reconstructs ledger; debt detail + mortgage context ledger-aligned; NW history upsert + invalidate on cache refresh. See `R2_REPORT.md`.
 
-**Fix scope:**
-- Accounts list: expose ledger-aligned balance (or clearly label cache vs ledger; acceptance prefers ledger).
-- Debt detail / mortgage context: use `getLedgerAlignedAccountRows` (or reconstruct) for outstanding.
-- NW history: refresh or invalidate `account_balance_snapshots` for affected dates after ledger mutations (not insert-only).
+**Problem (historical):** list/detail/history could show stale cache.
 
 ---
 
@@ -96,10 +90,10 @@ Do **not** expand into full recon UX beyond making mismatch already shown remain
 
 ## Suggested fix order
 
-1. **P0-A1** atomicity (prevents corruption class)  
-2. **P0-A2** depreciation idempotency  
-3. **P0-A3** float extract  
-4. **P0-A5** ledger-aligned reads / history invalidation  
+1. ~~**P0-A1** atomicity~~ **FIXED (R1)**  
+2. ~~**P0-A2** depreciation idempotency~~ **FIXED (R1)**  
+3. ~~**P0-A3** float extract~~ **FIXED (R2)**  
+4. ~~**P0-A5** ledger-aligned reads / history invalidation~~ **FIXED (R2)**  
 5. **P0-A4** refund HTTP + split persist  
 6. **P0-A6** metric hash/asOf  
 7. **P0-A7** vehicle purchase paths  

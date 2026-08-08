@@ -1,3 +1,5 @@
+import { kronorStringToMinor } from "@ffos/domain";
+
 export type MockExtractInput = {
   title: string;
   documentType: string;
@@ -27,20 +29,35 @@ function inferIssuer(input: MockExtractInput): string | null {
   return input.issuerHint ?? null;
 }
 
+/**
+ * Parse a kronor-like token from OCR/title text into minor units.
+ * Uses exact decimal string parsing — never JS Number/float.
+ * Returns null for scientific notation, >2 fractional digits, or junk.
+ */
+export function parseExtractAmountToken(raw: string): bigint | null {
+  const token = raw.trim();
+  if (!token) return null;
+  if (/[eE]/.test(token)) return null;
+  if (/[^\d.,\s-]/.test(token)) return null;
+  return kronorStringToMinor(token);
+}
+
 function inferAmount(input: MockExtractInput): bigint | null {
   const hay = `${input.title} ${input.filename ?? ""}`;
-  const m = hay.match(/(\d+[.,]\d{2}|\d{3,})/);
-  if (!m) {
+  // Prefer full decimal / thousands forms before short \d{1,3} prefixes.
+  const m = hay.match(
+    /(-?\d+[.,]\d{1,2}|-?\d{1,3}(?:[ \u00a0]\d{3})+(?:[.,]\d{1,2})?|-?\d{3,})/,
+  );
+  if (!m || m.index == null) {
     if (input.documentType === "INVOICE") return 1_250_00n;
     if (input.documentType === "VEHICLE") return 4_500_00n;
     if (input.documentType === "SALARY") return 42_000_00n;
     return null;
   }
-  const raw = m[1]!.replace(",", ".");
-  if (raw.includes(".")) {
-    return BigInt(Math.round(Number(raw) * 100));
-  }
-  return BigInt(raw) * 100n;
+  // Reject scientific notation like "1.23e2" (regex would otherwise take "1.23").
+  const after = hay.charAt(m.index + m[0].length);
+  if (after === "e" || after === "E") return null;
+  return parseExtractAmountToken(m[1]!);
 }
 
 /** Deterministic mock extraction — no OCR. */

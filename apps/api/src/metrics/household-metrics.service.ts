@@ -99,8 +99,24 @@ export class HouseholdMetricsService {
   }
 
   /**
+   * Drop reconstructed NW history snapshots so the next ensure rebuilds from ledger.
+   * Called after financial mutations so history cannot stay stuck on pre-mutation inserts.
+   */
+  async invalidateNetWorthHistorySnapshots(householdId: string) {
+    const db = getDb();
+    await db
+      .delete(accountBalanceSnapshots)
+      .where(
+        and(
+          eq(accountBalanceSnapshots.householdId, householdId),
+          eq(accountBalanceSnapshots.source, "nw_history_reconstruct"),
+        ),
+      );
+  }
+
+  /**
    * Build / refresh NW history from account_balance_snapshots.
-   * If sparse, reconstruct balances at month-ends from ledger and persist snapshots.
+   * Always upserts month-end balances reconstructed from ledger (not insert-only).
    */
   async ensureNetWorthHistorySnapshots(
     householdId: string,
@@ -112,19 +128,6 @@ export class HouseholdMetricsService {
     if (!accountRows.length) return;
 
     const dates = monthEndDates(asOf, monthsBack);
-    const existing = await db
-      .select({
-        asOf: accountBalanceSnapshots.asOf,
-        accountId: accountBalanceSnapshots.accountId,
-      })
-      .from(accountBalanceSnapshots)
-      .where(eq(accountBalanceSnapshots.householdId, householdId));
-
-    const existingKeys = new Set(
-      existing.map(
-        (e) => `${e.accountId}:${e.asOf.toISOString().slice(0, 10)}`,
-      ),
-    );
 
     const postingRows = await db
       .select({
@@ -145,11 +148,6 @@ export class HouseholdMetricsService {
     }));
 
     for (const date of dates) {
-      const needWrite = accountRows.some(
-        (a) => !existingKeys.has(`${a.id}:${date}`),
-      );
-      if (!needWrite) continue;
-
       const postingsToDate = postingRows
         .filter((p) => p.bookedOn <= date)
         .map((p) => ({
@@ -160,11 +158,22 @@ export class HouseholdMetricsService {
       const balances = reconstructBalances({ openings, postings: postingsToDate });
       const asOfDate = new Date(`${date}T12:00:00.000Z`);
 
+      // Replace prior reconstructed rows for this calendar day so postings stay fresh.
+      await db
+        .delete(accountBalanceSnapshots)
+        .where(
+          and(
+            eq(accountBalanceSnapshots.householdId, householdId),
+            eq(accountBalanceSnapshots.source, "nw_history_reconstruct"),
+            sql`(${accountBalanceSnapshots.asOf} AT TIME ZONE 'UTC')::date = ${date}::date`,
+          ),
+        );
+
       for (const a of accountRows) {
         if (a.accountType === "EXPENSE" || a.accountType === "INCOME") continue;
-        const key = `${a.id}:${date}`;
-        if (existingKeys.has(key)) continue;
-        const bal = balances.get(a.id) ?? openings.find((o) => o.accountId === a.id)!.openingMinor;
+        const bal =
+          balances.get(a.id) ??
+          openings.find((o) => o.accountId === a.id)!.openingMinor;
         await db.insert(accountBalanceSnapshots).values({
           householdId,
           accountId: a.id,
@@ -178,7 +187,6 @@ export class HouseholdMetricsService {
           userVerified: false,
           isEstimated: date !== asOf.slice(0, 10),
         });
-        existingKeys.add(key);
       }
     }
   }
