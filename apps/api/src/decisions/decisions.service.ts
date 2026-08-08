@@ -524,7 +524,7 @@ export class DecisionsService {
     const asOf = await resolveHouseholdAsOf(input.householdId);
     const assumptions = input.assumptions ?? {};
     const { seed } = await this.baselineSeed(input.householdId, currency, asOf);
-    const mortgage = await this.debt.primaryMortgageContext(input.householdId);
+    const mortgage = await this.debt.primaryMortgageContext(input.householdId, asOf);
     const sim = simulateScenario({
       baseline: seed,
       assumptions: parseScenarioAssumptions(assumptions as Record<string, unknown>),
@@ -573,7 +573,7 @@ export class DecisionsService {
       row.assumptions ??
       {}) as Record<string, unknown>;
     const { seed } = await this.baselineSeed(input.householdId, currency, asOf);
-    const mortgage = await this.debt.primaryMortgageContext(input.householdId);
+    const mortgage = await this.debt.primaryMortgageContext(input.householdId, asOf);
     const sim = simulateScenario({
       baseline: seed,
       assumptions: parseScenarioAssumptions(assumptionsRaw),

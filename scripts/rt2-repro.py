@@ -37,7 +37,7 @@ API = os.environ.get("RT_API_URL", "http://localhost:3001/api/v1")
 DEMO_EMAIL = os.environ.get("RT_DEMO_EMAIL", "demo@ffos.local")
 DEMO_PASSWORD = os.environ.get("RT_DEMO_PASSWORD", "demo-password-123")
 PSQL = os.environ.get(
-    "RT_PSQL", "docker exec ekonomi-postgres-1 psql -U ffos -d ffos -tAc"
+    "RT_PSQL", "docker exec ekonomi-postgres-1 psql -U ffos -d ffos_dev -tAc"
 )
 
 results = []

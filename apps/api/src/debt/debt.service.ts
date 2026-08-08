@@ -161,7 +161,7 @@ export class DebtService {
     const rows = await this.liabilityAccounts(householdId);
     // Ledger-aligned balances — same path as metric registry debt_total.
     const [aligned, snap] = await Promise.all([
-      this.metrics.getLedgerAlignedAccountRows(householdId),
+      this.metrics.getLedgerAlignedAccountRows(householdId, asOf),
       this.metrics.getFinancialSnapshot(householdId, currency, asOf),
     ]);
     const balanceById = new Map(
@@ -253,7 +253,7 @@ export class DebtService {
       })),
     );
 
-    const aligned = await this.metrics.getLedgerAlignedAccountRows(householdId);
+    const aligned = await this.metrics.getLedgerAlignedAccountRows(householdId, asOf);
     const ledgerBal =
       aligned.find((a) => a.id === accountId)?.currentBalanceMinor ??
       row.currentBalanceMinor;
@@ -279,13 +279,16 @@ export class DebtService {
   }
 
   /** Primary mortgage context for scenario rate shocks. */
-  async primaryMortgageContext(householdId: string) {
+  async primaryMortgageContext(householdId: string, asOf?: string) {
     const rows = await this.liabilityAccounts(householdId);
     const mortgage = rows.find(
       (r) => r.accountType === "MORTGAGE" && r.interestRateBps != null,
     );
     if (!mortgage || mortgage.interestRateBps == null) return null;
-    const aligned = await this.metrics.getLedgerAlignedAccountRows(householdId);
+    const aligned = await this.metrics.getLedgerAlignedAccountRows(
+      householdId,
+      asOf,
+    );
     const ledgerBal =
       aligned.find((a) => a.id === mortgage.id)?.currentBalanceMinor ??
       mortgage.currentBalanceMinor;

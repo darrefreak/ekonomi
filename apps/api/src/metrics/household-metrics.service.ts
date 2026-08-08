@@ -65,7 +65,7 @@ export class HouseholdMetricsService {
    * Account rows with balances forced to ledger reconstruction
    * (openings + postings). Cache fields are ignored for financial truth.
    */
-  async getLedgerAlignedAccountRows(householdId: string) {
+  async getLedgerAlignedAccountRows(householdId: string, asOf?: string) {
     const accountRows = await this.getAccountRows(householdId);
     const db = getDb();
     const postingRows = await db
@@ -87,6 +87,10 @@ export class HouseholdMetricsService {
         and(
           eq(ledgerPostings.householdId, householdId),
           eq(financialEvents.status, "ACTIVE"),
+          // A position is always a position *at a date*. Without this bound the
+          // answer to "net worth as of 31 May" was today's balance, and the
+          // history series disagreed with its own final point.
+          ...(asOf ? [lte(ledgerEntries.bookedOn, asOf)] : []),
         ),
       );
 
@@ -669,7 +673,7 @@ export class HouseholdMetricsService {
    * Shared financial snapshot for dashboard + net-worth (same asOf / definitions).
    */
   async getFinancialSnapshot(householdId: string, currency: CurrencyCode, asOf: string) {
-    const accountRows = await this.getLedgerAlignedAccountRows(householdId);
+    const accountRows = await this.getLedgerAlignedAccountRows(householdId, asOf);
     const position = this.positionFromAccounts(accountRows, currency);
     const cashflow = await this.cashflow(householdId, currency, asOf);
     const monthLabel = cashflow.currentPeriod.label;
