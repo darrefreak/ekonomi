@@ -22,7 +22,7 @@ No critical dashboard/NW metric found hardcoded in UI or API assemblers.
 | Cash runway | `cashRunwayMonths` engine | REAL | cash / monthly spend |
 | Budget forecast / remaining | Budget lines + actuals via planning metrics | REAL (partial inputs) | Planned editable |
 | Cashflow forecast | `forecastCashflowDeltas` live-engine | REAL | Linear model |
-| Available to invest | — | MISSING | No service/API/UI |
+| Available to invest | dashboard.availableToInvest | PASS (P1-U2) | Engine + dashboard; assumptions exposed |
 | Mortgage interest | Mortgage payment events / debt engine | REAL | Seed builders; runtime read |
 | Debt reduction | Principal portion from mortgage builder / debt API | REAL | |
 | Vehicle TCO | `vehicleCostEvents` → engine TCO → vehicles API | REAL (seed inputs) | |

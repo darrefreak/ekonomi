@@ -42,4 +42,7 @@ export function clearSession() {
 export const api = createApiClient({
   baseUrl: process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001",
   getAccessToken,
+  getRefreshToken,
+  onTokensRefreshed: setSession,
+  onAuthFailure: clearSession,
 });

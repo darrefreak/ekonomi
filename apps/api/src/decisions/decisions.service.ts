@@ -345,6 +345,7 @@ export class DecisionsService {
         estimatedAnnualSaving: o.estimatedAnnualSavingMinor
           ? moneyToJson(money(o.estimatedAnnualSavingMinor, currency))
           : null,
+        estimateBasis: o.estimateBasis,
         confidence: o.confidence,
         effort: o.effort,
         risk: o.risk,

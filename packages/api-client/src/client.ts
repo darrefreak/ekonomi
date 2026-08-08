@@ -44,6 +44,10 @@ import {
   sourceSchema,
   syncResultSchema,
   updateSourceSchema,
+  createCreditCardPurchaseSchema,
+  createCreditCardPaymentSchema,
+  createMortgagePaymentSchema,
+  createInvestmentTransferSchema,
   investmentsResponseSchema,
   netWorthResponseSchema,
   opportunitiesResponseSchema,
@@ -96,6 +100,10 @@ import {
   type CreateGoalInput,
   type CreateScenarioInput,
   type CreateSinkingFundInput,
+  type CreateCreditCardPurchaseInput,
+  type CreateCreditCardPaymentInput,
+  type CreateMortgagePaymentInput,
+  type CreateInvestmentTransferInput,
   type DashboardResponse,
   type DebtDetailResponse,
   type DebtResponse,
@@ -151,6 +159,12 @@ import {
 export type ApiClientOptions = {
   baseUrl: string;
   getAccessToken?: () => string | null | undefined;
+  /** Used to attempt a single silent refresh when a request fails with 401. */
+  getRefreshToken?: () => string | null | undefined;
+  /** Called with the new token pair immediately after a successful refresh. */
+  onTokensRefreshed?: (tokens: AuthTokens) => void;
+  /** Called when refresh itself fails (or no refresh token is available) after a 401. */
+  onAuthFailure?: () => void;
   fetchImpl?: typeof fetch;
 };
 
@@ -174,9 +188,33 @@ async function parseJson(res: Response): Promise<unknown> {
 export function createApiClient(options: ApiClientOptions) {
   const fetchImpl = options.fetchImpl ?? fetch;
 
+  /** Single-flight refresh: concurrent 401s share one in-flight refresh call. */
+  let refreshInFlight: Promise<AuthTokens> | null = null;
+
+  async function refresh(refreshToken: string): Promise<AuthTokens> {
+    return request<AuthTokens>("/api/v1/auth/refresh", {
+      method: "POST",
+      body: JSON.stringify({ refreshToken }),
+      skipAuth: true,
+    });
+  }
+
+  async function refreshTokensOnce(): Promise<AuthTokens> {
+    if (!refreshInFlight) {
+      const refreshToken = options.getRefreshToken?.();
+      if (!refreshToken) {
+        throw new Error("No refresh token available");
+      }
+      refreshInFlight = refresh(refreshToken).finally(() => {
+        refreshInFlight = null;
+      });
+    }
+    return refreshInFlight;
+  }
+
   async function request<T>(
     path: string,
-    init?: RequestInit & { skipAuth?: boolean },
+    init?: RequestInit & { skipAuth?: boolean; skipRefresh?: boolean },
   ): Promise<T> {
     const headers = new Headers(init?.headers);
     headers.set("Accept", "application/json");
@@ -192,6 +230,24 @@ export function createApiClient(options: ApiClientOptions) {
       ...init,
       headers,
     });
+
+    if (
+      res.status === 401 &&
+      !init?.skipAuth &&
+      !init?.skipRefresh
+    ) {
+      try {
+        const tokens = await refreshTokensOnce();
+        options.onTokensRefreshed?.(tokens);
+      } catch {
+        options.onAuthFailure?.();
+        throw Object.assign(new Error("Session expired"), {
+          status: 401,
+          code: "AUTH_REFRESH_FAILED",
+        });
+      }
+      return request<T>(path, { ...init, skipRefresh: true });
+    }
 
     const data = await parseJson(res);
     if (!res.ok) {
@@ -251,6 +307,7 @@ export function createApiClient(options: ApiClientOptions) {
         body: JSON.stringify(input),
         skipAuth: true,
       }),
+    refresh,
     logout: (input?: LogoutInput) =>
       request<{ ok: true }>("/api/v1/auth/logout", {
         method: "POST",
@@ -463,6 +520,38 @@ export function createApiClient(options: ApiClientOptions) {
       const data = await request<{ id: string; eventType: string; status: string }>(
         "/api/v1/ledger/transfers/internal",
         { method: "POST", body: JSON.stringify(input) },
+      );
+      return data;
+    },
+    createCreditCardPurchase: async (input: CreateCreditCardPurchaseInput) => {
+      const body = createCreditCardPurchaseSchema.parse(input);
+      const data = await request<{ id: string; eventType: string; status: string }>(
+        "/api/v1/ledger/credit-card/purchase",
+        { method: "POST", body: JSON.stringify(body) },
+      );
+      return data;
+    },
+    createCreditCardPayment: async (input: CreateCreditCardPaymentInput) => {
+      const body = createCreditCardPaymentSchema.parse(input);
+      const data = await request<{ id: string; eventType: string; status: string }>(
+        "/api/v1/ledger/credit-card/payment",
+        { method: "POST", body: JSON.stringify(body) },
+      );
+      return data;
+    },
+    createMortgagePayment: async (input: CreateMortgagePaymentInput) => {
+      const body = createMortgagePaymentSchema.parse(input);
+      const data = await request<{ id: string; eventType: string; status: string }>(
+        "/api/v1/ledger/mortgage/payment",
+        { method: "POST", body: JSON.stringify(body) },
+      );
+      return data;
+    },
+    createInvestmentTransfer: async (input: CreateInvestmentTransferInput) => {
+      const body = createInvestmentTransferSchema.parse(input);
+      const data = await request<{ id: string; eventType: string; status: string }>(
+        "/api/v1/ledger/investments/transfer",
+        { method: "POST", body: JSON.stringify(body) },
       );
       return data;
     },

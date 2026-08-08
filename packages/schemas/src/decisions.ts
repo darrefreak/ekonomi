@@ -79,6 +79,8 @@ export const opportunitiesResponseSchema = z.object({
       title: z.string(),
       description: z.string(),
       estimatedAnnualSaving: moneySchema.nullable(),
+      /** Heuristic / formula basis — never present savings as guaranteed. */
+      estimateBasis: z.string().nullable().optional(),
       confidence: z.number().nullable(),
       effort: z.string(),
       risk: z.string(),

@@ -13,7 +13,7 @@ Legend for layer columns: **C** complete · **P** partial · **S** scaffold · *
 
 | Feature | Status | BE | FE | Test | Mobile | Pri | Deps | Missing / defects |
 |---|---|---|---|---|---|---|---|---|
-| Authentication (login/register/JWT) | PARTIAL | C | P | P | P | P0 | — | Logout/revoke-all API + UI; refresh still not auto-wired in client |
+| Authentication (login/register/JWT) | COMPLETE | C | C | P | P | P0 | — | Refresh-on-401 wired (P1-U2); logout/revoke-all present |
 | Household creation | COMPLETE | C | C | P | P | P1 | Auth | Onboarding + settings rename (P1-U1) |
 | Household membership | COMPLETE | C | C | C | P | P0 | Auth | Invite/accept/role/remove + last-OWNER (P1-U1) |
 | Permissions / roles | COMPLETE | C | C | C | P | P0 | Members | Role change UI + authz tests (P1-U1) |
@@ -38,8 +38,8 @@ Legend for layer columns: **C** complete · **P** partial · **S** scaffold · *
 | Ledger entries/postings | COMPLETE | C | N | C | N | P0 | Engine | Runtime persist via events (R1–R3/U1); no raw posting UI |
 | Transaction splits | COMPLETE | C | C | P | P | P0 | Events | replaceEventSplits + split editor (P1-U1) |
 | Internal transfers | COMPLETE | C | C | C | P | P0 | Ledger | Product UX + copy (P1-U1) |
-| Credit card handling | PARTIAL | C | N | C | N | P1 | Ledger | API exists; dedicated UX deferred U2+ |
-| Mortgage handling | PARTIAL | C | P | C | N | P1 | Ledger | Split editor covers principal/interest; full mortgage form deferred |
+| Credit card handling | COMPLETE | C | C | C | P | P1 | Ledger | Purchase/payment product forms (P1-U2) |
+| Mortgage handling | COMPLETE | C | C | C | P | P1 | Ledger | Mortgage payment form + splits (P1-U2) |
 | Refunds / reimbursements | COMPLETE | C | C | C | P | P0 | Ledger | HTTP + UI (R3/U1) |
 | Merchant normalization | PARTIAL | P | P | P | P | P2 | — | List + assign (P1-U1); alias engine deferred |
 | Categories | COMPLETE | C | C | C | P | P1 | — | User CRUD + archive (P1-U1) |
@@ -74,13 +74,13 @@ Legend for layer columns: **C** complete · **P** partial · **S** scaffold · *
 | Recurring | PARTIAL | P | N | N | N | P1 | — | Seed/detection foundation thin |
 | Subscriptions | PARTIAL | P | P | P | B | P1 | — | Read + annualize |
 | Contracts | PARTIAL | P | P | P | B | P1 | — | Read |
-| Sinking funds | PARTIAL | P | P | P | P | P1 | Goals | Create/contribute UX (WS D); update still thin |
+| Sinking funds | COMPLETE | C | C | P | P | P1 | Goals | Create/contribute/edit (P1-U2) |
 | Goals | COMPLETE | C | C | P | P | P1 | — | Create/edit/status + progress (P1-U1) |
 | Planned expenses | SCAFFOLD_ONLY | S | N | N | N | P2 | Forecast | — |
 | Forecast horizons | PARTIAL | P | P | P | P | P0 | Core | Live 7d–12m engine (WS E); linear model |
 | Forecast backtesting | PARTIAL | P | P | P | P | P2 | Forecast | Infra + lookback compare (WS E) |
 | Scenarios | PARTIAL | P | P | P | P | P1 | Engine | Non-destructive simulate (WS E) |
-| Available to invest | SCAFFOLD_ONLY | S | N | N | N | P1 | Policies | Spec only / thin |
+| Available to invest | COMPLETE | C | C | C | P | P1 | Policies | Policy math + dashboard (P1-U2); not advice |
 
 ---
 

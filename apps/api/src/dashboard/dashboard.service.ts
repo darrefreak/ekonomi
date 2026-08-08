@@ -1,11 +1,16 @@
 import { Inject, Injectable } from "@nestjs/common";
+import { eq } from "drizzle-orm";
 import { money, moneyToJson, type CurrencyCode } from "@ffos/domain";
+import { calculateAvailableToInvest } from "@ffos/financial-engine";
 import type { DashboardResponse } from "@ffos/schemas";
 import { DecisionsService } from "../decisions/decisions.service";
+import { getDb } from "../db/client";
+import { sinkingFunds } from "../db/schema-planning";
 import { HouseholdAccessService } from "../households/household-access.service";
 import { HouseholdMetricsService } from "../metrics/household-metrics.service";
 import { PlanningMetricsService } from "../planning/planning-metrics.service";
 import { ReviewService } from "../review/review.service";
+import { SettingsService } from "../settings/settings.service";
 
 @Injectable()
 export class DashboardService {
@@ -17,6 +22,7 @@ export class DashboardService {
     @Inject(PlanningMetricsService)
     private readonly planning: PlanningMetricsService,
     @Inject(DecisionsService) private readonly decisions: DecisionsService,
+    @Inject(SettingsService) private readonly settings: SettingsService,
   ) {}
 
   async getDashboard(
@@ -28,12 +34,13 @@ export class DashboardService {
     const currency = (household.baseCurrency || "SEK") as CurrencyCode;
     const asOf = asOfInput ?? process.env.DEMO_AS_OF_DATE ?? "2026-08-01";
 
-    const [snap, coverage, review, budget, opps] = await Promise.all([
+    const [snap, coverage, review, budget, opps, settings] = await Promise.all([
       this.metrics.getFinancialSnapshot(householdId, currency, asOf),
       this.metrics.coverage(householdId, asOf),
       this.review.list(userId, householdId),
       this.planning.getBudget(householdId, currency, asOf),
       this.decisions.opportunities(userId, householdId),
+      this.settings.get(userId, householdId),
     ]);
 
     const hour = new Date().getHours();
@@ -52,6 +59,7 @@ export class DashboardService {
         title: o.title,
         description: o.description,
         estimatedAnnualSaving: o.estimatedAnnualSaving,
+        estimateBasis: o.estimateBasis ?? null,
         confidence: o.confidence,
         effort: o.effort,
         risk: o.risk,
@@ -59,6 +67,64 @@ export class DashboardService {
         status: o.status,
         category: o.category,
       }));
+
+    const horizon30 = new Date(`${asOf}T00:00:00.000Z`);
+    horizon30.setUTCDate(horizon30.getUTCDate() + 30);
+    const horizon30Date = horizon30.toISOString().slice(0, 10);
+    const upcoming30dOutflowMinor = snap.upcoming
+      .filter(
+        (u) =>
+          (u.kind === "bill" || u.kind === "other") &&
+          u.date >= asOf &&
+          u.date <= horizon30Date,
+      )
+      .reduce((sum, u) => sum + BigInt(u.amount.amountMinor), 0n);
+
+    const fundRows = await getDb()
+      .select({ currentReservedMinor: sinkingFunds.currentReservedMinor })
+      .from(sinkingFunds)
+      .where(eq(sinkingFunds.householdId, householdId));
+    const reservedSinkingFundMinor = fundRows.reduce(
+      (sum, f) => sum + f.currentReservedMinor,
+      0n,
+    );
+
+    const ati = calculateAvailableToInvest({
+      availableCashMinor: snap.position.availableCash.amountMinor,
+      minimumCashBalanceMinor: BigInt(
+        settings.financialPolicies.minimumCashBalanceMinor,
+      ),
+      emergencyFundTargetMinor: BigInt(
+        settings.financialPolicies.emergencyFundTargetMinor,
+      ),
+      safetyMarginMinor: BigInt(settings.financialPolicies.safetyMarginMinor),
+      reservedSinkingFundMinor,
+      upcoming30dOutflowMinor,
+    });
+    const availableToInvest = {
+      amount: moneyToJson(money(ati.availableToInvestMinor, currency)),
+      assumptions: ati.assumptions,
+      deductions: {
+        minimumCashBalance: moneyToJson(
+          money(ati.deductions.minimumCashBalanceMinor, currency),
+        ),
+        emergencyFundTarget: moneyToJson(
+          money(ati.deductions.emergencyFundTargetMinor, currency),
+        ),
+        safetyMargin: moneyToJson(
+          money(ati.deductions.safetyMarginMinor, currency),
+        ),
+        reservedSinkingFunds: moneyToJson(
+          money(ati.deductions.reservedSinkingFundMinor, currency),
+        ),
+        upcoming30dOutflows: moneyToJson(
+          money(ati.deductions.upcoming30dOutflowMinor, currency),
+        ),
+        total: moneyToJson(money(ati.deductions.totalDeductedMinor, currency)),
+      },
+      disclaimer:
+        "Policyberäkning av kassaöverskott — inte investeringsrådgivning.",
+    };
 
     const brief = buildBrief({
       spendingDeltaPercent: snap.cashflow.comparison.spendingDeltaPercent,
@@ -81,6 +147,7 @@ export class DashboardService {
         investments: moneyToJson(snap.position.investments),
         debt: moneyToJson(snap.position.liabilities),
       },
+      availableToInvest,
       thisMonth: {
         income: moneyToJson(money(snap.incomeMinor, currency)),
         spending: moneyToJson(money(snap.spendingMinor, currency)),
