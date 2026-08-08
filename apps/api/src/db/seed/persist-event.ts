@@ -78,6 +78,12 @@ export type PersistBalancedEventInput = {
   transferGroupId?: string;
   importBatchId?: string;
   externalId?: string;
+  /**
+   * Client command identity (HTTP `Idempotency-Key`). Independent of
+   * `externalId`, which is source-provider identity, so manual user commands
+   * are protected without inventing a fake source id.
+   */
+  idempotencyKey?: string;
   /** Provenance for the financial event (seed | api | import | …). */
   sourceType?: string;
   /** Logical command type for idempotency (defaults from sourceType). */
@@ -151,6 +157,29 @@ function payloadHashForPersist(input: PersistBalancedEventInput): string {
   });
 }
 
+export type CommandKeySource = "idempotency_key" | "external_id";
+
+export type ResolvedCommandKey = {
+  key: string;
+  keySource: CommandKeySource;
+};
+
+/**
+ * Command identity for idempotency. A client `Idempotency-Key` wins over source
+ * `externalId` so retries of a manual command collapse to one economic effect.
+ */
+function resolveCommandKey(
+  input: Pick<PersistBalancedEventInput, "idempotencyKey" | "externalId">,
+): ResolvedCommandKey | null {
+  if (input.idempotencyKey) {
+    return { key: input.idempotencyKey, keySource: "idempotency_key" };
+  }
+  if (input.externalId) {
+    return { key: input.externalId, keySource: "external_id" };
+  }
+  return null;
+}
+
 async function loadEventById(db: DbExecutor, eventId: string) {
   const [event] = await db
     .select()
@@ -164,7 +193,7 @@ async function lookupIdempotentEvent(
   db: DbExecutor,
   householdId: string,
   commandType: string,
-  externalId: string,
+  commandKey: ResolvedCommandKey,
   payloadHash: string,
 ) {
   const [row] = await db
@@ -174,7 +203,8 @@ async function lookupIdempotentEvent(
       and(
         eq(financialCommandIdempotency.householdId, householdId),
         eq(financialCommandIdempotency.commandType, commandType),
-        eq(financialCommandIdempotency.externalId, externalId),
+        eq(financialCommandIdempotency.keySource, commandKey.keySource),
+        eq(financialCommandIdempotency.externalId, commandKey.key),
       ),
     )
     .limit(1);
@@ -198,13 +228,14 @@ async function persistBalancedEventInTx(
   const sourceType = input.sourceType ?? "seed";
   const commandType = input.commandType ?? "LEDGER_EVENT";
   const payloadHash = payloadHashForPersist(input);
+  const commandKey = resolveCommandKey(input);
 
-  if (input.externalId) {
+  if (commandKey) {
     const existing = await lookupIdempotentEvent(
       db,
       input.householdId,
       commandType,
-      input.externalId,
+      commandKey,
       payloadHash,
     );
     if (existing) return existing;
@@ -377,11 +408,12 @@ async function persistBalancedEventInTx(
     }
   }
 
-  if (input.externalId) {
+  if (commandKey) {
     await db.insert(financialCommandIdempotency).values({
       householdId: input.householdId,
       commandType,
-      externalId: input.externalId,
+      externalId: commandKey.key,
+      keySource: commandKey.keySource,
       payloadHash,
       financialEventId: event.id,
     });
@@ -411,6 +443,7 @@ async function persistBalancedEventInTx(
 export async function persistBalancedEvent(input: PersistBalancedEventInput) {
   const commandType = input.commandType ?? "LEDGER_EVENT";
   const payloadHash = payloadHashForPersist(input);
+  const commandKey = resolveCommandKey(input);
 
   const run = async (executor: DbExecutor) =>
     persistBalancedEventInTx(executor, input);
@@ -421,15 +454,14 @@ export async function persistBalancedEvent(input: PersistBalancedEventInput) {
     }
     return await getDb().transaction(async (tx) => run(tx));
   } catch (err) {
-    if (
-      input.externalId &&
-      isUniqueViolation(err)
-    ) {
+    // Concurrent same-key submissions: the unique index lets exactly one
+    // transaction commit; losers resolve to the winner's event.
+    if (commandKey && isUniqueViolation(err)) {
       const existing = await lookupIdempotentEvent(
         getDb(),
         input.householdId,
         commandType,
-        input.externalId,
+        commandKey,
         payloadHash,
       );
       if (existing) return existing;

@@ -17,6 +17,7 @@ import { HouseholdMetricsService } from "../metrics/household-metrics.service";
 import { MetricRegistryService } from "../metrics/metric-registry.service";
 import { IntakeService } from "../intake/intake.service";
 import { AuditService } from "../audit/audit.service";
+import { resolveHouseholdAsOf } from "../common/as-of";
 import { DebtService } from "../debt/debt.service";
 import { LedgerTruthService } from "../ledger/ledger-truth.service";
 import { PlanningMetricsService } from "../planning/planning-metrics.service";
@@ -24,7 +25,7 @@ import { ObjectStorageService } from "../storage/object-storage.service";
 import { VehiclesService } from "../vehicles/vehicles.service";
 import { VehicleIntelService } from "../vehicle-intel/vehicle-intel.service";
 
-const DEMO_AS_OF = () => process.env.DEMO_AS_OF_DATE ?? "2026-08-01";
+// asOf comes from the job payload; otherwise the household clock decides.
 
 /** Job types that write a row to analysis_runs for the Settings status panel. */
 const TRACKED_ANALYSIS_JOBS = new Set<JobType>([
@@ -109,14 +110,14 @@ async function executeJob(
     }
 
     case "RECONCILE_ACCOUNT_BALANCES": {
-      const asOf = payload.asOf ?? DEMO_AS_OF();
+      const asOf = await resolveHouseholdAsOf(payload.householdId, payload.asOf);
       const result = await services.ledger.reconcileHousehold(payload.householdId, asOf);
       return { asOf, updated: result.updated, mismatches: result.mismatches };
     }
 
     case "CALCULATE_METRICS":
     case "CALCULATE_NET_WORTH": {
-      const asOf = payload.asOf ?? DEMO_AS_OF();
+      const asOf = await resolveHouseholdAsOf(payload.householdId, payload.asOf);
       const currency = await resolveHouseholdCurrency(payload.householdId);
       const result = await services.metricRegistry.materializeSnapshots(
         payload.householdId,
@@ -137,7 +138,7 @@ async function executeJob(
     }
 
     case "GENERATE_OPPORTUNITIES": {
-      const asOf = payload.asOf ?? DEMO_AS_OF();
+      const asOf = await resolveHouseholdAsOf(payload.householdId, payload.asOf);
       const currency = await resolveHouseholdCurrency(payload.householdId);
       const detected = await services.generator.generate(payload.householdId, currency, asOf);
       return { asOf, detectedCount: detected.length };
@@ -149,7 +150,7 @@ async function executeJob(
     }
 
     case "RUN_ANOMALY_ANALYSIS": {
-      const asOf = payload.asOf ?? DEMO_AS_OF();
+      const asOf = await resolveHouseholdAsOf(payload.householdId, payload.asOf);
       const detected = await services.anomaly.run(payload.householdId, asOf);
       return { asOf, findingCount: detected.length };
     }
@@ -206,12 +207,16 @@ async function executeJob(
 export async function runJobHandler(payload: JobPayload): Promise<JobHandlerResult> {
   const services = buildServices();
   const track = TRACKED_ANALYSIS_JOBS.has(payload.type) && payload.householdId !== "system";
-  const asOf = ("asOf" in payload && payload.asOf) || DEMO_AS_OF();
-  const startedAt = new Date();
 
   if (!track) {
     return executeJob(services, payload);
   }
+
+  // Only resolved for tracked jobs: system jobs carry no real household id.
+  const asOf =
+    ("asOf" in payload && payload.asOf) ||
+    (await resolveHouseholdAsOf(payload.householdId));
+  const startedAt = new Date();
 
   try {
     const result = await executeJob(services, payload);

@@ -12,6 +12,7 @@ import { getDb } from "../db/client";
 import { budgetLines } from "../db/schema-planning";
 import { HouseholdAccessService } from "../households/household-access.service";
 import { PlanningMetricsService } from "./planning-metrics.service";
+import { resolveHouseholdAsOf } from "../common/as-of";
 
 @Injectable()
 export class BudgetService {
@@ -23,7 +24,7 @@ export class BudgetService {
 
   async get(userId: string, householdId: string) {
     const { household } = await this.access.requireMembership(userId, householdId);
-    const asOf = process.env.DEMO_AS_OF_DATE ?? "2026-08-01";
+    const asOf = await resolveHouseholdAsOf(householdId);
     const budget = await this.planning.getBudget(
       householdId,
       (household.baseCurrency || "SEK") as CurrencyCode,
@@ -59,7 +60,7 @@ export class BudgetService {
       .set({ plannedMinor })
       .where(and(eq(budgetLines.id, lineId), eq(budgetLines.householdId, input.householdId)));
 
-    const asOf = process.env.DEMO_AS_OF_DATE ?? "2026-08-01";
+    const asOf = await resolveHouseholdAsOf(input.householdId);
     const budget = await this.planning.getBudget(
       input.householdId,
       (household.baseCurrency || "SEK") as CurrencyCode,

@@ -2,6 +2,7 @@ import { Controller, Get, Post, UseGuards } from "@nestjs/common";
 import { ApiBearerAuth, ApiTags } from "@nestjs/swagger";
 import { ForbiddenException } from "@nestjs/common";
 import { AuthGuard } from "../auth/auth.guard";
+import { demoSeedAsOf } from "../common/as-of";
 import { seedDemoHousehold } from "../db/seed/demo-household";
 
 @ApiTags("demo")
@@ -14,7 +15,7 @@ export class DemoController {
     return {
       email: "demo@ffos.local",
       passwordHint: "demo-password-123",
-      asOf: process.env.DEMO_AS_OF_DATE ?? "2026-08-01",
+      asOf: demoSeedAsOf(),
       reseedAllowed:
         process.env.FFOS_ALLOW_DEMO_RESEED === "true" ||
         process.env.NODE_ENV !== "production",

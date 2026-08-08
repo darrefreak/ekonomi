@@ -7,7 +7,6 @@ import {
 import { AuthGuard } from "../auth/auth.guard";
 import { CurrentUser } from "../auth/current-user.decorator";
 import type { AuthenticatedUser } from "../auth/auth.types";
-import { resolveAsOf } from "../common/as-of";
 import { ZodValidationPipe } from "../common/zod-validation.pipe";
 import { ReportsService } from "./reports.service";
 
@@ -28,7 +27,7 @@ export class ReportsController {
       user.userId,
       query.householdId,
       query.period,
-      resolveAsOf(query.asOf),
+      query.asOf,
     );
   }
 
@@ -42,7 +41,7 @@ export class ReportsController {
       user.userId,
       query.householdId,
       query.year ? Number(query.year) : undefined,
-      resolveAsOf(query.asOf),
+      query.asOf,
     );
   }
 }

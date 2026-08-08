@@ -8,7 +8,7 @@ import {
 import { AuthGuard } from "../auth/auth.guard";
 import { CurrentUser } from "../auth/current-user.decorator";
 import type { AuthenticatedUser } from "../auth/auth.types";
-import { resolveAsOf } from "../common/as-of";
+import { resolveHouseholdAsOf } from "../common/as-of";
 import { ZodValidationPipe } from "../common/zod-validation.pipe";
 import { HouseholdAccessService } from "../households/household-access.service";
 import { MetricRegistryService } from "./metric-registry.service";
@@ -47,7 +47,7 @@ export class MetricsController {
       query.householdId,
     );
     const currency = (household.baseCurrency || "SEK") as CurrencyCode;
-    const asOf = resolveAsOf(query.asOf);
+    const asOf = await resolveHouseholdAsOf(query.householdId, query.asOf);
 
     if (query.mode === "stored") {
       return this.registry.getStoredSnapshots(query.householdId, asOf, {
@@ -77,7 +77,7 @@ export class MetricsController {
       query.householdId,
     );
     const currency = (household.baseCurrency || "SEK") as CurrencyCode;
-    const asOf = resolveAsOf(query.asOf);
+    const asOf = await resolveHouseholdAsOf(query.householdId, query.asOf);
     const result = await this.registry.getSnapshots(
       query.householdId,
       currency,

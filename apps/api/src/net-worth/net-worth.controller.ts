@@ -4,7 +4,6 @@ import { householdAsOfQuerySchema } from "@ffos/schemas";
 import { AuthGuard } from "../auth/auth.guard";
 import { CurrentUser } from "../auth/current-user.decorator";
 import type { AuthenticatedUser } from "../auth/auth.types";
-import { resolveAsOf } from "../common/as-of";
 import { ZodValidationPipe } from "../common/zod-validation.pipe";
 import { NetWorthService } from "./net-worth.service";
 
@@ -21,10 +20,6 @@ export class NetWorthController {
     @Query(new ZodValidationPipe(householdAsOfQuerySchema))
     query: { householdId: string; asOf?: string },
   ) {
-    return this.netWorth.get(
-      user.userId,
-      query.householdId,
-      resolveAsOf(query.asOf),
-    );
+    return this.netWorth.get(user.userId, query.householdId, query.asOf);
   }
 }

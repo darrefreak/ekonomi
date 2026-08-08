@@ -18,6 +18,7 @@ import {
 } from "../db/schema-planning";
 import { HouseholdAccessService } from "../households/household-access.service";
 import { PlanningMetricsService } from "./planning-metrics.service";
+import { resolveHouseholdAsOf } from "../common/as-of";
 
 @Injectable()
 export class SinkingFundsService {
@@ -29,7 +30,7 @@ export class SinkingFundsService {
 
   private async goalsPayload(userId: string, householdId: string) {
     const { household } = await this.access.requireMembership(userId, householdId);
-    const asOf = process.env.DEMO_AS_OF_DATE ?? "2026-08-01";
+    const asOf = await resolveHouseholdAsOf(householdId);
     return this.planning.getGoals(
       householdId,
       (household.baseCurrency || "SEK") as CurrencyCode,
@@ -116,7 +117,7 @@ export class SinkingFundsService {
     );
     const currency = (household.baseCurrency || "SEK") as CurrencyCode;
     const amount = BigInt(input.amountMinor);
-    const asOf = process.env.DEMO_AS_OF_DATE ?? "2026-08-01";
+    const asOf = await resolveHouseholdAsOf(input.householdId);
     const contributedOn = input.contributedOn ?? asOf;
     const db = getDb();
 

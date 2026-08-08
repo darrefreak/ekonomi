@@ -423,7 +423,10 @@ export const financialCommandIdempotency = pgTable(
       .notNull()
       .references(() => households.id, { onDelete: "cascade" }),
     commandType: varchar("command_type", { length: 80 }).notNull(),
+    /** Resolved command key: client Idempotency-Key or source externalId. */
     externalId: varchar("external_id", { length: 160 }).notNull(),
+    /** Which identity produced `externalId` — keeps the two namespaces apart. */
+    keySource: varchar("key_source", { length: 20 }).notNull().default("external_id"),
     payloadHash: varchar("payload_hash", { length: 64 }).notNull(),
     financialEventId: uuid("financial_event_id")
       .notNull()
@@ -434,6 +437,7 @@ export const financialCommandIdempotency = pgTable(
     uniqueIndex("financial_command_idempotency_key").on(
       t.householdId,
       t.commandType,
+      t.keySource,
       t.externalId,
     ),
   ],

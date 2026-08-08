@@ -40,6 +40,7 @@ import {
 import { vehicles } from "../db/schema-vehicles";
 import { HouseholdAccessService } from "../households/household-access.service";
 import { VehiclesService } from "../vehicles/vehicles.service";
+import { resolveHouseholdAsOf } from "../common/as-of";
 
 const SWITCHING_COST_MINOR = 15_000_00n;
 const KEEP_HORIZON_MONTHS = 36;
@@ -94,7 +95,7 @@ export class VehicleIntelService {
   async market(userId: string, householdId: string, vehicleId?: string) {
     const { household } = await this.access.requireMembership(userId, householdId);
     const currency = (household.baseCurrency || "SEK") as CurrencyCode;
-    const asOf = process.env.DEMO_AS_OF_DATE ?? "2026-08-01";
+    const asOf = await resolveHouseholdAsOf(householdId);
     const db = getDb();
 
     let targetVehicleId = vehicleId;

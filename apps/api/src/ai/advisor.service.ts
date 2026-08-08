@@ -30,6 +30,7 @@ import {
   explainFromTools,
   selectToolsForMessage,
 } from "./ai-tools";
+import { resolveHouseholdAsOf } from "../common/as-of";
 
 @Injectable()
 export class AdvisorService {
@@ -53,7 +54,7 @@ export class AdvisorService {
   ): Promise<AdvisorToolContext & { household: { baseCurrency: string | null } }> {
     const { household } = await this.access.requireMembership(userId, householdId);
     const currency = (household.baseCurrency || "SEK") as CurrencyCode;
-    const asOf = process.env.DEMO_AS_OF_DATE ?? "2026-08-01";
+    const asOf = await resolveHouseholdAsOf(householdId);
     return {
       userId,
       householdId,

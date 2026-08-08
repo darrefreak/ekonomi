@@ -6,6 +6,7 @@ import { HouseholdAccessService } from "../households/household-access.service";
 import { getDb } from "../db/client";
 import { recurringItems } from "../db/schema-planning";
 import { PlanningMetricsService } from "./planning-metrics.service";
+import { resolveHouseholdAsOf } from "../common/as-of";
 
 @Injectable()
 export class SubscriptionsService {
@@ -17,7 +18,7 @@ export class SubscriptionsService {
 
   async get(userId: string, householdId: string) {
     const { household } = await this.access.requireMembership(userId, householdId);
-    const asOf = process.env.DEMO_AS_OF_DATE ?? "2026-08-01";
+    const asOf = await resolveHouseholdAsOf(householdId);
     return this.planning.getSubscriptions(
       householdId,
       (household.baseCurrency || "SEK") as CurrencyCode,

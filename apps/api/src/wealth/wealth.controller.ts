@@ -4,7 +4,6 @@ import { householdAsOfQuerySchema } from "@ffos/schemas";
 import { AuthGuard } from "../auth/auth.guard";
 import { CurrentUser } from "../auth/current-user.decorator";
 import type { AuthenticatedUser } from "../auth/auth.types";
-import { resolveAsOf } from "../common/as-of";
 import { ZodValidationPipe } from "../common/zod-validation.pipe";
 import { WealthService } from "./wealth.service";
 
@@ -21,11 +20,7 @@ export class WealthController {
     @Query(new ZodValidationPipe(householdAsOfQuerySchema))
     query: { householdId: string; asOf?: string },
   ) {
-    return this.wealth.investments(
-      user.userId,
-      query.householdId,
-      resolveAsOf(query.asOf),
-    );
+    return this.wealth.investments(user.userId, query.householdId, query.asOf);
   }
 
   @Get("assets")
@@ -34,10 +29,6 @@ export class WealthController {
     @Query(new ZodValidationPipe(householdAsOfQuerySchema))
     query: { householdId: string; asOf?: string },
   ) {
-    return this.wealth.assets(
-      user.userId,
-      query.householdId,
-      resolveAsOf(query.asOf),
-    );
+    return this.wealth.assets(user.userId, query.householdId, query.asOf);
   }
 }

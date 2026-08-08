@@ -16,6 +16,7 @@ import {
   calculateNetWorth,
   reconstructBalances,
 } from "@ffos/financial-engine";
+import { demoSeedAsOf } from "../../common/as-of";
 import { getDb } from "../client";
 import { householdMembers, households, users } from "../schema";
 import {
@@ -80,7 +81,7 @@ async function seedCategories(householdId: string): Promise<CatMap> {
 }
 
 export async function seedDemoHousehold() {
-  const asOf = process.env.DEMO_AS_OF_DATE ?? "2026-08-01";
+  const asOf = demoSeedAsOf();
   const seedKey = process.env.DEMO_RANDOM_SEED ?? "family-financial-os-demo-v1";
   const rng = createSeededRng(seedKey);
   const db = getDb();
@@ -112,9 +113,11 @@ export async function seedDemoHousehold() {
     })
     .returning();
 
+  // demoAsOf freezes the product clock for the demo household only; real
+  // households resolve asOf from the application clock (RT-001).
   const [household] = await db
     .insert(households)
-    .values({ name: "Familjen Demo", baseCurrency: "SEK" })
+    .values({ name: "Familjen Demo", baseCurrency: "SEK", demoAsOf: asOf })
     .returning();
 
   const [owner] = await db

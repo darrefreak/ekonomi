@@ -11,6 +11,7 @@ import {
 import { vehicles } from "../db/schema-vehicles";
 import { HouseholdAccessService } from "../households/household-access.service";
 import { HouseholdMetricsService } from "../metrics/household-metrics.service";
+import { resolveHouseholdAsOf } from "../common/as-of";
 
 const INVESTMENT_TYPES = ["INVESTMENT", "PENSION", "CRYPTO"] as const;
 
@@ -32,7 +33,7 @@ export class WealthService {
   async investments(userId: string, householdId: string, asOfInput?: string) {
     const { household } = await this.access.requireMembership(userId, householdId);
     const currency = (household.baseCurrency || "SEK") as CurrencyCode;
-    const asOf = asOfInput ?? process.env.DEMO_AS_OF_DATE ?? "2026-08-01";
+    const asOf = await resolveHouseholdAsOf(householdId, asOfInput);
     const { start, end } = this.trailingWindow(asOf);
     const db = getDb();
     const [aligned, snap] = await Promise.all([
@@ -134,7 +135,7 @@ export class WealthService {
   async assets(userId: string, householdId: string, asOfInput?: string) {
     const { household } = await this.access.requireMembership(userId, householdId);
     const currency = (household.baseCurrency || "SEK") as CurrencyCode;
-    const asOf = asOfInput ?? process.env.DEMO_AS_OF_DATE ?? "2026-08-01";
+    const asOf = await resolveHouseholdAsOf(householdId, asOfInput);
     const db = getDb();
     const [aligned, snap] = await Promise.all([
       this.metrics.getLedgerAlignedAccountRows(householdId),

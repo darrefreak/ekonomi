@@ -7,7 +7,6 @@ import {
 import { AuthGuard } from "../auth/auth.guard";
 import { CurrentUser } from "../auth/current-user.decorator";
 import type { AuthenticatedUser } from "../auth/auth.types";
-import { resolveAsOf } from "../common/as-of";
 import { ZodValidationPipe } from "../common/zod-validation.pipe";
 import { DebtService } from "./debt.service";
 
@@ -24,11 +23,7 @@ export class DebtController {
     @Query(new ZodValidationPipe(householdAsOfQuerySchema))
     query: { householdId: string; asOf?: string },
   ) {
-    return this.debt.list(
-      user.userId,
-      query.householdId,
-      resolveAsOf(query.asOf),
-    );
+    return this.debt.list(user.userId, query.householdId, query.asOf);
   }
 
   @Get(":accountId")
@@ -43,7 +38,7 @@ export class DebtController {
       user.userId,
       query.householdId,
       params.accountId,
-      resolveAsOf(query.asOf),
+      query.asOf,
     );
   }
 }

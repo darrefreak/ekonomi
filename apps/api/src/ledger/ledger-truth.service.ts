@@ -15,6 +15,7 @@ import {
 } from "../db/schema-economic";
 import { AuditService } from "../audit/audit.service";
 import { logger } from "../common/logger";
+import { resolveHouseholdAsOf } from "../common/as-of";
 
 export type AuthoritativeBalance = {
   accountId: string;
@@ -205,7 +206,7 @@ export class LedgerTruthService {
   }
 
   async reconcileHousehold(householdId: string, asOf?: string) {
-    const day = asOf ?? process.env.DEMO_AS_OF_DATE ?? "2026-08-01";
+    const day = await resolveHouseholdAsOf(householdId, asOf);
     const result = await this.refreshDerivedCaches(householdId, day);
     await this.audit.record({
       householdId,

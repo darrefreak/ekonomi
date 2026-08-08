@@ -11,6 +11,7 @@ import { HouseholdMetricsService } from "../metrics/household-metrics.service";
 import { PlanningMetricsService } from "../planning/planning-metrics.service";
 import { ReviewService } from "../review/review.service";
 import { SettingsService } from "../settings/settings.service";
+import { resolveHouseholdAsOf } from "../common/as-of";
 
 @Injectable()
 export class DashboardService {
@@ -32,7 +33,7 @@ export class DashboardService {
   ): Promise<DashboardResponse> {
     const { household } = await this.access.requireMembership(userId, householdId);
     const currency = (household.baseCurrency || "SEK") as CurrencyCode;
-    const asOf = asOfInput ?? process.env.DEMO_AS_OF_DATE ?? "2026-08-01";
+    const asOf = await resolveHouseholdAsOf(householdId, asOfInput);
 
     const [snap, coverage, review, budget, opps, settings] = await Promise.all([
       this.metrics.getFinancialSnapshot(householdId, currency, asOf),
