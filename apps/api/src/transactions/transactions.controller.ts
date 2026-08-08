@@ -1,18 +1,23 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Inject,
   Param,
   Patch,
+  Post,
   Query,
   UseGuards,
 } from "@nestjs/common";
 import { ApiBearerAuth, ApiTags } from "@nestjs/swagger";
 import {
+  createCategorySchema,
   householdIdQuerySchema,
   idParamSchema,
+  listCategoriesQuerySchema,
   listTransactionsQuerySchema,
+  updateCategorySchema,
   updateTransactionSchema,
 } from "@ffos/schemas";
 import { AuthGuard } from "../auth/auth.guard";
@@ -33,10 +38,60 @@ export class TransactionsController {
   @Get("categories")
   listCategories(
     @CurrentUser() user: AuthenticatedUser,
+    @Query(new ZodValidationPipe(listCategoriesQuerySchema))
+    query: { householdId: string; includeArchived?: string },
+  ) {
+    return this.transactions.listCategories(user.userId, query.householdId, {
+      includeArchived:
+        query.includeArchived === "true" || query.includeArchived === "1",
+    });
+  }
+
+  @Post("categories")
+  createCategory(
+    @CurrentUser() user: AuthenticatedUser,
+    @Body(new ZodValidationPipe(createCategorySchema)) body: unknown,
+  ) {
+    return this.transactions.createCategory(
+      user.userId,
+      createCategorySchema.parse(body),
+    );
+  }
+
+  @Patch("categories/:id")
+  updateCategory(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param(new ZodValidationPipe(idParamSchema)) params: { id: string },
+    @Body(new ZodValidationPipe(updateCategorySchema)) body: unknown,
+  ) {
+    return this.transactions.updateCategory(
+      user.userId,
+      params.id,
+      updateCategorySchema.parse(body),
+    );
+  }
+
+  @Delete("categories/:id")
+  archiveCategory(
+    @CurrentUser() user: AuthenticatedUser,
+    @Query(new ZodValidationPipe(householdIdQuerySchema))
+    query: { householdId: string },
+    @Param(new ZodValidationPipe(idParamSchema)) params: { id: string },
+  ) {
+    return this.transactions.archiveCategory(
+      user.userId,
+      query.householdId,
+      params.id,
+    );
+  }
+
+  @Get("merchants")
+  listMerchants(
+    @CurrentUser() user: AuthenticatedUser,
     @Query(new ZodValidationPipe(householdIdQuerySchema))
     query: { householdId: string },
   ) {
-    return this.transactions.listCategories(user.userId, query.householdId);
+    return this.transactions.listMerchants(user.userId, query.householdId);
   }
 
   @Get("transactions")

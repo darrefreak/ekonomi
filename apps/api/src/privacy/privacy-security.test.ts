@@ -68,8 +68,8 @@ test("roles privacy logout and export against real DB", async () => {
 
   const access = new HouseholdAccessService();
   const audit = new AuditService();
-  const accountsService = new AccountsService(access);
-  const txService = new TransactionsService(access);
+  const accountsService = new AccountsService(access, audit);
+  const txService = new TransactionsService(access, audit);
   const settings = new SettingsService(access, audit);
   const privacy = new PrivacyService(access, audit);
   const auth = new AuthService(new JwtService({}), audit);

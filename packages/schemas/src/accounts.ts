@@ -24,6 +24,7 @@ export const accountSchema = z.object({
   accountType: z.string(),
   currency: z.string(),
   isShared: z.boolean(),
+  ownerMemberId: z.string().uuid().nullable().optional(),
   currentBalance: moneySchema,
   connectionStatus: z.string(),
   lastSyncedAt: z.string().nullable(),
@@ -48,6 +49,7 @@ export const createAccountSchema = z
     creditLimitMinor: amountMinorStringSchema.optional().nullable(),
     externalReference: z.string().max(160).optional().nullable(),
     openingBalanceMinor: nonNegativeAmountMinorStringSchema.optional().default("0"),
+    ownerMemberId: z.string().uuid().optional().nullable(),
   })
   .strict();
 
@@ -57,6 +59,7 @@ export const updateAccountSchema = z
     name: z.string().min(1).max(160).optional(),
     provider: z.string().max(80).optional().nullable(),
     isShared: z.boolean().optional(),
+    ownerMemberId: z.string().uuid().optional().nullable(),
     creditLimitMinor: amountMinorStringSchema.optional().nullable(),
     externalReference: z.string().max(160).optional().nullable(),
     connectionStatus: z

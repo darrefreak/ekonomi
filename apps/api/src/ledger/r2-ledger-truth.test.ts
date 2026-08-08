@@ -84,7 +84,7 @@ async function setup() {
   const ledger = new LedgerTruthService(audit);
   const events = new EconomicEventsService(ledger, audit);
   const metrics = new HouseholdMetricsService();
-  const accountsService = new AccountsService(access, ledger);
+  const accountsService = new AccountsService(access, audit, ledger);
   const debt = new DebtService(access, metrics);
 
   return {

@@ -99,20 +99,7 @@ export const listTransactionsQuerySchema = z
   });
 
 
-export const categorySchema = z.object({
-  id: z.string().uuid(),
-  key: z.string(),
-  name: z.string(),
-  kind: z.string(),
-  parentId: z.string().uuid().nullable().optional(),
-});
-
-export const categoriesResponseSchema = z.object({
-  items: z.array(categorySchema),
-});
-
 export type TransactionDto = z.infer<typeof transactionSchema>;
 export type TransactionDetailDto = z.infer<typeof transactionDetailSchema>;
 export type TransactionsResponse = z.infer<typeof transactionsResponseSchema>;
 export type UpdateTransactionInput = z.infer<typeof updateTransactionSchema>;
-export type CategoriesResponse = z.infer<typeof categoriesResponseSchema>;

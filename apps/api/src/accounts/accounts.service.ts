@@ -9,6 +9,7 @@ import { and, asc, desc, eq, gte, isNull, lte, ne, sql } from "drizzle-orm";
 import { money, moneyToJson } from "@ffos/domain";
 import type { CreateAccountInput, UpdateAccountInput } from "@ffos/schemas";
 import { getDb } from "../db/client";
+import { householdMembers } from "../db/schema";
 import {
   accountBalanceSnapshots,
   accounts,
@@ -18,6 +19,7 @@ import {
 } from "../db/schema-economic";
 import { HouseholdAccessService } from "../households/household-access.service";
 import { LedgerTruthService } from "../ledger/ledger-truth.service";
+import { AuditService } from "../audit/audit.service";
 
 const USER_ACCOUNT_TYPES = new Set([
   "CHECKING",
@@ -38,8 +40,27 @@ const USER_ACCOUNT_TYPES = new Set([
 export class AccountsService {
   constructor(
     @Inject(HouseholdAccessService) private readonly access: HouseholdAccessService,
+    @Inject(AuditService) private readonly audit: AuditService,
     @Optional() private readonly ledger?: LedgerTruthService,
   ) {}
+
+  /** Validates that a member belongs to the household before assigning ownership. */
+  private async requireMemberInHousehold(householdId: string, memberId: string) {
+    const db = getDb();
+    const [member] = await db
+      .select({ id: householdMembers.id })
+      .from(householdMembers)
+      .where(
+        and(
+          eq(householdMembers.id, memberId),
+          eq(householdMembers.householdId, householdId),
+        ),
+      )
+      .limit(1);
+    if (!member) {
+      throw new BadRequestException("ownerMemberId does not belong to this household");
+    }
+  }
 
   async list(
     userId: string,
@@ -87,6 +108,9 @@ export class AccountsService {
     if (!USER_ACCOUNT_TYPES.has(input.accountType)) {
       throw new BadRequestException("Invalid account type");
     }
+    if (input.ownerMemberId) {
+      await this.requireMemberInHousehold(input.householdId, input.ownerMemberId);
+    }
     const db = getDb();
     const opening = BigInt(input.openingBalanceMinor ?? "0");
     const creditLimit =
@@ -101,6 +125,7 @@ export class AccountsService {
         accountType: input.accountType,
         currency: input.currency ?? "SEK",
         provider: input.provider ?? null,
+        ownerMemberId: input.ownerMemberId ?? null,
         isShared: input.isShared ?? true,
         creditLimitMinor: creditLimit,
         externalReference: input.externalReference ?? null,
@@ -129,6 +154,20 @@ export class AccountsService {
       });
     }
 
+    await this.audit.record({
+      householdId: input.householdId,
+      actorUserId: userId,
+      action: "account.create",
+      entity: "account",
+      entityId: row.id,
+      after: {
+        name: row.name,
+        accountType: row.accountType,
+        ownerMemberId: row.ownerMemberId,
+        isShared: row.isShared,
+      },
+    });
+
     return this.toListItem(row);
   }
 
@@ -150,12 +189,19 @@ export class AccountsService {
       throw new NotFoundException("Account not found");
     }
 
+    if (input.ownerMemberId) {
+      await this.requireMemberInHousehold(input.householdId, input.ownerMemberId);
+    }
+
     const patch: Partial<typeof accounts.$inferInsert> = {
       updatedAt: new Date(),
     };
     if (input.name !== undefined) patch.name = input.name.trim();
     if (input.provider !== undefined) patch.provider = input.provider;
     if (input.isShared !== undefined) patch.isShared = input.isShared;
+    if (input.ownerMemberId !== undefined) {
+      patch.ownerMemberId = input.ownerMemberId;
+    }
     if (input.externalReference !== undefined) {
       patch.externalReference = input.externalReference;
     }
@@ -169,11 +215,34 @@ export class AccountsService {
           : BigInt(input.creditLimitMinor);
     }
 
+    const before = {
+      name: existing.name,
+      provider: existing.provider,
+      isShared: existing.isShared,
+      ownerMemberId: existing.ownerMemberId,
+    };
+
     const [row] = await db
       .update(accounts)
       .set(patch)
       .where(eq(accounts.id, accountId))
       .returning();
+
+    await this.audit.record({
+      householdId: input.householdId,
+      actorUserId: userId,
+      action: "account.update",
+      entity: "account",
+      entityId: accountId,
+      before,
+      after: {
+        name: row.name,
+        provider: row.provider,
+        isShared: row.isShared,
+        ownerMemberId: row.ownerMemberId,
+      },
+    });
+
     return this.toListItem(row);
   }
 
@@ -203,6 +272,17 @@ export class AccountsService {
       })
       .where(eq(accounts.id, accountId))
       .returning();
+
+    await this.audit.record({
+      householdId,
+      actorUserId: userId,
+      action: "account.archive",
+      entity: "account",
+      entityId: accountId,
+      before: { archivedAt: null },
+      after: { archivedAt: row.archivedAt?.toISOString() ?? null },
+    });
+
     return this.toListItem(row);
   }
 
@@ -390,6 +470,7 @@ export class AccountsService {
       accountType: row.accountType,
       currency: row.currency,
       isShared: row.isShared,
+      ownerMemberId: row.ownerMemberId ?? null,
       // Caller overlays ledger-calculated balance before mapping when available.
       currentBalance: moneyToJson({
         amountMinor: row.currentBalanceMinor,

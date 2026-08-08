@@ -159,6 +159,7 @@ export const categories = pgTable("categories", {
   name: varchar("name", { length: 120 }).notNull(),
   kind: varchar("kind", { length: 40 }).notNull().default("expense"),
   isSystem: boolean("is_system").notNull().default(true),
+  archivedAt: timestamp("archived_at", { withTimezone: true }),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
 });
 

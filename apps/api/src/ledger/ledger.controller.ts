@@ -12,6 +12,8 @@ import { ApiBearerAuth, ApiTags } from "@nestjs/swagger";
 import {
   createAssetDepreciationSchema,
   createAssetPurchaseSchema,
+  createCashExpenseSchema,
+  createCashIncomeSchema,
   createCashRefundSchema,
   createCreditCardPaymentSchema,
   createCreditCardPurchaseSchema,
@@ -202,6 +204,60 @@ export class LedgerController {
       status: event.status,
       expenseAmountMinor: event.expenseAmountMinor.toString(),
       netWorthDeltaMinor: event.netWorthDeltaMinor.toString(),
+    };
+  }
+
+  @Post("expenses")
+  async createCashExpense(
+    @CurrentUser() user: AuthenticatedUser,
+    @Body(new ZodValidationPipe(createCashExpenseSchema)) body: unknown,
+  ) {
+    const input = createCashExpenseSchema.parse(body);
+    await this.access.requireCanWrite(user.userId, input.householdId);
+    const event = await this.events.createCashExpense({
+      householdId: input.householdId,
+      cashAccountId: input.cashAccountId,
+      expenseAccountId: input.expenseAccountId,
+      amountMinor: BigInt(input.amountMinor),
+      occurredOn: input.occurredOn,
+      description: input.description,
+      categoryId: input.categoryId,
+      merchantName: input.merchantName,
+      notes: input.notes,
+      externalId: input.externalId,
+    });
+    return {
+      id: event.id,
+      eventType: event.eventType,
+      status: event.status,
+      expenseAmountMinor: event.expenseAmountMinor.toString(),
+    };
+  }
+
+  @Post("income")
+  async createCashIncome(
+    @CurrentUser() user: AuthenticatedUser,
+    @Body(new ZodValidationPipe(createCashIncomeSchema)) body: unknown,
+  ) {
+    const input = createCashIncomeSchema.parse(body);
+    await this.access.requireCanWrite(user.userId, input.householdId);
+    const event = await this.events.createCashIncome({
+      householdId: input.householdId,
+      cashAccountId: input.cashAccountId,
+      incomeAccountId: input.incomeAccountId,
+      amountMinor: BigInt(input.amountMinor),
+      occurredOn: input.occurredOn,
+      description: input.description,
+      categoryId: input.categoryId,
+      merchantName: input.merchantName,
+      notes: input.notes,
+      externalId: input.externalId,
+    });
+    return {
+      id: event.id,
+      eventType: event.eventType,
+      status: event.status,
+      incomeAmountMinor: event.incomeAmountMinor.toString(),
     };
   }
 

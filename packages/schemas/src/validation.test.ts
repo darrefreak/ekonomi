@@ -4,13 +4,18 @@ import {
   amountMinorStringSchema,
   createAccountSchema,
   createAssetDepreciationSchema,
+  createCategorySchema,
+  createCashExpenseSchema,
   createInternalTransferSchema,
   createMortgagePaymentSchema,
   currencyCodeSchema,
+  inviteMemberSchema,
   isoDateSchema,
   jobPayloadSchema,
+  listMerchantsQuerySchema,
   listTransactionsQuerySchema,
   transactionSplitsSchema,
+  updateSettingsSchema,
   updateTransactionSchema,
 } from "./index";
 
@@ -217,4 +222,107 @@ test("update transaction rejects unknown privilege fields", () => {
     householdRole: "OWNER",
   });
   assert.equal(bad.success, false);
+});
+
+test("create category rejects mass-assignment and invalid key format", () => {
+  assert.equal(
+    createCategorySchema.safeParse({
+      householdId: "11111111-1111-4111-8111-111111111111",
+      name: "Mat",
+      isSystem: true,
+    }).success,
+    false,
+  );
+  assert.equal(
+    createCategorySchema.safeParse({
+      householdId: "11111111-1111-4111-8111-111111111111",
+      name: "Mat",
+      key: "Mat Uppercase",
+    }).success,
+    false,
+  );
+  assert.equal(
+    createCategorySchema.safeParse({
+      householdId: "11111111-1111-4111-8111-111111111111",
+      name: "Mat",
+      kind: "expense",
+      key: "mat",
+    }).success,
+    true,
+  );
+});
+
+test("invite member defaults role to ADULT and rejects OWNER invites", () => {
+  const parsed = inviteMemberSchema.safeParse({
+    householdId: "11111111-1111-4111-8111-111111111111",
+    email: "test@example.com",
+  });
+  assert.equal(parsed.success, true);
+  if (parsed.success) assert.equal(parsed.data.role, "ADULT");
+
+  assert.equal(
+    inviteMemberSchema.safeParse({
+      householdId: "11111111-1111-4111-8111-111111111111",
+      email: "test@example.com",
+      role: "OWNER",
+    }).success,
+    false,
+  );
+});
+
+test("list merchants query requires householdId", () => {
+  assert.equal(listMerchantsQuerySchema.safeParse({}).success, false);
+  assert.equal(
+    listMerchantsQuerySchema.safeParse({
+      householdId: "11111111-1111-4111-8111-111111111111",
+      q: "ica",
+    }).success,
+    true,
+  );
+});
+
+test("cash expense requires positive amount and rejects unknown fields", () => {
+  const base = {
+    householdId: "11111111-1111-4111-8111-111111111111",
+    cashAccountId: "11111111-1111-4111-8111-111111111112",
+    amountMinor: "10000",
+    occurredOn: "2026-08-01",
+  };
+  assert.equal(createCashExpenseSchema.safeParse(base).success, true);
+  assert.equal(
+    createCashExpenseSchema.safeParse({ ...base, amountMinor: "0" }).success,
+    false,
+  );
+  assert.equal(
+    createCashExpenseSchema.safeParse({ ...base, skipAuthCheck: true }).success,
+    false,
+  );
+});
+
+test("update settings bounds new financial policy percentages 0-100", () => {
+  assert.equal(
+    updateSettingsSchema.safeParse({
+      householdId: "11111111-1111-4111-8111-111111111111",
+      financialPolicies: { savingsRateTargetPercent: 101 },
+    }).success,
+    false,
+  );
+  assert.equal(
+    updateSettingsSchema.safeParse({
+      householdId: "11111111-1111-4111-8111-111111111111",
+      financialPolicies: { maxFixedCostRatioPercent: -1 },
+    }).success,
+    false,
+  );
+  assert.equal(
+    updateSettingsSchema.safeParse({
+      householdId: "11111111-1111-4111-8111-111111111111",
+      financialPolicies: {
+        savingsRateTargetPercent: 25.5,
+        maxFixedCostRatioPercent: 45,
+        investmentContributionTargetMinor: "150000",
+      },
+    }).success,
+    true,
+  );
 });

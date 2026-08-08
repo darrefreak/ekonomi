@@ -69,6 +69,29 @@ export const householdMembers = pgTable("household_members", {
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
 });
 
+/** Pending / accepted household invites (Mailpit SMTP in V1). */
+export const householdInvitations = pgTable("household_invitations", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  householdId: uuid("household_id")
+    .notNull()
+    .references(() => households.id, { onDelete: "cascade" }),
+  email: varchar("email", { length: 320 }).notNull(),
+  role: householdRoleEnum("role").notNull().default("ADULT"),
+  token: varchar("token", { length: 64 }).notNull().unique(),
+  status: varchar("status", { length: 40 }).notNull().default("PENDING"),
+  invitedByUserId: uuid("invited_by_user_id").references(() => users.id, {
+    onDelete: "set null",
+  }),
+  acceptedByUserId: uuid("accepted_by_user_id").references(() => users.id, {
+    onDelete: "set null",
+  }),
+  expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+  acceptedAt: timestamp("accepted_at", { withTimezone: true }),
+  cancelledAt: timestamp("cancelled_at", { withTimezone: true }),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+});
+
 export const featureFlags = pgTable("feature_flags", {
   key: varchar("key", { length: 80 }).primaryKey(),
   enabled: boolean("enabled").notNull().default(false),
