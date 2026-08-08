@@ -45,14 +45,13 @@ P0 financial core remains protected (no float money, no Metric Registry bypass, 
 
 ## Gates
 
-Recorded after commit/push in this batch:
-
 | Gate | Result |
 |---|---|
-| typecheck / lint / build | (see CI / local run) |
-| API + engine tests | (see local run) |
-| E2E | Prefer `pnpm test:e2e:docker` if host Chromium libs missing |
-| Docker compose | Smoke if services available |
+| typecheck / lint / build | Pass |
+| Engine tests | 57 pass |
+| API tests | 94 pass |
+| E2E (`e2e/p1-u3-polish.spec.ts`, chromium via Docker Playwright) | 3/3 + setup pass |
+| Docker compose (api/web/worker rebuild + demo reseed) | Pass |
 
 ## Stop
 
