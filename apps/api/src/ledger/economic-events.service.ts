@@ -19,7 +19,7 @@ import {
   type BalancedLedgerDraft,
 } from "@ffos/financial-engine";
 import type { CurrencyCode } from "@ffos/domain";
-import { and, eq, sql } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { getDb } from "../db/client";
 import {
   accounts,
