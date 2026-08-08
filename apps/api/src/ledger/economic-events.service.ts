@@ -1,7 +1,12 @@
-import { BadRequestException, Injectable } from "@nestjs/common";
+import {
+  BadRequestException,
+  ConflictException,
+  Injectable,
+} from "@nestjs/common";
 import { randomUUID } from "node:crypto";
 import {
   buildAssetDepreciation,
+  buildCashExpense,
   buildCreditCardPayment,
   buildCreditCardPurchase,
   buildInternalTransfer,
@@ -14,7 +19,16 @@ import type { CurrencyCode } from "@ffos/domain";
 import { and, eq } from "drizzle-orm";
 import { getDb } from "../db/client";
 import { accounts } from "../db/schema-economic";
-import { persistBalancedEvent } from "../db/seed/persist-event";
+import {
+  FinancialCommandFailedError,
+  IdempotencyConflictError,
+  persistBalancedEvent,
+  replaceEventSplits,
+  reviseEventEconomicMeaning,
+  type FinancialCommandType,
+  type PersistFailPoint,
+  type PersistSplit,
+} from "../db/seed/persist-event";
 import { LedgerTruthService } from "./ledger-truth.service";
 import { AuditService } from "../audit/audit.service";
 
@@ -40,22 +54,34 @@ async function requireAccount(
   return row;
 }
 
+function mapPersistError(err: unknown): never {
+  if (err instanceof IdempotencyConflictError) {
+    throw new ConflictException({
+      code: "IDEMPOTENCY_CONFLICT",
+      message: "Samma idempotency-nyckel med annat ekonomiskt innehåll.",
+    });
+  }
+  if (err instanceof FinancialCommandFailedError) {
+    throw new BadRequestException({
+      code: "FINANCIAL_COMMAND_FAILED",
+      message: "Finansiellt kommando misslyckades.",
+      fields: { _: err.message },
+    });
+  }
+  throw err;
+}
+
 @Injectable()
 export class EconomicEventsService {
   constructor(
     private readonly ledger: LedgerTruthService,
-    private readonly audit: AuditService,
+    /** Retained for Nest/module DI parity; financial audit rows write inside persist txn. */
+    private readonly _audit: AuditService,
   ) {}
 
-  private async afterWrite(householdId: string, asOf: string, action: string) {
+  /** Post-commit derived cache only — never inside the financial txn. */
+  private async afterCommit(householdId: string, asOf: string) {
     await this.ledger.refreshDerivedCaches(householdId, asOf);
-    await this.audit.record({
-      householdId,
-      action,
-      entity: "financial_event",
-      after: { asOf },
-      source: "api",
-    });
   }
 
   async persistDraft(input: {
@@ -84,19 +110,27 @@ export class EconomicEventsService {
     sourceType?: string;
     externalId?: string;
     vehicleId?: string;
+    commandType?: FinancialCommandType;
+    failPoint?: PersistFailPoint;
   }) {
-    const event = await persistBalancedEvent({
-      ...input,
-      sourceType: input.sourceType ?? "api",
-      externalId: input.externalId,
-      vehicleId: input.vehicleId,
-    });
-    await this.afterWrite(
-      input.householdId,
-      input.occurredOn,
-      "ledger.event_persist",
-    );
-    return event;
+    try {
+      const event = await persistBalancedEvent({
+        ...input,
+        sourceType: input.sourceType ?? "api",
+        externalId: input.externalId,
+        vehicleId: input.vehicleId,
+        commandType: input.commandType ?? "LEDGER_EVENT",
+        audit: {
+          action: "ledger.event_persist",
+          after: { asOf: input.occurredOn },
+          source: "api",
+        },
+      });
+      await this.afterCommit(input.householdId, input.occurredOn);
+      return event;
+    } catch (err) {
+      mapPersistError(err);
+    }
   }
 
   async createInternalTransfer(input: {
@@ -108,6 +142,7 @@ export class EconomicEventsService {
     description?: string;
     currency?: CurrencyCode;
     externalId?: string;
+    failPoint?: PersistFailPoint;
   }) {
     if (input.amountMinor <= 0n) {
       throw new BadRequestException("amountMinor must be positive");
@@ -143,12 +178,14 @@ export class EconomicEventsService {
       isInternalTransfer: true,
       transferGroupId,
       externalId,
+      commandType: "INTERNAL_TRANSFER",
       counterpartTx: {
         accountId: input.toAccountId,
         amountMinor: input.amountMinor,
         externalId: `${externalId}-counterpart`,
       },
       createReconciliationGroup: true,
+      failPoint: input.failPoint,
     });
   }
 
@@ -162,6 +199,7 @@ export class EconomicEventsService {
     categoryId?: string;
     merchantId?: string;
     currency?: CurrencyCode;
+    externalId?: string;
   }) {
     await requireAccount(input.householdId, input.creditCardAccountId, [
       "CREDIT_CARD",
@@ -184,6 +222,8 @@ export class EconomicEventsService {
       merchantId: input.merchantId,
       sourceAccountId: input.creditCardAccountId,
       sourceAmountMinor: -input.amountMinor,
+      externalId: input.externalId,
+      commandType: "CREDIT_CARD_PURCHASE",
     });
   }
 
@@ -195,6 +235,7 @@ export class EconomicEventsService {
     occurredOn: string;
     description?: string;
     currency?: CurrencyCode;
+    externalId?: string;
   }) {
     await requireAccount(input.householdId, input.cashAccountId, [
       "CHECKING",
@@ -210,6 +251,9 @@ export class EconomicEventsService {
       amountMinor: input.amountMinor,
       currency: input.currency ?? "SEK",
     });
+    const externalId =
+      input.externalId ??
+      `api-cc-pay-${input.cashAccountId}-${input.creditCardAccountId}-${input.occurredOn}-${input.amountMinor}`;
     return this.persistDraft({
       householdId: input.householdId,
       draft,
@@ -217,6 +261,8 @@ export class EconomicEventsService {
       description: input.description ?? "Kreditkortsbetalning",
       sourceAccountId: input.cashAccountId,
       sourceAmountMinor: -input.amountMinor,
+      externalId,
+      commandType: "CREDIT_CARD_PAYMENT",
     });
   }
 
@@ -230,6 +276,7 @@ export class EconomicEventsService {
     occurredOn: string;
     description?: string;
     currency?: CurrencyCode;
+    externalId?: string;
   }) {
     await requireAccount(input.householdId, input.cashAccountId, [
       "CHECKING",
@@ -259,6 +306,8 @@ export class EconomicEventsService {
       description: input.description ?? "Bolånebetalning",
       sourceAccountId: input.cashAccountId,
       sourceAmountMinor: -total,
+      externalId: input.externalId,
+      commandType: "MORTGAGE_PAYMENT",
       splits: [
         {
           amountMinor: input.principalMinor,
@@ -280,6 +329,7 @@ export class EconomicEventsService {
     occurredOn: string;
     description?: string;
     currency?: CurrencyCode;
+    externalId?: string;
   }) {
     await requireAccount(input.householdId, input.cashAccountId, [
       "CHECKING",
@@ -304,6 +354,8 @@ export class EconomicEventsService {
       description: input.description ?? "Överföring till investering",
       sourceAccountId: input.cashAccountId,
       sourceAmountMinor: -input.amountMinor,
+      externalId: input.externalId,
+      commandType: "INVESTMENT_TRANSFER",
     });
   }
 
@@ -315,6 +367,7 @@ export class EconomicEventsService {
     occurredOn: string;
     description?: string;
     currency?: CurrencyCode;
+    externalId?: string;
   }) {
     await requireAccount(input.householdId, input.cashAccountId);
     await requireAccount(input.householdId, input.expenseAccountId, ["EXPENSE"]);
@@ -332,6 +385,8 @@ export class EconomicEventsService {
       sourceAccountId: input.cashAccountId,
       sourceAmountMinor: input.amountMinor,
       incomeAmountMinor: 0n,
+      externalId: input.externalId,
+      commandType: "CASH_REFUND",
     });
   }
 
@@ -345,6 +400,7 @@ export class EconomicEventsService {
     vehicleId?: string;
     currency?: CurrencyCode;
     externalId?: string;
+    failPoint?: PersistFailPoint;
   }) {
     if (input.amountMinor <= 0n) {
       throw new BadRequestException({
@@ -388,7 +444,95 @@ export class EconomicEventsService {
       externalId:
         input.externalId ??
         `api-depr-${input.assetAccountId}-${input.occurredOn}-${input.amountMinor}`,
+      commandType: "ASSET_DEPRECIATION",
+      failPoint: input.failPoint,
       // No cash source transaction — non-cash write-down (cashflow 0).
+    });
+  }
+
+  /**
+   * Replace splits for an existing event in one DB transaction.
+   * Invalid sets leave prior splits untouched.
+   */
+  async replaceSplits(input: {
+    householdId: string;
+    financialEventId: string;
+    sourceAmountMinor: bigint;
+    splits: PersistSplit[];
+    occurredOn: string;
+    failPoint?: PersistFailPoint;
+  }) {
+    try {
+      const event = await replaceEventSplits({
+        householdId: input.householdId,
+        financialEventId: input.financialEventId,
+        sourceAmountMinor: input.sourceAmountMinor,
+        splits: input.splits,
+        failPoint: input.failPoint,
+      });
+      await this.afterCommit(input.householdId, input.occurredOn);
+      return event;
+    } catch (err) {
+      mapPersistError(err);
+    }
+  }
+
+  /**
+   * Create a cash expense then revise it to an internal transfer atomically
+   * (used for classification revision integrity). Production callers use
+   * `reviseClassification` directly on an existing event.
+   */
+  async reviseClassification(input: {
+    householdId: string;
+    financialEventId: string;
+    draft: BalancedLedgerDraft;
+    occurredOn: string;
+    description: string;
+    incomeAmountMinor?: bigint;
+    isInternalTransfer?: boolean;
+    failPoint?: PersistFailPoint;
+  }) {
+    try {
+      const event = await reviseEventEconomicMeaning(input);
+      await this.afterCommit(input.householdId, input.occurredOn);
+      return event;
+    } catch (err) {
+      mapPersistError(err);
+    }
+  }
+
+  /** Helper for tests / future API: cash expense create. */
+  async createCashExpense(input: {
+    householdId: string;
+    cashAccountId: string;
+    expenseAccountId: string;
+    amountMinor: bigint;
+    occurredOn: string;
+    description?: string;
+    currency?: CurrencyCode;
+    externalId?: string;
+  }) {
+    await requireAccount(input.householdId, input.cashAccountId, [
+      "CHECKING",
+      "SAVINGS",
+      "CASH",
+    ]);
+    await requireAccount(input.householdId, input.expenseAccountId, ["EXPENSE"]);
+    const draft = buildCashExpense({
+      cashAccountId: input.cashAccountId,
+      expenseAccountId: input.expenseAccountId,
+      amountMinor: input.amountMinor,
+      currency: input.currency ?? "SEK",
+    });
+    return this.persistDraft({
+      householdId: input.householdId,
+      draft,
+      occurredOn: input.occurredOn,
+      description: input.description ?? "Utgift",
+      sourceAccountId: input.cashAccountId,
+      sourceAmountMinor: -input.amountMinor,
+      externalId: input.externalId,
+      commandType: "LEDGER_EVENT",
     });
   }
 }

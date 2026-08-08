@@ -6,26 +6,19 @@ Narrow, acceptance-blocking fixes only. No P1 product expansion.
 
 ## P0-A1 — Ledger persist atomicity
 
-**Problem:** `persistBalancedEvent` performs sequential inserts (event → entry → postings → recon → source txs → splits) with **no** `db.transaction`. Mid-failure can leave half-written economic state.
+**Status:** FIXED (Batch R1 — 2026-08-08)  
+**Evidence:** `persistBalancedEvent` uses `db.transaction`; R1-T1 failure injection; see `docs/completion/batches/R1_REPORT.md`.
 
-**Fix scope:**
-- Wrap `persistBalancedEvent` body in a single Postgres transaction.
-- Add a failure-injection / rollback unit or integration test (force posting insert failure → assert zero residual rows).
-
-**Files:** `apps/api/src/db/seed/persist-event.ts`
+**Problem (historical):** sequential inserts without transaction could leave half-written economic state.
 
 ---
 
 ## P0-A2 — Depreciation idempotency
 
-**Problem:** `createAssetDepreciation` sets `externalId` but creates **no** `source_transactions` row, so idempotency lookup never hits. Retry doubles write-down (proven: 300k → 280k on two 10k calls with same key).
+**Status:** FIXED (Batch R1 — 2026-08-08)  
+**Evidence:** `financial_command_idempotency` UNIQUE + payload hash; R1-T2/T3/T4; adversarial re-verify PASS.
 
-**Fix scope:**
-- Persist a non-cash source/idempotency record keyed by `(householdId, externalId)`, **or** look up existing `financial_events` by a durable external key.
-- Reject / return existing event on retry.
-- Add persisted test: same externalId → same event id, balance unchanged on second call.
-
-**Files:** `economic-events.service.ts`, `persist-event.ts`, depreciation invariants test
+**Problem (historical):** `externalId` without source_tx row allowed double write-down.
 
 ---
 
