@@ -8,7 +8,7 @@ import {
   metricInputHash,
   metricVersionsMap,
 } from "@ffos/financial-engine";
-import { resolveAsOf } from "../common/as-of";
+import { resolveHouseholdAsOf } from "../common/as-of";
 import { HouseholdAccessService } from "../households/household-access.service";
 import { HouseholdMetricsService } from "../metrics/household-metrics.service";
 
@@ -28,7 +28,7 @@ export class ReportsService {
   ) {
     const { household } = await this.access.requireMembership(userId, householdId);
     const currency = (household.baseCurrency || "SEK") as CurrencyCode;
-    const asOf = resolveAsOf(asOfInput);
+    const asOf = await resolveHouseholdAsOf(householdId, asOfInput);
     const month =
       period ??
       (() => {
@@ -90,7 +90,7 @@ export class ReportsService {
   ) {
     const { household } = await this.access.requireMembership(userId, householdId);
     const currency = (household.baseCurrency || "SEK") as CurrencyCode;
-    const asOf = resolveAsOf(asOfInput);
+    const asOf = await resolveHouseholdAsOf(householdId, asOfInput);
     const y = year ?? Number(asOf.slice(0, 4));
     const months = Array.from({ length: 12 }, (_, i) =>
       `${y}-${String(i + 1).padStart(2, "0")}`,

@@ -57,17 +57,14 @@ export async function resolveHouseholdAsOf(
   if (cached && Date.now() - cached.at < DEMO_AS_OF_TTL_MS) {
     return cached.value ?? currentAppDate();
   }
-  let demoAsOf: string | null = null;
-  try {
-    const [row] = await getDb()
-      .select({ demoAsOf: households.demoAsOf })
-      .from(households)
-      .where(eq(households.id, householdId))
-      .limit(1);
-    demoAsOf = row?.demoAsOf ?? null;
-  } catch {
-    demoAsOf = null;
-  }
+  // Deliberately not guarded: swallowing a read failure here would silently
+  // move a household's financial date, which is worse than failing the request.
+  const [row] = await getDb()
+    .select({ demoAsOf: households.demoAsOf })
+    .from(households)
+    .where(eq(households.id, householdId))
+    .limit(1);
+  const demoAsOf = row?.demoAsOf ?? null;
   demoAsOfCache.set(householdId, { value: demoAsOf, at: Date.now() });
   return demoAsOf ?? currentAppDate();
 }

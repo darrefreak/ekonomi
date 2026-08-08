@@ -207,14 +207,16 @@ async function executeJob(
 export async function runJobHandler(payload: JobPayload): Promise<JobHandlerResult> {
   const services = buildServices();
   const track = TRACKED_ANALYSIS_JOBS.has(payload.type) && payload.householdId !== "system";
-  const asOf =
-    ("asOf" in payload && payload.asOf) ||
-    (await resolveHouseholdAsOf(payload.householdId));
-  const startedAt = new Date();
 
   if (!track) {
     return executeJob(services, payload);
   }
+
+  // Only resolved for tracked jobs: system jobs carry no real household id.
+  const asOf =
+    ("asOf" in payload && payload.asOf) ||
+    (await resolveHouseholdAsOf(payload.householdId));
+  const startedAt = new Date();
 
   try {
     const result = await executeJob(services, payload);

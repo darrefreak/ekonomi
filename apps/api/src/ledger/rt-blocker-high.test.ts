@@ -261,6 +261,34 @@ test("asOf: two households in one process do not contaminate each other", async 
   assert.notEqual(demoAsOf, realAsOf);
 });
 
+test("asOf: no controller resolves the clock before the household is known", async () => {
+  const { readdirSync, readFileSync } = await import("node:fs");
+  const { join } = await import("node:path");
+
+  const offenders: string[] = [];
+  const walk = (dir: string) => {
+    for (const entry of readdirSync(dir, { withFileTypes: true })) {
+      const full = join(dir, entry.name);
+      if (entry.isDirectory()) {
+        walk(full);
+        continue;
+      }
+      if (!entry.name.endsWith(".controller.ts")) continue;
+      const source = readFileSync(full, "utf8");
+      // `resolveAsOf` has no household context, so calling it in a controller
+      // turns "no asOf given" into today and hides a demo household's own date.
+      if (/\bresolveAsOf\s*\(/.test(source)) offenders.push(entry.name);
+    }
+  };
+  walk(join(__dirname, ".."));
+
+  assert.deepEqual(
+    offenders,
+    [],
+    `controllers must pass asOf through to the service: ${offenders.join(", ")}`,
+  );
+});
+
 test("asOf: an explicit request asOf always wins", async () => {
   const demo = await setup("RT clock explicit", AS_OF);
   if (!demo) return;

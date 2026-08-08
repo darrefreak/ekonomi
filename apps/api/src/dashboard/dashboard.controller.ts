@@ -4,7 +4,6 @@ import { householdAsOfQuerySchema } from "@ffos/schemas";
 import { AuthGuard } from "../auth/auth.guard";
 import { CurrentUser } from "../auth/current-user.decorator";
 import type { AuthenticatedUser } from "../auth/auth.types";
-import { resolveAsOf } from "../common/as-of";
 import { ZodValidationPipe } from "../common/zod-validation.pipe";
 import { DashboardService } from "./dashboard.service";
 
@@ -23,10 +22,8 @@ export class DashboardController {
     @Query(new ZodValidationPipe(householdAsOfQuerySchema))
     query: { householdId: string; asOf?: string },
   ) {
-    return this.dashboard.getDashboard(
-      user.userId,
-      query.householdId,
-      resolveAsOf(query.asOf),
-    );
+    // Pass asOf through unresolved: only the service knows the household, and
+    // a demo household carries its own frozen date (RT-001).
+    return this.dashboard.getDashboard(user.userId, query.householdId, query.asOf);
   }
 }
