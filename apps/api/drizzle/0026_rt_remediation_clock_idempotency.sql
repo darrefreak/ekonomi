@@ -4,6 +4,11 @@
 -- household uses the real application clock.
 ALTER TABLE "households" ADD COLUMN IF NOT EXISTS "demo_as_of" date;
 
+-- Existing demo data was seeded before the column existed; keep its frozen date.
+UPDATE "households"
+SET "demo_as_of" = DATE '2026-08-01'
+WHERE "name" = 'Familjen Demo' AND "demo_as_of" IS NULL;
+
 -- RT-002: command idempotency must also work for manual commands that carry no
 -- source externalId. `external_id` now stores the resolved command key and
 -- `key_source` separates client Idempotency-Key identity from source identity.

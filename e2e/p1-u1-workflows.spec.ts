@@ -33,7 +33,7 @@ test.describe("P1-U1 core workflows", () => {
   test("Flow 4 — create goal persists after refresh", async ({ page }) => {
     const name = `U1 Mål ${Date.now()}`;
     await page.goto("/goals");
-    await expect(page.getByRole("heading", { name: /mål/i })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Mål", exact: true })).toBeVisible();
 
     const form = page.locator("form").filter({ hasText: /nytt mål|skapa mål/i }).first();
     await form.locator("input").first().fill(name);

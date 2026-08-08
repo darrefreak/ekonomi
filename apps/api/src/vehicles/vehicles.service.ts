@@ -29,7 +29,8 @@ import {
 } from "../db/schema-vehicles";
 import { AuditService } from "../audit/audit.service";
 import { HouseholdAccessService } from "../households/household-access.service";
-import { EconomicEventsService } from "../ledger/economic-events.service";
+import type { EconomicEventsService } from "../ledger/economic-events.service";
+import { ECONOMIC_EVENTS_SERVICE } from "../ledger/economic-events.token";
 import { resolveHouseholdAsOf } from "../common/as-of";
 
 const CASH_ACCOUNT_TYPES = new Set(["CHECKING", "SAVINGS", "CASH"]);
@@ -40,7 +41,7 @@ export class VehiclesService {
     @Inject(HouseholdAccessService) private readonly access: HouseholdAccessService,
     /** Write path only; read-only consumers (jobs, tests) construct without it. */
     @Optional()
-    @Inject(EconomicEventsService)
+    @Inject(ECONOMIC_EVENTS_SERVICE)
     private readonly events?: EconomicEventsService,
     @Optional()
     @Inject(AuditService)
@@ -411,7 +412,11 @@ export class VehiclesService {
       .select()
       .from(vehicleOdometerReadings)
       .where(eq(vehicleOdometerReadings.vehicleId, vehicleId))
-      .orderBy(desc(vehicleOdometerReadings.recordedOn));
+      // Same-day corrections are common; the newest write wins.
+      .orderBy(
+        desc(vehicleOdometerReadings.recordedOn),
+        desc(vehicleOdometerReadings.createdAt),
+      );
     const odo = odometerRows[0];
 
     const from = new Date(`${asOf}T00:00:00.000Z`);
