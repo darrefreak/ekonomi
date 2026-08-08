@@ -5,6 +5,8 @@
 | Document | Purpose |
 |---|---|
 | **`V1_FINAL_PRODUCT_ACCEPTANCE.md`** | **V1 FINAL PRODUCT — ACCEPTED (2026-08-08)** |
+| **`V1_RED_TEAM_ACCEPTANCE.md`** | **Adversarial red-team / real-household audit — FAIL (2026-08-08)** |
+| `V1_RED_TEAM_FINDINGS.md` | Full defect inventory from red-team run |
 | `p0/P0_FINANCIAL_ACCEPTANCE.md` | P0 financial core — ACCEPTED |
 | `../completion/p1/P1_FINAL_STATUS.md` | P1-U1…U6 closure |
 | `../completion/FEATURE_MATRIX.md` | Living feature matrix |
