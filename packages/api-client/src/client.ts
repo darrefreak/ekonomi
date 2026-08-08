@@ -13,6 +13,17 @@ import {
   budgetResponseSchema,
   cashflowResponseSchema,
   categoriesResponseSchema,
+  categorySchema,
+  createCategorySchema,
+  updateCategorySchema,
+  listCategoriesQuerySchema,
+  merchantsResponseSchema,
+  listMerchantsQuerySchema,
+  inviteMemberSchema,
+  acceptInviteSchema,
+  updateMemberRoleSchema,
+  invitationSchema,
+  reviseClassificationSchema,
   contractsResponseSchema,
   coverageResponseSchema,
   dashboardResponseSchema,
@@ -67,6 +78,16 @@ import {
   type BudgetResponse,
   type CashflowResponse,
   type CategoriesResponse,
+  type CategoryDto,
+  type CreateCategoryInput,
+  type UpdateCategoryInput,
+  type MerchantsResponse,
+  type InviteMemberInput,
+  type AcceptInviteInput,
+  type UpdateMemberRoleInput,
+  type CreateCashExpenseInput,
+  type CreateCashIncomeInput,
+  type ReviseClassificationInput,
   type ContractsResponse,
   type ContributeGoalInput,
   type ContributeSinkingFundInput,
@@ -311,11 +332,48 @@ export function createApiClient(options: ApiClientOptions) {
       );
       return accountDetailSchema.parse(data) as AccountDetailDto;
     },
-    listCategories: async (householdId: string) => {
-      const data = await request<unknown>(
-        `/api/v1/categories?householdId=${encodeURIComponent(householdId)}`,
-      );
+    listCategories: async (
+      householdId: string,
+      opts?: { includeArchived?: boolean },
+    ) => {
+      const params = listCategoriesQuerySchema.parse({
+        householdId,
+        includeArchived: opts?.includeArchived ? "true" : undefined,
+      });
+      const qs = new URLSearchParams({ householdId: params.householdId });
+      if (params.includeArchived) qs.set("includeArchived", params.includeArchived);
+      const data = await request<unknown>(`/api/v1/categories?${qs}`);
       return categoriesResponseSchema.parse(data) as CategoriesResponse;
+    },
+    createCategory: async (input: CreateCategoryInput) => {
+      const body = createCategorySchema.parse(input);
+      const data = await request<unknown>("/api/v1/categories", {
+        method: "POST",
+        body: JSON.stringify(body),
+      });
+      return categorySchema.parse(data) as CategoryDto;
+    },
+    updateCategory: async (categoryId: string, input: UpdateCategoryInput) => {
+      const body = updateCategorySchema.parse(input);
+      const data = await request<unknown>(
+        `/api/v1/categories/${encodeURIComponent(categoryId)}`,
+        { method: "PATCH", body: JSON.stringify(body) },
+      );
+      return categorySchema.parse(data) as CategoryDto;
+    },
+    archiveCategory: async (householdId: string, categoryId: string) => {
+      const data = await request<unknown>(
+        `/api/v1/categories/${encodeURIComponent(categoryId)}?householdId=${encodeURIComponent(householdId)}`,
+        { method: "DELETE" },
+      );
+      return categorySchema.parse(data) as CategoryDto;
+    },
+    listMerchants: async (householdId: string, q?: string) => {
+      const params = listMerchantsQuerySchema.parse({ householdId, q });
+      const qs = new URLSearchParams({ householdId: params.householdId });
+      if (params.q) qs.set("q", params.q);
+      const data = await request<unknown>(`/api/v1/merchants?${qs}`);
+      return merchantsResponseSchema.parse(data) as MerchantsResponse;
     },
     listTransactions: async (
       householdId: string,
@@ -379,6 +437,20 @@ export function createApiClient(options: ApiClientOptions) {
       });
       return data;
     },
+    createCashExpense: async (input: CreateCashExpenseInput) => {
+      const data = await request<{ id: string; eventType: string; status: string }>(
+        "/api/v1/ledger/expenses",
+        { method: "POST", body: JSON.stringify(input) },
+      );
+      return data;
+    },
+    createCashIncome: async (input: CreateCashIncomeInput) => {
+      const data = await request<{ id: string; eventType: string; status: string }>(
+        "/api/v1/ledger/income",
+        { method: "POST", body: JSON.stringify(input) },
+      );
+      return data;
+    },
     createInternalTransfer: async (input: {
       householdId: string;
       fromAccountId: string;
@@ -426,6 +498,19 @@ export function createApiClient(options: ApiClientOptions) {
         `/api/v1/ledger/events/${encodeURIComponent(eventId)}/splits`,
         { method: "POST", body: JSON.stringify(input) },
       );
+      return data;
+    },
+    reviseExpenseToTransfer: async (input: ReviseClassificationInput) => {
+      const body = reviseClassificationSchema.parse(input);
+      const data = await request<{
+        id: string;
+        eventType: string;
+        status: string;
+        expenseAmountMinor: string;
+      }>("/api/v1/ledger/events/revise-classification", {
+        method: "POST",
+        body: JSON.stringify(body),
+      });
       return data;
     },
     reverseFinancialEvent: async (input: {
@@ -507,6 +592,45 @@ export function createApiClient(options: ApiClientOptions) {
         body: JSON.stringify(body),
       });
       return settingsResponseSchema.parse(data) as SettingsResponse;
+    },
+    inviteMember: async (input: InviteMemberInput) => {
+      const body = inviteMemberSchema.parse(input);
+      const data = await request<unknown>(
+        `/api/v1/households/${encodeURIComponent(body.householdId)}/invitations`,
+        { method: "POST", body: JSON.stringify(body) },
+      );
+      return invitationSchema.parse(data);
+    },
+    acceptInvite: async (input: AcceptInviteInput) => {
+      const body = acceptInviteSchema.parse(input);
+      return request<{ householdId: string; memberId: string; role: string }>(
+        "/api/v1/invitations/accept",
+        { method: "POST", body: JSON.stringify(body) },
+      );
+    },
+    updateMemberRole: async (memberId: string, input: UpdateMemberRoleInput) => {
+      const body = updateMemberRoleSchema.parse(input);
+      return request<{ id: string; userId: string; role: string }>(
+        `/api/v1/households/${encodeURIComponent(body.householdId)}/members/${encodeURIComponent(memberId)}/role`,
+        { method: "PATCH", body: JSON.stringify(body) },
+      );
+    },
+    removeMember: async (householdId: string, memberId: string) => {
+      return request<{ ok: true }>(
+        `/api/v1/households/${encodeURIComponent(householdId)}/members/${encodeURIComponent(memberId)}`,
+        { method: "DELETE" },
+      );
+    },
+    cancelInvitation: async (householdId: string, invitationId: string) => {
+      return request<{ ok: true } | unknown>(
+        `/api/v1/households/${encodeURIComponent(householdId)}/invitations/${encodeURIComponent(invitationId)}`,
+        { method: "DELETE" },
+      );
+    },
+    listPrivacyRequests: async (householdId: string) => {
+      return request<{
+        items: Array<{ id: string; kind: string; status: string; createdAt: string }>;
+      }>(`/api/v1/privacy/requests?householdId=${encodeURIComponent(householdId)}`);
     },
     search: async (householdId: string, q: string) => {
       const data = await request<unknown>(
