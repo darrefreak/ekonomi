@@ -153,10 +153,13 @@ Isolation strategy, in order of preference:
 
 ### Evidence
 
-Four consecutive full `pnpm test` runs with the development stack (API, worker, web,
-Postgres, Redis) up, and a Playwright desktop + mobile run driving the dev database
-concurrently: **0 failures, 0 shared-state contention failures**. This demonstrates
-isolation; it does not prove the absence of flakiness, which no finite number of runs can.
+Five consecutive full `pnpm test` runs with the development stack (API, worker, web,
+Postgres, Redis) up — three of them back to back while Playwright drove the development
+database and the reproduction scripts wrote to it — produced **0 failures and 0 shared-state
+contention failures**, with identical counts (155 API tests, 106 database-backed) every run.
+Identical counts matter as much as the zero: a suite that silently ran less would still be
+green. This demonstrates isolation; it does not prove the absence of flakiness, which no
+finite number of runs can.
 
 ---
 

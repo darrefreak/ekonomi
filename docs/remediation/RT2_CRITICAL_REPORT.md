@@ -282,22 +282,30 @@ identified page. A primary navigation link that 404s now fails the suite.
 
 The guard was tested by breaking it deliberately, twice:
 
+Both `/money` and `/definitely-does-not-exist` return HTTP 404 from the running web app,
+confirmed with `curl` first so the mutation is testing what it claims to. The guard was then
+broken deliberately, twice, and re-verified after the whole remediation was complete:
+
 ```
-Mutation 1 — point the mobile spec at /money and /definitely-does-not-exist
-  1 failed: No route identity is declared for "/money".
+Mutation A — declare an identity for /money (so the contract table cannot be what
+             fails) and point the mobile critical-path spec at it
+  1 failed  home, transactions, more, settings and review render without …
+            http://localhost:3000/money rendered the not-found page
+              at expectNotFoundPage (helpers/route-identity.ts:121)
+  52 passed
+
+Mutation B — point the same spec at /definitely-does-not-exist, undeclared
+  1 failed  Error: No route identity is declared for "/definitely-does-not-exist".
             A surface reachable from the product without an identity here is a gap
             in the contract, not a pass.
+  52 passed
 
-Mutation 2 — declare an identity for /money (so the table cannot be what fails)
-             and navigate to it
-  1 failed: http://localhost:3000/money rendered the not-found page
-
-Reverted; the same spec then passes 6/6.
+Both mutations reverted; the suite returns to 53 passed, 10 skipped, 0 failed.
 ```
 
-Mutation 1 proves the contract layer catches an undeclared route; mutation 2 proves the
-not-found detection catches a declared route that 404s. Under the previous assertion both
-mutations passed.
+Mutation A proves the not-found detection catches a declared route that 404s; mutation B
+proves the contract layer catches a route nobody declared. Under the previous
+`getByRole("heading").first()` assertion both of these passed.
 
 ---
 
@@ -353,10 +361,12 @@ targets.
 
 ### Isolation evidence
 
-Four consecutive full `pnpm test` runs with the development stack up, and a Playwright
-desktop + mobile run driving the development database concurrently: **0 failures, 0
-shared-state contention failures**. This demonstrates isolation. It does not prove the
-absence of flakiness, which no finite number of runs can, and is not claimed.
+Five consecutive full `pnpm test` runs with the development stack up — three back to back
+while Playwright and the reproduction scripts wrote to the development database — produced
+**0 failures and 0 shared-state contention failures**, with identical counts every run. The
+identical counts matter as much as the zero, since a suite that quietly ran less would also
+be green. This demonstrates isolation. It does not prove the absence of flakiness, which no
+finite number of runs can, and is not claimed.
 
 ---
 
@@ -501,7 +511,7 @@ reproduction residue, which is a stronger result than a pass on a clean seed.
 | 404 mutation test | PASS (both mutations fail as required) |
 | RT2-005 `pnpm test` executes the DB suite | PASS (106 DB-backed tests, counted) |
 | Dedicated test database | PASS (`ffos_test`) |
-| Test/dev isolation | PASS (0 contention failures in 4 concurrent runs) |
+| Test/dev isolation | PASS (0 contention failures in 5 runs with the dev stack up) |
 | RT2-006 `db:reset` guard | PASS |
 | RT2-008 snapshot uniqueness | PASS on `(account_id, as_of, source)` |
 | RT2-007 dependency advisory | RESOLVED |
