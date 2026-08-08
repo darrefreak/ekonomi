@@ -74,11 +74,11 @@ test("settings search review resolve and monthly report", async () => {
   const { AuditService } = await import("../audit/audit.service");
   const settings = new SettingsService(access, new AuditService());
   const before = settingsResponseSchema.parse(
-    await settings.get("user-1", household.id),
+    await settings.get(demoUser.id, household.id),
   );
   const updated = settingsResponseSchema.parse(
     await settings.update(
-      "user-1",
+      demoUser.id,
       updateSettingsSchema.parse({
         householdId: household.id,
         householdName: before.householdName,
@@ -92,12 +92,12 @@ test("settings search review resolve and monthly report", async () => {
 
   const search = new SearchService(access);
   const hits = searchResponseSchema.parse(
-    await search.search("user-1", household.id, "SEB"),
+    await search.search(demoUser.id, household.id, "SEB"),
   );
   assert.ok(hits.results.length > 0);
 
   const review = new ReviewService(access);
-  const list = await review.list("user-1", household.id);
+  const list = await review.list(demoUser.id, household.id);
   assert.ok(typeof list.total === "number");
 
   const [uncat] = await db
@@ -118,7 +118,7 @@ test("settings search review resolve and monthly report", async () => {
       .update(sourceTransactions)
       .set({ categoryId: null })
       .where(eq(sourceTransactions.id, uncat.id));
-    const after = await review.resolve("user-1", {
+    const after = await review.resolve(demoUser.id, {
       householdId: household.id,
       itemId: `tx-${uncat.id}`,
       kind: "unknown_transaction",
@@ -135,7 +135,7 @@ test("settings search review resolve and monthly report", async () => {
 
   const reports = new ReportsService(access, new HouseholdMetricsService());
   const monthly = monthlyReportSchema.parse(
-    await reports.monthly("user-1", household.id, "2026-07"),
+    await reports.monthly(demoUser.id, household.id, "2026-07"),
   );
   assert.equal(monthly.period, "2026-07");
   assert.ok(monthly.income.amountMinor != null);

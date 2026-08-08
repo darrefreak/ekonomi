@@ -69,6 +69,8 @@ export type PersistBalancedEventInput = {
   incomeAmountMinor?: bigint;
   categoryId?: string;
   merchantId?: string;
+  /** Free-text note attached to the primary source transaction (not hashed for idempotency). */
+  notes?: string;
   vehicleId?: string;
   sourceAccountId?: string;
   sourceAmountMinor?: bigint;
@@ -301,6 +303,7 @@ async function persistBalancedEventInTx(
         rawDescription: input.description,
         merchantId: input.merchantId,
         categoryId: input.categoryId,
+        notes: input.notes ?? null,
         status: "BOOKED",
         importBatchId: input.importBatchId,
         isInternalTransfer: input.isInternalTransfer ?? false,

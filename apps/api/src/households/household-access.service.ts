@@ -140,6 +140,7 @@ export class HouseholdAccessService {
       externalReference: null,
       connectionStatus: "DISCONNECTED",
       freshnessLabel: null,
+      ownerMemberId: null,
       name:
         visibility === "balance"
           ? "Personligt konto (saldo)"

@@ -121,6 +121,38 @@ export const createCashRefundSchema = z
   })
   .strict();
 
+/** Manual cash expense (product path). System EXPENSE account resolved server-side when omitted. */
+export const createCashExpenseSchema = z
+  .object({
+    householdId: uuidSchema,
+    cashAccountId: uuidSchema,
+    amountMinor: positiveAmountMinorStringSchema,
+    occurredOn: isoDateSchema,
+    description: descriptionSchema,
+    categoryId: uuidSchema.optional(),
+    merchantName: z.string().max(160).optional(),
+    notes: z.string().max(2000).optional(),
+    expenseAccountId: uuidSchema.optional(),
+    externalId: z.string().max(160).optional(),
+  })
+  .strict();
+
+/** Manual income into cash (product path). System INCOME account resolved server-side when omitted. */
+export const createCashIncomeSchema = z
+  .object({
+    householdId: uuidSchema,
+    cashAccountId: uuidSchema,
+    amountMinor: positiveAmountMinorStringSchema,
+    occurredOn: isoDateSchema,
+    description: descriptionSchema,
+    categoryId: uuidSchema.optional(),
+    merchantName: z.string().max(160).optional(),
+    notes: z.string().max(2000).optional(),
+    incomeAccountId: uuidSchema.optional(),
+    externalId: z.string().max(160).optional(),
+  })
+  .strict();
+
 export const createAssetPurchaseSchema = z
   .object({
     householdId: uuidSchema,
@@ -235,6 +267,8 @@ export type CreateAssetDepreciationInput = z.infer<
   typeof createAssetDepreciationSchema
 >;
 export type CreateCashRefundInput = z.infer<typeof createCashRefundSchema>;
+export type CreateCashExpenseInput = z.infer<typeof createCashExpenseSchema>;
+export type CreateCashIncomeInput = z.infer<typeof createCashIncomeSchema>;
 export type CreateAssetPurchaseInput = z.infer<typeof createAssetPurchaseSchema>;
 export type CreateFinancedAssetPurchaseInput = z.infer<
   typeof createFinancedAssetPurchaseSchema

@@ -8,6 +8,7 @@ import { accounts, sourceTransactions } from "../db/schema-economic";
 import { AccountsService } from "./accounts.service";
 import { TransactionsService } from "../transactions/transactions.service";
 import type { HouseholdAccessService } from "../households/household-access.service";
+import type { AuditService } from "../audit/audit.service";
 
 test("createAccountSchema requires household and name", () => {
   const parsed = createAccountSchema.parse({
@@ -51,8 +52,12 @@ test("account create update archive and transaction patch against DB", async () 
     projectTransactionItem: <T>(item: T) => item,
   } as unknown as HouseholdAccessService;
 
-  const accountsService = new AccountsService(access);
-  const txService = new TransactionsService(access);
+  const audit = {
+    record: async () => ({}) as never,
+  } as unknown as AuditService;
+
+  const accountsService = new AccountsService(access, audit);
+  const txService = new TransactionsService(access, audit);
 
   const created = await accountsService.create("user-1", {
     householdId: household.id,

@@ -1,11 +1,17 @@
 import {
+  BadRequestException,
+  ForbiddenException,
   Inject,
   Injectable,
   NotFoundException,
 } from "@nestjs/common";
-import { and, asc, desc, eq, gte, lte, ne, sql, type SQL } from "drizzle-orm";
+import { and, asc, desc, eq, gte, isNull, lte, ne, sql, type SQL } from "drizzle-orm";
 import { moneyToJson } from "@ffos/domain";
-import type { UpdateTransactionInput } from "@ffos/schemas";
+import type {
+  CreateCategoryInput,
+  UpdateCategoryInput,
+  UpdateTransactionInput,
+} from "@ffos/schemas";
 import { getDb } from "../db/client";
 import {
   accounts,
@@ -17,6 +23,18 @@ import {
 } from "../db/schema-economic";
 import { vehicles } from "../db/schema-vehicles";
 import { HouseholdAccessService } from "../households/household-access.service";
+import { AuditService } from "../audit/audit.service";
+
+function slugifyCategoryKey(name: string): string {
+  const base = name
+    .normalize("NFKD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, "_")
+    .replace(/^_+|_+$/g, "");
+  return base.length > 0 ? base.slice(0, 80) : `category_${Date.now()}`;
+}
 
 export type TransactionListFilters = {
   limit?: number;
@@ -32,11 +50,20 @@ export type TransactionListFilters = {
 export class TransactionsService {
   constructor(
     @Inject(HouseholdAccessService) private readonly access: HouseholdAccessService,
+    @Inject(AuditService) private readonly audit: AuditService,
   ) {}
 
-  async listCategories(userId: string, householdId: string) {
+  async listCategories(
+    userId: string,
+    householdId: string,
+    opts?: { includeArchived?: boolean },
+  ) {
     await this.access.requireMembership(userId, householdId);
     const db = getDb();
+    const conditions = [eq(categories.householdId, householdId)];
+    if (!opts?.includeArchived) {
+      conditions.push(isNull(categories.archivedAt));
+    }
     const rows = await db
       .select({
         id: categories.id,
@@ -44,11 +71,217 @@ export class TransactionsService {
         name: categories.name,
         kind: categories.kind,
         parentId: categories.parentId,
+        isSystem: categories.isSystem,
+        archivedAt: categories.archivedAt,
       })
       .from(categories)
-      .where(eq(categories.householdId, householdId))
+      .where(and(...conditions))
       .orderBy(asc(categories.name));
-    return { items: rows };
+    return { items: rows.map((row) => this.toCategoryDto(row)) };
+  }
+
+  async createCategory(userId: string, input: CreateCategoryInput) {
+    await this.access.requireCanWrite(userId, input.householdId);
+    const db = getDb();
+    const key = input.key ?? slugifyCategoryKey(input.name);
+
+    if (input.parentId) {
+      const [parent] = await db
+        .select({ id: categories.id })
+        .from(categories)
+        .where(
+          and(
+            eq(categories.id, input.parentId),
+            eq(categories.householdId, input.householdId),
+          ),
+        )
+        .limit(1);
+      if (!parent) throw new NotFoundException("Parent category not found");
+    }
+
+    const [existing] = await db
+      .select({ id: categories.id })
+      .from(categories)
+      .where(
+        and(
+          eq(categories.householdId, input.householdId),
+          eq(categories.key, key),
+        ),
+      )
+      .limit(1);
+    if (existing) {
+      throw new BadRequestException("A category with this key already exists");
+    }
+
+    const [row] = await db
+      .insert(categories)
+      .values({
+        householdId: input.householdId,
+        key,
+        name: input.name.trim(),
+        kind: input.kind ?? "expense",
+        parentId: input.parentId ?? null,
+        isSystem: false,
+      })
+      .returning();
+
+    await this.audit.record({
+      householdId: input.householdId,
+      actorUserId: userId,
+      action: "category.create",
+      entity: "category",
+      entityId: row.id,
+      after: { key: row.key, name: row.name, kind: row.kind },
+    });
+
+    return this.toCategoryDto(row);
+  }
+
+  async updateCategory(
+    userId: string,
+    categoryId: string,
+    input: UpdateCategoryInput,
+  ) {
+    await this.access.requireCanWrite(userId, input.householdId);
+    const db = getDb();
+    const [existing] = await db
+      .select()
+      .from(categories)
+      .where(
+        and(
+          eq(categories.id, categoryId),
+          eq(categories.householdId, input.householdId),
+        ),
+      )
+      .limit(1);
+    if (!existing) throw new NotFoundException("Category not found");
+    if (existing.isSystem) {
+      throw new ForbiddenException("System categories cannot be modified");
+    }
+
+    if (input.parentId) {
+      if (input.parentId === categoryId) {
+        throw new BadRequestException("A category cannot be its own parent");
+      }
+      const [parent] = await db
+        .select({ id: categories.id })
+        .from(categories)
+        .where(
+          and(
+            eq(categories.id, input.parentId),
+            eq(categories.householdId, input.householdId),
+          ),
+        )
+        .limit(1);
+      if (!parent) throw new NotFoundException("Parent category not found");
+    }
+
+    const before = { name: existing.name, kind: existing.kind, parentId: existing.parentId };
+    const patch: Partial<typeof categories.$inferInsert> = {};
+    if (input.name !== undefined) patch.name = input.name.trim();
+    if (input.kind !== undefined) patch.kind = input.kind;
+    if (input.parentId !== undefined) patch.parentId = input.parentId;
+
+    const [row] = await db
+      .update(categories)
+      .set(patch)
+      .where(eq(categories.id, categoryId))
+      .returning();
+
+    await this.audit.record({
+      householdId: input.householdId,
+      actorUserId: userId,
+      action: "category.update",
+      entity: "category",
+      entityId: categoryId,
+      before,
+      after: { name: row.name, kind: row.kind, parentId: row.parentId },
+    });
+
+    return this.toCategoryDto(row);
+  }
+
+  async archiveCategory(userId: string, householdId: string, categoryId: string) {
+    await this.access.requireCanWrite(userId, householdId);
+    const db = getDb();
+    const [existing] = await db
+      .select()
+      .from(categories)
+      .where(
+        and(
+          eq(categories.id, categoryId),
+          eq(categories.householdId, householdId),
+        ),
+      )
+      .limit(1);
+    if (!existing) throw new NotFoundException("Category not found");
+    if (existing.isSystem) {
+      throw new ForbiddenException("System categories cannot be archived");
+    }
+    if (existing.archivedAt) return this.toCategoryDto(existing);
+
+    const [row] = await db
+      .update(categories)
+      .set({ archivedAt: new Date() })
+      .where(eq(categories.id, categoryId))
+      .returning();
+
+    await this.audit.record({
+      householdId,
+      actorUserId: userId,
+      action: "category.archive",
+      entity: "category",
+      entityId: categoryId,
+      before: { archivedAt: null },
+      after: { archivedAt: row.archivedAt?.toISOString() ?? null },
+    });
+
+    return this.toCategoryDto(row);
+  }
+
+  async listMerchants(userId: string, householdId: string) {
+    await this.access.requireMembership(userId, householdId);
+    const db = getDb();
+    const rows = await db
+      .select({
+        id: merchants.id,
+        canonicalName: merchants.canonicalName,
+        aliases: merchants.aliases,
+        merchantCategory: merchants.merchantCategory,
+        country: merchants.country,
+      })
+      .from(merchants)
+      .where(eq(merchants.householdId, householdId))
+      .orderBy(asc(merchants.canonicalName));
+    return {
+      items: rows.map((row) => ({
+        id: row.id,
+        canonicalName: row.canonicalName,
+        aliases: row.aliases ?? [],
+        merchantCategory: row.merchantCategory,
+        country: row.country,
+      })),
+    };
+  }
+
+  private toCategoryDto(row: {
+    id: string;
+    key: string;
+    name: string;
+    kind: string;
+    parentId: string | null;
+    isSystem: boolean;
+    archivedAt: Date | null;
+  }) {
+    return {
+      id: row.id,
+      key: row.key,
+      name: row.name,
+      kind: row.kind,
+      parentId: row.parentId,
+      isSystem: row.isSystem,
+      archivedAt: row.archivedAt?.toISOString() ?? null,
+    };
   }
 
   async list(userId: string, householdId: string, filters: TransactionListFilters = {}) {

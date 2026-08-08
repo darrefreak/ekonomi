@@ -17,19 +17,20 @@
     "@ffos/domain": "workspace:*",
     "@ffos/schemas": "workspace:*",
     "@ffos/utils": "workspace:*",
+    "@tanstack/react-query": "^5",
     "next": "^15.3.3",
     "react": "^19.1.0",
     "react-dom": "^19.1.0"
   },
   "devDependencies": {
+    "@ffos/eslint-config": "workspace:*",
     "@tailwindcss/postcss": "^4.1.8",
     "@types/node": "^22.15.30",
     "@types/react": "^19.1.6",
     "@types/react-dom": "^19.1.5",
+    "eslint": "^9.39.5",
     "eslint-config-next": "^15",
     "tailwindcss": "^4.1.8",
-    "typescript": "^5.8.3",
-    "@ffos/eslint-config": "workspace:*",
-    "eslint": "^9.39.5"
+    "typescript": "^5.8.3"
   }
 }

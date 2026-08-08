@@ -1,6 +1,6 @@
 # Feature Completion Matrix
 
-Audit date: 2026-08-07  
+Audit date: 2026-08-08 (P1-U1 update)  
 Statuses: COMPLETE | PARTIAL | SCAFFOLD_ONLY | MOCK_ONLY | NOT_STARTED | BROKEN | BLOCKED  
 
 Columns: Status · Backend · Frontend · Tests · Mobile · Priority · Dependencies · Notes
@@ -14,12 +14,12 @@ Legend for layer columns: **C** complete · **P** partial · **S** scaffold · *
 | Feature | Status | BE | FE | Test | Mobile | Pri | Deps | Missing / defects |
 |---|---|---|---|---|---|---|---|---|
 | Authentication (login/register/JWT) | PARTIAL | C | P | P | P | P0 | — | Logout/revoke-all API + UI; refresh still not auto-wired in client |
-| Household creation | PARTIAL | C | P | N | N | P1 | Auth | Onboarding creates household (WS M) |
-| Household membership | PARTIAL | P | P | P | N | P0 | Auth | Roles enforced; invite/manage UI still missing |
-| Permissions / roles | PARTIAL | C | P | C | P | P0 | Members | VIEWER/CHILD write-deny; ADMIN policy edits (WS N) |
-| Member privacy policies | PARTIAL | C | P | C | P | P0 | Permissions | Aggregate/balance/owner projection + settings UI (WS N) |
-| Audit logging | PARTIAL | C | N | P | N | P1 | Auth | Policy/logout/privacy/export audited (WS N) |
-| Settings (product) | PARTIAL | P | P | P | B | P1 | — | Persisted policies + members (WS M) |
+| Household creation | COMPLETE | C | C | P | P | P1 | Auth | Onboarding + settings rename (P1-U1) |
+| Household membership | COMPLETE | C | C | C | P | P0 | Auth | Invite/accept/role/remove + last-OWNER (P1-U1) |
+| Permissions / roles | COMPLETE | C | C | C | P | P0 | Members | Role change UI + authz tests (P1-U1) |
+| Member privacy policies | COMPLETE | C | C | C | P | P0 | Permissions | Human-readable policy labels in settings (P1-U1) |
+| Audit logging | PARTIAL | C | N | P | N | P1 | Auth | Account/policy/member/category audited (P1-U1); no UI |
+| Settings (product) | COMPLETE | C | C | P | P | P1 | — | Full V1 sections + policies/categories/members (P1-U1) |
 | Localization sv-SE | PARTIAL | P | P | P | P | P2 | — | Swedish copy; en-US not wired |
 | Appearance / dark mode | SCAFFOLD_ONLY | S | S | N | S | P2 | Tokens | Tokens mention dark; UI light-only |
 | Feature flags | SCAFFOLD_ONLY | S | N | N | N | P2 | — | Not enforced |
@@ -30,21 +30,21 @@ Legend for layer columns: **C** complete · **P** partial · **S** scaffold · *
 
 | Feature | Status | BE | FE | Test | Mobile | Pri | Deps | Missing / defects |
 |---|---|---|---|---|---|---|---|---|
-| Accounts list/detail | PARTIAL | P | P | N | B | P1 | Core | Read-only; mobile via Mer broken |
-| Account balances (cache) | MOCK_ONLY | M | P | N | B | P0 | Ledger | Not from postings |
-| Balance snapshots | MOCK_ONLY | M | N | N | N | P0 | Ledger | Illustrative seed |
-| Source transactions | PARTIAL | P | P | N | B | P1 | — | Read/filter; no edit |
-| Financial events | PARTIAL | P | N | P | N | P0 | — | Seed persist; no runtime API |
-| Ledger entries/postings | PARTIAL | P | N | C | N | P0 | Engine | Engine builders tested; runtime unused |
-| Transaction splits | SCAFFOLD_ONLY | S | N | N | N | P0 | Events | Table unused |
-| Internal transfers | PARTIAL | P | N | C | N | P0 | Ledger | Engine+seed; pairing incomplete |
-| Credit card handling | PARTIAL | P | N | C | N | P0 | Ledger | Engine+seed; no product UX |
-| Mortgage handling | PARTIAL | P | N | C | N | P0 | Ledger | Engine+seed; event type fidelity gap |
-| Refunds / reimbursements | NOT_STARTED | N | N | N | N | P0 | Ledger | Enums only |
-| Merchant normalization | PARTIAL | P | N | N | N | P2 | — | Seed merchants; no alias engine |
-| Categories | PARTIAL | P | P | N | B | P1 | — | Taxonomy seeded; no user CRUD |
-| Transaction editing | NOT_STARTED | N | N | N | N | P1 | Txns | — |
-| Transaction filtering/search | PARTIAL | P | P | N | B | P1 | — | Page filter only |
+| Accounts list/detail | COMPLETE | C | C | C | P | P1 | Core | CRUD + opening balance + ownership (P1-U1); ledger-aligned |
+| Account balances (cache) | COMPLETE | C | C | C | P | P0 | Ledger | Cache derived; list/detail ledger-aligned (R2/U1) |
+| Balance snapshots | PARTIAL | P | P | P | N | P0 | Ledger | Opening + NW history; not all sources |
+| Source transactions | COMPLETE | C | C | P | P | P1 | — | Browse/edit classify/exclude (P1-U1) |
+| Financial events | COMPLETE | C | C | C | P | P0 | — | Runtime income/expense/transfer/refund HTTP + UI (P1-U1) |
+| Ledger entries/postings | COMPLETE | C | N | C | N | P0 | Engine | Runtime persist via events (R1–R3/U1); no raw posting UI |
+| Transaction splits | COMPLETE | C | C | P | P | P0 | Events | replaceEventSplits + split editor (P1-U1) |
+| Internal transfers | COMPLETE | C | C | C | P | P0 | Ledger | Product UX + copy (P1-U1) |
+| Credit card handling | PARTIAL | C | N | C | N | P1 | Ledger | API exists; dedicated UX deferred U2+ |
+| Mortgage handling | PARTIAL | C | P | C | N | P1 | Ledger | Split editor covers principal/interest; full mortgage form deferred |
+| Refunds / reimbursements | COMPLETE | C | C | C | P | P0 | Ledger | HTTP + UI (R3/U1) |
+| Merchant normalization | PARTIAL | P | P | P | P | P2 | — | List + assign (P1-U1); alias engine deferred |
+| Categories | COMPLETE | C | C | C | P | P1 | — | User CRUD + archive (P1-U1) |
+| Transaction editing | COMPLETE | C | C | P | P | P1 | Txns | Metadata + economic creates (P1-U1) |
+| Transaction filtering/search | COMPLETE | C | C | P | P | P1 | — | Filters + search (P1-U1) |
 
 ---
 
@@ -74,8 +74,8 @@ Legend for layer columns: **C** complete · **P** partial · **S** scaffold · *
 | Recurring | PARTIAL | P | N | N | N | P1 | — | Seed/detection foundation thin |
 | Subscriptions | PARTIAL | P | P | P | B | P1 | — | Read + annualize |
 | Contracts | PARTIAL | P | P | P | B | P1 | — | Read |
-| Sinking funds | PARTIAL | P | P | P | P | P1 | Goals | Create/contribute UX (WS D) |
-| Goals | PARTIAL | P | P | P | P | P1 | — | Create/contribute + progress (WS D) |
+| Sinking funds | PARTIAL | P | P | P | P | P1 | Goals | Create/contribute UX (WS D); update still thin |
+| Goals | COMPLETE | C | C | P | P | P1 | — | Create/edit/status + progress (P1-U1) |
 | Planned expenses | SCAFFOLD_ONLY | S | N | N | N | P2 | Forecast | — |
 | Forecast horizons | PARTIAL | P | P | P | P | P0 | Core | Live 7d–12m engine (WS E); linear model |
 | Forecast backtesting | PARTIAL | P | P | P | P | P2 | Forecast | Infra + lookback compare (WS E) |

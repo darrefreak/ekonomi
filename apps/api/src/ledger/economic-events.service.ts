@@ -11,6 +11,7 @@ import {
   buildCreditCardPayment,
   buildCreditCardPurchase,
   buildFinancedAssetPurchase,
+  buildIncome,
   buildInternalTransfer,
   buildInvestmentTransfer,
   buildMortgagePayment,
@@ -18,11 +19,12 @@ import {
   type BalancedLedgerDraft,
 } from "@ffos/financial-engine";
 import type { CurrencyCode } from "@ffos/domain";
-import { and, eq } from "drizzle-orm";
+import { and, eq, sql } from "drizzle-orm";
 import { getDb } from "../db/client";
 import {
   accounts,
   financialEvents,
+  merchants,
   sourceTransactionLinks,
   sourceTransactions,
 } from "../db/schema-economic";
@@ -99,6 +101,7 @@ export class EconomicEventsService {
     description: string;
     categoryId?: string;
     merchantId?: string;
+    notes?: string;
     sourceAccountId?: string;
     sourceAmountMinor?: bigint;
     isInternalTransfer?: boolean;
@@ -367,7 +370,21 @@ export class EconomicEventsService {
     });
   }
 
+  /** Finds the household's system EXPENSE account, creating it on first use. */
   async resolveExpenseBook(householdId: string) {
+    return this.resolveSystemBookAccount(householdId, "EXPENSE", "Utgiftsbok");
+  }
+
+  /** Finds the household's system INCOME account, creating it on first use. */
+  async resolveIncomeBook(householdId: string) {
+    return this.resolveSystemBookAccount(householdId, "INCOME", "Inkomstbok");
+  }
+
+  private async resolveSystemBookAccount(
+    householdId: string,
+    accountType: "EXPENSE" | "INCOME",
+    name: string,
+  ) {
     const db = getDb();
     const [row] = await db
       .select()
@@ -375,13 +392,56 @@ export class EconomicEventsService {
       .where(
         and(
           eq(accounts.householdId, householdId),
-          eq(accounts.accountType, "EXPENSE"),
+          eq(accounts.accountType, accountType),
           eq(accounts.isSystem, true),
         ),
       )
       .limit(1);
-    if (!row) throw new BadRequestException("Expense book not found");
-    return row;
+    if (row) return row;
+
+    const [created] = await db
+      .insert(accounts)
+      .values({
+        householdId,
+        name,
+        accountType,
+        currency: "SEK",
+        isShared: true,
+        isSystem: true,
+        connectionStatus: "DISCONNECTED",
+        openingBalanceMinor: 0n,
+        currentBalanceMinor: 0n,
+      })
+      .returning();
+    return created;
+  }
+
+  /** Finds (case-insensitive) or creates a merchant by display name. */
+  private async resolveMerchantByName(
+    householdId: string,
+    merchantName?: string,
+  ): Promise<string | undefined> {
+    const name = merchantName?.trim();
+    if (!name) return undefined;
+
+    const db = getDb();
+    const [existing] = await db
+      .select({ id: merchants.id })
+      .from(merchants)
+      .where(
+        and(
+          eq(merchants.householdId, householdId),
+          sql`lower(${merchants.canonicalName}) = lower(${name})`,
+        ),
+      )
+      .limit(1);
+    if (existing) return existing.id;
+
+    const [created] = await db
+      .insert(merchants)
+      .values({ householdId, canonicalName: name })
+      .returning();
+    return created.id;
   }
 
   async createCashRefund(input: {
@@ -720,14 +780,17 @@ export class EconomicEventsService {
     }
   }
 
-  /** Helper for tests / future API: cash expense create. */
+  /** Manual cash expense (product path). Resolves the system EXPENSE book when omitted. */
   async createCashExpense(input: {
     householdId: string;
     cashAccountId: string;
-    expenseAccountId: string;
+    expenseAccountId?: string;
     amountMinor: bigint;
     occurredOn: string;
     description?: string;
+    categoryId?: string;
+    merchantName?: string;
+    notes?: string;
     currency?: CurrencyCode;
     externalId?: string;
   }) {
@@ -736,10 +799,17 @@ export class EconomicEventsService {
       "SAVINGS",
       "CASH",
     ]);
-    await requireAccount(input.householdId, input.expenseAccountId, ["EXPENSE"]);
+    const expenseAccountId =
+      input.expenseAccountId ??
+      (await this.resolveExpenseBook(input.householdId)).id;
+    await requireAccount(input.householdId, expenseAccountId, ["EXPENSE"]);
+    const merchantId = await this.resolveMerchantByName(
+      input.householdId,
+      input.merchantName,
+    );
     const draft = buildCashExpense({
       cashAccountId: input.cashAccountId,
-      expenseAccountId: input.expenseAccountId,
+      expenseAccountId,
       amountMinor: input.amountMinor,
       currency: input.currency ?? "SEK",
     });
@@ -748,8 +818,63 @@ export class EconomicEventsService {
       draft,
       occurredOn: input.occurredOn,
       description: input.description ?? "Utgift",
+      categoryId: input.categoryId,
+      merchantId,
+      notes: input.notes,
       sourceAccountId: input.cashAccountId,
       sourceAmountMinor: -input.amountMinor,
+      externalId: input.externalId,
+      commandType: "LEDGER_EVENT",
+    });
+  }
+
+  /** Manual income into cash (product path). Resolves the system INCOME book when omitted. */
+  async createCashIncome(input: {
+    householdId: string;
+    cashAccountId: string;
+    incomeAccountId?: string;
+    amountMinor: bigint;
+    occurredOn: string;
+    description?: string;
+    categoryId?: string;
+    merchantName?: string;
+    notes?: string;
+    currency?: CurrencyCode;
+    externalId?: string;
+  }) {
+    if (input.amountMinor <= 0n) {
+      throw new BadRequestException("amountMinor must be positive");
+    }
+    await requireAccount(input.householdId, input.cashAccountId, [
+      "CHECKING",
+      "SAVINGS",
+      "CASH",
+    ]);
+    const incomeAccountId =
+      input.incomeAccountId ??
+      (await this.resolveIncomeBook(input.householdId)).id;
+    await requireAccount(input.householdId, incomeAccountId, ["INCOME"]);
+    const merchantId = await this.resolveMerchantByName(
+      input.householdId,
+      input.merchantName,
+    );
+    const draft = buildIncome({
+      cashAccountId: input.cashAccountId,
+      incomeAccountId,
+      amountMinor: input.amountMinor,
+      currency: input.currency ?? "SEK",
+    });
+    return this.persistDraft({
+      householdId: input.householdId,
+      draft,
+      occurredOn: input.occurredOn,
+      description: input.description ?? "Inkomst",
+      categoryId: input.categoryId,
+      merchantId,
+      notes: input.notes,
+      sourceAccountId: input.cashAccountId,
+      sourceAmountMinor: input.amountMinor,
+      incomeAmountMinor: input.amountMinor,
       externalId: input.externalId,
       commandType: "LEDGER_EVENT",
     });

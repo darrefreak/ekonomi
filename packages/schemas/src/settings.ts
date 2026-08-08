@@ -12,6 +12,9 @@ export const settingsResponseSchema = z.object({
     minimumCashBalanceMinor: minorString,
     emergencyFundTargetMinor: minorString,
     safetyMarginMinor: minorString,
+    savingsRateTargetPercent: z.number(),
+    maxFixedCostRatioPercent: z.number(),
+    investmentContributionTargetMinor: minorString,
     currency: z.string(),
   }),
   members: z
@@ -22,6 +25,19 @@ export const settingsResponseSchema = z.object({
         displayName: z.string(),
         role: z.string(),
         personalDataPolicy: z.string(),
+      }),
+    )
+    .optional()
+    .default([]),
+  invitations: z
+    .array(
+      z.object({
+        id: z.string().uuid(),
+        email: z.string(),
+        role: z.string(),
+        status: z.string(),
+        expiresAt: z.string(),
+        createdAt: z.string(),
       }),
     )
     .optional()
@@ -40,6 +56,9 @@ export const updateSettingsSchema = z
         minimumCashBalanceMinor: minorString.optional(),
         emergencyFundTargetMinor: minorString.optional(),
         safetyMarginMinor: minorString.optional(),
+        savingsRateTargetPercent: z.number().min(0).max(100).optional(),
+        maxFixedCostRatioPercent: z.number().min(0).max(100).optional(),
+        investmentContributionTargetMinor: minorString.optional(),
         currency: currencyCodeSchema.optional(),
       })
       .strict()

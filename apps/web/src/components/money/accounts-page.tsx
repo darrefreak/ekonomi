@@ -1,91 +1,129 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useState, type FormEvent } from "react";
+import { useState, type FormEvent } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { AccountDto } from "@ffos/schemas";
 import { api } from "@/lib/api";
 import { ensureHouseholdSession } from "@/lib/session";
+import { useHouseholdId } from "@/lib/use-household-id";
+import { queryKeys } from "@/lib/query-keys";
+import { kronorToMinorString } from "@/lib/money-input";
+import {
+  ACCOUNT_TYPES,
+  CURRENCIES,
+  accountTypeLabel,
+} from "@/lib/account-labels";
 import { MoneyValue } from "../financial/money-value";
 import { EmptyState } from "../feedback/empty-state";
 import { ErrorState } from "../feedback/error-state";
 import { LoadingState } from "../feedback/loading-state";
 
-const ACCOUNT_TYPES = [
-  "CHECKING",
-  "SAVINGS",
-  "CREDIT_CARD",
-  "CASH",
-  "INVESTMENT",
-  "MORTGAGE",
-  "LOAN",
-  "ASSET",
-  "OTHER",
-] as const;
+type FormState = {
+  name: string;
+  accountType: (typeof ACCOUNT_TYPES)[number];
+  currency: (typeof CURRENCIES)[number];
+  isShared: boolean;
+  ownerMemberId: string;
+  provider: string;
+  openingBalance: string;
+  creditLimit: string;
+};
+
+const INITIAL_FORM: FormState = {
+  name: "",
+  accountType: "CHECKING",
+  currency: "SEK",
+  isShared: true,
+  ownerMemberId: "",
+  provider: "",
+  openingBalance: "0",
+  creditLimit: "",
+};
 
 export function AccountsPage() {
-  const [items, setItems] = useState<AccountDto[]>([]);
-  const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [creating, setCreating] = useState(false);
-  const [name, setName] = useState("");
-  const [accountType, setAccountType] =
-    useState<(typeof ACCOUNT_TYPES)[number]>("CHECKING");
-  const [provider, setProvider] = useState("");
+  const householdId = useHouseholdId();
+  const queryClient = useQueryClient();
+  const [includeArchived, setIncludeArchived] = useState(false);
+  const [form, setForm] = useState<FormState>(INITIAL_FORM);
   const [formError, setFormError] = useState<string | null>(null);
 
-  const load = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const householdId = await ensureHouseholdSession();
-      const data = await api.listAccounts(householdId);
-      setItems(data.items);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Fel");
-      setItems([]);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+  const accountsQuery = useQuery({
+    queryKey: householdId
+      ? queryKeys.accounts.all(householdId, includeArchived)
+      : ["accounts", "pending"],
+    queryFn: () => api.listAccounts(householdId!, { includeArchived }),
+    enabled: Boolean(householdId),
+  });
 
-  useEffect(() => {
-    void load();
-  }, [load]);
+  const settingsQuery = useQuery({
+    queryKey: householdId ? queryKeys.settings.all(householdId) : ["settings", "pending"],
+    queryFn: () => api.getSettings(householdId!),
+    enabled: Boolean(householdId),
+  });
 
-  async function onCreate(e: FormEvent) {
-    e.preventDefault();
-    setCreating(true);
-    setFormError(null);
-    try {
-      const householdId = await ensureHouseholdSession();
-      await api.createAccount({
-        householdId,
-        name: name.trim(),
-        accountType,
-        currency: "SEK",
-        provider: provider.trim() || null,
-        isShared: true,
-        openingBalanceMinor: "0",
+  const createMutation = useMutation({
+    mutationFn: async () => {
+      const id = await ensureHouseholdSession();
+      if (!form.name.trim()) {
+        throw new Error("Ange ett kontonamn.");
+      }
+      const openingBalanceMinor = kronorToMinorString(form.openingBalance || "0");
+      if (openingBalanceMinor == null || BigInt(openingBalanceMinor) < 0n) {
+        throw new Error("Öppningssaldo måste vara ett giltigt belopp i kronor (≥ 0).");
+      }
+      let creditLimitMinor: string | null | undefined;
+      if (form.accountType === "CREDIT_CARD") {
+        if (!form.creditLimit.trim()) {
+          throw new Error("Ange en kreditgräns för kreditkort.");
+        }
+        creditLimitMinor = kronorToMinorString(form.creditLimit);
+        if (creditLimitMinor == null || BigInt(creditLimitMinor) < 0n) {
+          throw new Error("Kreditgränsen måste vara ett giltigt belopp i kronor (≥ 0).");
+        }
+      }
+      return api.createAccount({
+        householdId: id,
+        name: form.name.trim(),
+        accountType: form.accountType,
+        currency: form.currency,
+        provider: form.provider.trim() || null,
+        isShared: form.isShared,
+        ownerMemberId: form.isShared ? null : form.ownerMemberId || null,
+        openingBalanceMinor,
+        creditLimitMinor,
       });
-      setName("");
-      setProvider("");
-      await load();
-    } catch (err) {
-      setFormError(err instanceof Error ? err.message : "Kunde inte skapa konto");
-    } finally {
-      setCreating(false);
-    }
-  }
+    },
+    onSuccess: async () => {
+      setForm(INITIAL_FORM);
+      setFormError(null);
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["accounts", householdId] }),
+        queryClient.invalidateQueries({ queryKey: queryKeys.dashboard.all(householdId!) }),
+        queryClient.invalidateQueries({ queryKey: queryKeys.netWorth.all(householdId!) }),
+      ]);
+    },
+    onError: (err: unknown) => {
+      setFormError(err instanceof Error ? err.message : "Kunde inte skapa konto.");
+    },
+  });
 
-  if (loading && items.length === 0) {
+  const items = accountsQuery.data?.items ?? [];
+  const members = settingsQuery.data?.members ?? [];
+
+  if (!householdId || (accountsQuery.isLoading && items.length === 0)) {
     return <LoadingState label="Hämtar konton…" />;
   }
-  if (error && items.length === 0) {
+  if (accountsQuery.isError && items.length === 0) {
     return (
       <ErrorState
         title="Kunde inte hämta konton"
-        description={error}
-        onRetry={() => void load()}
+        description={
+          accountsQuery.error instanceof Error
+            ? accountsQuery.error.message
+            : "Något gick fel"
+        }
+        onRetry={() => void accountsQuery.refetch()}
       />
     );
   }
@@ -102,33 +140,58 @@ export function AccountsPage() {
       </div>
 
       <form
-        onSubmit={(e) => void onCreate(e)}
-        className="space-y-3 rounded-[16px] bg-surface-elevated p-4"
+        onSubmit={(e: FormEvent) => {
+          e.preventDefault();
+          void createMutation.mutate();
+        }}
+        className="space-y-4 rounded-[16px] bg-surface-elevated p-4"
       >
         <h2 className="text-sm font-medium text-text-secondary">Nytt konto</h2>
-        <div className="grid gap-3 md:grid-cols-3">
+        <div className="grid gap-3 md:grid-cols-2">
           <label className="block text-sm">
             <span className="text-text-muted">Namn</span>
             <input
               required
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="Namn"
+              value={form.name}
+              onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
+              placeholder="t.ex. Löntagarkonto"
               className="mt-1 min-h-11 w-full rounded-[12px] border border-border bg-surface px-3 text-sm"
             />
           </label>
           <label className="block text-sm">
             <span className="text-text-muted">Typ</span>
             <select
-              value={accountType}
+              value={form.accountType}
               onChange={(e) =>
-                setAccountType(e.target.value as (typeof ACCOUNT_TYPES)[number])
+                setForm((f) => ({
+                  ...f,
+                  accountType: e.target.value as (typeof ACCOUNT_TYPES)[number],
+                }))
               }
               className="mt-1 min-h-11 w-full rounded-[12px] border border-border bg-surface px-3 text-sm"
             >
               {ACCOUNT_TYPES.map((t) => (
                 <option key={t} value={t}>
-                  {t}
+                  {accountTypeLabel(t)}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="block text-sm">
+            <span className="text-text-muted">Valuta</span>
+            <select
+              value={form.currency}
+              onChange={(e) =>
+                setForm((f) => ({
+                  ...f,
+                  currency: e.target.value as (typeof CURRENCIES)[number],
+                }))
+              }
+              className="mt-1 min-h-11 w-full rounded-[12px] border border-border bg-surface px-3 text-sm"
+            >
+              {CURRENCIES.map((c) => (
+                <option key={c} value={c}>
+                  {c}
                 </option>
               ))}
             </select>
@@ -136,13 +199,72 @@ export function AccountsPage() {
           <label className="block text-sm">
             <span className="text-text-muted">Provider (valfritt)</span>
             <input
-              value={provider}
-              onChange={(e) => setProvider(e.target.value)}
-              placeholder="Provider"
+              value={form.provider}
+              onChange={(e) => setForm((f) => ({ ...f, provider: e.target.value }))}
+              placeholder="t.ex. SEB, Avanza"
               className="mt-1 min-h-11 w-full rounded-[12px] border border-border bg-surface px-3 text-sm"
             />
           </label>
+          <label className="block text-sm">
+            <span className="text-text-muted">Öppningssaldo (kr)</span>
+            <input
+              inputMode="decimal"
+              value={form.openingBalance}
+              onChange={(e) =>
+                setForm((f) => ({ ...f, openingBalance: e.target.value }))
+              }
+              placeholder="0"
+              className="mt-1 min-h-11 w-full rounded-[12px] border border-border bg-surface px-3 text-sm tabular-nums"
+            />
+          </label>
+          {form.accountType === "CREDIT_CARD" ? (
+            <label className="block text-sm">
+              <span className="text-text-muted">Kreditgräns (kr)</span>
+              <input
+                inputMode="decimal"
+                required
+                value={form.creditLimit}
+                onChange={(e) =>
+                  setForm((f) => ({ ...f, creditLimit: e.target.value }))
+                }
+                placeholder="15000"
+                className="mt-1 min-h-11 w-full rounded-[12px] border border-border bg-surface px-3 text-sm tabular-nums"
+              />
+            </label>
+          ) : null}
         </div>
+
+        <label className="flex min-h-11 items-center gap-2 text-sm">
+          <input
+            type="checkbox"
+            checked={form.isShared}
+            onChange={(e) =>
+              setForm((f) => ({ ...f, isShared: e.target.checked, ownerMemberId: "" }))
+            }
+          />
+          Delat konto (hela hushållet)
+        </label>
+
+        {!form.isShared ? (
+          <label className="block text-sm">
+            <span className="text-text-muted">Ägare (valfritt)</span>
+            <select
+              value={form.ownerMemberId}
+              onChange={(e) =>
+                setForm((f) => ({ ...f, ownerMemberId: e.target.value }))
+              }
+              className="mt-1 min-h-11 w-full rounded-[12px] border border-border bg-surface px-3 text-sm"
+            >
+              <option value="">Ingen specifik ägare</option>
+              {members.map((m) => (
+                <option key={m.id} value={m.id}>
+                  {m.displayName}
+                </option>
+              ))}
+            </select>
+          </label>
+        ) : null}
+
         {formError ? (
           <p className="text-sm text-negative" role="alert">
             {formError}
@@ -150,12 +272,21 @@ export function AccountsPage() {
         ) : null}
         <button
           type="submit"
-          disabled={creating}
+          disabled={createMutation.isPending}
           className="min-h-11 rounded-[12px] bg-accent px-4 text-sm font-medium text-white disabled:opacity-60"
         >
-          {creating ? "Skapar…" : "Skapa konto"}
+          {createMutation.isPending ? "Skapar…" : "Skapa konto"}
         </button>
       </form>
+
+      <label className="flex min-h-11 items-center gap-2 text-sm text-text-secondary">
+        <input
+          type="checkbox"
+          checked={includeArchived}
+          onChange={(e) => setIncludeArchived(e.target.checked)}
+        />
+        Visa arkiverade konton
+      </label>
 
       {items.length === 0 ? (
         <EmptyState
@@ -165,28 +296,60 @@ export function AccountsPage() {
       ) : (
         <ul className="divide-y divide-border rounded-[16px] bg-surface-elevated shadow-[var(--ffos-shadow-soft)]">
           {items.map((account) => (
-            <li key={account.id}>
-              <Link
-                href={`/accounts/${account.id}`}
-                className="flex min-h-14 items-center justify-between gap-3 px-4 py-3 hover:bg-surface-muted/60"
-              >
-                <div className="min-w-0">
-                  <p className="truncate font-medium">{account.name}</p>
-                  <p className="text-xs text-text-muted">
-                    {account.accountType}
-                    {account.provider ? ` · ${account.provider}` : ""}
-                    {account.freshnessLabel ? ` · ${account.freshnessLabel}` : ""}
-                  </p>
-                </div>
-                <MoneyValue
-                  value={account.currentBalance}
-                  className="shrink-0 text-text-primary"
-                />
-              </Link>
-            </li>
+            <AccountRow key={account.id} account={account} members={members} />
           ))}
         </ul>
       )}
     </div>
+  );
+}
+
+function AccountRow({
+  account,
+  members,
+}: {
+  account: AccountDto;
+  members: Array<{ id: string; displayName: string }>;
+}) {
+  const owner = account.ownerMemberId
+    ? members.find((m) => m.id === account.ownerMemberId)?.displayName
+    : null;
+  return (
+    <li>
+      <Link
+        href={`/accounts/${account.id}`}
+        className="flex min-h-14 items-center justify-between gap-3 px-4 py-3 hover:bg-surface-muted/60"
+      >
+        <div className="min-w-0">
+          <div className="flex items-center gap-2">
+            <p className="truncate font-medium">{account.name}</p>
+            <span
+              className={`shrink-0 rounded-full px-2 py-0.5 text-[11px] font-medium ${
+                account.isShared
+                  ? "bg-accent/10 text-accent"
+                  : "bg-surface-muted text-text-secondary"
+              }`}
+            >
+              {account.isShared ? "Delat" : "Personligt"}
+            </span>
+            {account.archivedAt ? (
+              <span className="shrink-0 rounded-full bg-surface-muted px-2 py-0.5 text-[11px] text-text-muted">
+                Arkiverat
+              </span>
+            ) : null}
+          </div>
+          <p className="text-xs text-text-muted">
+            {accountTypeLabel(account.accountType)}
+            {account.provider ? ` · ${account.provider}` : ""}
+            {owner ? ` · ${owner}` : ""}
+            {account.freshnessLabel ? ` · ${account.freshnessLabel}` : ""}
+          </p>
+        </div>
+        <MoneyValue
+          value={account.currentBalance}
+          className="shrink-0 text-text-primary"
+        />
+      </Link>
+    </li>
   );
 }

@@ -1,6 +1,7 @@
 import {
   bigint,
   jsonb,
+  numeric,
   pgTable,
   text,
   timestamp,
@@ -28,6 +29,26 @@ export const householdSettings = pgTable("household_settings", {
   safetyMarginMinor: bigint("safety_margin_minor", { mode: "bigint" })
     .notNull()
     .default(2_000_000n),
+  /** Target net savings rate percent (0–100). */
+  savingsRateTargetPercent: numeric("savings_rate_target_percent", {
+    precision: 8,
+    scale: 4,
+  })
+    .notNull()
+    .default("20"),
+  /** Max desired fixed-cost ratio percent (0–100). */
+  maxFixedCostRatioPercent: numeric("max_fixed_cost_ratio_percent", {
+    precision: 8,
+    scale: 4,
+  })
+    .notNull()
+    .default("50"),
+  investmentContributionTargetMinor: bigint(
+    "investment_contribution_target_minor",
+    { mode: "bigint" },
+  )
+    .notNull()
+    .default(0n),
   currency: varchar("currency", { length: 3 }).notNull().default("SEK"),
   updatedAt: timestamp("updated_at", { withTimezone: true })
     .defaultNow()

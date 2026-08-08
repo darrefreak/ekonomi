@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { AuthShell } from "@/components/auth/auth-shell";
+import { QueryProvider } from "@/components/providers/query-provider";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -27,7 +28,9 @@ export default function RootLayout({
         />
       </head>
       <body>
-        <AuthShell>{children}</AuthShell>
+        <QueryProvider>
+          <AuthShell>{children}</AuthShell>
+        </QueryProvider>
       </body>
     </html>
   );
