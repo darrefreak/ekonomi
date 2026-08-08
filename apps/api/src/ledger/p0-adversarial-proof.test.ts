@@ -9,10 +9,11 @@ import { EconomicEventsService } from "./economic-events.service";
 import { LedgerTruthService } from "./ledger-truth.service";
 
 /**
- * Adversarial proofs for P0 acceptance — intentionally looks for remaining breakage.
+ * P0 adversarial proofs — re-verified after R1 remediation.
+ * Depreciation idempotency and transactional persist are required PASS.
  */
 
-test("P0-A proof — depreciation externalId is NOT idempotent (no source_tx row)", async () => {
+test("P0-A2 re-verify — depreciation externalId is idempotent", async () => {
   if (!process.env.DATABASE_URL) return;
   const db = getDb();
   const [household] = await db
@@ -69,20 +70,21 @@ test("P0-A proof — depreciation externalId is NOT idempotent (no source_tx row
     .where(eq(financialEvents.householdId, household.id));
   const bal = await ledger.reconstructHousehold(household.id);
 
-  // Documented failure: same externalId creates a second write-down.
-  assert.notEqual(first.id, second.id);
-  assert.equal(rows.length, 2);
-  assert.equal(bal.get(vehicle.id), 280_000_00n);
+  assert.equal(first.id, second.id);
+  assert.equal(rows.length, 1);
+  assert.equal(bal.get(vehicle.id), 290_000_00n);
 });
 
-test("P0-A proof — persist path has no db.transaction wrapper", async () => {
-  // Static adversarial check: multi-write persist must be transactional for P0.
+test("P0-A1 re-verify — persist path uses db.transaction", async () => {
   const fs = await import("node:fs/promises");
-  const path = new URL("../db/seed/persist-event.ts", import.meta.url);
-  const src = await fs.readFile(path, "utf8");
+  const path = await import("node:path");
+  const src = await fs.readFile(
+    path.join(process.cwd(), "src/db/seed/persist-event.ts"),
+    "utf8",
+  );
   assert.equal(
-    /db\.transaction|\.transaction\s*\(/.test(src),
-    false,
-    "persist-event still has no transaction — partial write risk remains",
+    /\.transaction\s*\(/.test(src),
+    true,
+    "persist-event must wrap multi-write path in a transaction",
   );
 });

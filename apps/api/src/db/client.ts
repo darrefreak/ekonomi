@@ -40,4 +40,8 @@ export function getDb() {
 }
 
 export type Db = ReturnType<typeof getDb>;
+/** Transaction client or root db — share one object across a financial command. */
+export type DbExecutor =
+  | Db
+  | Parameters<Parameters<Db["transaction"]>[0]>[0];
 export { schema };

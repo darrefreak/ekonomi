@@ -241,17 +241,19 @@ export class TransactionsService {
     }
     if (input.description !== undefined) patch.description = input.description;
 
-    await db
-      .update(sourceTransactions)
-      .set(patch)
-      .where(eq(sourceTransactions.id, transactionId));
+    await db.transaction(async (tx) => {
+      await tx
+        .update(sourceTransactions)
+        .set(patch)
+        .where(eq(sourceTransactions.id, transactionId));
 
-    if (input.vehicleId !== undefined && existing.financialEventId) {
-      await db
-        .update(financialEvents)
-        .set({ vehicleId: input.vehicleId })
-        .where(eq(financialEvents.id, existing.financialEventId));
-    }
+      if (input.vehicleId !== undefined && existing.financialEventId) {
+        await tx
+          .update(financialEvents)
+          .set({ vehicleId: input.vehicleId })
+          .where(eq(financialEvents.id, existing.financialEventId));
+      }
+    });
 
     return this.get(userId, input.householdId, transactionId);
   }

@@ -73,6 +73,9 @@ export class ValidationExceptionFilter implements ExceptionFilter {
     if (status === HttpStatus.UNAUTHORIZED) code = "UNAUTHORIZED";
     if (status === HttpStatus.FORBIDDEN) code = "FORBIDDEN";
     if (status === HttpStatus.NOT_FOUND) code = "NOT_FOUND";
+    if (status === HttpStatus.CONFLICT && code === "HTTP_ERROR") {
+      code = "CONFLICT";
+    }
     if (status === HttpStatus.TOO_MANY_REQUESTS) code = "RATE_LIMITED";
 
     res.status(status).json({

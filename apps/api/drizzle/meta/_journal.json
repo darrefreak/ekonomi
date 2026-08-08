@@ -141,6 +141,13 @@
       "when": 1754641200000,
       "tag": "0019_batch_c2_metric_registry",
       "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "7",
+      "when": 1754644800000,
+      "tag": "0020_batch_r1_command_idempotency",
+      "breakpoints": true
     }
   ]
 }

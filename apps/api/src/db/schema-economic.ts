@@ -403,3 +403,31 @@ export const reconciliationGroups = pgTable("reconciliation_groups", {
   confidence: numeric("confidence", { precision: 5, scale: 4 }).default("0.9"),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
 });
+
+/**
+ * Durable command idempotency for financial mutations.
+ * Key: (household_id, command_type, external_id). payload_hash detects key reuse with different economics.
+ */
+export const financialCommandIdempotency = pgTable(
+  "financial_command_idempotency",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    householdId: uuid("household_id")
+      .notNull()
+      .references(() => households.id, { onDelete: "cascade" }),
+    commandType: varchar("command_type", { length: 80 }).notNull(),
+    externalId: varchar("external_id", { length: 160 }).notNull(),
+    payloadHash: varchar("payload_hash", { length: 64 }).notNull(),
+    financialEventId: uuid("financial_event_id")
+      .notNull()
+      .references(() => financialEvents.id, { onDelete: "cascade" }),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (t) => [
+    uniqueIndex("financial_command_idempotency_key").on(
+      t.householdId,
+      t.commandType,
+      t.externalId,
+    ),
+  ],
+);
