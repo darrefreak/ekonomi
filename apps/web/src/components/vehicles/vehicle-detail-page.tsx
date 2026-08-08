@@ -2,7 +2,7 @@
 
 import { useEffect, useState, type ReactNode } from "react";
 import Link from "next/link";
-import type { VehicleDetailDto } from "@ffos/schemas";
+import type { VehicleDetailDto, VehicleMarketResponse } from "@ffos/schemas";
 import { api } from "@/lib/api";
 import { ensureHouseholdSession } from "@/lib/session";
 import { MoneyValue } from "../financial/money-value";
@@ -13,13 +13,20 @@ import { VehiclePurchaseForm } from "./vehicle-purchase-form";
 
 export function VehicleDetailPage({ vehicleId }: { vehicleId: string }) {
   const [data, setData] = useState<VehicleDetailDto | null>(null);
+  const [market, setMarket] = useState<VehicleMarketResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     void ensureHouseholdSession()
-      .then((id) => api.getVehicle(id, vehicleId))
-      .then(setData)
+      .then(async (id) => {
+        const [vehicle, marketData] = await Promise.all([
+          api.getVehicle(id, vehicleId),
+          api.getVehicleMarket(id, vehicleId),
+        ]);
+        setData(vehicle);
+        setMarket(marketData);
+      })
       .catch((err: Error) => setError(err.message))
       .finally(() => setLoading(false));
   }, [vehicleId]);
@@ -30,6 +37,11 @@ export function VehicleDetailPage({ vehicleId }: { vehicleId: string }) {
       <ErrorState title="Kunde inte hämta fordon" description={error ?? "Ingen data"} />
     );
   }
+
+  const nextEvent =
+    data.recentCosts[0]?.description ??
+    data.linkedEvents?.[0]?.description ??
+    "—";
 
   return (
     <div className="space-y-6">
@@ -48,12 +60,48 @@ export function VehicleDetailPage({ vehicleId }: { vehicleId: string }) {
         </div>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-3">
-        <Stat label="Ekonomisk / mån" value={<MoneyValue value={data.metrics.monthlyEconomicCost} />} />
-        <Stat label="Equity" value={<MoneyValue value={data.metrics.netEquity} signed />} />
+      <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-6">
+        <Stat
+          label="Värde (mid)"
+          value={
+            data.valuation.mid ? (
+              <MoneyValue value={data.valuation.mid} />
+            ) : (
+              "—"
+            )
+          }
+        />
+        <Stat
+          label="Skuld / equity"
+          value={
+            <span className="block">
+              {data.finance ? (
+                <MoneyValue value={data.finance.remaining} />
+              ) : (
+                "—"
+              )}
+              <span className="mt-1 block text-xs text-text-muted">
+                <MoneyValue value={data.metrics.netEquity} signed />
+              </span>
+            </span>
+          }
+        />
+        <Stat
+          label="Ekonomisk / mån"
+          value={<MoneyValue value={data.metrics.monthlyEconomicCost} />}
+        />
         <Stat
           label="Kostnad / mil"
           value={<MoneyValue value={data.metrics.costPerSwedishMile} />}
+        />
+        <Stat label="Nästa händelse" value={<span className="text-sm">{nextEvent}</span>} />
+        <Stat
+          label="Rekommendation"
+          value={
+            <span className="text-sm font-medium">
+              {market?.recommendation?.kind ?? "—"}
+            </span>
+          }
         />
       </div>
 
@@ -65,6 +113,11 @@ export function VehicleDetailPage({ vehicleId }: { vehicleId: string }) {
             <Row label="Mid" value={data.valuation.mid ? <MoneyValue value={data.valuation.mid} /> : "—"} />
             <Row label="Hög" value={data.valuation.high ? <MoneyValue value={data.valuation.high} /> : "—"} />
           </dl>
+          {market?.analytics?.valuation ? (
+            <p className="mt-3 text-xs text-text-muted">
+              Marknad: {market.analytics.valuation.askLabel}
+            </p>
+          ) : null}
         </section>
         <section className="rounded-[16px] bg-surface-elevated p-5">
           <h2 className="text-sm text-text-secondary">Finansiering & användning</h2>
@@ -159,9 +212,9 @@ export function VehicleDetailPage({ vehicleId }: { vehicleId: string }) {
 
 function Stat({ label, value }: { label: string; value: ReactNode }) {
   return (
-    <section className="rounded-[16px] bg-surface-elevated p-5">
-      <p className="text-sm text-text-secondary">{label}</p>
-      <div className="mt-2 text-lg">{value}</div>
+    <section className="rounded-[16px] bg-surface-elevated p-4 md:p-5">
+      <p className="text-xs text-text-secondary md:text-sm">{label}</p>
+      <div className="mt-2 text-base md:text-lg">{value}</div>
     </section>
   );
 }

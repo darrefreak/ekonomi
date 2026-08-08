@@ -26,6 +26,7 @@ import { ReviewModule } from "./review/review.module";
 import { SearchModule } from "./search/search.module";
 import { SettingsModule } from "./settings/settings.module";
 import { TransactionsModule } from "./transactions/transactions.module";
+import { MerchantsModule } from "./merchants/merchants.module";
 import { VehicleIntelModule } from "./vehicle-intel/vehicle-intel.module";
 import { VehiclesModule } from "./vehicles/vehicles.module";
 import { WealthModule } from "./wealth/wealth.module";
@@ -54,6 +55,7 @@ import { WealthModule } from "./wealth/wealth.module";
     PlanningModule,
     VehiclesModule,
     VehicleIntelModule,
+    MerchantsModule,
     DecisionsModule,
     DebtModule,
     WealthModule,

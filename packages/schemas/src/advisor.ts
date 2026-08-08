@@ -73,6 +73,11 @@ export const recommendationOutcomeSchema = z.object({
   title: z.string(),
   status: z.string(),
   expectedImpact: moneySchema.nullable().optional(),
+  verifiedImpact: moneySchema.nullable().optional(),
+  verificationStatus: z
+    .enum(["AWAITING_EVIDENCE", "VERIFIED", "UNVERIFIABLE"])
+    .optional(),
+  verificationNotes: z.string().nullable().optional(),
   shownAt: z.string(),
   notes: z.string().nullable(),
 });

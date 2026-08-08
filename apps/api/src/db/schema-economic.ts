@@ -173,7 +173,11 @@ export const merchants = pgTable("merchants", {
   merchantCategory: varchar("merchant_category", { length: 80 }),
   country: varchar("country", { length: 2 }).default("SE"),
   confidence: numeric("confidence", { precision: 5, scale: 4 }).default("1"),
+  website: varchar("website", { length: 240 }),
+  normalizedTokens: jsonb("normalized_tokens").$type<string[]>().notNull().default([]),
+  userVerified: boolean("user_verified").notNull().default(false),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
 });
 
 export const accounts = pgTable("accounts", {

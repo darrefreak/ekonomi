@@ -3,7 +3,7 @@ import {
   Injectable,
   NotFoundException,
 } from "@nestjs/common";
-import { and, desc, eq } from "drizzle-orm";
+import { and, desc, eq, sql } from "drizzle-orm";
 import { money, moneyToJson, type CurrencyCode } from "@ffos/domain";
 import type {
   AdvisorChatInput,
@@ -12,12 +12,14 @@ import type {
 } from "@ffos/schemas";
 import { getDb } from "../db/client";
 import { aiBriefs, recommendationOutcomes } from "../db/schema-ai";
+import { sourceTransactions } from "../db/schema-economic";
 import { DecisionsService } from "../decisions/decisions.service";
 import { FeatureFlagsService } from "../feature-flags/feature-flags.service";
 import { HouseholdAccessService } from "../households/household-access.service";
 import { HouseholdMetricsService } from "../metrics/household-metrics.service";
 import { PlanningMetricsService } from "../planning/planning-metrics.service";
 import { VehiclesService } from "../vehicles/vehicles.service";
+import { VehicleIntelService } from "../vehicle-intel/vehicle-intel.service";
 import {
   listAdvisorTools,
   runAdvisorTools,
@@ -36,6 +38,7 @@ export class AdvisorService {
     @Inject(PlanningMetricsService) private readonly planning: PlanningMetricsService,
     @Inject(DecisionsService) private readonly decisions: DecisionsService,
     @Inject(VehiclesService) private readonly vehiclesSvc: VehiclesService,
+    @Inject(VehicleIntelService) private readonly vehicleIntel: VehicleIntelService,
     @Inject(HouseholdMetricsService) private readonly metrics: HouseholdMetricsService,
     @Inject(FeatureFlagsService) private readonly flags: FeatureFlagsService,
   ) {}
@@ -59,6 +62,7 @@ export class AdvisorService {
       planning: this.planning,
       decisions: this.decisions,
       vehicles: this.vehiclesSvc,
+      vehicleIntel: this.vehicleIntel,
       metrics: this.metrics,
       household,
     };
@@ -143,6 +147,14 @@ export class AdvisorService {
         expectedImpact: r.expectedImpactMinor
           ? moneyToJson(money(r.expectedImpactMinor, currency))
           : null,
+        verifiedImpact: r.verifiedImpactMinor
+          ? moneyToJson(money(r.verifiedImpactMinor, currency))
+          : null,
+        verificationStatus: r.verificationStatus as
+          | "AWAITING_EVIDENCE"
+          | "VERIFIED"
+          | "UNVERIFIABLE",
+        verificationNotes: r.verificationNotes,
         shownAt: r.shownAt.toISOString(),
         notes: r.notes,
       })),
@@ -218,14 +230,82 @@ export class AdvisorService {
       .limit(1);
     if (!existing) throw new NotFoundException("Outcome not found");
 
+    const patch: Partial<typeof recommendationOutcomes.$inferInsert> = {
+      status: input.status,
+      notes: input.notes === undefined ? existing.notes : input.notes,
+    };
+
+    if (input.status === "COMPLETED") {
+      const verification = await this.tryVerifySubscriptionOutcome(
+        input.householdId,
+        existing,
+      );
+      patch.verificationStatus = verification.status;
+      patch.verificationNotes = verification.notes;
+      // COMPLETED must NOT auto-set verifiedImpact — evidence path only.
+    }
+
     await db
       .update(recommendationOutcomes)
-      .set({
-        status: input.status,
-        notes: input.notes === undefined ? existing.notes : input.notes,
-      })
+      .set(patch)
       .where(eq(recommendationOutcomes.id, outcomeId));
 
     return this.outcomes(userId, input.householdId);
+  }
+
+  /**
+   * Simple subscription verification: VERIFIED only when no matching charges
+   * appear after completion window in source transactions (mock heuristic).
+   */
+  async tryVerifySubscriptionOutcome(
+    householdId: string,
+    outcome: typeof recommendationOutcomes.$inferSelect,
+  ): Promise<{
+    status: "AWAITING_EVIDENCE" | "VERIFIED" | "UNVERIFIABLE";
+    notes: string;
+    verifiedImpactMinor?: bigint;
+  }> {
+    const key = outcome.recommendationKey.toLowerCase();
+    const isSubscription =
+      key.includes("sub") ||
+      key.includes("subscription") ||
+      key.includes("netflix") ||
+      key.includes("cancel");
+
+    if (!isSubscription) {
+      return {
+        status: "AWAITING_EVIDENCE",
+        notes: "Inte en prenumerationsrekommendation — väntar på manuellt underlag.",
+      };
+    }
+
+    const db = getDb();
+    const since = outcome.completedAt ?? outcome.shownAt;
+    const titleToken = outcome.title.split(" ")[0]?.toLowerCase() ?? "";
+    const recentCharges = await db
+      .select({ id: sourceTransactions.id })
+      .from(sourceTransactions)
+      .where(
+        and(
+          eq(sourceTransactions.householdId, householdId),
+          sql`${sourceTransactions.bookingDate} >= ${since.toISOString().slice(0, 10)}`,
+          sql`${sourceTransactions.amountMinor} < 0`,
+          sql`${sourceTransactions.description} ilike ${`%${titleToken}%`}`,
+        ),
+      )
+      .limit(1);
+
+    if (recentCharges.length === 0) {
+      return {
+        status: "VERIFIED",
+        notes: "Inga fler debiteringar matchande titel efter åtgärd (enkel heuristik).",
+        verifiedImpactMinor: outcome.expectedImpactMinor ?? undefined,
+      };
+    }
+
+    return {
+      status: "AWAITING_EVIDENCE",
+      notes: "Fortfarande debiteringar — kräver mer underlag innan VERIFIED.",
+    };
   }
 }

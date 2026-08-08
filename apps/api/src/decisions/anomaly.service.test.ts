@@ -33,11 +33,17 @@ test("AnomalyService detects deterministically and upserts by identity key", asy
   );
 
   await anomaly.run(household.id, asOf);
-  const persisted = await anomaly.list(household.id);
-  const persistedKeys = new Set(persisted.items.map((r) => r.identityKey));
+  const rowsAfterRun = await db
+    .select()
+    .from(anomalyFindings)
+    .where(eq(anomalyFindings.householdId, household.id));
+  const persistedKeys = new Set(rowsAfterRun.map((r) => r.identityKey));
   for (const f of detected) {
     assert.ok(persistedKeys.has(f.id));
   }
+  // Active list excludes dismissed findings (user dismiss persists while still detected).
+  const active = await anomaly.list(household.id);
+  assert.ok(active.items.every((i) => persistedKeys.has(i.identityKey)));
 
   // Re-running should upsert, not duplicate, existing findings for this asOf.
   await anomaly.run(household.id, asOf);

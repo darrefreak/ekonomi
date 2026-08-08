@@ -176,6 +176,13 @@
       "when": 1754659200000,
       "tag": "0024_p1_u5_ops_surface",
       "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "7",
+      "when": 1754662800000,
+      "tag": "0025_p1_u6_vehicle_merchant_depth",
+      "breakpoints": true
     }
   ]
 }

@@ -2,6 +2,7 @@ import type { CurrencyCode } from "@ffos/domain";
 import type { DecisionsService } from "../decisions/decisions.service";
 import type { HouseholdMetricsService } from "../metrics/household-metrics.service";
 import type { PlanningMetricsService } from "../planning/planning-metrics.service";
+import type { VehicleIntelService } from "../vehicle-intel/vehicle-intel.service";
 import type { VehiclesService } from "../vehicles/vehicles.service";
 import type { ToolResult } from "./ai-tools";
 
@@ -13,6 +14,7 @@ export type AdvisorToolContext = {
   planning: PlanningMetricsService;
   decisions: DecisionsService;
   vehicles: VehiclesService;
+  vehicleIntel: VehicleIntelService;
   metrics: HouseholdMetricsService;
 };
 
@@ -29,6 +31,12 @@ export const ADVISOR_TOOL_NAMES = [
   "get_opportunities",
   "get_risk",
   "get_vehicle_equity",
+  "get_vehicle_summary",
+  "get_vehicle_tco",
+  "get_vehicle_valuation",
+  "get_vehicle_market_trend",
+  "compare_vehicle_candidates",
+  "get_vehicle_replacement_analysis",
   "get_net_worth",
 ] as const;
 
@@ -115,6 +123,163 @@ const tools: AdvisorToolDef[] = [
                 : false,
             }
           : {},
+      };
+    },
+  },
+  {
+    name: "get_vehicle_summary",
+    description: "Primary vehicle overview: equity, monthly economic cost, recommendation",
+    readOnly: true,
+    async run(ctx) {
+      const list = await ctx.vehicles.list(ctx.userId, ctx.householdId);
+      const v0 = list.items[0];
+      if (!v0) {
+        return { tool: "get_vehicle_summary", ok: false, data: {} };
+      }
+      const market = await ctx.vehicleIntel.market(
+        ctx.userId,
+        ctx.householdId,
+        v0.id,
+      );
+      return {
+        tool: "get_vehicle_summary",
+        ok: true,
+        data: {
+          vehicleId: v0.id,
+          name: v0.name,
+          netEquityMinor: v0.netEquity?.amountMinor,
+          monthlyEconomicMinor: v0.monthlyEconomicCost?.amountMinor,
+          recommendationKind: market.recommendation?.kind,
+          askLabel: market.analytics?.stats?.askLabel,
+        },
+      };
+    },
+  },
+  {
+    name: "get_vehicle_tco",
+    description: "Vehicle projected TCO horizons from economic cost engine",
+    readOnly: true,
+    async run(ctx) {
+      const list = await ctx.vehicles.list(ctx.userId, ctx.householdId);
+      const v0 = list.items[0];
+      if (!v0) return { tool: "get_vehicle_tco", ok: false, data: {} };
+      const detail = await ctx.vehicles.get(ctx.userId, ctx.householdId, v0.id);
+      return {
+        tool: "get_vehicle_tco",
+        ok: true,
+        data: {
+          vehicleId: v0.id,
+          monthlyEconomicMinor: detail.metrics.monthlyEconomicCost.amountMinor,
+          projected12mMinor: detail.metrics.projectedTco12m.amountMinor,
+          projected24mMinor: detail.metrics.projectedTco24m.amountMinor,
+          projected36mMinor: detail.metrics.projectedTco36m.amountMinor,
+          costPerSwedishMileMinor: detail.metrics.costPerSwedishMile.amountMinor,
+        },
+      };
+    },
+  },
+  {
+    name: "get_vehicle_valuation",
+    description: "Comparable asking-price valuation range (not sale price)",
+    readOnly: true,
+    async run(ctx) {
+      const list = await ctx.vehicles.list(ctx.userId, ctx.householdId);
+      const v0 = list.items[0];
+      if (!v0) return { tool: "get_vehicle_valuation", ok: false, data: {} };
+      const market = await ctx.vehicleIntel.market(
+        ctx.userId,
+        ctx.householdId,
+        v0.id,
+      );
+      const val = market.analytics?.valuation;
+      return {
+        tool: "get_vehicle_valuation",
+        ok: !!val && !val.insufficientData,
+        data: val
+          ? {
+              lowMinor: val.estimatedLow?.amountMinor,
+              midMinor: val.estimatedMid?.amountMinor,
+              highMinor: val.estimatedHigh?.amountMinor,
+              askLabel: val.askLabel,
+              confidence: val.confidence,
+            }
+          : {},
+      };
+    },
+  },
+  {
+    name: "get_vehicle_market_trend",
+    description: "Mock market trend over 30d/90d/6m/12m from history points",
+    readOnly: true,
+    async run(ctx) {
+      const list = await ctx.vehicles.list(ctx.userId, ctx.householdId);
+      const v0 = list.items[0];
+      if (!v0) {
+        return { tool: "get_vehicle_market_trend", ok: false, data: {} };
+      }
+      const market = await ctx.vehicleIntel.market(
+        ctx.userId,
+        ctx.householdId,
+        v0.id,
+      );
+      return {
+        tool: "get_vehicle_market_trend",
+        ok: true,
+        data: {
+          trend: market.analytics?.trend ?? null,
+          liquidity: market.analytics?.liquidity ?? null,
+          comparableCount: market.analytics?.comparableCount ?? 0,
+        },
+      };
+    },
+  },
+  {
+    name: "compare_vehicle_candidates",
+    description: "Keep vs replace comparisons with household fit flags",
+    readOnly: true,
+    async run(ctx) {
+      const market = await ctx.vehicleIntel.market(ctx.userId, ctx.householdId);
+      return {
+        tool: "compare_vehicle_candidates",
+        ok: market.comparisons.length > 0,
+        data: {
+          comparisons: market.comparisons.slice(0, 5).map((c) => ({
+            title: c.title,
+            monthlyDeltaMinor: c.monthlyDelta.amountMinor,
+            horizonDeltaMinor: c.horizonDelta?.amountMinor,
+            recommendation: c.recommendation,
+            fitEligible: c.fitEligible,
+          })),
+          candidates: market.candidates.map((c) => ({
+            id: c.id,
+            name: c.name,
+            fitEligible: c.fit?.eligibleForPrimaryRecommendation,
+            mustHaveFailures: c.fit?.mustHaveFailures ?? [],
+          })),
+        },
+      };
+    },
+  },
+  {
+    name: "get_vehicle_replacement_analysis",
+    description: "Sell window, purchase window, and primary recommendation",
+    readOnly: true,
+    async run(ctx) {
+      const market = await ctx.vehicleIntel.market(ctx.userId, ctx.householdId);
+      return {
+        tool: "get_vehicle_replacement_analysis",
+        ok: !!market.replacement,
+        data: {
+          sellWindow: market.replacement,
+          purchaseWindow: market.purchaseWindow,
+          recommendation: market.recommendation,
+          lease: market.lease
+            ? {
+                name: market.lease.name,
+                monthlyMinor: market.lease.monthlyNormalizedCash.amountMinor,
+              }
+            : null,
+        },
       };
     },
   },

@@ -9,6 +9,7 @@ import { households } from "../db/schema";
 import { accounts, financialEvents } from "../db/schema-economic";
 import { EconomicEventsService } from "./economic-events.service";
 import { LedgerTruthService } from "./ledger-truth.service";
+import { stubMerchantsService } from "../merchants/merchants.service.stub";
 
 const AS_OF = "2026-08-01";
 
@@ -56,7 +57,7 @@ test("A3 — vehicle depreciation 300k→280k persisted invariants", async () =>
 
   const audit = new AuditService();
   const ledger = new LedgerTruthService(audit);
-  const events = new EconomicEventsService(ledger, audit);
+  const events = new EconomicEventsService(ledger, audit, stubMerchantsService());
 
   const before = await ledger.reconstructHousehold(household.id);
   const beforeNw = calculateNetWorth({
@@ -134,7 +135,7 @@ test("S1 — depreciation cannot exceed current ledger asset balance", async () 
 
   const audit = new AuditService();
   const ledger = new LedgerTruthService(audit);
-  const events = new EconomicEventsService(ledger, audit);
+  const events = new EconomicEventsService(ledger, audit, stubMerchantsService());
 
   await assert.rejects(
     () =>

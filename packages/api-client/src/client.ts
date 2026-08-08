@@ -19,6 +19,13 @@ import {
   listCategoriesQuerySchema,
   merchantsResponseSchema,
   listMerchantsQuerySchema,
+  merchantNormalizeQuerySchema,
+  merchantNormalizeResponseSchema,
+  verifyMerchantAliasSchema,
+  verifyMerchantAliasResponseSchema,
+  createVehicleCandidateSchema,
+  createVehicleCandidateFromListingSchema,
+  updateVehicleCandidateSchema,
   inviteMemberSchema,
   acceptInviteSchema,
   updateMemberRoleSchema,
@@ -93,6 +100,11 @@ import {
   type CreateCategoryInput,
   type UpdateCategoryInput,
   type MerchantsResponse,
+  type MerchantNormalizeResponse,
+  type VerifyMerchantAliasInput,
+  type CreateVehicleCandidateInput,
+  type CreateVehicleCandidateFromListingInput,
+  type UpdateVehicleCandidateInput,
   type InviteMemberInput,
   type AcceptInviteInput,
   type UpdateMemberRoleInput,
@@ -445,6 +457,25 @@ export function createApiClient(options: ApiClientOptions) {
       if (params.q) qs.set("q", params.q);
       const data = await request<unknown>(`/api/v1/merchants?${qs}`);
       return merchantsResponseSchema.parse(data) as MerchantsResponse;
+    },
+    normalizeMerchant: async (householdId: string, raw: string) => {
+      const params = merchantNormalizeQuerySchema.parse({ householdId, raw });
+      const qs = new URLSearchParams({
+        householdId: params.householdId,
+        raw: params.raw,
+      });
+      const data = await request<unknown>(`/api/v1/merchants/normalize?${qs}`);
+      return merchantNormalizeResponseSchema.parse(
+        data,
+      ) as MerchantNormalizeResponse;
+    },
+    verifyMerchantAlias: async (input: VerifyMerchantAliasInput) => {
+      const body = verifyMerchantAliasSchema.parse(input);
+      const data = await request<unknown>("/api/v1/merchants/verify-alias", {
+        method: "POST",
+        body: JSON.stringify(body),
+      });
+      return verifyMerchantAliasResponseSchema.parse(data);
     },
     listTransactions: async (
       householdId: string,
@@ -1003,6 +1034,42 @@ export function createApiClient(options: ApiClientOptions) {
       if (vehicleId) qs.set("vehicleId", vehicleId);
       const data = await request<unknown>(`/api/v1/vehicle-market?${qs}`);
       return vehicleMarketResponseSchema.parse(data) as VehicleMarketResponse;
+    },
+    createVehicleCandidate: async (input: CreateVehicleCandidateInput) => {
+      const body = createVehicleCandidateSchema.parse(input);
+      const data = await request<unknown>("/api/v1/vehicle-candidates", {
+        method: "POST",
+        body: JSON.stringify(body),
+      });
+      return data as { id: string; created: boolean };
+    },
+    createVehicleCandidateFromListing: async (
+      input: CreateVehicleCandidateFromListingInput,
+    ) => {
+      const body = createVehicleCandidateFromListingSchema.parse(input);
+      const data = await request<unknown>(
+        "/api/v1/vehicle-candidates/from-listing",
+        { method: "POST", body: JSON.stringify(body) },
+      );
+      return data as { id: string; created: boolean };
+    },
+    updateVehicleCandidate: async (
+      candidateId: string,
+      input: UpdateVehicleCandidateInput,
+    ) => {
+      const body = updateVehicleCandidateSchema.parse(input);
+      const data = await request<unknown>(
+        `/api/v1/vehicle-candidates/${encodeURIComponent(candidateId)}`,
+        { method: "PATCH", body: JSON.stringify(body) },
+      );
+      return data as { id: string; updated: boolean };
+    },
+    archiveVehicleCandidate: async (householdId: string, candidateId: string) => {
+      const data = await request<unknown>(
+        `/api/v1/vehicle-candidates/${encodeURIComponent(candidateId)}?householdId=${encodeURIComponent(householdId)}`,
+        { method: "DELETE" },
+      );
+      return data as { id: string; archived: boolean };
     },
     getDocuments: async (householdId: string) => {
       const data = await request<unknown>(

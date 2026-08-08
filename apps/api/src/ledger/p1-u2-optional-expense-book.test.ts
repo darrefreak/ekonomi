@@ -7,6 +7,7 @@ import { households } from "../db/schema";
 import { accounts, financialEvents } from "../db/schema-economic";
 import { EconomicEventsService } from "./economic-events.service";
 import { LedgerTruthService } from "./ledger-truth.service";
+import { stubMerchantsService } from "../merchants/merchants.service.stub";
 
 const AS_OF = "2026-08-01";
 
@@ -56,7 +57,7 @@ async function setup() {
 
   const audit = new AuditService();
   const ledger = new LedgerTruthService(audit);
-  const events = new EconomicEventsService(ledger, audit);
+  const events = new EconomicEventsService(ledger, audit, stubMerchantsService());
   return { db, household, cash, mortgage, creditCard, events };
 }
 

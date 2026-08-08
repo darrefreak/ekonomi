@@ -1,6 +1,6 @@
 # Feature Completion Matrix
 
-Audit date: 2026-08-08 (P1-U5 update)  
+Audit date: 2026-08-08 (P1-U6 update)  
 Statuses: COMPLETE | PARTIAL | SCAFFOLD_ONLY | MOCK_ONLY | NOT_STARTED | BROKEN | BLOCKED  
 
 Columns: Status · Backend · Frontend · Tests · Mobile · Priority · Dependencies · Notes
@@ -41,7 +41,7 @@ Legend for layer columns: **C** complete · **P** partial · **S** scaffold · *
 | Credit card handling | COMPLETE | C | C | C | P | P1 | Ledger | Purchase/payment product forms (P1-U2) |
 | Mortgage handling | COMPLETE | C | C | C | P | P1 | Ledger | Mortgage payment form + splits (P1-U2) |
 | Refunds / reimbursements | COMPLETE | C | C | C | P | P0 | Ledger | HTTP + UI (R3/U1) |
-| Merchant normalization | PARTIAL | P | P | C | P | P2 | — | List `q` + alias search + searchable assign (P1-U3); import normalizer deferred |
+| Merchant normalization | PARTIAL | C | P | C | P | P1 | — | Deterministic normalize + alias verify + review (P1-U6); import fuzzy merge deferred |
 | Categories | COMPLETE | C | C | C | P | P1 | — | User CRUD + archive (P1-U1) |
 | Transaction editing | COMPLETE | C | C | P | P | P1 | Txns | Metadata + economic creates (P1-U1) |
 | Transaction filtering/search | COMPLETE | C | C | P | P | P1 | — | Filters + search (P1-U1) |
@@ -107,7 +107,7 @@ Legend for layer columns: **C** complete · **P** partial · **S** scaffold · *
 | Contract renewal intel | PARTIAL | C | P | C | P | P1 | Contracts | Deadline review; no fake savings (P1-U4) |
 | Lifestyle creep | PARTIAL | C | P | C | P | P2 | Cashflow | Spending-trend opportunity (P1-U4) |
 | Anomaly detection | PARTIAL | C | P | C | N | P1 | Review | List/dismiss API + Insights/Review UI (P1-U5); no ML |
-| Recommendation outcomes | PARTIAL | P | P | P | B | P2 | AI | List + status actions (WS I) |
+| Recommendation outcomes | PARTIAL | C | P | P | B | P1 | AI | EXPECTED vs VERIFIED foundation (P1-U6); COMPLETED ≠ verified |
 
 ---
 
@@ -125,13 +125,13 @@ Legend for layer columns: **C** complete · **P** partial · **S** scaffold · *
 
 | Feature | Status | BE | FE | Test | Mobile | Pri | Deps | Missing / defects |
 |---|---|---|---|---|---|---|---|---|
-| Vehicle list/detail | PARTIAL | P | P | P | B | P1 | — | Seed-backed + IA + purchase form + E2E (P1-U3) |
-| Ownership / financing | PARTIAL | P | P | P | B | P1 | — | Financed seed/ledger coherent + cash/financed UX (P1-U3); leasing thin |
+| Vehicle list/detail | PARTIAL | C | C | P | P | P1 | — | Mobile overview metrics + recommendation (P1-U6) |
+| Ownership / financing | PARTIAL | C | P | C | P | P1 | — | Cash/finance/lease compare + private lease economics (P1-U6) |
 | Odometer / maintenance | PARTIAL | P | P | P | B | P1 | — | Odometer + maint costs UI (WS H) |
 | Vehicle-linked transactions | PARTIAL | P | P | P | B | P1 | Txns | Fuel linked; txn vehicleId filter/update (WS H) |
 | Cash / economic / TCO / mil | PARTIAL | P | P | C | B | P1 | Engine | Engine real on seed inputs |
-| Valuation / equity | PARTIAL | P | P | P | B | P1 | Market | Live equity + mock ask (WS H) |
-| Candidates / compare / market | PARTIAL | P | P | P | B | P1 | Market | Live keepVsReplace over mock listings (WS H) |
+| Valuation / equity | PARTIAL | C | C | C | P | P1 | Market | Comp-based valuation range; ask ≠ sale (P1-U6) |
+| Candidates / compare / market | PARTIAL | C | C | C | P | P1 | Market | Listings analytics, CRUD candidates, fit, windows (P1-U6) |
 | Household fit | PARTIAL | P | P | P | B | P1 | — | Usage on detail/maintenance |
 | Replacement / sell window | PARTIAL | P | P | P | B | P1 | Engine | Live sellWindowHint (WS H) |
 | Vehicle scenarios | SCAFFOLD_ONLY | S | N | N | N | P2 | — | — |

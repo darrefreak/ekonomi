@@ -9,6 +9,7 @@ import { AccountsService } from "../accounts/accounts.service";
 import { TransactionsService } from "../transactions/transactions.service";
 import { EconomicEventsService } from "../ledger/economic-events.service";
 import { LedgerTruthService } from "../ledger/ledger-truth.service";
+import { stubMerchantsService } from "../merchants/merchants.service.stub";
 import { HouseholdAccessService } from "./household-access.service";
 import { MembersService } from "./members.service";
 
@@ -320,7 +321,7 @@ test("P1-U1: createCashIncome mirrors createCashExpense and auto-resolves system
 
   const audit = new AuditService();
   const ledger = new LedgerTruthService(audit);
-  const events = new EconomicEventsService(ledger, audit);
+  const events = new EconomicEventsService(ledger, audit, stubMerchantsService());
 
   const db = getDb();
   const { accounts } = await import("../db/schema-economic");

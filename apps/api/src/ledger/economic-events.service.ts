@@ -19,12 +19,11 @@ import {
   type BalancedLedgerDraft,
 } from "@ffos/financial-engine";
 import type { CurrencyCode } from "@ffos/domain";
-import { and, eq, sql } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { getDb } from "../db/client";
 import {
   accounts,
   financialEvents,
-  merchants,
   sourceTransactionLinks,
   sourceTransactions,
 } from "../db/schema-economic";
@@ -42,6 +41,7 @@ import {
 import { LedgerTruthService } from "./ledger-truth.service";
 import { AuditService } from "../audit/audit.service";
 import { invalidateAfterEconomicMutation } from "../jobs/invalidation";
+import { MerchantsService } from "../merchants/merchants.service";
 import { logger } from "../common/logger";
 
 async function requireAccount(
@@ -89,6 +89,7 @@ export class EconomicEventsService {
     private readonly ledger: LedgerTruthService,
     /** Retained for Nest/module DI parity; financial audit rows write inside persist txn. */
     private readonly _audit: AuditService,
+    private readonly merchantsSvc: MerchantsService,
   ) {}
 
   /** Post-commit derived cache only — never inside the financial txn. */
@@ -431,32 +432,14 @@ export class EconomicEventsService {
     return created;
   }
 
-  /** Finds (case-insensitive) or creates a merchant by display name. */
+  /** Finds merchant via deterministic normalization; preserves raw description at call sites. */
   private async resolveMerchantByName(
     householdId: string,
     merchantName?: string,
   ): Promise<string | undefined> {
     const name = merchantName?.trim();
     if (!name) return undefined;
-
-    const db = getDb();
-    const [existing] = await db
-      .select({ id: merchants.id })
-      .from(merchants)
-      .where(
-        and(
-          eq(merchants.householdId, householdId),
-          sql`lower(${merchants.canonicalName}) = lower(${name})`,
-        ),
-      )
-      .limit(1);
-    if (existing) return existing.id;
-
-    const [created] = await db
-      .insert(merchants)
-      .values({ householdId, canonicalName: name })
-      .returning();
-    return created.id;
+    return this.merchantsSvc.resolveMerchantId(householdId, name);
   }
 
   async createCashRefund(input: {

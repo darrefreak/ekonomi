@@ -6,6 +6,7 @@ import { HouseholdsModule } from "../households/households.module";
 import { MetricsModule } from "../metrics/metrics.module";
 import { PlanningModule } from "../planning/planning.module";
 import { VehiclesModule } from "../vehicles/vehicles.module";
+import { VehicleIntelModule } from "../vehicle-intel/vehicle-intel.module";
 import { AdvisorController } from "./advisor.controller";
 import { AdvisorService } from "./advisor.service";
 
@@ -16,6 +17,7 @@ import { AdvisorService } from "./advisor.service";
     PlanningModule,
     DecisionsModule,
     VehiclesModule,
+    VehicleIntelModule,
     MetricsModule,
     FeatureFlagsModule,
   ],

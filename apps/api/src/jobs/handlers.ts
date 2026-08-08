@@ -22,6 +22,7 @@ import { LedgerTruthService } from "../ledger/ledger-truth.service";
 import { PlanningMetricsService } from "../planning/planning-metrics.service";
 import { ObjectStorageService } from "../storage/object-storage.service";
 import { VehiclesService } from "../vehicles/vehicles.service";
+import { VehicleIntelService } from "../vehicle-intel/vehicle-intel.service";
 
 const DEMO_AS_OF = () => process.env.DEMO_AS_OF_DATE ?? "2026-08-01";
 
@@ -48,13 +49,22 @@ function buildServices() {
   const planning = new PlanningMetricsService();
   const debt = new DebtService(access, metrics);
   const vehicles = new VehiclesService(access);
+  const vehicleIntel = new VehicleIntelService(access, vehicles);
   const generator = new OpportunitiesGeneratorService();
   const decisions = new DecisionsService(access, metrics, planning, debt, vehicles, generator);
   const anomaly = new AnomalyService();
   const analysisRuns = new AnalysisRunsService();
   const metricRegistry = new MetricRegistryService(metrics);
   const flags = new FeatureFlagsService();
-  const advisor = new AdvisorService(access, planning, decisions, vehicles, metrics, flags);
+  const advisor = new AdvisorService(
+    access,
+    planning,
+    decisions,
+    vehicles,
+    vehicleIntel,
+    metrics,
+    flags,
+  );
   const audit = new AuditService();
   const ledger = new LedgerTruthService(audit);
   const storage = new ObjectStorageService();
