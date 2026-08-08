@@ -24,6 +24,12 @@ export const queryKeys = {
   netWorth: {
     all: (householdId: string) => ["net-worth", householdId] as const,
   },
+  debt: {
+    all: (householdId: string) => ["debt", householdId] as const,
+  },
+  investments: {
+    all: (householdId: string) => ["investments", householdId] as const,
+  },
   cashflow: {
     all: (householdId: string) => ["cashflow", householdId] as const,
   },
