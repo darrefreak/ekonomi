@@ -23,20 +23,14 @@ async function fillExpense(page: Page, description: string) {
   const form = page.locator("form").filter({ hasText: /belopp \(kr\)/i });
   await expect(form).toBeVisible();
 
-  const accountSelect = form
-    .locator("label")
-    .filter({ hasText: /^konto$/i })
-    .locator("select");
+  // First select is the cash account; the second is the optional category.
+  const accountSelect = form.locator("select").first();
   await expect(accountSelect.locator("option").nth(1)).toBeAttached({
     timeout: 15_000,
   });
   await accountSelect.selectOption({ index: 1 });
 
-  await form
-    .locator("label")
-    .filter({ hasText: /belopp \(kr\)/i })
-    .locator("input")
-    .fill("1000");
+  await form.getByPlaceholder("0").fill("1000");
   await form
     .locator("label")
     .filter({ hasText: /beskrivning/i })
