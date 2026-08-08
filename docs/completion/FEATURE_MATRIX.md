@@ -60,7 +60,7 @@ Legend for layer columns: **C** complete · **P** partial · **S** scaffold · *
 | Cashflow forecast widget | PARTIAL | P | P | P | P | P0 | Forecast | Engine 30/60/90 deltas (WS C) |
 | Financial brief | PARTIAL | P | P | P | P | P1 | AI/Metrics | Opps + cashflow + review (WS C); AI later |
 | Upcoming obligations | PARTIAL | P | P | P | P | P1 | Recurring | Subs/contracts/salary estimate |
-| Opportunities on dashboard | PARTIAL | P | P | P | P | P2 | Opps | Aggregated live detectors (WS C/I) |
+| Opportunities on dashboard | PARTIAL | C | P | P | P | P2 | Opps | Deterministic opps + estimateBasis/facts (P1-U4) |
 | Coverage / freshness | PARTIAL | P | P | P | P | P1 | Accounts | Heuristic coverage |
 
 ---
@@ -102,11 +102,11 @@ Legend for layer columns: **C** complete · **P** partial · **S** scaffold · *
 
 | Feature | Status | BE | FE | Test | Mobile | Pri | Deps | Missing / defects |
 |---|---|---|---|---|---|---|---|---|
-| Savings opportunities | PARTIAL | P | P | P | B | P1 | Core | Live detectors + evidence (WS I) |
-| Subscription analysis | PARTIAL | P | P | P | B | P1 | Subs | Feeds live subs-trim detector |
-| Contract renewal intel | PARTIAL | P | P | P | B | P1 | Contracts | Live renewal detector (WS I) |
-| Lifestyle creep | PARTIAL | P | P | P | B | P2 | Cashflow | 3m vs 12m + drivers (WS I) |
-| Anomaly detection | SCAFFOLD_ONLY | S | N | N | N | P1 | Review | Heuristic review only |
+| Savings opportunities | PARTIAL | C | C | C | P | P1 | Core | Deterministic detectors + evidence/facts (P1-U4); more types deferred |
+| Subscription analysis | PARTIAL | C | P | C | P | P1 | Subs | Price-increase series detector (P1-U4) |
+| Contract renewal intel | PARTIAL | C | P | C | P | P1 | Contracts | Deadline review; no fake savings (P1-U4) |
+| Lifestyle creep | PARTIAL | C | P | C | P | P2 | Cashflow | Spending-trend opportunity (P1-U4) |
+| Anomaly detection | PARTIAL | C | N | C | N | P1 | Review | V1 rules + persist + job (P1-U4); no ML |
 | Recommendation outcomes | PARTIAL | P | P | P | B | P2 | AI | List + status actions (WS I) |
 
 ---
@@ -117,7 +117,7 @@ Legend for layer columns: **C** complete · **P** partial · **S** scaffold · *
 |---|---|---|---|---|---|---|---|---|
 | Risk dimensions (liquidity/debt/…) | PARTIAL | P | P | P | B | P1 | Core | Live scores + evidence (WS I) |
 | Financial health | PARTIAL | P | P | P | B | P1 | — | Live dimension scores (WS I) |
-| Live risk engine jobs | SCAFFOLD_ONLY | S | N | N | N | P2 | Jobs | Request-path live; jobs deferred |
+| Live risk engine jobs | PARTIAL | C | N | P | N | P2 | Jobs | RUN_RISK_ANALYSIS job + request-path (P1-U4) |
 
 ---
 
@@ -195,7 +195,7 @@ Legend for layer columns: **C** complete · **P** partial · **S** scaffold · *
 | Observability | PARTIAL | P | N | N | N | P2 | — | Structured logs + request IDs |
 | Performance (dashboard) | PARTIAL | P | P | N | P | P1 | — | Aggregated dashboard API exists |
 | Security baseline | PARTIAL | P | P | N | P | P0 | — | See P0_ISSUES |
-| Jobs catalog | SCAFFOLD_ONLY | S | N | N | N | P2 | Redis | HEALTH_CHECK only |
+| Jobs catalog | PARTIAL | C | N | C | N | P2 | Redis | Typed registry + real V1 handlers (P1-U4); UI thin |
 | iOS app | NOT_STARTED | — | — | — | N | P3 | Shared pkgs | Reserved |
 | Real external connectors | BLOCKED | — | — | — | — | — | Compliance | Explicitly out of V1 |
 
