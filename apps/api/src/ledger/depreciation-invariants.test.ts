@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { requireTestDatabase } from "../testing/require-test-database";
 import { test } from "node:test";
 import { eq } from "drizzle-orm";
 import { money } from "@ffos/domain";
@@ -14,7 +15,7 @@ import { stubMerchantsService } from "../merchants/merchants.service.stub";
 const AS_OF = "2026-08-01";
 
 test("A3 — vehicle depreciation 300k→280k persisted invariants", async () => {
-  if (!process.env.DATABASE_URL) return;
+  requireTestDatabase();
   const db = getDb();
 
   const [household] = await db
@@ -101,7 +102,7 @@ test("A3 — vehicle depreciation 300k→280k persisted invariants", async () =>
 });
 
 test("S1 — depreciation cannot exceed current ledger asset balance", async () => {
-  if (!process.env.DATABASE_URL) return;
+  requireTestDatabase();
   const db = getDb();
 
   const [household] = await db

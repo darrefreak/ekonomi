@@ -6,22 +6,31 @@
 
 New findings are numbered `RT2-nnn` so they never collide with the original `RT-nnn` set.
 
+**Status updated 2026-08-08 after the RT2 critical remediation.** The finding text below is
+the audit's own and is left unedited; only the Status column moves, so the history of what
+was found stays readable. Fix detail, evidence and acceptance:
+[`docs/remediation/RT2_CRITICAL_REPORT.md`](../remediation/RT2_CRITICAL_REPORT.md).
+
 ---
 
 ## Index
 
 | ID | Severity | Title | Status |
 |---|---|---|---|
-| RT2-001 | **BLOCKER** | Net worth and debt misstated when a liability account holds a credit balance | OPEN |
-| RT2-002 | **BLOCKER** | `POST /vehicles` and `POST /accounts` ignore `Idempotency-Key`, duplicating economic effects | OPEN |
-| RT2-003 | **HIGH** | Genuinely new transfers, card payments and asset purchases refused `409` | OPEN |
-| RT2-004 | **HIGH** | Mobile 404 false positive still possible; the corrected assertion passes on a 404 page | OPEN |
-| RT2-005 | **HIGH** | Test gate unreliable: `pnpm test` runs no DB-backed test (strict env strips `DATABASE_URL`), cached results, shared mutable state, 129 vacuous guards | OPEN |
-| RT2-006 | **HIGH** | `pnpm db:reset` can drop a production/pilot schema; no named test database | OPEN |
-| RT2-007 | MEDIUM | `drizzle-orm` 0.44.7 carries a HIGH SQL-injection advisory (not reachable here) | OPEN |
-| RT2-008 | MEDIUM | No unique index on `account_balance_snapshots (account_id, as_of)`; RT-004 fixed read-side only | OPEN |
-| RT2-009 | LOW | Ledger-derived aggregates scale linearly with postings | OPEN |
-| RT2-010 | LOW | The 404 page shows untranslated English inside the Swedish app shell | OPEN |
+| RT2-001 | **BLOCKER** | Net worth and debt misstated when a liability account holds a credit balance | **FIXED** — liabilities sum signed; independent oracle at three levels; five surfaces agree with it |
+| RT2-002 | **BLOCKER** | `POST /vehicles` and `POST /accounts` ignore `Idempotency-Key`, duplicating economic effects | **FIXED** — `command_idempotency` on (household, command type, key); vehicle create is one atomic aggregate |
+| RT2-003 | **HIGH** | Genuinely new transfers, card payments and asset purchases refused `409` | **FIXED** — synthesised `externalId` removed; command, source and business identity separated |
+| RT2-004 | **HIGH** | Mobile 404 false positive still possible; the corrected assertion passes on a 404 page | **FIXED** — per-route title + content identity, explicit not-found detection, nav route contract, mutation-proven |
+| RT2-005 | **HIGH** | Test gate unreliable: `pnpm test` runs no DB-backed test (strict env strips `DATABASE_URL`), cached results, shared mutable state, 129 vacuous guards | **FIXED** — `ffos_test`, `.env.test`, honest runner, loud guards, 101 DB-backed tests counted |
+| RT2-006 | **HIGH** | `pnpm db:reset` can drop a production/pilot schema; no named test database | **FIXED** — four-condition guard, protected-name and host refusal, no credentials in output |
+| RT2-007 | MEDIUM | `drizzle-orm` 0.44.7 carries a HIGH SQL-injection advisory (not reachable here) | **RESOLVED** — upgraded to 0.45.2 |
+| RT2-008 | MEDIUM | No unique index on `account_balance_snapshots (account_id, as_of)`; RT-004 fixed read-side only | **FIXED** — unique on `(account_id, as_of, source)`, the domain-correct key; 113 duplicates resolved by documented rule |
+| RT2-009 | LOW | Ledger-derived aggregates scale linearly with postings | OPEN (out of scope) |
+| RT2-010 | LOW | The 404 page shows untranslated English inside the Swedish app shell | OPEN (out of scope) |
+
+One further defect was found by the remediation and fixed with it: current positions ignored
+the requested `asOf`, so `/net-worth` disagreed with its own history series once any event
+was booked after the demo freeze — the write-side residue of original finding RT-004.
 
 Original BLOCKER/HIGH re-verification and original MEDIUM/LOW re-verification are at the
 end of this document.

@@ -36,6 +36,7 @@ import {
   sourceTransactions,
 } from "../db/schema-economic";
 import { contracts, subscriptions } from "../db/schema-planning";
+import { snapshotAsOfDate } from "../common/snapshot-as-of";
 
 /** Period metrics: ACTIVE events only; exclude when primary source tx isExcluded. */
 function activeNonExcludedEventSql() {
@@ -64,7 +65,7 @@ export class HouseholdMetricsService {
    * Account rows with balances forced to ledger reconstruction
    * (openings + postings). Cache fields are ignored for financial truth.
    */
-  async getLedgerAlignedAccountRows(householdId: string) {
+  async getLedgerAlignedAccountRows(householdId: string, asOf?: string) {
     const accountRows = await this.getAccountRows(householdId);
     const db = getDb();
     const postingRows = await db
@@ -86,6 +87,10 @@ export class HouseholdMetricsService {
         and(
           eq(ledgerPostings.householdId, householdId),
           eq(financialEvents.status, "ACTIVE"),
+          // A position is always a position *at a date*. Without this bound the
+          // answer to "net worth as of 31 May" was today's balance, and the
+          // history series disagreed with its own final point.
+          ...(asOf ? [lte(ledgerEntries.bookedOn, asOf)] : []),
         ),
       );
 
@@ -271,37 +276,45 @@ export class HouseholdMetricsService {
           amountMinor: p.amountMinor,
         }));
       const balances = reconstructBalances({ openings, postings: postingsToDate });
-      const asOfDate = new Date(`${date}T12:00:00.000Z`);
-
-      // Replace prior reconstructed rows for this calendar day so postings stay fresh.
-      await db
-        .delete(accountBalanceSnapshots)
-        .where(
-          and(
-            eq(accountBalanceSnapshots.householdId, householdId),
-            eq(accountBalanceSnapshots.source, "nw_history_reconstruct"),
-            sql`(${accountBalanceSnapshots.asOf} AT TIME ZONE 'UTC')::date = ${date}::date`,
-          ),
-        );
+      const asOfDate = snapshotAsOfDate(date);
+      const isEstimated = date !== asOf.slice(0, 10);
 
       for (const a of accountRows) {
         if (a.accountType === "EXPENSE" || a.accountType === "INCOME") continue;
         const bal =
           balances.get(a.id) ??
           openings.find((o) => o.accountId === a.id)!.openingMinor;
-        await db.insert(accountBalanceSnapshots).values({
-          householdId,
-          accountId: a.id,
-          reportedBalanceMinor: bal,
-          availableBalanceMinor: bal,
-          ledgerCalculatedBalanceMinor: bal,
-          reconciledBalanceMinor: bal,
-          asOf: asOfDate,
-          source: "nw_history_reconstruct",
-          confidence: "1",
-          userVerified: false,
-          isEstimated: date !== asOf.slice(0, 10),
-        });
+        // Upsert on the snapshot identity so a concurrent run refreshes the row
+        // instead of racing a delete against an insert (RT2-008).
+        await db
+          .insert(accountBalanceSnapshots)
+          .values({
+            householdId,
+            accountId: a.id,
+            reportedBalanceMinor: bal,
+            availableBalanceMinor: bal,
+            ledgerCalculatedBalanceMinor: bal,
+            reconciledBalanceMinor: bal,
+            asOf: asOfDate,
+            source: "nw_history_reconstruct",
+            confidence: "1",
+            userVerified: false,
+            isEstimated,
+          })
+          .onConflictDoUpdate({
+            target: [
+              accountBalanceSnapshots.accountId,
+              accountBalanceSnapshots.asOf,
+              accountBalanceSnapshots.source,
+            ],
+            set: {
+              reportedBalanceMinor: bal,
+              availableBalanceMinor: bal,
+              ledgerCalculatedBalanceMinor: bal,
+              reconciledBalanceMinor: bal,
+              isEstimated,
+            },
+          });
       }
     }
   }
@@ -660,7 +673,7 @@ export class HouseholdMetricsService {
    * Shared financial snapshot for dashboard + net-worth (same asOf / definitions).
    */
   async getFinancialSnapshot(householdId: string, currency: CurrencyCode, asOf: string) {
-    const accountRows = await this.getLedgerAlignedAccountRows(householdId);
+    const accountRows = await this.getLedgerAlignedAccountRows(householdId, asOf);
     const position = this.positionFromAccounts(accountRows, currency);
     const cashflow = await this.cashflow(householdId, currency, asOf);
     const monthLabel = cashflow.currentPeriod.label;

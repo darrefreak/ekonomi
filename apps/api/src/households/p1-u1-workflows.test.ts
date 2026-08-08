@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { requireTestDatabase } from "../testing/require-test-database";
 import { test } from "node:test";
 import { eq } from "drizzle-orm";
 import { getDb } from "../db/client";
@@ -14,7 +15,7 @@ import { HouseholdAccessService } from "./household-access.service";
 import { MembersService } from "./members.service";
 
 async function setup() {
-  if (!process.env.DATABASE_URL) return null;
+  requireTestDatabase();
   const db = getDb();
 
   const [household] = await db
@@ -41,7 +42,6 @@ async function setup() {
 
 test("P1-U1: categories CRUD respects system protection and archive filter", async () => {
   const ctx = await setup();
-  if (!ctx) return;
   const { household, owner } = ctx;
 
   const access = new HouseholdAccessService();
@@ -112,7 +112,6 @@ test("P1-U1: categories CRUD respects system protection and archive filter", asy
 
 test("P1-U1: merchants list is scoped to household", async () => {
   const ctx = await setup();
-  if (!ctx) return;
   const { household, owner } = ctx;
 
   const access = new HouseholdAccessService();
@@ -125,7 +124,6 @@ test("P1-U1: merchants list is scoped to household", async () => {
 
 test("P1-U3: merchants q matches canonical name or aliases", async () => {
   const ctx = await setup();
-  if (!ctx) return;
   const { household, owner, db } = ctx;
 
   await db.insert(merchants).values([
@@ -167,7 +165,6 @@ test("P1-U3: merchants q matches canonical name or aliases", async () => {
 
 test("P1-U1: AccountsService sets/validates ownerMemberId and audits changes", async () => {
   const ctx = await setup();
-  if (!ctx) return;
   const { household, owner, ownerMember } = ctx;
 
   const access = new HouseholdAccessService();
@@ -214,7 +211,6 @@ test("P1-U1: AccountsService sets/validates ownerMemberId and audits changes", a
 
 test("P1-U1: invite -> accept -> role update -> remove member workflow", async () => {
   const ctx = await setup();
-  if (!ctx) return;
   const { household, owner, db } = ctx;
 
   const access = new HouseholdAccessService();
@@ -289,7 +285,6 @@ test("P1-U1: invite -> accept -> role update -> remove member workflow", async (
 
 test("P1-U1: invitation cancel only works while pending", async () => {
   const ctx = await setup();
-  if (!ctx) return;
   const { household, owner } = ctx;
 
   const access = new HouseholdAccessService();
@@ -316,7 +311,6 @@ test("P1-U1: invitation cancel only works while pending", async () => {
 
 test("P1-U1: createCashIncome mirrors createCashExpense and auto-resolves system books", async () => {
   const ctx = await setup();
-  if (!ctx) return;
   const { household } = ctx;
 
   const audit = new AuditService();
@@ -371,7 +365,6 @@ test("P1-U1: createCashIncome mirrors createCashExpense and auto-resolves system
 
 test("P1-U1: opening balance establishes position without period income/expense", async () => {
   const ctx = await setup();
-  if (!ctx) return;
   const { household, owner } = ctx;
 
   const access = new HouseholdAccessService();

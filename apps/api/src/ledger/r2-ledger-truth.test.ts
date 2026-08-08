@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { requireTestDatabase } from "../testing/require-test-database";
 import { test } from "node:test";
 import { and, eq } from "drizzle-orm";
 import { AuditService } from "../audit/audit.service";
@@ -19,7 +20,7 @@ import { stubMerchantsService } from "../merchants/merchants.service.stub";
 const AS_OF = "2026-08-01";
 
 async function setup() {
-  if (!process.env.DATABASE_URL) return null;
+  requireTestDatabase();
   const db = getDb();
   const [household] = await db
     .insert(households)
@@ -105,7 +106,6 @@ async function setup() {
 
 test("R2-A5 — accounts list uses ledger balance not stale cache", async () => {
   const ctx = await setup();
-  if (!ctx) return;
 
   await ctx.events.createInternalTransfer({
     householdId: ctx.household.id,
@@ -130,7 +130,6 @@ test("R2-A5 — accounts list uses ledger balance not stale cache", async () => 
 
 test("R2-A5 — debt detail uses ledger-aligned outstanding", async () => {
   const ctx = await setup();
-  if (!ctx) return;
 
   await ctx.events.createMortgagePayment({
     householdId: ctx.household.id,
@@ -163,7 +162,6 @@ test("R2-A5 — debt detail uses ledger-aligned outstanding", async () => {
 
 test("R2-A5 — NW history rebuilds after ledger mutation (not insert-only stale)", async () => {
   const ctx = await setup();
-  if (!ctx) return;
 
   await ctx.metrics.ensureNetWorthHistorySnapshots(
     ctx.household.id,

@@ -28,7 +28,21 @@ pnpm test:e2e:docker         # both projects
 pnpm test:e2e:docker:mobile  # mobile only
 ```
 
-Note that a Next.js 404 still renders the app shell, so `main` / `#main-content`
-being visible does not prove a route exists. Assert page-specific content too.
+## Route identity
+
+A Next.js not-found result still renders the application shell, so `main`,
+`#main-content` or "a heading exists" being true does not prove a route exists —
+that is defect RT2-004. Use `e2e/helpers/route-identity.ts` instead:
+
+- `gotoRoute(page, path)` navigates and proves that route rendered: not the
+  not-found page, its own document title, its own level-1 heading, and where
+  declared a control only that page offers.
+- `expectNotFoundPage(page, expected)` asserts the not-found state explicitly,
+  by title, by the built-in copy, and by `data-testid="not-found"`.
+- `route-contract.spec.ts` walks every href the sidebar, bottom navigation, More
+  menu and dashboard render, and fails if any of them lands on not-found.
+
+Every routable page declares `metadata.title`, which is what makes the titles
+unique and route identity independent of whether the page's data loaded.
 
 Auth uses API login once (`e2e/auth.setup.ts`) and stores `e2e/.auth/demo.json`.

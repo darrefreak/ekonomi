@@ -37,7 +37,7 @@ export class WealthService {
     const { start, end } = this.trailingWindow(asOf);
     const db = getDb();
     const [aligned, snap] = await Promise.all([
-      this.metrics.getLedgerAlignedAccountRows(householdId),
+      this.metrics.getLedgerAlignedAccountRows(householdId, asOf),
       this.metrics.getFinancialSnapshot(householdId, currency, asOf),
     ]);
     const balanceById = new Map(
@@ -138,7 +138,7 @@ export class WealthService {
     const asOf = await resolveHouseholdAsOf(householdId, asOfInput);
     const db = getDb();
     const [aligned, snap] = await Promise.all([
-      this.metrics.getLedgerAlignedAccountRows(householdId),
+      this.metrics.getLedgerAlignedAccountRows(householdId, asOf),
       this.metrics.getFinancialSnapshot(householdId, currency, asOf),
     ]);
     const balanceById = new Map(

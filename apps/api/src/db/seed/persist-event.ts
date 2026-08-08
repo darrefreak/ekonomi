@@ -165,19 +165,29 @@ export type ResolvedCommandKey = {
 };
 
 /**
- * Command identity for idempotency. A client `Idempotency-Key` wins over source
- * `externalId` so retries of a manual command collapse to one economic effect.
+ * The identities under which this event may already exist.
+ *
+ * They are two different questions and both may apply to one command:
+ *
+ *   external_id      "is this the same record at the source provider?"
+ *   idempotency_key  "is this HTTP command a retry of the same user intent?"
+ *
+ * Source identity is checked first, because one provider record must resolve to
+ * one event however many distinct client commands reference it. Recording both
+ * keeps the namespaces apart, so a second genuine command of the same economic
+ * shape is never mistaken for a retry (RT2-003).
  */
-function resolveCommandKey(
+function resolveCommandKeys(
   input: Pick<PersistBalancedEventInput, "idempotencyKey" | "externalId">,
-): ResolvedCommandKey | null {
-  if (input.idempotencyKey) {
-    return { key: input.idempotencyKey, keySource: "idempotency_key" };
-  }
+): ResolvedCommandKey[] {
+  const keys: ResolvedCommandKey[] = [];
   if (input.externalId) {
-    return { key: input.externalId, keySource: "external_id" };
+    keys.push({ key: input.externalId, keySource: "external_id" });
   }
-  return null;
+  if (input.idempotencyKey) {
+    keys.push({ key: input.idempotencyKey, keySource: "idempotency_key" });
+  }
+  return keys;
 }
 
 async function loadEventById(db: DbExecutor, eventId: string) {
@@ -228,9 +238,9 @@ async function persistBalancedEventInTx(
   const sourceType = input.sourceType ?? "seed";
   const commandType = input.commandType ?? "LEDGER_EVENT";
   const payloadHash = payloadHashForPersist(input);
-  const commandKey = resolveCommandKey(input);
+  const commandKeys = resolveCommandKeys(input);
 
-  if (commandKey) {
+  for (const commandKey of commandKeys) {
     const existing = await lookupIdempotentEvent(
       db,
       input.householdId,
@@ -408,7 +418,7 @@ async function persistBalancedEventInTx(
     }
   }
 
-  if (commandKey) {
+  for (const commandKey of commandKeys) {
     await db.insert(financialCommandIdempotency).values({
       householdId: input.householdId,
       commandType,
@@ -443,7 +453,7 @@ async function persistBalancedEventInTx(
 export async function persistBalancedEvent(input: PersistBalancedEventInput) {
   const commandType = input.commandType ?? "LEDGER_EVENT";
   const payloadHash = payloadHashForPersist(input);
-  const commandKey = resolveCommandKey(input);
+  const commandKeys = resolveCommandKeys(input);
 
   const run = async (executor: DbExecutor) =>
     persistBalancedEventInTx(executor, input);
@@ -456,15 +466,17 @@ export async function persistBalancedEvent(input: PersistBalancedEventInput) {
   } catch (err) {
     // Concurrent same-key submissions: the unique index lets exactly one
     // transaction commit; losers resolve to the winner's event.
-    if (commandKey && isUniqueViolation(err)) {
-      const existing = await lookupIdempotentEvent(
-        getDb(),
-        input.householdId,
-        commandType,
-        commandKey,
-        payloadHash,
-      );
-      if (existing) return existing;
+    if (commandKeys.length && isUniqueViolation(err)) {
+      for (const commandKey of commandKeys) {
+        const existing = await lookupIdempotentEvent(
+          getDb(),
+          input.householdId,
+          commandType,
+          commandKey,
+          payloadHash,
+        );
+        if (existing) return existing;
+      }
       throw new IdempotencyConflictError();
     }
     throw err;

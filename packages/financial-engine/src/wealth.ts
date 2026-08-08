@@ -6,34 +6,29 @@ export type TypedAccountBalance = {
   balanceMinor: bigint;
 };
 
-function absMinor(n: bigint): bigint {
-  return n < 0n ? -n : n;
-}
-
-/** Bucket account balances into NW components (absolute liabilities). */
+/**
+ * Bucket account balances into net worth components.
+ *
+ * Every bucket carries the SIGNED balance, liabilities included, per the
+ * canonical convention in `account-sign.ts`. `calculateNetWorth` subtracts the
+ * liability bucket, so a liability holding a credit balance correctly adds to
+ * net worth. Taking the magnitude here was defect RT2-001 and cost exactly
+ * twice any credit balance.
+ */
 export function bucketBalancesForNetWorth(
   rows: TypedAccountBalance[],
   currency: CurrencyCode,
 ): NetWorthInput {
-  const sumTypes = (types: string[], asLiability: boolean) =>
+  const sumTypes = (types: string[]) =>
     rows
       .filter((r) => types.includes(r.accountType))
-      .reduce(
-        (acc, r) => acc + (asLiability ? absMinor(r.balanceMinor) : r.balanceMinor),
-        0n,
-      );
+      .reduce((acc, r) => acc + r.balanceMinor, 0n);
 
   return {
-    cash: money(sumTypes(["CHECKING", "SAVINGS", "CASH"], false), currency),
-    investments: money(
-      sumTypes(["INVESTMENT", "PENSION", "CRYPTO"], false),
-      currency,
-    ),
-    assets: money(sumTypes(["ASSET"], false), currency),
-    liabilities: money(
-      sumTypes(["MORTGAGE", "LOAN", "CREDIT_CARD"], true),
-      currency,
-    ),
+    cash: money(sumTypes(["CHECKING", "SAVINGS", "CASH"]), currency),
+    investments: money(sumTypes(["INVESTMENT", "PENSION", "CRYPTO"]), currency),
+    assets: money(sumTypes(["ASSET"]), currency),
+    liabilities: money(sumTypes(["MORTGAGE", "LOAN", "CREDIT_CARD"]), currency),
   };
 }
 

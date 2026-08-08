@@ -1,4 +1,6 @@
 import assert from "node:assert/strict";
+import { requireTestDatabase } from "../testing/require-test-database";
+import { assertFixture } from "../testing/demo-fixture";
 import { test } from "node:test";
 import { eq, sql } from "drizzle-orm";
 import { AuditService } from "../audit/audit.service";
@@ -28,7 +30,7 @@ const AS_OF = "2026-08-01";
 type Fixture = Awaited<ReturnType<typeof setup>>;
 
 async function setup(label: string, demoAsOf?: string) {
-  if (!process.env.DATABASE_URL) return null;
+  requireTestDatabase();
   const db = getDb();
   const [household] = await db
     .insert(households)
@@ -110,7 +112,6 @@ function expenseCommand(fx: NonNullable<Fixture>, amountMinor: bigint) {
 
 test("B1 identical retry with the same Idempotency-Key creates one expense", async () => {
   const fx = await setup("RT B1");
-  if (!fx) return;
 
   const first = await fx.events.createCashExpense({
     ...expenseCommand(fx, 1_000_00n),
@@ -135,7 +136,6 @@ test("B1 identical retry with the same Idempotency-Key creates one expense", asy
 
 test("B2 concurrent retries with the same key produce one economic effect", async () => {
   const fx = await setup("RT B2");
-  if (!fx) return;
 
   const results = await Promise.allSettled(
     Array.from({ length: 5 }, () =>
@@ -157,7 +157,6 @@ test("B2 concurrent retries with the same key produce one economic effect", asyn
 
 test("B3 same key with a different payload is rejected as a conflict", async () => {
   const fx = await setup("RT B3");
-  if (!fx) return;
 
   await fx.events.createCashExpense({
     ...expenseCommand(fx, 1_000_00n),
@@ -181,7 +180,6 @@ test("B3 same key with a different payload is rejected as a conflict", async () 
 
 test("B4 manual expense without externalId is still idempotent", async () => {
   const fx = await setup("RT B4");
-  if (!fx) return;
 
   const command = { ...expenseCommand(fx, 1_500_00n), idempotencyKey: "b4-key" };
   assert.equal("externalId" in command, false);
@@ -194,7 +192,6 @@ test("B4 manual expense without externalId is still idempotent", async () => {
 
 test("B4b distinct keys still allow two genuinely different expenses", async () => {
   const fx = await setup("RT B4b");
-  if (!fx) return;
 
   const a = await fx.events.createCashExpense({
     ...expenseCommand(fx, 55_00n),
@@ -232,7 +229,6 @@ test("idempotency keys are scoped to one household", async () => {
 
 test("asOf: a real household resolves to the application clock", async () => {
   const fx = await setup("RT clock real");
-  if (!fx) return;
 
   const resolved = await resolveHouseholdAsOf(fx.household.id);
   assert.equal(resolved, currentAppDate());
@@ -245,7 +241,7 @@ test("asOf: a real household resolves to the application clock", async () => {
 
 test("asOf: a demo household keeps its own frozen date", async () => {
   const demo = await setup("RT clock demo", AS_OF);
-  if (!demo) return;
+  assertFixture(demo, "demo");
   assert.equal(await resolveHouseholdAsOf(demo.household.id), AS_OF);
 });
 
@@ -291,7 +287,7 @@ test("asOf: no controller resolves the clock before the household is known", asy
 
 test("asOf: an explicit request asOf always wins", async () => {
   const demo = await setup("RT clock explicit", AS_OF);
-  if (!demo) return;
+  assertFixture(demo, "demo");
   assert.equal(
     await resolveHouseholdAsOf(demo.household.id, "2025-03-31"),
     "2025-03-31",
@@ -310,7 +306,6 @@ async function history(fx: NonNullable<Fixture>, asOf: string) {
 
 test("NW1 the asOf day appears exactly once and matches the current position", async () => {
   const fx = await setup("RT NW1", AS_OF);
-  if (!fx) return;
 
   // A second writer produces a competing snapshot set for the same day, which
   // is exactly what made the original series double.
@@ -346,7 +341,6 @@ test("NW1 the asOf day appears exactly once and matches the current position", a
 
 test("NW2 a mutation on the asOf day is counted exactly once", async () => {
   const fx = await setup("RT NW2", AS_OF);
-  if (!fx) return;
 
   const before = await history(fx, AS_OF);
   const beforeFinal = BigInt(before[before.length - 1]!.netWorth.amountMinor);
@@ -367,7 +361,6 @@ test("NW2 a mutation on the asOf day is counted exactly once", async () => {
 
 test("NW3 opening balances are not duplicated in the first bucket", async () => {
   const fx = await setup("RT NW3", AS_OF);
-  if (!fx) return;
 
   const series = await history(fx, AS_OF);
   const opening = fx.cash.openingBalanceMinor + fx.asset.openingBalanceMinor;
@@ -376,7 +369,6 @@ test("NW3 opening balances are not duplicated in the first bucket", async () => 
 
 test("NW4 depreciation on the asOf day reduces net worth once", async () => {
   const fx = await setup("RT NW4", AS_OF);
-  if (!fx) return;
 
   const before = await history(fx, AS_OF);
   const beforeFinal = BigInt(before[before.length - 1]!.netWorth.amountMinor);
@@ -398,7 +390,6 @@ test("NW4 depreciation on the asOf day reduces net worth once", async () => {
 
 test("NW5 a snapshot written near midnight stays on its own calendar bucket", async () => {
   const fx = await setup("RT NW5", AS_OF);
-  if (!fx) return;
 
   await history(fx, AS_OF);
   // 00:15 Europe/Stockholm on the asOf day is 22:15 UTC the day before; the

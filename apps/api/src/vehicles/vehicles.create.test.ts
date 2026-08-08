@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { requireTestDatabase } from "../testing/require-test-database";
 import { test } from "node:test";
 import { eq, sql } from "drizzle-orm";
 import { AuditService } from "../audit/audit.service";
@@ -17,7 +18,7 @@ const AS_OF = "2026-08-01";
 const USER_ID = "00000000-0000-4000-8000-000000000001";
 
 async function setup(label: string) {
-  if (!process.env.DATABASE_URL) return null;
+  requireTestDatabase();
   const db = getDb();
   const [household] = await db
     .insert(households)
@@ -80,7 +81,6 @@ async function periodTotals(householdId: string) {
 
 test("onboarding an owned financed vehicle uses opening positions, not current-period flows", async () => {
   const fx = await setup("VC onboard");
-  if (!fx) return;
 
   const detail = await fx.vehicles.create(USER_ID, {
     ...base,
@@ -120,7 +120,6 @@ test("onboarding an owned financed vehicle uses opening positions, not current-p
 
 test("cash purchase today moves cash into the asset without booking consumption", async () => {
   const fx = await setup("VC cash");
-  if (!fx) return;
 
   const detail = await fx.vehicles.create(USER_ID, {
     ...base,
@@ -147,7 +146,6 @@ test("cash purchase today moves cash into the asset without booking consumption"
 
 test("financed purchase today books debt, not income", async () => {
   const fx = await setup("VC financed");
-  if (!fx) return;
 
   await fx.vehicles.create(USER_ID, {
     ...base,
@@ -180,7 +178,6 @@ test("financed purchase today books debt, not income", async () => {
 
 test("private lease creates no asset or loan account", async () => {
   const fx = await setup("VC lease");
-  if (!fx) return;
 
   const detail = await fx.vehicles.create(USER_ID, {
     ...base,
@@ -206,7 +203,6 @@ test("private lease creates no asset or loan account", async () => {
 
 test("vehicle edit updates valuation and odometer without touching the ledger", async () => {
   const fx = await setup("VC edit");
-  if (!fx) return;
 
   const created = await fx.vehicles.create(USER_ID, {
     ...base,

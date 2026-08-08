@@ -1,4 +1,6 @@
 import assert from "node:assert/strict";
+import { requireTestDatabase } from "../testing/require-test-database";
+import { assertFixture } from "../testing/demo-fixture";
 import { test } from "node:test";
 import { eq } from "drizzle-orm";
 import {
@@ -24,11 +26,11 @@ test("createSourceSchema defaults connection status", () => {
 });
 
 test("source CRUD reconnect sync and import history", async () => {
-  if (!process.env.DATABASE_URL) return;
+  requireTestDatabase();
 
   const db = getDb();
   const [household] = await db.select().from(households).limit(1);
-  if (!household) return;
+  assertFixture(household, "household");
 
   const access = {
     requireMembership: async () => ({

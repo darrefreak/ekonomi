@@ -41,6 +41,47 @@ Räntor, valutakurser och procent som kräver decimalprecision använder säker 
 
 Se [ADR-0001](./adr/0001-money-representation.md).
 
+## 1b. Teckenkonvention för saldon (kanonisk)
+
+Ett saldo är kontots **tecknade ekonomiska position sett från hushållet**, uttryckt i
+kontots egen naturliga riktning. Detta är en enda regel, och varje aggregering måste följa
+den i stället för att härleda ett eget tecken. Implementation och fullständig motivering:
+`packages/financial-engine/src/account-sign.ts`.
+
+| Kontoklass | Kontotyper | `+32 005,36` betyder | `−32 005,36` betyder |
+|---|---|---|---|
+| Tillgång | `CHECKING` `SAVINGS` `CASH` `INVESTMENT` `PENSION` `CRYPTO` `ASSET` | hushållet äger beloppet | kontot är övertrasserat |
+| Skuld | `MORTGAGE` `LOAN` `CREDIT_CARD` | hushållet **är skyldigt** beloppet | långivaren är skyldig hushållet beloppet, t.ex. ett överbetalt kort — en vanlig position, inte ett datafel |
+| Nominell | `EXPENSE` `INCOME` | ingår aldrig i en balansräkningsposition | — |
+
+Postningsriktning: på tillgångs- och nominella konton ökar debet saldot och kredit minskar
+det; på skuldkonton ökar kredit det skyldiga beloppet och debet minskar det. En amortering
+(debet) flyttar därför skulden mot — och möjligen förbi — noll.
+
+Nettoförmögenhet är följaktligen, utan absolutbelopp någonstans:
+
+```
+netWorth = Σ tillgångsklass − Σ skuldklass
+```
+
+En amortering på 1 000 kr från kassan flyttar kassan −1 000 och skulden −1 000, så
+nettoförmögenheten är oförändrad. Ränta på 100 kr flyttar kassan −100 utan skuldrörelse, så
+nettoförmögenheten faller 100. Båda följer av identiteten ovan; ingen behöver ett
+specialfall.
+
+### Presentation är ett annat lager
+
+Användaren ser skuld som ett positivt belopp ("Skulder 3 000 000 kr"). `outstandingDebtMinor`
+finns för det och **nollklamrar** i stället för att ta absolutbeloppet: ett hushåll med ett
+överbetalt kort är inte skyldigt någonting, det är inte skyldigt krediten.
+`liabilityCreditMinor` visar krediten som sin egen positiva storhet.
+
+**Presentationshjälpare får aldrig användas inne i ekonomisk aggregering.** Just den
+substitutionen var defekt RT2-001: `absMinor` på ett skuldsaldo kostade exakt dubbla
+krediten i nettoförmögenhet. Skuldsidan visar därför per konto `outstanding` (nollklamrad)
+och `credit`, medan totalen är den tecknade positionen — `owed − credit = total` — som
+nettoförmögenheten drar av.
+
 ## 2. Ledger
 
 Alla ekonomiska händelser måste kunna representeras **balanserat**.

@@ -1,8 +1,13 @@
 import { getPool } from "./client";
+import { assertDatabaseResetAllowed, DatabaseResetRefused } from "./reset-guard";
 
 async function main() {
+  const target = assertDatabaseResetAllowed(process.env, {
+    assumeYes: process.argv.includes("--yes"),
+  });
+
+  console.log(`Resetting ${target.describe()}`);
   const pool = getPool();
-  console.log("Resetting public + drizzle schemas...");
   // Must drop drizzle journal too; otherwise migrate is a no-op on an empty public schema.
   await pool.query(
     "DROP SCHEMA IF EXISTS public CASCADE; CREATE SCHEMA public; DROP SCHEMA IF EXISTS drizzle CASCADE;",
@@ -29,6 +34,11 @@ async function main() {
 }
 
 main().catch((err) => {
+  if (err instanceof DatabaseResetRefused) {
+    // Operator-readable refusal, never a stack trace and never the URL.
+    console.error(`\n✖ ${err.message}\n`);
+    process.exit(1);
+  }
   console.error(err);
   process.exit(1);
 });

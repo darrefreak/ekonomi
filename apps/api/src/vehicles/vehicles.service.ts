@@ -18,6 +18,7 @@ import {
   vehicleNetEquity,
 } from "@ffos/financial-engine";
 import { getDb } from "../db/client";
+import { runIdempotentCommand } from "../common/command-idempotency";
 import { accounts, financialEvents } from "../db/schema-economic";
 import {
   vehicleCostEvents,
@@ -102,10 +103,13 @@ export class VehiclesService {
    *   asset and loan accounts start at their current values, so the current
    *   period gains no fake spending, income or cashflow.
    */
-  async create(userId: string, input: CreateVehicleInput) {
+  async create(
+    userId: string,
+    input: CreateVehicleInput,
+    options: { idempotencyKey?: string | null } = {},
+  ) {
     const { events, audit } = this.requireWriteDeps();
     await this.access.requireCanWrite(userId, input.householdId);
-    const db = getDb();
     const householdId = input.householdId;
     const currency = (input.currency || "SEK") as CurrencyCode;
     const isLease = input.purchaseType === "PRIVATE_LEASE";
@@ -119,190 +123,206 @@ export class VehiclesService {
       input.downPaymentMinor ?? (isFinanced ? "0" : input.purchasePriceMinor),
     );
 
-    if (isNewPurchase && !isLease) {
-      const [cash] = await db
-        .select()
-        .from(accounts)
-        .where(
-          and(
-            eq(accounts.householdId, householdId),
-            eq(accounts.id, input.cashAccountId!),
-          ),
-        )
-        .limit(1);
-      if (!cash || !CASH_ACCOUNT_TYPES.has(cash.accountType)) {
-        throw new BadRequestException({
-          code: "VALIDATION_ERROR",
-          message: "Kontrollera uppgifterna och försök igen.",
-          fields: { cashAccountId: "Välj ett giltigt kontantkonto." },
-        });
+    const { vehicleId } = await runIdempotentCommand({
+      householdId,
+      commandType: "CREATE_VEHICLE",
+      idempotencyKey: options.idempotencyKey,
+      request: { ...input, householdId },
+      command: async (tx) => {
+      if (isNewPurchase && !isLease) {
+        const [cash] = await tx
+          .select()
+          .from(accounts)
+          .where(
+            and(
+              eq(accounts.householdId, householdId),
+              eq(accounts.id, input.cashAccountId!),
+            ),
+          )
+          .limit(1);
+        if (!cash || !CASH_ACCOUNT_TYPES.has(cash.accountType)) {
+          throw new BadRequestException({
+            code: "VALIDATION_ERROR",
+            message: "Kontrollera uppgifterna och försök igen.",
+            fields: { cashAccountId: "Välj ett giltigt kontantkonto." },
+          });
+        }
       }
-    }
 
-    // Opening positions only for onboarding; a new purchase starts at zero and
-    // is moved by the ledger command below.
-    const assetOpeningMinor = isNewPurchase ? 0n : currentValueMinor;
-    const loanOpeningMinor = isNewPurchase ? 0n : outstandingDebtMinor;
+      // Opening positions only for onboarding; a new purchase starts at zero and
+      // is moved by the ledger command below.
+      const assetOpeningMinor = isNewPurchase ? 0n : currentValueMinor;
+      const loanOpeningMinor = isNewPurchase ? 0n : outstandingDebtMinor;
 
-    let assetAccountId: string | undefined;
-    let loanAccountId: string | undefined;
+      let assetAccountId: string | undefined;
+      let loanAccountId: string | undefined;
 
-    if (!isLease) {
-      const [assetAccount] = await db
-        .insert(accounts)
-        .values({
-          householdId,
-          name: `${input.name} (fordon)`,
-          accountType: "ASSET",
-          currency,
-          isShared: true,
-          isSystem: false,
-          connectionStatus: "DISCONNECTED",
-          openingBalanceMinor: assetOpeningMinor,
-          currentBalanceMinor: assetOpeningMinor,
-          reportedBalanceMinor: assetOpeningMinor,
-        })
-        .returning();
-      assetAccountId = assetAccount.id;
-
-      if (isFinanced && (outstandingDebtMinor > 0n || isNewPurchase)) {
-        const [loanAccount] = await db
+      if (!isLease) {
+        const [assetAccount] = await tx
           .insert(accounts)
           .values({
             householdId,
-            name: `${input.name} (billån)`,
-            accountType: "LOAN",
+            name: `${input.name} (fordon)`,
+            accountType: "ASSET",
             currency,
             isShared: true,
             isSystem: false,
             connectionStatus: "DISCONNECTED",
-            openingBalanceMinor: loanOpeningMinor,
-            currentBalanceMinor: loanOpeningMinor,
-            reportedBalanceMinor: loanOpeningMinor,
+            openingBalanceMinor: assetOpeningMinor,
+            currentBalanceMinor: assetOpeningMinor,
+            reportedBalanceMinor: assetOpeningMinor,
           })
           .returning();
-        loanAccountId = loanAccount.id;
+        assetAccountId = assetAccount.id;
+
+        if (isFinanced && (outstandingDebtMinor > 0n || isNewPurchase)) {
+          const [loanAccount] = await tx
+            .insert(accounts)
+            .values({
+              householdId,
+              name: `${input.name} (billån)`,
+              accountType: "LOAN",
+              currency,
+              isShared: true,
+              isSystem: false,
+              connectionStatus: "DISCONNECTED",
+              openingBalanceMinor: loanOpeningMinor,
+              currentBalanceMinor: loanOpeningMinor,
+              reportedBalanceMinor: loanOpeningMinor,
+            })
+            .returning();
+          loanAccountId = loanAccount.id;
+        }
       }
-    }
 
-    const [vehicle] = await db
-      .insert(vehicles)
-      .values({
-        householdId,
-        name: input.name.trim(),
-        make: input.make.trim(),
-        model: [input.model.trim(), input.variant?.trim()]
-          .filter(Boolean)
-          .join(" ")
-          .slice(0, 80),
-        modelYear: input.modelYear,
-        registrationNumber: input.registrationNumber?.trim() || null,
-        fuelType: input.fuelType.toLowerCase(),
-        currency,
-        purchasePriceMinor,
-        purchaseDate: input.purchaseDate,
-        estimatedValueLowMinor: (currentValueMinor * 95n) / 100n,
-        estimatedValueMidMinor: currentValueMinor,
-        estimatedValueHighMinor: (currentValueMinor * 105n) / 100n,
-        valuationAsOf: await resolveHouseholdAsOf(householdId),
-        linkedAssetAccountId: assetAccountId ?? null,
-        linkedLoanAccountId: loanAccountId ?? null,
-        notes: input.transmission ? `Växellåda: ${input.transmission}` : null,
-      })
-      .returning();
-
-    await db.insert(vehicleOwnerships).values({
-      householdId,
-      vehicleId: vehicle.id,
-      ownershipType: isLease
-        ? "PRIVATE_LEASE"
-        : isFinanced
-          ? "FINANCED"
-          : "PRIVATE_OWNED",
-      ownerSharePercent: "100",
-      startedOn: input.purchaseDate,
-    });
-
-    await db.insert(vehicleUsageProfiles).values({
-      householdId,
-      vehicleId: vehicle.id,
-      annualKm: input.annualKm ?? 15_000,
-      commuteSharePercent: "60",
-    });
-
-    if (input.currentOdometerKm != null) {
-      await db.insert(vehicleOdometerReadings).values({
-        householdId,
-        vehicleId: vehicle.id,
-        readingKm: input.currentOdometerKm,
-        recordedOn: await resolveHouseholdAsOf(householdId),
-        source: "manual",
-      });
-    }
-
-    if (isFinanced && outstandingDebtMinor >= 0n && loanAccountId) {
-      await db.insert(vehicleFinanceAgreements).values({
-        householdId,
-        vehicleId: vehicle.id,
-        lender: input.financeLender?.trim() || "Okänd långivare",
-        principalMinor: isNewPurchase
-          ? purchasePriceMinor - downPaymentMinor
-          : outstandingDebtMinor,
-        remainingMinor: isNewPurchase
-          ? purchasePriceMinor - downPaymentMinor
-          : outstandingDebtMinor,
-        interestRateBps: input.financeInterestRateBps ?? 0,
-        monthlyPaymentMinor: BigInt(input.financeMonthlyPaymentMinor ?? "0"),
-        currency,
-        startDate: input.purchaseDate,
-        endDate: input.financeEndDate ?? null,
-      });
-    }
-
-    if (isNewPurchase && !isLease && assetAccountId) {
-      if (isFinanced && loanAccountId) {
-        await events.createFinancedAssetPurchase({
+      const [vehicle] = await tx
+        .insert(vehicles)
+        .values({
           householdId,
-          cashAccountId: input.cashAccountId!,
-          assetAccountId,
-          loanAccountId,
+          name: input.name.trim(),
+          make: input.make.trim(),
+          model: [input.model.trim(), input.variant?.trim()]
+            .filter(Boolean)
+            .join(" ")
+            .slice(0, 80),
+          modelYear: input.modelYear,
+          registrationNumber: input.registrationNumber?.trim() || null,
+          fuelType: input.fuelType.toLowerCase(),
+          currency,
           purchasePriceMinor,
-          downPaymentMinor,
-          occurredOn: input.purchaseDate,
-          description: `Köp av ${input.name}`,
-          vehicleId: vehicle.id,
-          currency,
-        });
-      } else {
-        await events.createAssetPurchase({
+          purchaseDate: input.purchaseDate,
+          estimatedValueLowMinor: (currentValueMinor * 95n) / 100n,
+          estimatedValueMidMinor: currentValueMinor,
+          estimatedValueHighMinor: (currentValueMinor * 105n) / 100n,
+          valuationAsOf: await resolveHouseholdAsOf(householdId),
+          linkedAssetAccountId: assetAccountId ?? null,
+          linkedLoanAccountId: loanAccountId ?? null,
+          notes: input.transmission ? `Växellåda: ${input.transmission}` : null,
+        })
+        .returning();
+
+      await tx.insert(vehicleOwnerships).values({
+        householdId,
+        vehicleId: vehicle.id,
+        ownershipType: isLease
+          ? "PRIVATE_LEASE"
+          : isFinanced
+            ? "FINANCED"
+            : "PRIVATE_OWNED",
+        ownerSharePercent: "100",
+        startedOn: input.purchaseDate,
+      });
+
+      await tx.insert(vehicleUsageProfiles).values({
+        householdId,
+        vehicleId: vehicle.id,
+        annualKm: input.annualKm ?? 15_000,
+        commuteSharePercent: "60",
+      });
+
+      if (input.currentOdometerKm != null) {
+        await tx.insert(vehicleOdometerReadings).values({
           householdId,
-          cashAccountId: input.cashAccountId!,
-          assetAccountId,
-          amountMinor: purchasePriceMinor,
-          occurredOn: input.purchaseDate,
-          description: `Köp av ${input.name}`,
           vehicleId: vehicle.id,
-          currency,
+          readingKm: input.currentOdometerKm,
+          recordedOn: await resolveHouseholdAsOf(householdId),
+          source: "manual",
         });
       }
-    }
 
-    await audit.record({
-      householdId,
-      actorUserId: userId,
-      action: "vehicle.create",
-      entity: "vehicle",
-      entityId: vehicle.id,
-      after: {
-        name: vehicle.name,
-        acquisitionMode: input.acquisitionMode,
-        purchaseType: input.purchaseType,
-        assetAccountId: assetAccountId ?? null,
-        loanAccountId: loanAccountId ?? null,
+      if (isFinanced && outstandingDebtMinor >= 0n && loanAccountId) {
+        await tx.insert(vehicleFinanceAgreements).values({
+          householdId,
+          vehicleId: vehicle.id,
+          lender: input.financeLender?.trim() || "Okänd långivare",
+          principalMinor: isNewPurchase
+            ? purchasePriceMinor - downPaymentMinor
+            : outstandingDebtMinor,
+          remainingMinor: isNewPurchase
+            ? purchasePriceMinor - downPaymentMinor
+            : outstandingDebtMinor,
+          interestRateBps: input.financeInterestRateBps ?? 0,
+          monthlyPaymentMinor: BigInt(input.financeMonthlyPaymentMinor ?? "0"),
+          currency,
+          startDate: input.purchaseDate,
+          endDate: input.financeEndDate ?? null,
+        });
+      }
+
+      if (isNewPurchase && !isLease && assetAccountId) {
+        if (isFinanced && loanAccountId) {
+          await events.createFinancedAssetPurchase({
+            householdId,
+            cashAccountId: input.cashAccountId!,
+            assetAccountId,
+            loanAccountId,
+            purchasePriceMinor,
+            downPaymentMinor,
+            occurredOn: input.purchaseDate,
+            description: `Köp av ${input.name}`,
+            vehicleId: vehicle.id,
+            currency,
+            executor: tx,
+          });
+        } else {
+          await events.createAssetPurchase({
+            householdId,
+            cashAccountId: input.cashAccountId!,
+            assetAccountId,
+            amountMinor: purchasePriceMinor,
+            occurredOn: input.purchaseDate,
+            description: `Köp av ${input.name}`,
+            vehicleId: vehicle.id,
+            currency,
+            executor: tx,
+          });
+        }
+      }
+
+      await audit.record({
+        householdId,
+        actorUserId: userId,
+        action: "vehicle.create",
+        entity: "vehicle",
+        entityId: vehicle.id,
+        after: {
+          name: vehicle.name,
+          acquisitionMode: input.acquisitionMode,
+          purchaseType: input.purchaseType,
+          assetAccountId: assetAccountId ?? null,
+          loanAccountId: loanAccountId ?? null,
+        },
+        executor: tx,
+      });
+
+
+        return { vehicleId: vehicle.id };
       },
     });
 
-    return this.get(userId, householdId, vehicle.id);
+    // Derived caches are refreshed only once the whole aggregate has committed.
+    await events.refreshAfterCommit(householdId, input.purchaseDate);
+    return this.get(userId, householdId, vehicleId as string);
   }
 
   /**

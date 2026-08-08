@@ -7,6 +7,7 @@ import { and, desc, eq, gte, inArray, isNull, lte, sql } from "drizzle-orm";
 import { money, moneyToJson, type CurrencyCode } from "@ffos/domain";
 import {
   MORTGAGE_RATE_SHOCKS_BPS,
+  liabilityCreditMinor,
   monthlyInterestFromRateMinor,
   mortgageRateScenarioMonthlyDeltaMinor,
   outstandingLiabilityMinor,
@@ -92,7 +93,10 @@ export class DebtService {
     currency: CurrencyCode,
     trailing: { principalMinor: bigint; interestMinor: bigint; paymentCount: number },
   ) {
+    // Display magnitude of what is owed; a credit balance owes nothing and is
+    // surfaced separately rather than being flipped into debt (RT2-001).
     const outstandingMinor = outstandingLiabilityMinor(row.currentBalanceMinor);
+    const creditMinor = liabilityCreditMinor(row.currentBalanceMinor);
     let rateBps = row.interestRateBps;
     // Fallback for DBs seeded before interest_rate_bps existed.
     if (
@@ -132,6 +136,10 @@ export class DebtService {
       provider: row.provider,
       accountType: row.accountType as "MORTGAGE" | "LOAN" | "CREDIT_CARD",
       outstanding: moneyToJson(money(outstandingMinor, currency)),
+      /** Positive when the lender owes the household, e.g. an overpaid card. */
+      credit: moneyToJson(money(creditMinor, currency)),
+      /** Signed economic position; this is what net worth subtracts. */
+      signedBalance: moneyToJson(money(row.currentBalanceMinor, currency)),
       interestRateBps: rateBps ?? null,
       interestRatePercent: rateBps != null ? rateBps / 100 : null,
       bindingEndDate: row.bindingEndDate,
@@ -153,7 +161,7 @@ export class DebtService {
     const rows = await this.liabilityAccounts(householdId);
     // Ledger-aligned balances — same path as metric registry debt_total.
     const [aligned, snap] = await Promise.all([
-      this.metrics.getLedgerAlignedAccountRows(householdId),
+      this.metrics.getLedgerAlignedAccountRows(householdId, asOf),
       this.metrics.getFinancialSnapshot(householdId, currency, asOf),
     ]);
     const balanceById = new Map(
@@ -179,10 +187,13 @@ export class DebtService {
       );
     }
 
+    // Per-type totals use the signed position so they reconcile with
+    // `totals.outstanding` (= registry debt_total = the net worth liability
+    // component). Per-account display magnitudes live on `items[].outstanding`.
     const sumType = (type: string) =>
       items
         .filter((i) => i.accountType === type)
-        .reduce((acc, i) => acc + BigInt(i.outstanding.amountMinor), 0n);
+        .reduce((acc, i) => acc + BigInt(i.signedBalance.amountMinor), 0n);
 
     const trailingPrincipal = items.reduce(
       (acc, i) => acc + BigInt(i.trailingPrincipal.amountMinor),
@@ -242,7 +253,7 @@ export class DebtService {
       })),
     );
 
-    const aligned = await this.metrics.getLedgerAlignedAccountRows(householdId);
+    const aligned = await this.metrics.getLedgerAlignedAccountRows(householdId, asOf);
     const ledgerBal =
       aligned.find((a) => a.id === accountId)?.currentBalanceMinor ??
       row.currentBalanceMinor;
@@ -268,13 +279,16 @@ export class DebtService {
   }
 
   /** Primary mortgage context for scenario rate shocks. */
-  async primaryMortgageContext(householdId: string) {
+  async primaryMortgageContext(householdId: string, asOf?: string) {
     const rows = await this.liabilityAccounts(householdId);
     const mortgage = rows.find(
       (r) => r.accountType === "MORTGAGE" && r.interestRateBps != null,
     );
     if (!mortgage || mortgage.interestRateBps == null) return null;
-    const aligned = await this.metrics.getLedgerAlignedAccountRows(householdId);
+    const aligned = await this.metrics.getLedgerAlignedAccountRows(
+      householdId,
+      asOf,
+    );
     const ledgerBal =
       aligned.find((a) => a.id === mortgage.id)?.currentBalanceMinor ??
       mortgage.currentBalanceMinor;

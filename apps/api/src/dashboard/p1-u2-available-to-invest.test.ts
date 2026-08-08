@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { requireTestDatabase } from "../testing/require-test-database";
 import { test } from "node:test";
 import { eq } from "drizzle-orm";
 import { AuditService } from "../audit/audit.service";
@@ -18,7 +19,7 @@ import { VehiclesService } from "../vehicles/vehicles.service";
 import { DashboardService } from "./dashboard.service";
 
 test("P1-U2: dashboard exposes availableToInvest with assumptions", async () => {
-  if (!process.env.DATABASE_URL) return;
+  requireTestDatabase();
   const db = getDb();
   const [household] = await db
     .insert(households)

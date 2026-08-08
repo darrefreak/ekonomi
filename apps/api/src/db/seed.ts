@@ -1,5 +1,6 @@
 import { eq } from "drizzle-orm";
 import { getDb, getPool } from "./client";
+import { describeDatabaseTarget } from "./database-target";
 import { featureFlags } from "./schema";
 import { seedDemoHousehold } from "./seed/demo-household";
 
@@ -43,6 +44,20 @@ async function seedFeatureFlags() {
 }
 
 async function main() {
+  // Seeding writes a demo household with a published password. That belongs in
+  // a disposable database only, so it obeys the same target policy as the
+  // destructive reset (RT2-006).
+  const target = describeDatabaseTarget(process.env.DATABASE_URL);
+  if (target.kind !== "test" && target.kind !== "development") {
+    throw new Error(
+      `Refusing to seed demo data into ${target.describe()}: only databases whose name ends in _dev or _test may be seeded.`,
+    );
+  }
+  if ((process.env.NODE_ENV ?? "").trim().toLowerCase() === "production") {
+    throw new Error("Refusing to seed demo data with NODE_ENV=production.");
+  }
+  console.log(`Seeding ${target.describe()}`);
+
   await seedFeatureFlags();
   const demo = await seedDemoHousehold();
   console.log("Seed complete");

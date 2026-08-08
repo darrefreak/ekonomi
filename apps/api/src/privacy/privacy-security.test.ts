@@ -1,4 +1,6 @@
 import assert from "node:assert/strict";
+import { requireTestDatabase } from "../testing/require-test-database";
+import { assertFixture } from "../testing/demo-fixture";
 import { test } from "node:test";
 import { createHash } from "node:crypto";
 import * as bcrypt from "bcryptjs";
@@ -41,7 +43,7 @@ test("requireAccessSecret fails closed in production without secret", () => {
 });
 
 test("roles privacy logout and export against real DB", async () => {
-  if (!process.env.DATABASE_URL) return;
+  requireTestDatabase();
 
   const db = getDb();
   const [demoUser] = await db
@@ -49,14 +51,14 @@ test("roles privacy logout and export against real DB", async () => {
     .from(users)
     .where(eq(users.email, "demo@ffos.local"))
     .limit(1);
-  if (!demoUser) return;
+  assertFixture(demoUser, "demoUser");
 
   const [ownerMembership] = await db
     .select()
     .from(householdMembers)
     .where(eq(householdMembers.userId, demoUser.id))
     .limit(1);
-  if (!ownerMembership) return;
+  assertFixture(ownerMembership, "ownerMembership");
 
   const householdId = ownerMembership.householdId;
   const [household] = await db
@@ -64,7 +66,7 @@ test("roles privacy logout and export against real DB", async () => {
     .from(households)
     .where(eq(households.id, householdId))
     .limit(1);
-  if (!household) return;
+  assertFixture(household, "household");
 
   const access = new HouseholdAccessService();
   const audit = new AuditService();

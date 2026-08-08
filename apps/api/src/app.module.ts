@@ -37,7 +37,11 @@ import { WealthModule } from "./wealth/wealth.module";
       {
         name: "default",
         ttl: 60_000,
-        limit: 120,
+        // 120/minute per client is the product default. An end-to-end run
+        // drives every page of the application from one address in a couple of
+        // minutes, which is not abuse but does exceed that, so the limit is
+        // configurable for such a stack. Production leaves it unset.
+        limit: Number(process.env.FFOS_RATE_LIMIT ?? 120),
       },
     ]),
     AuditModule,

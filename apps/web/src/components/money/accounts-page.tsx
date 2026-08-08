@@ -9,6 +9,7 @@ import { ensureHouseholdSession } from "@/lib/session";
 import { useHouseholdId } from "@/lib/use-household-id";
 import { queryKeys } from "@/lib/query-keys";
 import { kronorToMinorString } from "@/lib/money-input";
+import { useSubmissionKey } from "@/lib/idempotency";
 import {
   ACCOUNT_TYPES,
   CURRENCIES,
@@ -47,6 +48,7 @@ export function AccountsPage() {
   const [includeArchived, setIncludeArchived] = useState(false);
   const [form, setForm] = useState<FormState>(INITIAL_FORM);
   const [formError, setFormError] = useState<string | null>(null);
+  const submissionKey = useSubmissionKey();
 
   const accountsQuery = useQuery({
     queryKey: householdId
@@ -92,9 +94,11 @@ export function AccountsPage() {
         ownerMemberId: form.isShared ? null : form.ownerMemberId || null,
         openingBalanceMinor,
         creditLimitMinor,
-      });
+      }, { idempotencyKey: submissionKey.current() });
     },
     onSuccess: async () => {
+      // The intent succeeded; the next submission is a genuinely new account.
+      submissionKey.renew();
       setForm(INITIAL_FORM);
       setFormError(null);
       await Promise.all([

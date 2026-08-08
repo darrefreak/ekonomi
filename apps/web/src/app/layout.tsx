@@ -5,7 +5,13 @@ import { ThemeApplicator } from "@/components/providers/theme-applicator";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Family Financial OS",
+  // Every route sets its own title; the template makes each one unique, which
+  // is also what lets an end-to-end test tell the pages apart from each other
+  // and from the not-found result (RT2-004).
+  title: {
+    template: "%s · Family Financial OS",
+    default: "Family Financial OS",
+  },
   description: "Ekonomiskt operativsystem för hushållet",
 };
 

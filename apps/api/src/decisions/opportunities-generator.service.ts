@@ -124,7 +124,10 @@ export class OpportunitiesGeneratorService {
     );
     if (!withRate) return null;
 
-    const aligned = await this.metrics.getLedgerAlignedAccountRows(householdId);
+    const aligned = await this.metrics.getLedgerAlignedAccountRows(
+      householdId,
+      asOf,
+    );
     const ledgerBal =
       aligned.find((a) => a.id === withRate.id)?.currentBalanceMinor ??
       withRate.currentBalanceMinor;

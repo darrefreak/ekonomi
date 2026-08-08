@@ -190,6 +190,13 @@
       "when": 1754749200000,
       "tag": "0026_rt_remediation_clock_idempotency",
       "breakpoints": true
+    },
+    {
+      "idx": 27,
+      "version": "7",
+      "when": 1754760000000,
+      "tag": "0027_rt2_command_idempotency_snapshot_identity",
+      "breakpoints": true
     }
   ]
 }

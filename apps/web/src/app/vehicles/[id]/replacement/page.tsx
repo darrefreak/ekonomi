@@ -1,4 +1,9 @@
+import type { Metadata } from "next";
 import { VehicleMarketPage } from "@/components/vehicles/vehicle-market-page";
+
+export const metadata: Metadata = {
+  title: "Byte av fordon",
+};
 
 export default async function Page({
   params,

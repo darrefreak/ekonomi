@@ -4,13 +4,14 @@ services:
     environment:
       POSTGRES_USER: ffos
       POSTGRES_PASSWORD: ffos
-      POSTGRES_DB: ffos
+      POSTGRES_DB: ffos_dev
     ports:
       - "5436:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+      - ./infrastructure/docker/postgres-init:/docker-entrypoint-initdb.d:ro
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ffos -d ffos"]
+      test: ["CMD-SHELL", "pg_isready -U ffos -d ffos_dev"]
       interval: 5s
       timeout: 5s
       retries: 10
@@ -58,7 +59,7 @@ services:
     environment:
       NODE_ENV: development
       API_PORT: 3001
-      DATABASE_URL: postgresql://ffos:ffos@postgres:5432/ffos
+      DATABASE_URL: postgresql://ffos:ffos@postgres:5432/ffos_dev
       REDIS_URL: redis://redis:6379
       JWT_ACCESS_SECRET: dev-access-secret-change-me
       JWT_REFRESH_SECRET: dev-refresh-secret-change-me
@@ -73,6 +74,9 @@ services:
       S3_REGION: us-east-1
       DEMO_AS_OF_DATE: "2026-08-01"
       DEMO_RANDOM_SEED: family-financial-os-demo-v1
+      # An end-to-end run drives the whole application from one address; the
+      # product default of 120/minute is what production uses.
+      FFOS_RATE_LIMIT: "2000"
     ports:
       - "3001:3001"
     depends_on:
@@ -88,7 +92,7 @@ services:
       dockerfile: infrastructure/docker/Dockerfile.api
     environment:
       NODE_ENV: development
-      DATABASE_URL: postgresql://ffos:ffos@postgres:5432/ffos
+      DATABASE_URL: postgresql://ffos:ffos@postgres:5432/ffos_dev
       REDIS_URL: redis://redis:6379
       JWT_ACCESS_SECRET: dev-access-secret-change-me
       JWT_REFRESH_SECRET: dev-refresh-secret-change-me

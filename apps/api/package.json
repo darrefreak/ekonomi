@@ -10,7 +10,7 @@
     "start:worker": "node dist/worker.js",
     "lint": "eslint .",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "test": "tsx --test src/dashboard/dashboard.service.test.ts src/dashboard/p1-u2-available-to-invest.test.ts src/ai/ai-tools.test.ts src/ai/advisor.service.test.ts src/metrics/household-metrics.consistency.test.ts src/metrics/metric-registry.consistency.test.ts src/metrics/r4-metric-registry.test.ts src/accounts/accounts.mutations.test.ts src/planning/planning.mutations.test.ts src/decisions/decisions.mutations.test.ts src/decisions/decisions.live.test.ts src/debt/debt.service.test.ts src/wealth/wealth.service.test.ts src/vehicle-intel/vehicle-intel.service.test.ts src/vehicle-intel/p1-u6-vehicle-intel.test.ts src/merchants/p1-u6-merchants.test.ts src/intake/mock-extract.test.ts src/intake/intake.mutations.test.ts src/intake/intake.integrations.test.ts src/ops/product-ops.test.ts src/ops/p1-u5-ops-surface.test.ts src/privacy/privacy-security.test.ts src/ledger/ledger-invariants.test.ts src/ledger/depreciation-invariants.test.ts src/ledger/r1-atomicity-idempotency.test.ts src/ledger/r2-ledger-truth.test.ts src/ledger/r3-financial-runtime.test.ts src/ledger/p1-u2-optional-expense-book.test.ts src/ledger/p0-adversarial-proof.test.ts src/common/runtime-validation.test.ts src/households/p1-u1-workflows.test.ts src/decisions/opportunities-generator.service.test.ts src/decisions/anomaly.service.test.ts src/jobs/jobs.integration.test.ts src/ledger/rt-blocker-high.test.ts src/vehicles/vehicles.create.test.ts",
+    "test": "tsx --test --test-concurrency=1 $(find src -name '*.test.ts' | sort)",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "tsx src/db/migrate.ts",
     "db:seed": "tsx src/db/seed.ts",
@@ -32,7 +32,7 @@
     "@nestjs/throttler": "^6.5.0",
     "bcryptjs": "^3.0.2",
     "bullmq": "^5.53.2",
-    "drizzle-orm": "^0.44.2",
+    "drizzle-orm": "^0.45.2",
     "helmet": "^8.3.0",
     "ioredis": "^5.6.1",
     "pg": "^8.16.0",
@@ -41,14 +41,14 @@
     "zod": "^3.25.67"
   },
   "devDependencies": {
+    "@ffos/eslint-config": "workspace:*",
     "@types/bcryptjs": "^2.4.6",
     "@types/express": "^5.0.3",
     "@types/node": "^22.15.30",
     "@types/pg": "^8.15.4",
     "drizzle-kit": "^0.31.1",
+    "eslint": "^9.39.5",
     "tsx": "^4.19.4",
-    "typescript": "^5.8.3",
-    "@ffos/eslint-config": "workspace:*",
-    "eslint": "^9.39.5"
+    "typescript": "^5.8.3"
   }
 }

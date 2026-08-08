@@ -60,7 +60,8 @@ export const METRIC_DEFINITIONS: readonly MetricDefinition[] = [
     metricKey: "debt_total",
     displayName: "Skulder",
     formulaDescription:
-      "Absolute sum of MORTGAGE + LOAN + CREDIT_CARD ledger balances",
+      "Signed sum of MORTGAGE + LOAN + CREDIT_CARD ledger balances (positive is owed; " +
+      "a credit balance nets against debt, so net_worth subtracts exactly this)",
     calculationVersion: "1.0.0",
     valueKind: "money_minor",
     unit: "minor",

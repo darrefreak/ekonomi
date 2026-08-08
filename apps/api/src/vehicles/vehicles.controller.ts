@@ -20,6 +20,7 @@ import { AuthGuard } from "../auth/auth.guard";
 import { CurrentUser } from "../auth/current-user.decorator";
 import type { AuthenticatedUser } from "../auth/auth.types";
 import { ZodValidationPipe } from "../common/zod-validation.pipe";
+import { IdempotencyKey } from "../common/idempotency-key.decorator";
 import { VehiclesService } from "./vehicles.service";
 
 @ApiTags("vehicles")
@@ -52,8 +53,11 @@ export class VehiclesController {
   create(
     @CurrentUser() user: AuthenticatedUser,
     @Body(new ZodValidationPipe(createVehicleSchema)) body: unknown,
+    @IdempotencyKey() idempotencyKey?: string,
   ) {
-    return this.vehicles.create(user.userId, createVehicleSchema.parse(body));
+    return this.vehicles.create(user.userId, createVehicleSchema.parse(body), {
+      idempotencyKey,
+    });
   }
 
   @Patch(":id")

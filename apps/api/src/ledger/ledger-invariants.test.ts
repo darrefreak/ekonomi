@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { requireTestDatabase } from "../testing/require-test-database";
 import { test } from "node:test";
 import { and, eq, sql } from "drizzle-orm";
 import { money } from "@ffos/domain";
@@ -19,7 +20,7 @@ import { stubMerchantsService } from "../merchants/merchants.service.stub";
 const AS_OF = "2026-08-01";
 
 async function setup() {
-  if (!process.env.DATABASE_URL) return null;
+  requireTestDatabase();
   const db = getDb();
 
   // Isolated household so parallel suite tests cannot race the demo household.
@@ -140,7 +141,6 @@ function position(
 
 test("A2 Test 1 — internal transfer persisted invariants", async () => {
   const ctx = await setup();
-  if (!ctx) return;
 
   const before = await ctx.ledger.reconstructHousehold(ctx.household.id);
   const beforeNw = position(before, [ctx.bankA, ctx.bankB]);
@@ -168,7 +168,6 @@ test("A2 Test 1 — internal transfer persisted invariants", async () => {
 
 test("A2 Test 2 — credit card purchase + payment", async () => {
   const ctx = await setup();
-  if (!ctx) return;
 
   const purchase = await ctx.events.createCreditCardPurchase({
     householdId: ctx.household.id,
@@ -214,7 +213,6 @@ test("A2 Test 2 — credit card purchase + payment", async () => {
 
 test("A2 Test 3 — mortgage principal/interest split", async () => {
   const ctx = await setup();
-  if (!ctx) return;
 
   const before = await ctx.ledger.reconstructHousehold(ctx.household.id);
   const beforeCash = before.get(ctx.bankA.id) ?? 0n;
@@ -253,7 +251,6 @@ test("A2 Test 3 — mortgage principal/interest split", async () => {
 
 test("A2 Test 4 — investment transfer", async () => {
   const ctx = await setup();
-  if (!ctx) return;
 
   const before = await ctx.ledger.reconstructHousehold(ctx.household.id);
   const beforeNw = position(before, [ctx.bankA, ctx.investment]);
@@ -278,7 +275,6 @@ test("A2 Test 4 — investment transfer", async () => {
 
 test("A2 Test 5 — reconciliation mismatch visible, no silent overwrite", async () => {
   const ctx = await setup();
-  if (!ctx) return;
 
   await ctx.db
     .update(accounts)
@@ -303,7 +299,6 @@ test("A2 Test 5 — reconciliation mismatch visible, no silent overwrite", async
 
 test("A2 Test 6 — reconcile retry idempotent; transfer externalId idempotent", async () => {
   const ctx = await setup();
-  if (!ctx) return;
 
   const externalId = `a2-idem-${ctx.bankA.id}`;
   const first = await ctx.events.createInternalTransfer({
@@ -346,7 +341,6 @@ test("A2 Test 6 — reconcile retry idempotent; transfer externalId idempotent",
 
 test("A2 refund reduces expense rather than unrelated income", async () => {
   const ctx = await setup();
-  if (!ctx) return;
 
   await ctx.events.createCreditCardPurchase({
     householdId: ctx.household.id,
