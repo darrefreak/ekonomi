@@ -1,9 +1,10 @@
 import assert from "node:assert/strict";
+import { requireTestDatabase } from "../testing/require-test-database";
+import { requireDemoHousehold } from "../testing/demo-fixture";
 import { test } from "node:test";
 import { eq } from "drizzle-orm";
 import { createAccountSchema, updateTransactionSchema } from "@ffos/schemas";
 import { getDb } from "../db/client";
-import { households } from "../db/schema";
 import { accounts, sourceTransactions } from "../db/schema-economic";
 import { AccountsService } from "./accounts.service";
 import { TransactionsService } from "../transactions/transactions.service";
@@ -33,10 +34,9 @@ test("updateTransactionSchema accepts classification fields", () => {
 });
 
 test("account create update archive and transaction patch against DB", async () => {
-  if (!process.env.DATABASE_URL) return;
+  requireTestDatabase();
+  const household = await requireDemoHousehold();
   const db = getDb();
-  const [household] = await db.select().from(households).limit(1);
-  if (!household) return; // skip if DB empty in CI without seed
 
   const access = {
     requireMembership: async () => ({

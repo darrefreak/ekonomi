@@ -1,4 +1,6 @@
 import assert from "node:assert/strict";
+import { requireTestDatabase } from "../testing/require-test-database";
+import { assertFixture } from "../testing/demo-fixture";
 import { test } from "node:test";
 import { and, eq } from "drizzle-orm";
 import {
@@ -16,7 +18,7 @@ import { VehiclesService } from "../vehicles/vehicles.service";
 import { DecisionsService } from "./decisions.service";
 
 test("opportunities and risk are live-engine with evidence", async () => {
-  if (!process.env.DATABASE_URL) return;
+  requireTestDatabase();
   const db = getDb();
   // Prefer seeded demo household — parallel invariant suites create extra mortgages.
   const [household] = await db
@@ -24,7 +26,7 @@ test("opportunities and risk are live-engine with evidence", async () => {
     .from(households)
     .where(eq(households.name, "Familjen Demo"))
     .limit(1);
-  if (!household) return;
+  assertFixture(household, "household");
   const [account] = await db
     .select()
     .from(accounts)
@@ -35,7 +37,7 @@ test("opportunities and risk are live-engine with evidence", async () => {
       ),
     )
     .limit(1);
-  if (!account) return;
+  assertFixture(account, "account");
 
   const access = {
     requireMembership: async () => ({

@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { requireTestDatabase } from "../testing/require-test-database";
 import { test } from "node:test";
 import { and, eq, sql } from "drizzle-orm";
 import { buildInternalTransfer } from "@ffos/financial-engine";
@@ -22,7 +23,7 @@ import { stubMerchantsService } from "../merchants/merchants.service.stub";
 const AS_OF = "2026-08-01";
 
 async function setupHousehold(label: string) {
-  if (!process.env.DATABASE_URL) return null;
+  requireTestDatabase();
   const db = getDb();
   const [household] = await db
     .insert(households)
@@ -122,7 +123,6 @@ async function countPostings(householdId: string) {
 
 test("R1-T1 Partial ledger rollback — mid-command failure leaves no residual rows", async () => {
   const ctx = await setupHousehold("R1-T1");
-  if (!ctx) return;
 
   const beforeEvents = await countEvents(ctx.household.id);
   const beforePostings = await countPostings(ctx.household.id);
@@ -173,7 +173,6 @@ test("R1-T1 Partial ledger rollback — mid-command failure leaves no residual r
 
 test("R1-T2 Depreciation retry — same externalId applies once", async () => {
   const ctx = await setupHousehold("R1-T2");
-  if (!ctx) return;
 
   const externalId = `r1-depr-${ctx.household.id}`;
   const first = await ctx.events.createAssetDepreciation({
@@ -219,7 +218,6 @@ test("R1-T2 Depreciation retry — same externalId applies once", async () => {
 
 test("R1-T3 Depreciation idempotency conflict — same key different amount", async () => {
   const ctx = await setupHousehold("R1-T3");
-  if (!ctx) return;
 
   const externalId = `r1-depr-conflict-${ctx.household.id}`;
   await ctx.events.createAssetDepreciation({
@@ -258,7 +256,6 @@ test("R1-T3 Depreciation idempotency conflict — same key different amount", as
 
 test("R1-T4 Concurrent duplicate — one economic effect", async () => {
   const ctx = await setupHousehold("R1-T4");
-  if (!ctx) return;
 
   const externalId = `r1-concurrent-${ctx.household.id}`;
   const args = {
@@ -286,7 +283,6 @@ test("R1-T4 Concurrent duplicate — one economic effect", async () => {
 
 test("R1-T5 Split rebuild rollback — invalid second split preserves original", async () => {
   const ctx = await setupHousehold("R1-T5");
-  if (!ctx) return;
 
   const event = await ctx.events.createMortgagePayment({
     householdId: ctx.household.id,
@@ -366,7 +362,6 @@ test("R1-T5 Split rebuild rollback — invalid second split preserves original",
 
 test("R1-T6 Classification revision rollback — old postings remain on failure", async () => {
   const ctx = await setupHousehold("R1-T6");
-  if (!ctx) return;
 
   const expenseEvent = await ctx.events.createCashExpense({
     householdId: ctx.household.id,
@@ -445,7 +440,6 @@ test("R1-T6 Classification revision rollback — old postings remain on failure"
 
 test("R1 — credit-card payment idempotent retry", async () => {
   const ctx = await setupHousehold("R1-CC");
-  if (!ctx) return;
 
   await ctx.events.createCreditCardPurchase({
     householdId: ctx.household.id,

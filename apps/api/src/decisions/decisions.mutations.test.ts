@@ -1,4 +1,6 @@
 import assert from "node:assert/strict";
+import { requireTestDatabase } from "../testing/require-test-database";
+import { requireDemoHousehold } from "../testing/demo-fixture";
 import { test } from "node:test";
 import { eq } from "drizzle-orm";
 import {
@@ -7,7 +9,6 @@ import {
   scenarioSimulationResponseSchema,
 } from "@ffos/schemas";
 import { getDb } from "../db/client";
-import { households } from "../db/schema";
 import { accounts } from "../db/schema-economic";
 import { scenarios } from "../db/schema-decisions";
 import type { HouseholdAccessService } from "../households/household-access.service";
@@ -27,16 +28,9 @@ test("createScenarioSchema accepts assumption minors", () => {
 });
 
 test("live forecast horizons and non-destructive scenario simulate", async () => {
-  if (!process.env.DATABASE_URL) return;
+  requireTestDatabase();
+  const household = await requireDemoHousehold();
   const db = getDb();
-  const [account] = await db.select().from(accounts).limit(1);
-  if (!account) return;
-  const [household] = await db
-    .select()
-    .from(households)
-    .where(eq(households.id, account.householdId))
-    .limit(1);
-  if (!household) return;
 
   const access = {
     requireMembership: async () => ({

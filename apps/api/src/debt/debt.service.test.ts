@@ -1,30 +1,15 @@
 import assert from "node:assert/strict";
+import { requireTestDatabase } from "../testing/require-test-database";
+import { requireDemoAccount } from "../testing/demo-fixture";
 import { test } from "node:test";
-import { eq } from "drizzle-orm";
 import { debtResponseSchema } from "@ffos/schemas";
-import { getDb } from "../db/client";
-import { households } from "../db/schema";
-import { accounts } from "../db/schema-economic";
 import type { HouseholdAccessService } from "../households/household-access.service";
 import { HouseholdMetricsService } from "../metrics/household-metrics.service";
 import { DebtService } from "./debt.service";
 
 test("debt list exposes principal vs interest and rate scenarios", async () => {
-  if (!process.env.DATABASE_URL) return;
-  const db = getDb();
-  const [mortgage] = await db
-    .select()
-    .from(accounts)
-    .where(eq(accounts.accountType, "MORTGAGE"))
-    .limit(1);
-  if (!mortgage) return;
-
-  const [household] = await db
-    .select()
-    .from(households)
-    .where(eq(households.id, mortgage.householdId))
-    .limit(1);
-  if (!household) return;
+  requireTestDatabase();
+  const { household } = await requireDemoAccount("MORTGAGE");
 
   const access = {
     requireMembership: async () => ({

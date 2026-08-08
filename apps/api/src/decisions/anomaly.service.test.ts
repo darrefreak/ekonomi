@@ -1,4 +1,6 @@
 import assert from "node:assert/strict";
+import { requireTestDatabase } from "../testing/require-test-database";
+import { assertFixture } from "../testing/demo-fixture";
 import { test } from "node:test";
 import { eq } from "drizzle-orm";
 import { getDb } from "../db/client";
@@ -7,14 +9,14 @@ import { anomalyFindings } from "../db/schema-decisions";
 import { AnomalyService } from "./anomaly.service";
 
 test("AnomalyService detects deterministically and upserts by identity key", async () => {
-  if (!process.env.DATABASE_URL) return;
+  requireTestDatabase();
   const db = getDb();
   const [household] = await db
     .select()
     .from(households)
     .where(eq(households.name, "Familjen Demo"))
     .limit(1);
-  if (!household) return;
+  assertFixture(household, "household");
 
   const anomaly = new AnomalyService();
   const asOf = process.env.DEMO_AS_OF_DATE ?? "2026-08-01";

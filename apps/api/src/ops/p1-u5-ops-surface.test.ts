@@ -1,4 +1,6 @@
 import assert from "node:assert/strict";
+import { requireTestDatabase } from "../testing/require-test-database";
+import { assertFixture } from "../testing/demo-fixture";
 import { test } from "node:test";
 import { and, eq } from "drizzle-orm";
 import {
@@ -21,7 +23,7 @@ import { SubscriptionsService } from "../planning/subscriptions.service";
 import { runJobHandler } from "../jobs/handlers";
 
 test("P1-U5 ops surface: anomalies dismiss, audit list, recurring status, analysis runs", async () => {
-  if (!process.env.DATABASE_URL) return;
+  requireTestDatabase();
 
   const db = getDb();
   const [demoUser] = await db
@@ -29,19 +31,19 @@ test("P1-U5 ops surface: anomalies dismiss, audit list, recurring status, analys
     .from(users)
     .where(eq(users.email, "demo@ffos.local"))
     .limit(1);
-  if (!demoUser) return;
+  assertFixture(demoUser, "demoUser");
   const [membership] = await db
     .select()
     .from(householdMembers)
     .where(eq(householdMembers.userId, demoUser.id))
     .limit(1);
-  if (!membership) return;
+  assertFixture(membership, "membership");
   const [household] = await db
     .select()
     .from(households)
     .where(eq(households.id, membership.householdId))
     .limit(1);
-  if (!household) return;
+  assertFixture(household, "household");
 
   const access = {
     requireMembership: async () => ({

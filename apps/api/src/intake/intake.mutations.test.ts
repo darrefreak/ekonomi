@@ -1,14 +1,12 @@
 import assert from "node:assert/strict";
+import { requireTestDatabase } from "../testing/require-test-database";
+import { requireDemoVehicle } from "../testing/demo-fixture";
 import { test } from "node:test";
-import { eq } from "drizzle-orm";
 import {
   documentDetailSchema,
   documentsResponseSchema,
   uploadDocumentSchema,
 } from "@ffos/schemas";
-import { getDb } from "../db/client";
-import { households } from "../db/schema";
-import { vehicles } from "../db/schema-vehicles";
 import type { HouseholdAccessService } from "../households/household-access.service";
 import { ObjectStorageService } from "../storage/object-storage.service";
 import { IntakeService } from "./intake.service";
@@ -24,18 +22,10 @@ test("uploadDocumentSchema requires household and content", () => {
 });
 
 test("document upload storage extract status and vehicle link", async () => {
-  if (!process.env.DATABASE_URL) return;
+  requireTestDatabase();
   process.env.FFOS_STORAGE_DRIVER = "local";
 
-  const db = getDb();
-  const [vehicle] = await db.select().from(vehicles).limit(1);
-  if (!vehicle) return;
-  const [household] = await db
-    .select()
-    .from(households)
-    .where(eq(households.id, vehicle.householdId))
-    .limit(1);
-  if (!household) return;
+  const { household, vehicle } = await requireDemoVehicle();
 
   const access = {
     requireMembership: async () => ({

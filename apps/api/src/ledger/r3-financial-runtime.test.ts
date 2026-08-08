@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { requireTestDatabase } from "../testing/require-test-database";
 import { test } from "node:test";
 import { and, eq } from "drizzle-orm";
 import { money } from "@ffos/domain";
@@ -21,7 +22,7 @@ const PERIOD_START = "2026-08-01";
 const PERIOD_END = "2026-08-31";
 
 async function setup() {
-  if (!process.env.DATABASE_URL) return null;
+  requireTestDatabase();
   const db = getDb();
   const [household] = await db
     .insert(households)
@@ -133,7 +134,6 @@ async function setup() {
 
 test("R3 comprehensive scenario — no double counting", async () => {
   const ctx = await setup();
-  if (!ctx) return;
 
   // Opening purchase of vehicle (not period income).
   await ctx.events.createAssetPurchase({
@@ -252,7 +252,6 @@ test("R3 comprehensive scenario — no double counting", async () => {
 
 test("R3 classification revise EXPENSE→TRANSFER updates economics", async () => {
   const ctx = await setup();
-  if (!ctx) return;
 
   const expenseEvent = await ctx.events.createCashExpense({
     householdId: ctx.household.id,
@@ -299,7 +298,6 @@ test("R3 classification revise EXPENSE→TRANSFER updates economics", async () =
 
 test("R3 exclude removes from period metrics; re-include restores once", async () => {
   const ctx = await setup();
-  if (!ctx) return;
 
   const event = await ctx.events.createCashExpense({
     householdId: ctx.household.id,
@@ -353,7 +351,6 @@ test("R3 exclude removes from period metrics; re-include restores once", async (
 
 test("R3 reverse excludes from reconstruct and period totals", async () => {
   const ctx = await setup();
-  if (!ctx) return;
 
   const event = await ctx.events.createCashExpense({
     householdId: ctx.household.id,
@@ -392,7 +389,6 @@ test("R3 reverse excludes from reconstruct and period totals", async () => {
 
 test("R3 depreciation incremental across valuations is consistent", async () => {
   const ctx = await setup();
-  if (!ctx) return;
 
   await ctx.events.createAssetPurchase({
     householdId: ctx.household.id,
@@ -426,7 +422,6 @@ test("R3 depreciation incremental across valuations is consistent", async () => 
 
 test("R3 financed purchase runtime path", async () => {
   const ctx = await setup();
-  if (!ctx) return;
 
   await ctx.events.createFinancedAssetPurchase({
     householdId: ctx.household.id,
@@ -455,7 +450,6 @@ test("R3 financed purchase runtime path", async () => {
 
 test("R3 opening balances are not period income/expense", async () => {
   const ctx = await setup();
-  if (!ctx) return;
 
   const period = await ctx.metrics.periodEventTotals(
     ctx.household.id,

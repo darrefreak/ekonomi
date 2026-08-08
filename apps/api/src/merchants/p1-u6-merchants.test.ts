@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { requireTestDatabase } from "../testing/require-test-database";
 import { test } from "node:test";
 import { eq } from "drizzle-orm";
 import {
@@ -13,7 +14,7 @@ import type { HouseholdAccessService } from "../households/household-access.serv
 import { MerchantsService } from "./merchants.service";
 
 async function setup() {
-  if (!process.env.DATABASE_URL) return null;
+  requireTestDatabase();
   const db = getDb();
   const [household] = await db
     .insert(households)
@@ -45,7 +46,6 @@ async function setup() {
 
 test("P1-U6: normalize preview matches alias", async () => {
   const ctx = await setup();
-  if (!ctx) return;
   const { household, owner, merchant } = ctx;
 
   const access = {
@@ -72,7 +72,6 @@ test("P1-U6: normalize preview matches alias", async () => {
 
 test("P1-U6: verify alias adds alias and sets userVerified", async () => {
   const ctx = await setup();
-  if (!ctx) return;
   const { household, owner, merchant, db } = ctx;
 
   const access = {
@@ -105,7 +104,6 @@ test("P1-U6: verify alias adds alias and sets userVerified", async () => {
 
 test("P1-U6: resolveMerchantId uses matchMerchant", async () => {
   const ctx = await setup();
-  if (!ctx) return;
   const { household, merchant } = ctx;
 
   const access = {

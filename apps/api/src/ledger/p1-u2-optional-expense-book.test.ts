@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { requireTestDatabase } from "../testing/require-test-database";
 import { test } from "node:test";
 import { and, eq } from "drizzle-orm";
 import { AuditService } from "../audit/audit.service";
@@ -18,7 +19,7 @@ const AS_OF = "2026-08-01";
  * must resolve (and create on first use) the system book automatically.
  */
 async function setup() {
-  if (!process.env.DATABASE_URL) return null;
+  requireTestDatabase();
   const db = getDb();
   const [household] = await db
     .insert(households)
@@ -76,7 +77,6 @@ async function findSystemExpenseAccounts(db: ReturnType<typeof getDb>, household
 
 test("credit-card purchase without expenseAccountId resolves system EXPENSE book once", async () => {
   const ctx = await setup();
-  if (!ctx) return;
 
   const first = await ctx.events.createCreditCardPurchase({
     householdId: ctx.household.id,
@@ -106,7 +106,6 @@ test("credit-card purchase without expenseAccountId resolves system EXPENSE book
 
 test("mortgage payment without interestExpenseAccountId resolves system EXPENSE book", async () => {
   const ctx = await setup();
-  if (!ctx) return;
 
   const event = await ctx.events.createMortgagePayment({
     householdId: ctx.household.id,

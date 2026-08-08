@@ -1,4 +1,6 @@
 import assert from "node:assert/strict";
+import { requireTestDatabase } from "../testing/require-test-database";
+import { assertFixture } from "../testing/demo-fixture";
 import { test } from "node:test";
 import { moneyFromJson } from "@ffos/domain";
 import { calculateNetWorth, forecastCashflowDeltas } from "@ffos/financial-engine";
@@ -128,10 +130,10 @@ test("forecast deltas for dashboard are engine-driven (not hardcoded)", () => {
 });
 
 test("getDashboard aggregates opportunities and forecast from live services", async () => {
-  if (!process.env.DATABASE_URL) return;
+  requireTestDatabase();
   const db = getDb();
   const [household] = await db.select().from(households).limit(1);
-  if (!household) return;
+  assertFixture(household, "household");
 
   const access = {
     requireMembership: async () => ({

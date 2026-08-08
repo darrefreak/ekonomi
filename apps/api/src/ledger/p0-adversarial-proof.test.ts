@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { requireTestDatabase } from "../testing/require-test-database";
 import { test } from "node:test";
 import { eq } from "drizzle-orm";
 import { AuditService } from "../audit/audit.service";
@@ -15,7 +16,7 @@ import { stubMerchantsService } from "../merchants/merchants.service.stub";
  */
 
 test("P0-A2 re-verify — depreciation externalId is idempotent", async () => {
-  if (!process.env.DATABASE_URL) return;
+  requireTestDatabase();
   const db = getDb();
   const [household] = await db
     .insert(households)

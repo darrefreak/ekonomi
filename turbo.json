@@ -16,7 +16,22 @@
       "dependsOn": ["^build"]
     },
     "test": {
-      "dependsOn": ["^build"]
+      "dependsOn": ["^build"],
+      "env": [
+        "NODE_ENV",
+        "DATABASE_URL",
+        "REDIS_URL",
+        "FFOS_QUEUE_PREFIX",
+        "FFOS_TEST_EXECUTION_LOG",
+        "FFOS_ALLOW_DB_RESET",
+        "DEMO_AS_OF_DATE",
+        "DEMO_RANDOM_SEED",
+        "JWT_ACCESS_SECRET",
+        "JWT_REFRESH_SECRET",
+        "JWT_ACCESS_TTL",
+        "JWT_REFRESH_TTL"
+      ],
+      "cache": false
     },
     "clean": {
       "cache": false

@@ -4,21 +4,13 @@ import { logger } from "../common/logger";
 import { runJobHandler } from "./handlers";
 import { jobOptionsFor, jobRegistry, QUEUE_NAME } from "./registry";
 import { resolveHouseholdAsOf } from "../common/as-of";
+import { queueOptions } from "./redis-connection";
 
 export const HEALTH_CHECK_JOB: JobType = "HEALTH_CHECK";
 export const RECONCILE_ACCOUNT_BALANCES_JOB: JobType = "RECONCILE_ACCOUNT_BALANCES";
 
-function redisConnection() {
-  const url = new URL(process.env.REDIS_URL ?? "redis://localhost:6379");
-  return {
-    host: url.hostname,
-    port: Number(url.port || 6379),
-    maxRetriesPerRequest: null as null,
-  };
-}
-
 export function createJobsQueue(): Queue {
-  return new Queue(QUEUE_NAME, { connection: redisConnection() });
+  return new Queue(QUEUE_NAME, queueOptions());
 }
 
 /**
@@ -137,7 +129,7 @@ export function startWorker() {
       }
       return runJobHandler(parsed.data);
     },
-    { connection: redisConnection() },
+    queueOptions(),
   );
 
   worker.on("completed", (job) => {

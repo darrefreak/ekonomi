@@ -1,35 +1,20 @@
 import assert from "node:assert/strict";
+import { requireTestDatabase } from "../testing/require-test-database";
+import { requireDemoAccount } from "../testing/demo-fixture";
 import { test } from "node:test";
-import { eq } from "drizzle-orm";
 import {
   assetsResponseSchema,
   investmentsResponseSchema,
   netWorthResponseSchema,
 } from "@ffos/schemas";
-import { getDb } from "../db/client";
-import { households } from "../db/schema";
-import { accounts } from "../db/schema-economic";
 import type { HouseholdAccessService } from "../households/household-access.service";
 import { HouseholdMetricsService } from "../metrics/household-metrics.service";
 import { NetWorthService } from "../net-worth/net-worth.service";
 import { WealthService } from "./wealth.service";
 
 test("investments and assets APIs return ledger-backed wealth", async () => {
-  if (!process.env.DATABASE_URL) return;
-  const db = getDb();
-  const [inv] = await db
-    .select()
-    .from(accounts)
-    .where(eq(accounts.accountType, "INVESTMENT"))
-    .limit(1);
-  if (!inv) return;
-
-  const [household] = await db
-    .select()
-    .from(households)
-    .where(eq(households.id, inv.householdId))
-    .limit(1);
-  if (!household) return;
+  requireTestDatabase();
+  const { household } = await requireDemoAccount("INVESTMENT");
 
   const access = {
     requireMembership: async () => ({
@@ -55,21 +40,8 @@ test("investments and assets APIs return ledger-backed wealth", async () => {
 });
 
 test("net worth history comes from account_balance_snapshots", async () => {
-  if (!process.env.DATABASE_URL) return;
-  const db = getDb();
-  const [inv] = await db
-    .select()
-    .from(accounts)
-    .where(eq(accounts.accountType, "INVESTMENT"))
-    .limit(1);
-  if (!inv) return;
-
-  const [household] = await db
-    .select()
-    .from(households)
-    .where(eq(households.id, inv.householdId))
-    .limit(1);
-  if (!household) return;
+  requireTestDatabase();
+  const { household } = await requireDemoAccount("INVESTMENT");
 
   const access = {
     requireMembership: async () => ({

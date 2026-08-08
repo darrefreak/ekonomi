@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { requireTestDatabase } from "../testing/require-test-database";
 import { test } from "node:test";
 import {
   METRIC_BUNDLE_VERSION,
@@ -21,7 +22,7 @@ const AS_OF = "2026-08-01";
 const AS_OF_ALT = "2026-07-15";
 
 async function setup() {
-  if (!process.env.DATABASE_URL) return null;
+  requireTestDatabase();
   const db = getDb();
   const [household] = await db
     .insert(households)
@@ -84,7 +85,6 @@ async function setup() {
 
 test("R4-T1 — inputHash changes when composition changes with same cash total", async () => {
   const ctx = await setup();
-  if (!ctx) return;
 
   const before = await ctx.metrics.getFinancialSnapshot(
     ctx.household.id,
@@ -118,7 +118,6 @@ test("R4-T1 — inputHash changes when composition changes with same cash total"
 
 test("R4-T2 — metricMeta.calculationVersion is catalog fingerprint, not bundle", async () => {
   const ctx = await setup();
-  if (!ctx) return;
 
   const snap = await ctx.metrics.getFinancialSnapshot(
     ctx.household.id,
@@ -134,7 +133,6 @@ test("R4-T2 — metricMeta.calculationVersion is catalog fingerprint, not bundle
 
 test("R4-T3 — product asOf query is honored (net-worth)", async () => {
   const ctx = await setup();
-  if (!ctx) return;
 
   const nw = await ctx.netWorth.get("user-1", ctx.household.id, AS_OF_ALT);
   assert.equal(nw.asOf, AS_OF_ALT);
@@ -143,7 +141,6 @@ test("R4-T3 — product asOf query is honored (net-worth)", async () => {
 
 test("R4-T4 — yearly report inputHash is derived, not yearly-${y}", async () => {
   const ctx = await setup();
-  if (!ctx) return;
 
   const yearly = await ctx.reports.yearly(
     "user-1",
@@ -162,7 +159,6 @@ test("R4-T4 — yearly report inputHash is derived, not yearly-${y}", async () =
 
 test("R4-T5 — stored snapshot serve does not rematerialize under live path", async () => {
   const ctx = await setup();
-  if (!ctx) return;
 
   const live = await ctx.registry.materializeSnapshots(
     ctx.household.id,

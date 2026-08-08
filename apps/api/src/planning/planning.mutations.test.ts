@@ -1,4 +1,6 @@
 import assert from "node:assert/strict";
+import { requireTestDatabase } from "../testing/require-test-database";
+import { assertFixture, requireDemoHousehold } from "../testing/demo-fixture";
 import { test } from "node:test";
 import { eq } from "drizzle-orm";
 import {
@@ -7,7 +9,6 @@ import {
   updateBudgetLineSchema,
 } from "@ffos/schemas";
 import { getDb } from "../db/client";
-import { households } from "../db/schema";
 import { budgetPeriods, goals, sinkingFunds } from "../db/schema-planning";
 import type { HouseholdAccessService } from "../households/household-access.service";
 import { BudgetService } from "./budget.service";
@@ -43,16 +44,15 @@ test("createGoalSchema defaults type and current", () => {
 });
 
 test("budget line update and goal/fund contributions against DB", async () => {
-  if (!process.env.DATABASE_URL) return;
+  requireTestDatabase();
+  const household = await requireDemoHousehold();
   const db = getDb();
-  const [periodRow] = await db.select().from(budgetPeriods).limit(1);
-  if (!periodRow) return;
-  const [household] = await db
+  const [periodRow] = await db
     .select()
-    .from(households)
-    .where(eq(households.id, periodRow.householdId))
+    .from(budgetPeriods)
+    .where(eq(budgetPeriods.householdId, household.id))
     .limit(1);
-  if (!household) return;
+  assertFixture(periodRow, "a budget period in the demo household");
 
   const access = {
     requireMembership: async () => ({

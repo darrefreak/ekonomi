@@ -1,4 +1,6 @@
 import assert from "node:assert/strict";
+import { requireTestDatabase } from "../testing/require-test-database";
+import { assertFixture } from "../testing/demo-fixture";
 import { test } from "node:test";
 import { and, eq } from "drizzle-orm";
 import type { CurrencyCode } from "@ffos/domain";
@@ -8,14 +10,14 @@ import { opportunities } from "../db/schema-decisions";
 import { OpportunitiesGeneratorService } from "./opportunities-generator.service";
 
 test("OpportunitiesGeneratorService detects and persists deterministic opportunities", async () => {
-  if (!process.env.DATABASE_URL) return;
+  requireTestDatabase();
   const db = getDb();
   const [household] = await db
     .select()
     .from(households)
     .where(eq(households.name, "Familjen Demo"))
     .limit(1);
-  if (!household) return;
+  assertFixture(household, "household");
 
   const generator = new OpportunitiesGeneratorService();
   const currency = (household.baseCurrency || "SEK") as CurrencyCode;

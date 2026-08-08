@@ -1,4 +1,9 @@
 import assert from "node:assert/strict";
+import {
+  requireTestDatabase,
+  requireTestRedis,
+} from "../testing/require-test-database";
+import { assertFixture } from "../testing/demo-fixture";
 import { test } from "node:test";
 import { Queue, Worker } from "bullmq";
 import { eq } from "drizzle-orm";
@@ -7,15 +12,7 @@ import { households } from "../db/schema";
 import { runJobHandler } from "./handlers";
 import { enqueueCalculateMetrics } from "./queue";
 import { jobOptionsFor, jobRegistry } from "./registry";
-
-function redisConnection() {
-  const url = new URL(process.env.REDIS_URL ?? "redis://localhost:6379");
-  return {
-    host: url.hostname,
-    port: Number(url.port || 6379),
-    maxRetriesPerRequest: null as null,
-  };
-}
+import { queueOptions } from "./redis-connection";
 
 test("job registry covers every JobType with a distinct buildJobId", () => {
   const seen = new Set<string>();
@@ -35,14 +32,14 @@ test("runJobHandler executes HEALTH_CHECK without a database", async () => {
 });
 
 test("runJobHandler CALCULATE_METRICS materializes real snapshots", async () => {
-  if (!process.env.DATABASE_URL) return;
+  requireTestDatabase();
   const db = getDb();
   const [household] = await db
     .select()
     .from(households)
     .where(eq(households.name, "Familjen Demo"))
     .limit(1);
-  if (!household) return;
+  assertFixture(household, "household");
 
   const asOf = process.env.DEMO_AS_OF_DATE ?? "2026-08-01";
   const result = await runJobHandler({
@@ -57,14 +54,14 @@ test("runJobHandler CALCULATE_METRICS materializes real snapshots", async () => 
 });
 
 test("runJobHandler GENERATE_OPPORTUNITIES persists deterministic opportunities", async () => {
-  if (!process.env.DATABASE_URL) return;
+  requireTestDatabase();
   const db = getDb();
   const [household] = await db
     .select()
     .from(households)
     .where(eq(households.name, "Familjen Demo"))
     .limit(1);
-  if (!household) return;
+  assertFixture(household, "household");
 
   const result = await runJobHandler({
     type: "GENERATE_OPPORTUNITIES",
@@ -74,20 +71,20 @@ test("runJobHandler GENERATE_OPPORTUNITIES persists deterministic opportunities"
   assert.ok((result as { detectedCount: number }).detectedCount >= 1);
 });
 
-test("enqueue → real Redis worker roundtrip for HEALTH_CHECK", async (t) => {
-  if (!process.env.REDIS_URL) {
-    t.skip("REDIS_URL not set");
-    return;
-  }
+test("enqueue → real Redis worker roundtrip for HEALTH_CHECK", async () => {
+  // A required test that cannot reach its infrastructure has not passed.
+  requireTestRedis();
 
   // Uses an isolated queue name (not the shared production queue) so this
   // test's own Worker is guaranteed to be the sole consumer — avoids flakiness
   // from any other long-running worker process sharing the same Redis.
   const testQueueName = `ffos-jobs-test-${Date.now()}`;
-  const queue = new Queue(testQueueName, { connection: redisConnection() });
-  const worker = new Worker(testQueueName, async (job) => runJobHandler(job.data), {
-    connection: redisConnection(),
-  });
+  const queue = new Queue(testQueueName, queueOptions());
+  const worker = new Worker(
+    testQueueName,
+    async (job) => runJobHandler(job.data),
+    queueOptions(),
+  );
   await worker.waitUntilReady();
 
   try {
@@ -117,12 +114,9 @@ test("enqueue → real Redis worker roundtrip for HEALTH_CHECK", async (t) => {
   }
 });
 
-test("enqueueCalculateMetrics is idempotent per (householdId, asOf) jobId", async (t) => {
-  if (!process.env.REDIS_URL) {
-    t.skip("REDIS_URL not set");
-    return;
-  }
-  if (!process.env.DATABASE_URL) return;
+test("enqueueCalculateMetrics is idempotent per (householdId, asOf) jobId", async () => {
+  requireTestRedis();
+  requireTestDatabase();
 
   const db = getDb();
   const [household] = await db
@@ -130,7 +124,7 @@ test("enqueueCalculateMetrics is idempotent per (householdId, asOf) jobId", asyn
     .from(households)
     .where(eq(households.name, "Familjen Demo"))
     .limit(1);
-  if (!household) return;
+  assertFixture(household, "household");
 
   const asOf = process.env.DEMO_AS_OF_DATE ?? "2026-08-01";
   const firstId = await enqueueCalculateMetrics(household.id, asOf);
