@@ -10,11 +10,18 @@ export function AuthShell({ children }: { children: ReactNode }) {
   const router = useRouter();
   const isLogin = pathname === "/login";
   const isOnboarding = pathname === "/onboarding";
+  const isInvite = pathname === "/invite";
+  const isPublic = isLogin || isInvite;
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
     const authed = hasSession();
     const householdId = getHouseholdId();
+
+    if (isInvite) {
+      setReady(true);
+      return;
+    }
 
     if (isLogin) {
       if (authed && householdId) {
@@ -40,16 +47,16 @@ export function AuthShell({ children }: { children: ReactNode }) {
     }
 
     setReady(true);
-  }, [isLogin, isOnboarding, pathname, router]);
+  }, [isLogin, isOnboarding, isInvite, pathname, router]);
 
   if (!ready) {
     return (
       <div className="flex min-h-screen items-center justify-center px-4 text-sm text-text-secondary">
-        {isLogin ? "Laddar…" : "Kontrollerar inloggning…"}
+        {isPublic ? "Laddar…" : "Kontrollerar inloggning…"}
       </div>
     );
   }
 
-  if (isLogin) return <>{children}</>;
+  if (isPublic) return <>{children}</>;
   return <AppShell>{children}</AppShell>;
 }

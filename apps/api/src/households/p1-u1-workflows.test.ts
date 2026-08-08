@@ -325,3 +325,52 @@ test("P1-U1: createCashIncome mirrors createCashExpense and auto-resolves system
   assert.equal(expenseBook.isSystem, true);
   assert.equal(incomeBook.isSystem, true);
 });
+
+test("P1-U1: opening balance establishes position without period income/expense", async () => {
+  const ctx = await setup();
+  if (!ctx) return;
+  const { household, owner } = ctx;
+
+  const access = new HouseholdAccessService();
+  const audit = new AuditService();
+  const accountsService = new AccountsService(access, audit);
+  const metrics = new (
+    await import("../metrics/household-metrics.service")
+  ).HouseholdMetricsService();
+
+  const asset = await accountsService.create(owner.id, {
+    householdId: household.id,
+    name: "Sparkonto öppning",
+    accountType: "SAVINGS",
+    currency: "SEK",
+    openingBalanceMinor: "5000000", // 50 000 SEK
+    isShared: true,
+  });
+  assert.equal(asset.currentBalance.amountMinor, "5000000");
+
+  const liability = await accountsService.create(owner.id, {
+    householdId: household.id,
+    name: "Lån öppning",
+    accountType: "LOAN",
+    currency: "SEK",
+    openingBalanceMinor: "20000000", // 200 000 SEK
+    isShared: true,
+  });
+  assert.equal(liability.currentBalance.amountMinor, "20000000");
+
+  const asOf = "2026-08-01";
+  const period = await metrics.periodEventTotals(
+    household.id,
+    "2026-08-01",
+    "2026-08-31",
+  );
+  assert.equal(period.incomeMinor, 0n);
+  assert.equal(period.spendingMinor, 0n);
+
+  const snap = await metrics.getFinancialSnapshot(household.id, "SEK", asOf);
+  assert.equal(snap.position.availableCash.amountMinor, 5_000_000n);
+  assert.equal(snap.position.liabilities.amountMinor, 20_000_000n);
+  assert.equal(snap.incomeMinor, 0n);
+  assert.equal(snap.spendingMinor, 0n);
+});
+
