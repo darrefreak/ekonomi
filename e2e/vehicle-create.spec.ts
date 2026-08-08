@@ -12,10 +12,6 @@ test.describe("vehicle create", () => {
   }) => {
     const name = `Begagnad bil ${Date.now()}`;
 
-    await page.goto("/money");
-    const spendingBefore = await page.locator("body").innerText();
-    expect(spendingBefore.length).toBeGreaterThan(0);
-
     await page.goto("/vehicles");
     await page.getByRole("button", { name: /lägg till fordon/i }).click();
     const form = page.getByRole("form", { name: /lägg till fordon/i });

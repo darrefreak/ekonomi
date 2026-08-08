@@ -26,9 +26,11 @@ test.describe("mobile critical paths", () => {
   test("home, money, more and settings render without horizontal overflow", async ({
     page,
   }) => {
-    for (const path of ["/", "/money", "/more", "/settings", "/review"]) {
+    for (const path of ["/", "/transactions", "/more", "/settings", "/review"]) {
       await page.goto(path);
-      await expect(page.locator("main")).toBeVisible();
+      await expect(page.locator("#main-content")).toBeVisible();
+      // A 404 shell also renders #main-content, so assert the real page landed.
+      await expect(page.getByRole("heading").first()).toBeVisible();
       await expectNoHorizontalOverflow(page);
     }
   });
@@ -70,7 +72,7 @@ test.describe("mobile critical paths", () => {
   });
 
   test("transaction detail opens and stays usable", async ({ page }) => {
-    await page.goto("/money");
+    await page.goto("/transactions");
     const firstTx = page.locator('a[href^="/transactions/"]').first();
     await expect(firstTx).toBeVisible({ timeout: 15_000 });
     await firstTx.click();
