@@ -18,6 +18,7 @@ import { minorToKronorInput, kronorToMinorString } from "@/lib/money-input";
 import { CURRENCIES, MEMBER_ROLE_LABELS, PRIVACY_POLICY_LABELS } from "@/lib/account-labels";
 import { ErrorState } from "../feedback/error-state";
 import { LoadingState } from "../feedback/loading-state";
+import { writeStoredAppearance } from "../providers/theme-applicator";
 
 const POLICY_OPTIONS = [
   "FULL_DETAILS",
@@ -1076,9 +1077,6 @@ function AppearanceSection({
   const saveMutation = useMutation({
     mutationFn: async () => {
       const id = await ensureHouseholdSession();
-      const { writeStoredAppearance } = await import(
-        "@/components/providers/theme-applicator"
-      );
       writeStoredAppearance(appearance);
       document.documentElement.classList.toggle(
         "dark",
