@@ -9,6 +9,8 @@ import { getDb } from "../db/client";
 import {
   accountBalanceSnapshots,
   accounts,
+  financialEvents,
+  ledgerEntries,
   ledgerPostings,
 } from "../db/schema-economic";
 import { AuditService } from "../audit/audit.service";
@@ -49,6 +51,7 @@ export class LedgerTruthService {
 
   async loadPostings(householdId: string) {
     const db = getDb();
+    // Only ACTIVE financial events participate in ledger reconstruction (P0-A8).
     return db
       .select({
         accountId: ledgerPostings.accountId,
@@ -56,7 +59,20 @@ export class LedgerTruthService {
         amountMinor: ledgerPostings.amountMinor,
       })
       .from(ledgerPostings)
-      .where(eq(ledgerPostings.householdId, householdId));
+      .innerJoin(
+        ledgerEntries,
+        eq(ledgerPostings.ledgerEntryId, ledgerEntries.id),
+      )
+      .innerJoin(
+        financialEvents,
+        eq(ledgerEntries.financialEventId, financialEvents.id),
+      )
+      .where(
+        and(
+          eq(ledgerPostings.householdId, householdId),
+          eq(financialEvents.status, "ACTIVE"),
+        ),
+      );
   }
 
   /**

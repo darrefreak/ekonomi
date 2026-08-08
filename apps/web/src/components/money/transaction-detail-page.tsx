@@ -20,6 +20,9 @@ export function TransactionDetailPage({ transactionId }: { transactionId: string
   const [tags, setTags] = useState("");
   const [isExcluded, setIsExcluded] = useState(false);
   const [actionError, setActionError] = useState<string | null>(null);
+  const [refundMinor, setRefundMinor] = useState("");
+  const [refundBusy, setRefundBusy] = useState(false);
+  const [refundMsg, setRefundMsg] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -154,6 +157,66 @@ export function TransactionDetailPage({ transactionId }: { transactionId: string
           className="min-h-11 rounded-[12px] bg-accent px-4 text-sm font-medium text-white disabled:opacity-60"
         >
           {saving ? "Sparar…" : "Spara ändringar"}
+        </button>
+      </section>
+
+      <section className="space-y-3 rounded-[16px] bg-surface-elevated p-5">
+        <h2 className="text-sm font-medium text-text-secondary">
+          Återbetalning (ledger)
+        </h2>
+        <p className="text-sm text-text-secondary">
+          Registrerar en kontant återbetalning som minskar periodens utgift — inte
+          som lön/inkomst.
+        </p>
+        <label className="block text-sm">
+          <span className="text-text-secondary">Belopp (öre, heltal)</span>
+          <input
+            value={refundMinor}
+            onChange={(e) => setRefundMinor(e.target.value.replace(/\D/g, ""))}
+            inputMode="numeric"
+            placeholder="50000"
+            className="mt-1 min-h-11 w-full rounded-[12px] border border-border bg-surface px-3"
+          />
+        </label>
+        {refundMsg ? (
+          <p className="text-sm text-text-secondary" role="status">
+            {refundMsg}
+          </p>
+        ) : null}
+        <button
+          type="button"
+          disabled={refundBusy || !refundMinor}
+          onClick={() => {
+            void (async () => {
+              setRefundBusy(true);
+              setRefundMsg(null);
+              setActionError(null);
+              try {
+                const householdId = await ensureHouseholdSession();
+                const result = await api.createCashRefund({
+                  householdId,
+                  cashAccountId: data.accountId,
+                  amountMinor: refundMinor,
+                  occurredOn: data.bookingDate,
+                  description: `Återbetalning för ${data.description ?? data.id}`,
+                  externalId: `ui-refund-${data.id}-${refundMinor}`,
+                });
+                setRefundMsg(
+                  `Sparad återbetalning ${result.id} (utgift ${result.expenseAmountMinor} öre)`,
+                );
+                setRefundMinor("");
+              } catch (err) {
+                setActionError(
+                  err instanceof Error ? err.message : "Kunde inte skapa återbetalning",
+                );
+              } finally {
+                setRefundBusy(false);
+              }
+            })();
+          }}
+          className="min-h-11 rounded-[12px] border border-border bg-surface px-4 text-sm font-medium disabled:opacity-60"
+        >
+          {refundBusy ? "Sparar…" : "Registrera återbetalning"}
         </button>
       </section>
 

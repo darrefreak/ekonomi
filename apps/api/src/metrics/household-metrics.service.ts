@@ -30,8 +30,24 @@ import {
   financialEvents,
   ledgerEntries,
   ledgerPostings,
+  sourceTransactionLinks,
+  sourceTransactions,
 } from "../db/schema-economic";
 import { contracts, subscriptions } from "../db/schema-planning";
+
+/** Period metrics: ACTIVE events only; exclude when primary source tx isExcluded. */
+function activeNonExcludedEventSql() {
+  return sql`${financialEvents.status} = 'ACTIVE'
+    and not exists (
+      select 1
+      from ${sourceTransactionLinks}
+      inner join ${sourceTransactions}
+        on ${sourceTransactions.id} = ${sourceTransactionLinks.sourceTransactionId}
+      where ${sourceTransactionLinks.financialEventId} = ${financialEvents.id}
+        and ${sourceTransactionLinks.role} = 'primary'
+        and ${sourceTransactions.isExcluded} = true
+    )`;
+}
 
 @Injectable()
 export class HouseholdMetricsService {
@@ -56,7 +72,20 @@ export class HouseholdMetricsService {
         amountMinor: ledgerPostings.amountMinor,
       })
       .from(ledgerPostings)
-      .where(eq(ledgerPostings.householdId, householdId));
+      .innerJoin(
+        ledgerEntries,
+        eq(ledgerPostings.ledgerEntryId, ledgerEntries.id),
+      )
+      .innerJoin(
+        financialEvents,
+        eq(ledgerEntries.financialEventId, financialEvents.id),
+      )
+      .where(
+        and(
+          eq(ledgerPostings.householdId, householdId),
+          eq(financialEvents.status, "ACTIVE"),
+        ),
+      );
 
     const ledger = reconstructBalances({
       openings: accountRows.map((a) => ({
@@ -81,6 +110,14 @@ export class HouseholdMetricsService {
     accountRows: Awaited<ReturnType<HouseholdMetricsService["getAccountRows"]>>,
     currency: CurrencyCode,
   ) {
+    // V1: household position aggregation is SEK-only — never silent-cross-currency sum.
+    for (const a of accountRows) {
+      if (a.currency !== currency) {
+        throw new Error(
+          `V1 multi-currency aggregation unsupported: account ${a.id} is ${a.currency}, household base is ${currency}`,
+        );
+      }
+    }
     const buckets = bucketBalancesForNetWorth(
       accountRows.map((a) => ({
         accountType: a.accountType,
@@ -138,7 +175,16 @@ export class HouseholdMetricsService {
       })
       .from(ledgerPostings)
       .innerJoin(ledgerEntries, eq(ledgerPostings.ledgerEntryId, ledgerEntries.id))
-      .where(eq(ledgerPostings.householdId, householdId));
+      .innerJoin(
+        financialEvents,
+        eq(ledgerEntries.financialEventId, financialEvents.id),
+      )
+      .where(
+        and(
+          eq(ledgerPostings.householdId, householdId),
+          eq(financialEvents.status, "ACTIVE"),
+        ),
+      );
 
     // Authoritative openings from persisted account.openingBalanceMinor.
     const openings = accountRows.map((a) => ({
@@ -255,6 +301,7 @@ export class HouseholdMetricsService {
           eq(financialEvents.householdId, householdId),
           gte(financialEvents.occurredOn, startDate),
           lte(financialEvents.occurredOn, endDate),
+          activeNonExcludedEventSql(),
         ),
       );
     return {
@@ -282,6 +329,7 @@ export class HouseholdMetricsService {
           eq(financialEvents.householdId, householdId),
           gte(financialEvents.occurredOn, start),
           lte(financialEvents.occurredOn, end),
+          activeNonExcludedEventSql(),
         ),
       )
       .groupBy(sql`to_char(${financialEvents.occurredOn}, 'YYYY-MM')`);
@@ -321,6 +369,7 @@ export class HouseholdMetricsService {
             eq(financialEvents.householdId, householdId),
             gte(financialEvents.occurredOn, start),
             lte(financialEvents.occurredOn, end),
+            activeNonExcludedEventSql(),
           ),
         )
         .groupBy(categories.key, categories.name);
@@ -595,6 +644,7 @@ export class HouseholdMetricsService {
           gte(financialEvents.occurredOn, start),
           lte(financialEvents.occurredOn, end),
           sql`${financialEvents.debtReductionMinor} > 0`,
+          activeNonExcludedEventSql(),
         ),
       );
     const interest = BigInt(row?.interest ?? "0");
