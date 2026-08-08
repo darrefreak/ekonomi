@@ -1,6 +1,7 @@
 import { Inject, Injectable } from "@nestjs/common";
 import { HouseholdAccessService } from "../households/household-access.service";
 import { HouseholdMetricsService } from "../metrics/household-metrics.service";
+import { resolveHouseholdAsOf } from "../common/as-of";
 
 @Injectable()
 export class FinancialCoverageService {
@@ -12,7 +13,7 @@ export class FinancialCoverageService {
 
   async get(userId: string, householdId: string) {
     await this.access.requireMembership(userId, householdId);
-    const asOf = process.env.DEMO_AS_OF_DATE ?? "2026-08-01";
+    const asOf = await resolveHouseholdAsOf(householdId);
     return this.metrics.coverage(householdId, asOf);
   }
 }

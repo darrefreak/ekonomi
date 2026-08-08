@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import type { VehiclesResponse } from "@ffos/schemas";
 import { api } from "@/lib/api";
@@ -9,12 +10,15 @@ import { MoneyValue } from "../financial/money-value";
 import { EmptyState } from "../feedback/empty-state";
 import { ErrorState } from "../feedback/error-state";
 import { LoadingState } from "../feedback/loading-state";
+import { AddVehicleForm } from "./add-vehicle-form";
 import { VehicleHouseholdNav } from "./vehicle-subnav";
 
 export function VehiclesPage() {
+  const router = useRouter();
   const [data, setData] = useState<VehiclesResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [adding, setAdding] = useState(false);
 
   useEffect(() => {
     void ensureHouseholdSession()
@@ -43,7 +47,24 @@ export function VehiclesPage() {
         <div className="mt-3">
           <VehicleHouseholdNav active="/vehicles" />
         </div>
+        <button
+          type="button"
+          onClick={() => setAdding((v) => !v)}
+          className="mt-4 min-h-11 rounded-[12px] bg-accent px-4 text-sm font-medium text-white"
+        >
+          {adding ? "Stäng formuläret" : "Lägg till fordon"}
+        </button>
       </div>
+
+      {adding ? (
+        <AddVehicleForm
+          onCancel={() => setAdding(false)}
+          onCreated={(vehicleId) => {
+            setAdding(false);
+            router.push(`/vehicles/${vehicleId}`);
+          }}
+        />
+      ) : null}
 
       {data.items.length === 0 ? (
         <EmptyState

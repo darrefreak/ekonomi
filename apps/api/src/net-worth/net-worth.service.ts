@@ -2,6 +2,7 @@ import { Inject, Injectable } from "@nestjs/common";
 import { money, moneyToJson, type CurrencyCode } from "@ffos/domain";
 import { HouseholdAccessService } from "../households/household-access.service";
 import { HouseholdMetricsService } from "../metrics/household-metrics.service";
+import { resolveHouseholdAsOf } from "../common/as-of";
 
 @Injectable()
 export class NetWorthService {
@@ -14,7 +15,7 @@ export class NetWorthService {
   async get(userId: string, householdId: string, asOfInput?: string) {
     const { household } = await this.access.requireMembership(userId, householdId);
     const currency = (household.baseCurrency || "SEK") as CurrencyCode;
-    const asOf = asOfInput ?? process.env.DEMO_AS_OF_DATE ?? "2026-08-01";
+    const asOf = await resolveHouseholdAsOf(householdId, asOfInput);
     const snap = await this.metrics.getFinancialSnapshot(
       householdId,
       currency,

@@ -20,6 +20,7 @@ import {
 import { HouseholdAccessService } from "../households/household-access.service";
 import { LedgerTruthService } from "../ledger/ledger-truth.service";
 import { AuditService } from "../audit/audit.service";
+import { resolveHouseholdAsOf } from "../common/as-of";
 
 const USER_ACCOUNT_TYPES = new Set([
   "CHECKING",
@@ -348,7 +349,7 @@ export class AccountsService {
             .orderBy(asc(accountBalanceSnapshots.asOf))
         : [];
 
-    const asOf = process.env.DEMO_AS_OF_DATE ?? "2026-08-01";
+    const asOf = await resolveHouseholdAsOf(householdId);
     const monthStart = `${asOf.slice(0, 7)}-01`;
     const [period] =
       visibility === "full" || visibility === "balance"

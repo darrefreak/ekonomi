@@ -30,6 +30,8 @@ import {
 import { AuthGuard } from "../auth/auth.guard";
 import { CurrentUser } from "../auth/current-user.decorator";
 import type { AuthenticatedUser } from "../auth/auth.types";
+import { resolveHouseholdAsOf } from "../common/as-of";
+import { IdempotencyKey } from "../common/idempotency-key.decorator";
 import { ZodValidationPipe } from "../common/zod-validation.pipe";
 import { HouseholdAccessService } from "../households/household-access.service";
 import { enqueueReconcileAccountBalances } from "../jobs/queue";
@@ -56,7 +58,7 @@ export class LedgerController {
   ) {
     const q = ledgerBalancesQuerySchema.parse(query);
     await this.access.requireMembership(user.userId, q.householdId);
-    const asOf = q.asOf ?? process.env.DEMO_AS_OF_DATE ?? "2026-08-01";
+    const asOf = await resolveHouseholdAsOf(q.householdId, q.asOf);
     const rows = await this.ledger.getAuthoritativeBalances(q.householdId, asOf);
     return {
       asOf,
@@ -83,7 +85,7 @@ export class LedgerController {
   ) {
     const q = ledgerReconcileBodySchema.parse(body);
     await this.access.requireCanWrite(user.userId, q.householdId);
-    const asOf = q.asOf ?? process.env.DEMO_AS_OF_DATE ?? "2026-08-01";
+    const asOf = await resolveHouseholdAsOf(q.householdId, q.asOf);
     await enqueueReconcileAccountBalances(q.householdId, asOf);
     return this.ledger.reconcileHousehold(q.householdId, asOf);
   }
@@ -92,6 +94,7 @@ export class LedgerController {
   async internalTransfer(
     @CurrentUser() user: AuthenticatedUser,
     @Body(new ZodValidationPipe(createInternalTransferSchema)) body: unknown,
+    @IdempotencyKey() idempotencyKey?: string,
   ) {
     const input = createInternalTransferSchema.parse(body);
     await this.access.requireCanWrite(user.userId, input.householdId);
@@ -103,6 +106,7 @@ export class LedgerController {
       occurredOn: input.occurredOn,
       description: input.description,
       externalId: input.externalId,
+      idempotencyKey,
     });
     return { id: event.id, eventType: event.eventType, status: event.status };
   }
@@ -111,6 +115,7 @@ export class LedgerController {
   async creditCardPurchase(
     @CurrentUser() user: AuthenticatedUser,
     @Body(new ZodValidationPipe(createCreditCardPurchaseSchema)) body: unknown,
+    @IdempotencyKey() idempotencyKey?: string,
   ) {
     const input = createCreditCardPurchaseSchema.parse(body);
     await this.access.requireCanWrite(user.userId, input.householdId);
@@ -122,6 +127,7 @@ export class LedgerController {
       occurredOn: input.occurredOn,
       description: input.description,
       categoryId: input.categoryId,
+      idempotencyKey,
     });
     return { id: event.id, eventType: event.eventType, status: event.status };
   }
@@ -130,6 +136,7 @@ export class LedgerController {
   async creditCardPayment(
     @CurrentUser() user: AuthenticatedUser,
     @Body(new ZodValidationPipe(createCreditCardPaymentSchema)) body: unknown,
+    @IdempotencyKey() idempotencyKey?: string,
   ) {
     const input = createCreditCardPaymentSchema.parse(body);
     await this.access.requireCanWrite(user.userId, input.householdId);
@@ -140,6 +147,7 @@ export class LedgerController {
       amountMinor: BigInt(input.amountMinor),
       occurredOn: input.occurredOn,
       description: input.description,
+      idempotencyKey,
     });
     return { id: event.id, eventType: event.eventType, status: event.status };
   }
@@ -148,6 +156,7 @@ export class LedgerController {
   async mortgagePayment(
     @CurrentUser() user: AuthenticatedUser,
     @Body(new ZodValidationPipe(createMortgagePaymentSchema)) body: unknown,
+    @IdempotencyKey() idempotencyKey?: string,
   ) {
     const input = createMortgagePaymentSchema.parse(body);
     await this.access.requireCanWrite(user.userId, input.householdId);
@@ -160,6 +169,7 @@ export class LedgerController {
       interestMinor: BigInt(input.interestMinor),
       occurredOn: input.occurredOn,
       description: input.description,
+      idempotencyKey,
     });
     return { id: event.id, eventType: event.eventType, status: event.status };
   }
@@ -168,6 +178,7 @@ export class LedgerController {
   async investmentTransfer(
     @CurrentUser() user: AuthenticatedUser,
     @Body(new ZodValidationPipe(createInvestmentTransferSchema)) body: unknown,
+    @IdempotencyKey() idempotencyKey?: string,
   ) {
     const input = createInvestmentTransferSchema.parse(body);
     await this.access.requireCanWrite(user.userId, input.householdId);
@@ -178,6 +189,7 @@ export class LedgerController {
       amountMinor: BigInt(input.amountMinor),
       occurredOn: input.occurredOn,
       description: input.description,
+      idempotencyKey,
     });
     return { id: event.id, eventType: event.eventType, status: event.status };
   }
@@ -186,6 +198,7 @@ export class LedgerController {
   async assetDepreciation(
     @CurrentUser() user: AuthenticatedUser,
     @Body(new ZodValidationPipe(createAssetDepreciationSchema)) body: unknown,
+    @IdempotencyKey() idempotencyKey?: string,
   ) {
     const input = createAssetDepreciationSchema.parse(body);
     await this.access.requireCanWrite(user.userId, input.householdId);
@@ -197,6 +210,7 @@ export class LedgerController {
       occurredOn: input.occurredOn,
       description: input.description,
       vehicleId: input.vehicleId,
+      idempotencyKey,
     });
     return {
       id: event.id,
@@ -211,6 +225,7 @@ export class LedgerController {
   async createCashExpense(
     @CurrentUser() user: AuthenticatedUser,
     @Body(new ZodValidationPipe(createCashExpenseSchema)) body: unknown,
+    @IdempotencyKey() idempotencyKey?: string,
   ) {
     const input = createCashExpenseSchema.parse(body);
     await this.access.requireCanWrite(user.userId, input.householdId);
@@ -225,6 +240,7 @@ export class LedgerController {
       merchantName: input.merchantName,
       notes: input.notes,
       externalId: input.externalId,
+      idempotencyKey,
     });
     return {
       id: event.id,
@@ -238,6 +254,7 @@ export class LedgerController {
   async createCashIncome(
     @CurrentUser() user: AuthenticatedUser,
     @Body(new ZodValidationPipe(createCashIncomeSchema)) body: unknown,
+    @IdempotencyKey() idempotencyKey?: string,
   ) {
     const input = createCashIncomeSchema.parse(body);
     await this.access.requireCanWrite(user.userId, input.householdId);
@@ -252,6 +269,7 @@ export class LedgerController {
       merchantName: input.merchantName,
       notes: input.notes,
       externalId: input.externalId,
+      idempotencyKey,
     });
     return {
       id: event.id,
@@ -265,6 +283,7 @@ export class LedgerController {
   async cashRefund(
     @CurrentUser() user: AuthenticatedUser,
     @Body(new ZodValidationPipe(createCashRefundSchema)) body: unknown,
+    @IdempotencyKey() idempotencyKey?: string,
   ) {
     const input = createCashRefundSchema.parse(body);
     await this.access.requireCanWrite(user.userId, input.householdId);
@@ -276,6 +295,7 @@ export class LedgerController {
       occurredOn: input.occurredOn,
       description: input.description,
       externalId: input.externalId,
+      idempotencyKey,
     });
     return {
       id: event.id,
@@ -289,6 +309,7 @@ export class LedgerController {
   async assetPurchase(
     @CurrentUser() user: AuthenticatedUser,
     @Body(new ZodValidationPipe(createAssetPurchaseSchema)) body: unknown,
+    @IdempotencyKey() idempotencyKey?: string,
   ) {
     const input = createAssetPurchaseSchema.parse(body);
     await this.access.requireCanWrite(user.userId, input.householdId);
@@ -301,6 +322,7 @@ export class LedgerController {
       description: input.description,
       vehicleId: input.vehicleId,
       externalId: input.externalId,
+      idempotencyKey,
     });
     return { id: event.id, eventType: event.eventType, status: event.status };
   }
@@ -310,6 +332,7 @@ export class LedgerController {
     @CurrentUser() user: AuthenticatedUser,
     @Body(new ZodValidationPipe(createFinancedAssetPurchaseSchema))
     body: unknown,
+    @IdempotencyKey() idempotencyKey?: string,
   ) {
     const input = createFinancedAssetPurchaseSchema.parse(body);
     await this.access.requireCanWrite(user.userId, input.householdId);
@@ -324,6 +347,7 @@ export class LedgerController {
       description: input.description,
       vehicleId: input.vehicleId,
       externalId: input.externalId,
+      idempotencyKey,
     });
     return { id: event.id, eventType: event.eventType, status: event.status };
   }
@@ -336,7 +360,7 @@ export class LedgerController {
   ) {
     const input = replaceEventSplitsBodySchema.parse(body);
     await this.access.requireCanWrite(user.userId, input.householdId);
-    const asOf = process.env.DEMO_AS_OF_DATE ?? "2026-08-01";
+    const asOf = await resolveHouseholdAsOf(input.householdId);
     const event = await this.events.replaceSplits({
       householdId: input.householdId,
       financialEventId: eventId,

@@ -7,6 +7,7 @@ import { moneyFromJson } from "@ffos/domain";
 import { formatMoney } from "@ffos/utils";
 import { api } from "@/lib/api";
 import { ensureHouseholdSession } from "@/lib/session";
+import { useSubmissionKey } from "@/lib/idempotency";
 import { kronorToMinorString } from "@/lib/money-input";
 import { queryKeys } from "@/lib/query-keys";
 
@@ -60,6 +61,7 @@ export function NewTransactionForm({
   onDone: () => void;
 }) {
   const queryClient = useQueryClient();
+  const submissionKey = useSubmissionKey();
   const [kind, setKind] = useState<Kind>("EXPENSE");
   const [accountId, setAccountId] = useState("");
   const [toAccountId, setToAccountId] = useState("");
@@ -135,6 +137,9 @@ export function NewTransactionForm({
 
   const createMutation = useMutation({
     mutationFn: async () => {
+      // One key per user submission: a double-tap or retry reuses it, so the
+      // server returns the first result instead of booking a second event.
+      const mutationOpts = { idempotencyKey: submissionKey.current() };
       const id = await ensureHouseholdSession();
       if (!accountId) throw new Error("Välj ett konto.");
       if (!occurredOn) throw new Error("Ange ett datum.");
@@ -157,7 +162,7 @@ export function NewTransactionForm({
           interestMinor,
           occurredOn,
           description: description.trim() || undefined,
-        });
+        }, mutationOpts);
       }
 
       const amountMinor = kronorToMinorString(amount);
@@ -174,7 +179,7 @@ export function NewTransactionForm({
           description: description.trim() || undefined,
           categoryId: categoryId || undefined,
           merchantName: merchantName.trim() || undefined,
-        });
+        }, mutationOpts);
       }
       if (kind === "INCOME") {
         return api.createCashIncome({
@@ -185,7 +190,7 @@ export function NewTransactionForm({
           description: description.trim() || undefined,
           categoryId: categoryId || undefined,
           merchantName: merchantName.trim() || undefined,
-        });
+        }, mutationOpts);
       }
       if (kind === "TRANSFER") {
         if (!toAccountId) throw new Error("Välj mottagarkonto.");
@@ -199,7 +204,7 @@ export function NewTransactionForm({
           amountMinor,
           occurredOn,
           description: description.trim() || undefined,
-        });
+        }, mutationOpts);
       }
       if (kind === "REFUND") {
         return api.createCashRefund({
@@ -208,7 +213,7 @@ export function NewTransactionForm({
           amountMinor,
           occurredOn,
           description: description.trim() || undefined,
-        });
+        }, mutationOpts);
       }
       if (kind === "CREDIT_CARD_PURCHASE") {
         return api.createCreditCardPurchase({
@@ -217,7 +222,7 @@ export function NewTransactionForm({
           amountMinor,
           occurredOn,
           description: description.trim() || undefined,
-        });
+        }, mutationOpts);
       }
       if (kind === "CREDIT_CARD_PAYMENT") {
         if (!toAccountId) throw new Error("Välj kreditkort.");
@@ -228,7 +233,7 @@ export function NewTransactionForm({
           amountMinor,
           occurredOn,
           description: description.trim() || undefined,
-        });
+        }, mutationOpts);
       }
       // INVESTMENT_TRANSFER
       if (!toAccountId) throw new Error("Välj investeringskonto.");
@@ -239,10 +244,11 @@ export function NewTransactionForm({
         amountMinor,
         occurredOn,
         description: description.trim() || undefined,
-      });
+      }, mutationOpts);
     },
     onSuccess: async () => {
       setFormError(null);
+      submissionKey.renew();
       resetForm();
       await invalidateAfterMutation();
       onDone();

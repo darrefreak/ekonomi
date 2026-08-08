@@ -306,18 +306,34 @@ export class HouseholdMetricsService {
     }
   }
 
+  /**
+   * Net worth history, one bucket per requested date.
+   *
+   * Canonical rule (RT-004): a bucket holds exactly one balance per account.
+   * Several writers (seed reconstruct, reconcile, manual opening, history
+   * reconstruct) can leave more than one snapshot row for the same account and
+   * day, so rows are deduplicated per (account, day) with the most recent write
+   * winning, and only the requested bucket dates are returned. The final bucket
+   * is the authoritative position at `asOf` — never an extra appended point.
+   */
   async netWorthHistoryFromSnapshots(
     householdId: string,
     currency: CurrencyCode,
     asOf: string,
   ) {
-    await this.ensureNetWorthHistorySnapshots(householdId, asOf, 6);
+    const monthsBack = 6;
+    await this.ensureNetWorthHistorySnapshots(householdId, asOf, monthsBack);
     const db = getDb();
+    const bucketDates = monthEndDates(asOf, monthsBack);
+    const wanted = new Set(bucketDates);
+
     const rows = await db
       .select({
+        id: accountBalanceSnapshots.id,
         asOf: accountBalanceSnapshots.asOf,
         accountId: accountBalanceSnapshots.accountId,
         balanceMinor: accountBalanceSnapshots.ledgerCalculatedBalanceMinor,
+        source: accountBalanceSnapshots.source,
         accountType: accounts.accountType,
       })
       .from(accountBalanceSnapshots)
@@ -330,23 +346,52 @@ export class HouseholdMetricsService {
       )
       .orderBy(asc(accountBalanceSnapshots.asOf));
 
-    const byDate = new Map<string, Array<{ accountType: string; balanceMinor: bigint }>>();
+    type Candidate = {
+      accountType: string;
+      balanceMinor: bigint;
+      rank: number;
+      id: string;
+    };
+    // Higher rank wins when two writers produced the same (account, day).
+    const sourceRank = (source: string | null) =>
+      source === "nw_history_reconstruct"
+        ? 3
+        : source === "ledger_reconcile"
+          ? 2
+          : source === "ledger_reconstruct"
+            ? 1
+            : 0;
+
+    const byDate = new Map<string, Map<string, Candidate>>();
     for (const row of rows) {
       if (row.accountType === "EXPENSE" || row.accountType === "INCOME") continue;
       const key = row.asOf.toISOString().slice(0, 10);
-      const list = byDate.get(key) ?? [];
-      list.push({
+      if (!wanted.has(key)) continue;
+      const perAccount = byDate.get(key) ?? new Map<string, Candidate>();
+      const candidate: Candidate = {
         accountType: row.accountType,
         balanceMinor: row.balanceMinor ?? 0n,
-      });
-      byDate.set(key, list);
+        rank: sourceRank(row.source),
+        id: row.id,
+      };
+      const existing = perAccount.get(row.accountId);
+      if (
+        !existing ||
+        candidate.rank > existing.rank ||
+        (candidate.rank === existing.rank && candidate.id > existing.id)
+      ) {
+        perAccount.set(row.accountId, candidate);
+      }
+      byDate.set(key, perAccount);
     }
 
-    return [...byDate.entries()]
-      .sort(([a], [b]) => a.localeCompare(b))
-      .map(([date, balances]) => ({
+    return bucketDates
+      .filter((date) => byDate.has(date))
+      .map((date) => ({
         asOf: date,
-        netWorth: moneyToJson(netWorthFromTypedBalances(balances, currency)),
+        netWorth: moneyToJson(
+          netWorthFromTypedBalances([...byDate.get(date)!.values()], currency),
+        ),
         source: "account_balance_snapshots" as const,
       }));
   }

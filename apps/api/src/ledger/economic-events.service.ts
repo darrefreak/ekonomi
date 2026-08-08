@@ -43,6 +43,7 @@ import { AuditService } from "../audit/audit.service";
 import { invalidateAfterEconomicMutation } from "../jobs/invalidation";
 import { MerchantsService } from "../merchants/merchants.service";
 import { logger } from "../common/logger";
+import { resolveHouseholdAsOf } from "../common/as-of";
 
 async function requireAccount(
   householdId: string,
@@ -132,6 +133,7 @@ export class EconomicEventsService {
     incomeAmountMinor?: bigint;
     sourceType?: string;
     externalId?: string;
+    idempotencyKey?: string;
     vehicleId?: string;
     commandType?: FinancialCommandType;
     failPoint?: PersistFailPoint;
@@ -141,6 +143,7 @@ export class EconomicEventsService {
         ...input,
         sourceType: input.sourceType ?? "api",
         externalId: input.externalId,
+        idempotencyKey: input.idempotencyKey,
         vehicleId: input.vehicleId,
         commandType: input.commandType ?? "LEDGER_EVENT",
         audit: {
@@ -165,6 +168,7 @@ export class EconomicEventsService {
     description?: string;
     currency?: CurrencyCode;
     externalId?: string;
+    idempotencyKey?: string;
     failPoint?: PersistFailPoint;
   }) {
     if (input.amountMinor <= 0n) {
@@ -201,6 +205,7 @@ export class EconomicEventsService {
       isInternalTransfer: true,
       transferGroupId,
       externalId,
+      idempotencyKey: input.idempotencyKey,
       commandType: "INTERNAL_TRANSFER",
       counterpartTx: {
         accountId: input.toAccountId,
@@ -223,6 +228,7 @@ export class EconomicEventsService {
     merchantId?: string;
     currency?: CurrencyCode;
     externalId?: string;
+    idempotencyKey?: string;
   }) {
     await requireAccount(input.householdId, input.creditCardAccountId, [
       "CREDIT_CARD",
@@ -247,6 +253,7 @@ export class EconomicEventsService {
       sourceAccountId: input.creditCardAccountId,
       sourceAmountMinor: -input.amountMinor,
       externalId: input.externalId,
+      idempotencyKey: input.idempotencyKey,
       commandType: "CREDIT_CARD_PURCHASE",
     });
   }
@@ -260,6 +267,7 @@ export class EconomicEventsService {
     description?: string;
     currency?: CurrencyCode;
     externalId?: string;
+    idempotencyKey?: string;
   }) {
     await requireAccount(input.householdId, input.cashAccountId, [
       "CHECKING",
@@ -286,6 +294,7 @@ export class EconomicEventsService {
       sourceAccountId: input.cashAccountId,
       sourceAmountMinor: -input.amountMinor,
       externalId,
+      idempotencyKey: input.idempotencyKey,
       commandType: "CREDIT_CARD_PAYMENT",
     });
   }
@@ -301,6 +310,7 @@ export class EconomicEventsService {
     description?: string;
     currency?: CurrencyCode;
     externalId?: string;
+    idempotencyKey?: string;
   }) {
     await requireAccount(input.householdId, input.cashAccountId, [
       "CHECKING",
@@ -334,6 +344,7 @@ export class EconomicEventsService {
       sourceAccountId: input.cashAccountId,
       sourceAmountMinor: -total,
       externalId: input.externalId,
+      idempotencyKey: input.idempotencyKey,
       commandType: "MORTGAGE_PAYMENT",
       splits: [
         {
@@ -357,6 +368,7 @@ export class EconomicEventsService {
     description?: string;
     currency?: CurrencyCode;
     externalId?: string;
+    idempotencyKey?: string;
   }) {
     await requireAccount(input.householdId, input.cashAccountId, [
       "CHECKING",
@@ -382,6 +394,7 @@ export class EconomicEventsService {
       sourceAccountId: input.cashAccountId,
       sourceAmountMinor: -input.amountMinor,
       externalId: input.externalId,
+      idempotencyKey: input.idempotencyKey,
       commandType: "INVESTMENT_TRANSFER",
     });
   }
@@ -451,6 +464,7 @@ export class EconomicEventsService {
     description?: string;
     currency?: CurrencyCode;
     externalId?: string;
+    idempotencyKey?: string;
   }) {
     await requireAccount(input.householdId, input.cashAccountId);
     const expenseAccountId =
@@ -472,6 +486,7 @@ export class EconomicEventsService {
       sourceAmountMinor: input.amountMinor,
       incomeAmountMinor: 0n,
       externalId: input.externalId,
+      idempotencyKey: input.idempotencyKey,
       commandType: "CASH_REFUND",
     });
   }
@@ -486,6 +501,7 @@ export class EconomicEventsService {
     vehicleId?: string;
     currency?: CurrencyCode;
     externalId?: string;
+    idempotencyKey?: string;
   }) {
     if (input.amountMinor <= 0n) {
       throw new BadRequestException("amountMinor must be positive");
@@ -513,6 +529,7 @@ export class EconomicEventsService {
       externalId:
         input.externalId ??
         `api-purchase-${input.assetAccountId}-${input.occurredOn}-${input.amountMinor}`,
+      idempotencyKey: input.idempotencyKey,
       commandType: "LEDGER_EVENT",
     });
   }
@@ -529,6 +546,7 @@ export class EconomicEventsService {
     vehicleId?: string;
     currency?: CurrencyCode;
     externalId?: string;
+    idempotencyKey?: string;
   }) {
     await requireAccount(input.householdId, input.cashAccountId, [
       "CHECKING",
@@ -559,6 +577,7 @@ export class EconomicEventsService {
       externalId:
         input.externalId ??
         `api-financed-${input.assetAccountId}-${input.occurredOn}-${input.purchasePriceMinor}`,
+      idempotencyKey: input.idempotencyKey,
       commandType: "LEDGER_EVENT",
     });
   }
@@ -607,7 +626,7 @@ export class EconomicEventsService {
     financialEventId: string;
   }) {
     const db = getDb();
-    const asOf = process.env.DEMO_AS_OF_DATE ?? "2026-08-01";
+    const asOf = await resolveHouseholdAsOf(input.householdId);
     try {
       const event = await db.transaction(async (tx) => {
         const [existing] = await tx
@@ -677,6 +696,7 @@ export class EconomicEventsService {
     vehicleId?: string;
     currency?: CurrencyCode;
     externalId?: string;
+    idempotencyKey?: string;
     failPoint?: PersistFailPoint;
   }) {
     if (input.amountMinor <= 0n) {
@@ -721,6 +741,7 @@ export class EconomicEventsService {
       externalId:
         input.externalId ??
         `api-depr-${input.assetAccountId}-${input.occurredOn}-${input.amountMinor}`,
+      idempotencyKey: input.idempotencyKey,
       commandType: "ASSET_DEPRECIATION",
       failPoint: input.failPoint,
       // No cash source transaction — non-cash write-down (cashflow 0).
@@ -791,6 +812,7 @@ export class EconomicEventsService {
     notes?: string;
     currency?: CurrencyCode;
     externalId?: string;
+    idempotencyKey?: string;
   }) {
     await requireAccount(input.householdId, input.cashAccountId, [
       "CHECKING",
@@ -822,6 +844,7 @@ export class EconomicEventsService {
       sourceAccountId: input.cashAccountId,
       sourceAmountMinor: -input.amountMinor,
       externalId: input.externalId,
+      idempotencyKey: input.idempotencyKey,
       commandType: "LEDGER_EVENT",
     });
   }
@@ -839,6 +862,7 @@ export class EconomicEventsService {
     notes?: string;
     currency?: CurrencyCode;
     externalId?: string;
+    idempotencyKey?: string;
   }) {
     if (input.amountMinor <= 0n) {
       throw new BadRequestException("amountMinor must be positive");
@@ -874,6 +898,7 @@ export class EconomicEventsService {
       sourceAmountMinor: input.amountMinor,
       incomeAmountMinor: input.amountMinor,
       externalId: input.externalId,
+      idempotencyKey: input.idempotencyKey,
       commandType: "LEDGER_EVENT",
     });
   }

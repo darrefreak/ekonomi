@@ -23,6 +23,8 @@ import {
   merchantNormalizeResponseSchema,
   verifyMerchantAliasSchema,
   verifyMerchantAliasResponseSchema,
+  createVehicleSchema,
+  updateVehicleSchema,
   createVehicleCandidateSchema,
   createVehicleCandidateFromListingSchema,
   updateVehicleCandidateSchema,
@@ -102,6 +104,8 @@ import {
   type MerchantsResponse,
   type MerchantNormalizeResponse,
   type VerifyMerchantAliasInput,
+  type CreateVehicleInput,
+  type UpdateVehicleInput,
   type CreateVehicleCandidateInput,
   type CreateVehicleCandidateFromListingInput,
   type UpdateVehicleCandidateInput,
@@ -194,6 +198,12 @@ export type ApiClientOptions = {
   fetchImpl?: typeof fetch;
 };
 
+/** Options accepted by money-mutating client calls. */
+export type MutationOptions = {
+  /** Stable per-user-submission key; retries of the same intent must reuse it. */
+  idempotencyKey?: string;
+};
+
 export type AuthTokens = {
   accessToken: string;
   refreshToken: string;
@@ -240,12 +250,23 @@ export function createApiClient(options: ApiClientOptions) {
 
   async function request<T>(
     path: string,
-    init?: RequestInit & { skipAuth?: boolean; skipRefresh?: boolean },
+    init?: RequestInit & {
+      skipAuth?: boolean;
+      skipRefresh?: boolean;
+      /**
+       * Command identity for money mutations. Survives the silent 401 refresh
+       * retry below, so one user intent produces one economic effect.
+       */
+      idempotencyKey?: string;
+    },
   ): Promise<T> {
     const headers = new Headers(init?.headers);
     headers.set("Accept", "application/json");
     if (init?.body && !headers.has("Content-Type")) {
       headers.set("Content-Type", "application/json");
+    }
+    if (init?.idempotencyKey) {
+      headers.set("Idempotency-Key", init.idempotencyKey);
     }
     if (!init?.skipAuth) {
       const token = options.getAccessToken?.();
@@ -527,7 +548,7 @@ export function createApiClient(options: ApiClientOptions) {
       occurredOn: string;
       description?: string;
       externalId?: string;
-    }) => {
+    }, opts?: MutationOptions) => {
       const data = await request<{
         id: string;
         eventType: string;
@@ -536,20 +557,35 @@ export function createApiClient(options: ApiClientOptions) {
       }>("/api/v1/ledger/refunds", {
         method: "POST",
         body: JSON.stringify(input),
+        idempotencyKey: opts?.idempotencyKey,
       });
       return data;
     },
-    createCashExpense: async (input: CreateCashExpenseInput) => {
+    createCashExpense: async (
+      input: CreateCashExpenseInput,
+      opts?: MutationOptions,
+    ) => {
       const data = await request<{ id: string; eventType: string; status: string }>(
         "/api/v1/ledger/expenses",
-        { method: "POST", body: JSON.stringify(input) },
+        {
+          method: "POST",
+          body: JSON.stringify(input),
+          idempotencyKey: opts?.idempotencyKey,
+        },
       );
       return data;
     },
-    createCashIncome: async (input: CreateCashIncomeInput) => {
+    createCashIncome: async (
+      input: CreateCashIncomeInput,
+      opts?: MutationOptions,
+    ) => {
       const data = await request<{ id: string; eventType: string; status: string }>(
         "/api/v1/ledger/income",
-        { method: "POST", body: JSON.stringify(input) },
+        {
+          method: "POST",
+          body: JSON.stringify(input),
+          idempotencyKey: opts?.idempotencyKey,
+        },
       );
       return data;
     },
@@ -561,60 +597,89 @@ export function createApiClient(options: ApiClientOptions) {
       occurredOn: string;
       description?: string;
       externalId?: string;
-    }) => {
+    }, opts?: MutationOptions) => {
       const data = await request<{ id: string; eventType: string; status: string }>(
         "/api/v1/ledger/transfers/internal",
-        { method: "POST", body: JSON.stringify(input) },
+        {
+          method: "POST",
+          body: JSON.stringify(input),
+          idempotencyKey: opts?.idempotencyKey,
+        },
       );
       return data;
     },
-    createCreditCardPurchase: async (input: CreateCreditCardPurchaseInput) => {
+    createCreditCardPurchase: async (input: CreateCreditCardPurchaseInput, opts?: MutationOptions) => {
       const body = createCreditCardPurchaseSchema.parse(input);
       const data = await request<{ id: string; eventType: string; status: string }>(
         "/api/v1/ledger/credit-card/purchase",
-        { method: "POST", body: JSON.stringify(body) },
+        {
+          method: "POST",
+          body: JSON.stringify(body),
+          idempotencyKey: opts?.idempotencyKey,
+        },
       );
       return data;
     },
-    createCreditCardPayment: async (input: CreateCreditCardPaymentInput) => {
+    createCreditCardPayment: async (input: CreateCreditCardPaymentInput, opts?: MutationOptions) => {
       const body = createCreditCardPaymentSchema.parse(input);
       const data = await request<{ id: string; eventType: string; status: string }>(
         "/api/v1/ledger/credit-card/payment",
-        { method: "POST", body: JSON.stringify(body) },
+        {
+          method: "POST",
+          body: JSON.stringify(body),
+          idempotencyKey: opts?.idempotencyKey,
+        },
       );
       return data;
     },
-    createMortgagePayment: async (input: CreateMortgagePaymentInput) => {
+    createMortgagePayment: async (input: CreateMortgagePaymentInput, opts?: MutationOptions) => {
       const body = createMortgagePaymentSchema.parse(input);
       const data = await request<{ id: string; eventType: string; status: string }>(
         "/api/v1/ledger/mortgage/payment",
-        { method: "POST", body: JSON.stringify(body) },
+        {
+          method: "POST",
+          body: JSON.stringify(body),
+          idempotencyKey: opts?.idempotencyKey,
+        },
       );
       return data;
     },
-    createInvestmentTransfer: async (input: CreateInvestmentTransferInput) => {
+    createInvestmentTransfer: async (input: CreateInvestmentTransferInput, opts?: MutationOptions) => {
       const body = createInvestmentTransferSchema.parse(input);
       const data = await request<{ id: string; eventType: string; status: string }>(
         "/api/v1/ledger/investments/transfer",
-        { method: "POST", body: JSON.stringify(body) },
+        {
+          method: "POST",
+          body: JSON.stringify(body),
+          idempotencyKey: opts?.idempotencyKey,
+        },
       );
       return data;
     },
-    createAssetPurchase: async (input: CreateAssetPurchaseInput) => {
+    createAssetPurchase: async (input: CreateAssetPurchaseInput, opts?: MutationOptions) => {
       const body = createAssetPurchaseSchema.parse(input);
       const data = await request<{ id: string; eventType: string; status: string }>(
         "/api/v1/ledger/assets/purchase",
-        { method: "POST", body: JSON.stringify(body) },
+        {
+          method: "POST",
+          body: JSON.stringify(body),
+          idempotencyKey: opts?.idempotencyKey,
+        },
       );
       return data;
     },
     createFinancedAssetPurchase: async (
       input: CreateFinancedAssetPurchaseInput,
+      opts?: MutationOptions,
     ) => {
       const body = createFinancedAssetPurchaseSchema.parse(input);
       const data = await request<{ id: string; eventType: string; status: string }>(
         "/api/v1/ledger/assets/financed-purchase",
-        { method: "POST", body: JSON.stringify(body) },
+        {
+          method: "POST",
+          body: JSON.stringify(body),
+          idempotencyKey: opts?.idempotencyKey,
+        },
       );
       return data;
     },
@@ -940,6 +1005,23 @@ export function createApiClient(options: ApiClientOptions) {
     getVehicle: async (householdId: string, vehicleId: string) => {
       const data = await request<unknown>(
         `/api/v1/vehicles/${encodeURIComponent(vehicleId)}?householdId=${encodeURIComponent(householdId)}`,
+      );
+      return vehicleDetailSchema.parse(data) as VehicleDetailDto;
+    },
+    createVehicle: async (input: CreateVehicleInput, opts?: MutationOptions) => {
+      const body = createVehicleSchema.parse(input);
+      const data = await request<unknown>("/api/v1/vehicles", {
+        method: "POST",
+        body: JSON.stringify(body),
+        idempotencyKey: opts?.idempotencyKey,
+      });
+      return vehicleDetailSchema.parse(data) as VehicleDetailDto;
+    },
+    updateVehicle: async (vehicleId: string, input: UpdateVehicleInput) => {
+      const body = updateVehicleSchema.parse(input);
+      const data = await request<unknown>(
+        `/api/v1/vehicles/${encodeURIComponent(vehicleId)}`,
+        { method: "PATCH", body: JSON.stringify(body) },
       );
       return vehicleDetailSchema.parse(data) as VehicleDetailDto;
     },

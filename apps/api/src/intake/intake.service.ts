@@ -28,6 +28,7 @@ import { HouseholdAccessService } from "../households/household-access.service";
 import { ObjectStorageService } from "../storage/object-storage.service";
 import { mockExtractDocument } from "./mock-extract";
 import { createHash } from "node:crypto";
+import { resolveHouseholdAsOf } from "../common/as-of";
 
 const ALLOWED_STATUS: Record<string, string[]> = {
   NEW: ["PROCESSING", "REVIEW", "ACTION_REQUIRED", "ARCHIVED"],
@@ -75,7 +76,7 @@ export class IntakeService {
   async documents(userId: string, householdId: string) {
     const { household } = await this.access.requireMembership(userId, householdId);
     const currency = (household.baseCurrency || "SEK") as CurrencyCode;
-    const asOf = process.env.DEMO_AS_OF_DATE ?? "2026-08-01";
+    const asOf = await resolveHouseholdAsOf(householdId);
     const db = getDb();
     const rows = await db
       .select()
@@ -317,7 +318,7 @@ export class IntakeService {
 
   async integrations(userId: string, householdId: string) {
     await this.access.requireMembership(userId, householdId);
-    const asOf = process.env.DEMO_AS_OF_DATE ?? "2026-08-01";
+    const asOf = await resolveHouseholdAsOf(householdId);
     const db = getDb();
     const sources = await db
       .select()
@@ -365,7 +366,7 @@ export class IntakeService {
     const catalog = mockProviderCatalog.find(
       (p) => p.providerId === input.providerId,
     );
-    const asOf = process.env.DEMO_AS_OF_DATE ?? "2026-08-01";
+    const asOf = await resolveHouseholdAsOf(input.householdId);
     const db = getDb();
     const [row] = await db
       .insert(dataSources)
@@ -394,7 +395,7 @@ export class IntakeService {
     input: UpdateSourceInput,
   ) {
     await this.access.requireCanWrite(userId, input.householdId);
-    const asOf = process.env.DEMO_AS_OF_DATE ?? "2026-08-01";
+    const asOf = await resolveHouseholdAsOf(input.householdId);
     const db = getDb();
     const existing = await this.requireSource(input.householdId, sourceId);
     const [row] = await db
@@ -412,7 +413,7 @@ export class IntakeService {
 
   async archiveSource(userId: string, householdId: string, sourceId: string) {
     await this.access.requireMembership(userId, householdId);
-    const asOf = process.env.DEMO_AS_OF_DATE ?? "2026-08-01";
+    const asOf = await resolveHouseholdAsOf(householdId);
     await this.requireSource(householdId, sourceId);
     const db = getDb();
     const now = new Date();
@@ -459,7 +460,7 @@ export class IntakeService {
 
   async imports(userId: string, householdId: string) {
     await this.access.requireMembership(userId, householdId);
-    const asOf = process.env.DEMO_AS_OF_DATE ?? "2026-08-01";
+    const asOf = await resolveHouseholdAsOf(householdId);
     const db = getDb();
     const batches = await db
       .select({
@@ -496,7 +497,7 @@ export class IntakeService {
     message = "Fake sync triggered from UI",
   ) {
     await this.access.requireMembership(userId, householdId);
-    const asOf = process.env.DEMO_AS_OF_DATE ?? "2026-08-01";
+    const asOf = await resolveHouseholdAsOf(householdId);
     const db = getDb();
 
     let source: typeof dataSources.$inferSelect | undefined;

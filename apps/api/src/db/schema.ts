@@ -1,5 +1,6 @@
 import {
   boolean,
+  date,
   jsonb,
   pgEnum,
   pgTable,
@@ -49,6 +50,8 @@ export const households = pgTable("households", {
   id: uuid("id").defaultRandom().primaryKey(),
   name: varchar("name", { length: 120 }).notNull(),
   baseCurrency: varchar("base_currency", { length: 3 }).notNull().default("SEK"),
+  /** Demo households only: frozen product date. NULL means "use the real clock". */
+  demoAsOf: date("demo_as_of"),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
 });

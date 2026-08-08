@@ -12,6 +12,7 @@ import { anomalyFindings } from "../db/schema-decisions";
 import { financialEvents } from "../db/schema-economic";
 import { recurringItems } from "../db/schema-planning";
 import { HouseholdAccessService } from "../households/household-access.service";
+import { resolveHouseholdAsOf } from "../common/as-of";
 
 function addDaysIso(dateStr: string, days: number): string {
   const d = new Date(`${dateStr.slice(0, 10)}T00:00:00.000Z`);
@@ -211,7 +212,7 @@ export class AnomalyService {
 
   async list(householdId: string) {
     const db = getDb();
-    const asOf = process.env.DEMO_AS_OF_DATE ?? "2026-08-01";
+    const asOf = await resolveHouseholdAsOf(householdId);
     const rows = await db
       .select()
       .from(anomalyFindings)

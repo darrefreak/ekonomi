@@ -3,6 +3,7 @@ import { jobPayloadSchema, type JobPayload, type JobType } from "@ffos/schemas";
 import { logger } from "../common/logger";
 import { runJobHandler } from "./handlers";
 import { jobOptionsFor, jobRegistry, QUEUE_NAME } from "./registry";
+import { resolveHouseholdAsOf } from "../common/as-of";
 
 export const HEALTH_CHECK_JOB: JobType = "HEALTH_CHECK";
 export const RECONCILE_ACCOUNT_BALANCES_JOB: JobType = "RECONCILE_ACCOUNT_BALANCES";
@@ -45,7 +46,7 @@ export async function enqueueHealthCheck(householdId: string = "system") {
 }
 
 export async function enqueueReconcileAccountBalances(householdId: string, asOf?: string) {
-  const day = asOf ?? process.env.DEMO_AS_OF_DATE ?? "2026-08-01";
+  const day = await resolveHouseholdAsOf(householdId, asOf);
   return enqueueJob({ type: "RECONCILE_ACCOUNT_BALANCES", householdId, asOf: day });
 }
 

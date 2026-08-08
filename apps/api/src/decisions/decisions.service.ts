@@ -45,12 +45,11 @@ import {
 } from "../metrics/household-metrics.service";
 import { PlanningMetricsService } from "../planning/planning-metrics.service";
 import { VehiclesService } from "../vehicles/vehicles.service";
+import { resolveHouseholdAsOf } from "../common/as-of";
 import {
   OpportunitiesGeneratorService,
   resolveHouseholdCurrency,
 } from "./opportunities-generator.service";
-
-const DEMO_AS_OF = () => process.env.DEMO_AS_OF_DATE ?? "2026-08-01";
 
 @Injectable()
 export class DecisionsService {
@@ -168,21 +167,21 @@ export class DecisionsService {
   async forecast(userId: string, householdId: string) {
     const { household } = await this.access.requireMembership(userId, householdId);
     const currency = (household.baseCurrency || "SEK") as CurrencyCode;
-    const asOf = DEMO_AS_OF();
+    const asOf = await resolveHouseholdAsOf(householdId);
     return this.computeForecast(householdId, currency, asOf);
   }
 
   /** Job-path entry — no userId / request access check (caller already validated the job). */
   async generateForecast(householdId: string) {
     const currency = await resolveHouseholdCurrency(householdId);
-    const asOf = DEMO_AS_OF();
+    const asOf = await resolveHouseholdAsOf(householdId);
     return this.computeForecast(householdId, currency, asOf);
   }
 
   async backtest(userId: string, householdId: string) {
     const { household } = await this.access.requireMembership(userId, householdId);
     const currency = (household.baseCurrency || "SEK") as CurrencyCode;
-    const asOf = DEMO_AS_OF();
+    const asOf = await resolveHouseholdAsOf(householdId);
     const lookbackDays = 30;
     const { seed } = await this.baselineSeed(householdId, currency, asOf);
     const result = backtestLinearForecast({
@@ -266,14 +265,14 @@ export class DecisionsService {
   async opportunities(userId: string, householdId: string) {
     const { household } = await this.access.requireMembership(userId, householdId);
     const currency = (household.baseCurrency || "SEK") as CurrencyCode;
-    const asOf = DEMO_AS_OF();
+    const asOf = await resolveHouseholdAsOf(householdId);
     return this.computeOpportunities(householdId, currency, asOf);
   }
 
   /** Job-path entry — no userId / request access check. */
   async generateOpportunities(householdId: string) {
     const currency = await resolveHouseholdCurrency(householdId);
-    const asOf = DEMO_AS_OF();
+    const asOf = await resolveHouseholdAsOf(householdId);
     return this.computeOpportunities(householdId, currency, asOf);
   }
 
@@ -481,21 +480,21 @@ export class DecisionsService {
   async risk(userId: string, householdId: string) {
     const { household } = await this.access.requireMembership(userId, householdId);
     const currency = (household.baseCurrency || "SEK") as CurrencyCode;
-    const asOf = DEMO_AS_OF();
+    const asOf = await resolveHouseholdAsOf(householdId);
     return this.computeRisk(householdId, currency, asOf);
   }
 
   /** Job-path entry — no userId / request access check. */
   async runRiskAnalysis(householdId: string) {
     const currency = await resolveHouseholdCurrency(householdId);
-    const asOf = DEMO_AS_OF();
+    const asOf = await resolveHouseholdAsOf(householdId);
     return this.computeRisk(householdId, currency, asOf);
   }
 
   async scenarios(userId: string, householdId: string) {
     const { household } = await this.access.requireMembership(userId, householdId);
     const currency = (household.baseCurrency || "SEK") as CurrencyCode;
-    const asOf = DEMO_AS_OF();
+    const asOf = await resolveHouseholdAsOf(householdId);
     const db = getDb();
     const rows = await db
       .select()
@@ -522,7 +521,7 @@ export class DecisionsService {
       input.householdId,
     );
     const currency = (household.baseCurrency || "SEK") as CurrencyCode;
-    const asOf = DEMO_AS_OF();
+    const asOf = await resolveHouseholdAsOf(input.householdId);
     const assumptions = input.assumptions ?? {};
     const { seed } = await this.baselineSeed(input.householdId, currency, asOf);
     const mortgage = await this.debt.primaryMortgageContext(input.householdId);
@@ -556,7 +555,7 @@ export class DecisionsService {
       input.householdId,
     );
     const currency = (household.baseCurrency || "SEK") as CurrencyCode;
-    const asOf = DEMO_AS_OF();
+    const asOf = await resolveHouseholdAsOf(input.householdId);
     const db = getDb();
     const [row] = await db
       .select()
@@ -650,14 +649,14 @@ export class DecisionsService {
   async insights(userId: string, householdId: string) {
     const { household } = await this.access.requireMembership(userId, householdId);
     const currency = (household.baseCurrency || "SEK") as CurrencyCode;
-    const asOf = DEMO_AS_OF();
+    const asOf = await resolveHouseholdAsOf(householdId);
     return this.computeInsights(householdId, currency, asOf);
   }
 
   /** Job-path entry — no userId / request access check. */
   async generateInsights(householdId: string) {
     const currency = await resolveHouseholdCurrency(householdId);
-    const asOf = DEMO_AS_OF();
+    const asOf = await resolveHouseholdAsOf(householdId);
     return this.computeInsights(householdId, currency, asOf);
   }
 }

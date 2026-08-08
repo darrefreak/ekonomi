@@ -1,6 +1,21 @@
-import { Controller, Get, Inject, Param, Query, UseGuards } from "@nestjs/common";
+import {
+  Body,
+  Controller,
+  Get,
+  Inject,
+  Param,
+  Patch,
+  Post,
+  Query,
+  UseGuards,
+} from "@nestjs/common";
 import { ApiBearerAuth, ApiTags } from "@nestjs/swagger";
-import { householdIdQuerySchema, idParamSchema } from "@ffos/schemas";
+import {
+  createVehicleSchema,
+  householdIdQuerySchema,
+  idParamSchema,
+  updateVehicleSchema,
+} from "@ffos/schemas";
 import { AuthGuard } from "../auth/auth.guard";
 import { CurrentUser } from "../auth/current-user.decorator";
 import type { AuthenticatedUser } from "../auth/auth.types";
@@ -31,5 +46,26 @@ export class VehiclesController {
     @Param(new ZodValidationPipe(idParamSchema)) params: { id: string },
   ) {
     return this.vehicles.get(user.userId, query.householdId, params.id);
+  }
+
+  @Post()
+  create(
+    @CurrentUser() user: AuthenticatedUser,
+    @Body(new ZodValidationPipe(createVehicleSchema)) body: unknown,
+  ) {
+    return this.vehicles.create(user.userId, createVehicleSchema.parse(body));
+  }
+
+  @Patch(":id")
+  update(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param(new ZodValidationPipe(idParamSchema)) params: { id: string },
+    @Body(new ZodValidationPipe(updateVehicleSchema)) body: unknown,
+  ) {
+    return this.vehicles.update(
+      user.userId,
+      params.id,
+      updateVehicleSchema.parse(body),
+    );
   }
 }

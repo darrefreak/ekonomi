@@ -208,3 +208,114 @@ export const vehicleDetailSchema = z.object({
 });
 
 export type VehicleDetailDto = z.infer<typeof vehicleDetailSchema>;
+
+/**
+ * Real "add vehicle" command (RT-012).
+ *
+ * `acquisitionMode` decides the financial semantics:
+ * - `NEW_PURCHASE` books a ledger event today (cash out / debt up, never
+ *   consumption or income).
+ * - `EXISTING` onboards an already-owned vehicle as an opening position, so it
+ *   never invents current-period spending or income.
+ */
+export const vehicleAcquisitionModeSchema = z.enum(["NEW_PURCHASE", "EXISTING"]);
+
+export const vehiclePurchaseTypeSchema = z.enum([
+  "CASH",
+  "FINANCED",
+  "PRIVATE_LEASE",
+]);
+
+export const createVehicleSchema = z
+  .object({
+    householdId: uuidSchema,
+    name: z.string().min(1).max(160),
+    make: z.string().min(1).max(80),
+    model: z.string().min(1).max(80),
+    variant: z.string().max(80).optional(),
+    modelYear: z.number().int().min(1950).max(2100),
+    registrationNumber: z.string().max(16).optional(),
+    fuelType: vehicleFuelTypeSchema,
+    transmission: z.enum(["MANUAL", "AUTOMATIC", "OTHER"]).optional(),
+    seats: z.number().int().min(1).max(20).optional(),
+    isofixCount: z.number().int().min(0).max(20).optional(),
+    currentOdometerKm: z.number().int().min(0).max(2_000_000).optional(),
+    annualKm: z.number().int().min(0).max(500_000).optional(),
+    currency: z.string().length(3).default("SEK"),
+
+    acquisitionMode: vehicleAcquisitionModeSchema,
+    purchaseType: vehiclePurchaseTypeSchema,
+    purchaseDate: isoDateSchema,
+    purchasePriceMinor: positiveAmountMinorStringSchema,
+    currentValueMinor: nonNegativeAmountMinorStringSchema,
+
+    /** CASH + NEW_PURCHASE: account the money leaves. */
+    cashAccountId: uuidSchema.optional(),
+    /** FINANCED: down payment paid from cash on the purchase date. */
+    downPaymentMinor: nonNegativeAmountMinorStringSchema.optional(),
+    /** FINANCED: debt still outstanding today. */
+    outstandingDebtMinor: nonNegativeAmountMinorStringSchema.optional(),
+    financeLender: z.string().max(120).optional(),
+    financeInterestRateBps: interestRateBpsSchema.optional(),
+    financeMonthlyPaymentMinor: nonNegativeAmountMinorStringSchema.optional(),
+    financeEndDate: isoDateSchema.optional(),
+
+    /** PRIVATE_LEASE. */
+    leaseMonthlyCostMinor: nonNegativeAmountMinorStringSchema.optional(),
+    leaseStartDate: isoDateSchema.optional(),
+    leaseEndDate: isoDateSchema.optional(),
+    leaseMileageLimitKm: z.number().int().min(0).max(2_000_000).optional(),
+  })
+  .strict()
+  .superRefine((value, ctx) => {
+    const fail = (message: string, path: string) =>
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message, path: [path] });
+
+    if (value.seats != null && value.isofixCount != null && value.isofixCount > value.seats) {
+      fail("ISOFIX-platser får inte överstiga antalet säten", "isofixCount");
+    }
+    if (value.purchaseType === "FINANCED") {
+      if (value.outstandingDebtMinor == null) {
+        fail("Ange kvarvarande skuld för ett finansierat fordon.", "outstandingDebtMinor");
+      }
+      if (
+        value.acquisitionMode === "NEW_PURCHASE" &&
+        value.downPaymentMinor != null &&
+        BigInt(value.downPaymentMinor) > BigInt(value.purchasePriceMinor)
+      ) {
+        fail("Kontantinsatsen får inte överstiga köpeskillingen.", "downPaymentMinor");
+      }
+    }
+    if (
+      value.acquisitionMode === "NEW_PURCHASE" &&
+      value.purchaseType !== "PRIVATE_LEASE" &&
+      !value.cashAccountId
+    ) {
+      fail("Välj kontot pengarna dras från.", "cashAccountId");
+    }
+    if (
+      value.purchaseType === "PRIVATE_LEASE" &&
+      value.leaseStartDate &&
+      value.leaseEndDate &&
+      value.leaseStartDate > value.leaseEndDate
+    ) {
+      fail("Leasingens slut får inte vara före start.", "leaseEndDate");
+    }
+  });
+
+export type CreateVehicleInput = z.infer<typeof createVehicleSchema>;
+
+/** Non-financial corrections a user realistically needs to make. */
+export const updateVehicleSchema = z
+  .object({
+    householdId: uuidSchema,
+    name: z.string().min(1).max(160).optional(),
+    registrationNumber: z.string().max(16).nullable().optional(),
+    currentOdometerKm: z.number().int().min(0).max(2_000_000).optional(),
+    annualKm: z.number().int().min(0).max(500_000).optional(),
+    currentValueMinor: nonNegativeAmountMinorStringSchema.optional(),
+    notes: z.string().max(2000).nullable().optional(),
+  })
+  .strict();
+
+export type UpdateVehicleInput = z.infer<typeof updateVehicleSchema>;

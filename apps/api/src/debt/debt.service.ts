@@ -21,6 +21,7 @@ import {
 } from "../db/schema-economic";
 import { HouseholdAccessService } from "../households/household-access.service";
 import { HouseholdMetricsService } from "../metrics/household-metrics.service";
+import { resolveHouseholdAsOf } from "../common/as-of";
 
 const LIABILITY_TYPES = ["MORTGAGE", "LOAN", "CREDIT_CARD"] as const;
 
@@ -147,7 +148,7 @@ export class DebtService {
   async list(userId: string, householdId: string, asOfInput?: string) {
     const { household } = await this.access.requireMembership(userId, householdId);
     const currency = (household.baseCurrency || "SEK") as CurrencyCode;
-    const asOf = asOfInput ?? process.env.DEMO_AS_OF_DATE ?? "2026-08-01";
+    const asOf = await resolveHouseholdAsOf(householdId, asOfInput);
     const { start, end } = this.trailingWindow(asOf);
     const rows = await this.liabilityAccounts(householdId);
     // Ledger-aligned balances — same path as metric registry debt_total.
@@ -217,7 +218,7 @@ export class DebtService {
   ) {
     const { household } = await this.access.requireMembership(userId, householdId);
     const currency = (household.baseCurrency || "SEK") as CurrencyCode;
-    const asOf = asOfInput ?? process.env.DEMO_AS_OF_DATE ?? "2026-08-01";
+    const asOf = await resolveHouseholdAsOf(householdId, asOfInput);
     const { start, end } = this.trailingWindow(asOf);
 
     const [row] = await getDb()
