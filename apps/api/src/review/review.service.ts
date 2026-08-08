@@ -16,11 +16,13 @@ import {
 } from "../db/schema-economic";
 import { documents } from "../db/schema-intake";
 import { HouseholdAccessService } from "../households/household-access.service";
+import { MerchantsService } from "../merchants/merchants.service";
 
 @Injectable()
 export class ReviewService {
   constructor(
     @Inject(HouseholdAccessService) private readonly access: HouseholdAccessService,
+    @Inject(MerchantsService) private readonly merchantsSvc: MerchantsService,
   ) {}
 
   async list(userId: string, householdId: string) {
@@ -273,6 +275,13 @@ export class ReviewService {
         .update(sourceTransactions)
         .set({ merchantId: input.merchantId, updatedAt: new Date() })
         .where(eq(sourceTransactions.id, tx.id));
+      if (tx.description?.trim()) {
+        await this.merchantsSvc.verifyAlias(userId, {
+          householdId: input.householdId,
+          merchantId: input.merchantId,
+          rawDescription: tx.description,
+        });
+      }
     } else if (input.action === "dismiss") {
       await db
         .update(sourceTransactions)

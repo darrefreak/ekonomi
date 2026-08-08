@@ -12,6 +12,7 @@ import type { HouseholdAccessService } from "../households/household-access.serv
 import { HouseholdMetricsService } from "../metrics/household-metrics.service";
 import { PlanningMetricsService } from "../planning/planning-metrics.service";
 import { ReviewService } from "../review/review.service";
+import { stubMerchantsService } from "../merchants/merchants.service.stub";
 import { SettingsService } from "../settings/settings.service";
 import { VehiclesService } from "../vehicles/vehicles.service";
 import { DashboardService } from "./dashboard.service";
@@ -62,7 +63,7 @@ test("P1-U2: dashboard exposes availableToInvest with assumptions", async () => 
   const audit = new AuditService();
   const settings = new SettingsService(access, audit);
   const planning = new PlanningMetricsService();
-  const review = new ReviewService(access);
+  const review = new ReviewService(access, stubMerchantsService());
   const debt = new DebtService(access, metrics);
   const vehicles = new VehiclesService(access);
   const decisions = new DecisionsService(

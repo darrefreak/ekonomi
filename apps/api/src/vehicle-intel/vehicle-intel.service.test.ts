@@ -42,8 +42,9 @@ test("vehicle market recomputes compare/replace live from TCO", async () => {
   assert.ok(market.comparisons.length >= 1);
   assert.ok(market.replacement);
   assert.ok(
-    ["WAIT", "WINDOW", "WATCH"].includes(market.replacement!.status),
+    ["WAIT", "WINDOW", "WATCH", "SELL_NOW"].includes(market.replacement!.status),
   );
+  assert.ok(market.analytics);
 
   const detail = await vehiclesService.get("user-1", household.id, vehicle.id);
   assert.equal(

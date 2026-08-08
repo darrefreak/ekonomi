@@ -31,7 +31,17 @@ export const recommendationOutcomes = pgTable("recommendation_outcomes", {
   title: varchar("title", { length: 200 }).notNull(),
   status: varchar("status", { length: 40 }).notNull().default("SHOWN"),
   expectedImpactMinor: bigint("expected_impact_minor", { mode: "bigint" }),
+  expectedImpactBasis: text("expected_impact_basis"),
+  verifiedImpactMinor: bigint("verified_impact_minor", { mode: "bigint" }),
+  verificationStatus: varchar("verification_status", { length: 40 })
+    .notNull()
+    .default("AWAITING_EVIDENCE"),
+  verificationNotes: text("verification_notes"),
   currency: varchar("currency", { length: 3 }).default("SEK"),
   shownAt: timestamp("shown_at", { withTimezone: true }).defaultNow().notNull(),
+  acceptedAt: timestamp("accepted_at", { withTimezone: true }),
+  completedAt: timestamp("completed_at", { withTimezone: true }),
+  nextReviewAt: timestamp("next_review_at", { withTimezone: true }),
+  opportunityId: uuid("opportunity_id"),
   notes: text("notes"),
 });

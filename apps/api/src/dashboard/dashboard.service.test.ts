@@ -13,6 +13,7 @@ import { DecisionsService } from "../decisions/decisions.service";
 import { HouseholdMetricsService } from "../metrics/household-metrics.service";
 import { PlanningMetricsService } from "../planning/planning-metrics.service";
 import { ReviewService } from "../review/review.service";
+import { stubMerchantsService } from "../merchants/merchants.service.stub";
 import { SettingsService } from "../settings/settings.service";
 import type { HouseholdAccessService } from "../households/household-access.service";
 import { VehiclesService } from "../vehicles/vehicles.service";
@@ -143,7 +144,7 @@ test("getDashboard aggregates opportunities and forecast from live services", as
   const service = new DashboardService(
     access,
     metrics,
-    new ReviewService(access),
+    new ReviewService(access, stubMerchantsService()),
     new PlanningMetricsService(),
     new DecisionsService(
       access,

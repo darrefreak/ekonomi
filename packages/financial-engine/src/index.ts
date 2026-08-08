@@ -6,6 +6,7 @@ export * from "./coverage";
 export * from "./freshness";
 export * from "./planning";
 export * from "./vehicle";
+export * from "./merchants";
 export * from "./period-metrics";
 export * from "./forecast";
 export * from "./scenarios";

@@ -7,6 +7,7 @@ import { households } from "../db/schema";
 import { accounts, financialEvents } from "../db/schema-economic";
 import { EconomicEventsService } from "./economic-events.service";
 import { LedgerTruthService } from "./ledger-truth.service";
+import { stubMerchantsService } from "../merchants/merchants.service.stub";
 
 /**
  * P0 adversarial proofs — re-verified after R1 remediation.
@@ -44,7 +45,7 @@ test("P0-A2 re-verify — depreciation externalId is idempotent", async () => {
   });
 
   const ledger = new LedgerTruthService(new AuditService());
-  const events = new EconomicEventsService(ledger, new AuditService());
+  const events = new EconomicEventsService(ledger, new AuditService(), stubMerchantsService());
   const externalId = `adv-depr-${household.id}`;
 
   const first = await events.createAssetDepreciation({

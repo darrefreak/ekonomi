@@ -11,6 +11,7 @@ import { accounts } from "../db/schema-economic";
 import type { HouseholdAccessService } from "../households/household-access.service";
 import { EconomicEventsService } from "../ledger/economic-events.service";
 import { LedgerTruthService } from "../ledger/ledger-truth.service";
+import { stubMerchantsService } from "../merchants/merchants.service.stub";
 import { NetWorthService } from "../net-worth/net-worth.service";
 import { ReportsService } from "../reports/reports.service";
 import { HouseholdMetricsService } from "./household-metrics.service";
@@ -62,7 +63,7 @@ async function setup() {
 
   const audit = new AuditService();
   const ledger = new LedgerTruthService(audit);
-  const events = new EconomicEventsService(ledger, audit);
+  const events = new EconomicEventsService(ledger, audit, stubMerchantsService());
   const metrics = new HouseholdMetricsService();
   const registry = new MetricRegistryService(metrics);
   const netWorth = new NetWorthService(access, metrics);

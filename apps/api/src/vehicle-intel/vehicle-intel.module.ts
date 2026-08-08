@@ -9,5 +9,6 @@ import { VehicleIntelService } from "./vehicle-intel.service";
   imports: [AuthModule, HouseholdsModule, VehiclesModule],
   controllers: [VehicleIntelController],
   providers: [VehicleIntelService],
+  exports: [VehicleIntelService],
 })
 export class VehicleIntelModule {}

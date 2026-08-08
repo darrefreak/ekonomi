@@ -15,6 +15,7 @@ import type { HouseholdAccessService } from "../households/household-access.serv
 import { HouseholdMetricsService } from "../metrics/household-metrics.service";
 import { ReportsService } from "../reports/reports.service";
 import { ReviewService } from "../review/review.service";
+import { stubMerchantsService } from "../merchants/merchants.service.stub";
 import { SearchService } from "../search/search.service";
 import { SettingsService } from "../settings/settings.service";
 
@@ -96,7 +97,7 @@ test("settings search review resolve and monthly report", async () => {
   );
   assert.ok(hits.results.length > 0);
 
-  const review = new ReviewService(access);
+  const review = new ReviewService(access, stubMerchantsService());
   const list = await review.list(demoUser.id, household.id);
   assert.ok(typeof list.total === "number");
 

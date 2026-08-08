@@ -15,7 +15,7 @@
     "build": "tsc -p tsconfig.json",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "lint": "eslint .",
-    "test": "tsx --test src/net-worth.test.ts src/ledger/ledger.test.ts src/ledger/reconcile.test.ts src/cashflow.test.ts src/coverage.test.ts src/freshness.test.ts src/planning.test.ts src/vehicle/tco.test.ts src/vehicle/market.test.ts src/forecast.test.ts src/period-metrics.test.ts src/scenarios.test.ts src/debt.test.ts src/wealth.test.ts src/lifestyle-creep.test.ts src/opportunities.test.ts src/risk.test.ts src/metric-registry.test.ts src/available-to-invest.test.ts",
+    "test": "tsx --test src/net-worth.test.ts src/ledger/ledger.test.ts src/ledger/reconcile.test.ts src/cashflow.test.ts src/coverage.test.ts src/freshness.test.ts src/planning.test.ts src/vehicle/tco.test.ts src/vehicle/market.test.ts src/vehicle/market-analytics.test.ts src/vehicle/decisions.test.ts src/merchants/normalize.test.ts src/forecast.test.ts src/period-metrics.test.ts src/scenarios.test.ts src/debt.test.ts src/wealth.test.ts src/lifestyle-creep.test.ts src/opportunities.test.ts src/risk.test.ts src/metric-registry.test.ts src/available-to-invest.test.ts",
     "clean": "rm -rf dist"
   },
   "dependencies": {

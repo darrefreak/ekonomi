@@ -15,6 +15,7 @@ import type { HouseholdAccessService } from "../households/household-access.serv
 import { HouseholdMetricsService } from "../metrics/household-metrics.service";
 import { PlanningMetricsService } from "../planning/planning-metrics.service";
 import type { VehiclesService } from "../vehicles/vehicles.service";
+import type { VehicleIntelService } from "../vehicle-intel/vehicle-intel.service";
 import { AdvisorService } from "./advisor.service";
 import { listAdvisorTools } from "./ai-tool-registry";
 
@@ -29,7 +30,7 @@ test("advisorChatRequestSchema rejects empty message", () => {
 
 test("advisor tool registry is read-only allowlist", () => {
   const tools = listAdvisorTools();
-  assert.ok(tools.length >= 4);
+  assert.ok(tools.length >= 10);
   assert.ok(tools.every((t) => t.readOnly === true));
 });
 
@@ -105,11 +106,16 @@ test("AI flag gate and tools-only chat/brief", async () => {
     list: async () => ({ items: [] }),
   } as unknown as VehiclesService;
 
+  const vehicleIntel = {
+    market: async () => ({ candidates: [], comparisons: [] }),
+  } as unknown as VehicleIntelService;
+
   const service = new AdvisorService(
     access,
     planning,
     decisions,
     vehicles,
+    vehicleIntel,
     metrics,
     flags,
   );
