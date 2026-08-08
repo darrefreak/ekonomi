@@ -149,3 +149,26 @@ export function metricInputHash(parts: Array<string | number | bigint>): string 
   }
   return `fnv1a_${(h >>> 0).toString(16).padStart(8, "0")}`;
 }
+
+/**
+ * Fingerprint of per-metric calculation versions in the catalog.
+ * Used as `metricMeta.calculationVersion` so it is never confused with
+ * `METRIC_BUNDLE_VERSION` (bundle packaging vs formula versions).
+ */
+export function metricCatalogCalculationVersion(
+  defs: readonly MetricDefinition[] = METRIC_DEFINITIONS,
+): string {
+  const parts = [...defs]
+    .map((d) => `${d.metricKey}@${d.calculationVersion}`)
+    .sort();
+  return metricInputHash(parts);
+}
+
+/** Map of metricKey → calculationVersion for product meta payloads. */
+export function metricVersionsMap(
+  defs: readonly MetricDefinition[] = METRIC_DEFINITIONS,
+): Record<string, string> {
+  return Object.fromEntries(
+    defs.map((d) => [d.metricKey, d.calculationVersion]),
+  );
+}

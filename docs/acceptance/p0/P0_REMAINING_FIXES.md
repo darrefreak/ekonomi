@@ -51,14 +51,10 @@ Narrow, acceptance-blocking fixes only. No P1 product expansion.
 
 ## P0-A6 — Metric registry integrity (P0-8)
 
-**Problem:** Weak `inputHash`; bundle version stuffed into per-metric meta; hardcoded asOf; yearly fake hash; no historical version serve.
+**Status:** FIXED (Batch R4 — 2026-08-08)  
+**Evidence:** composition-sensitive `inputHash`; catalog `calculationVersion` + `metricVersions`; product `asOf` queries; derived yearly hash; `mode=stored` historical serve. See `R4_REPORT.md`.
 
-**Fix scope:**
-- Strengthen `inputHash` with posting aggregate fingerprint (e.g. count + sum of amountMinor + max bookedOn) or event max(updatedAt).
-- Set `metricMeta.calculationVersion` from relevant metric defs (or expose both bundle + metric versions).
-- Accept `asOf` on dashboard/NW/debt/wealth (or document single global asOf policy and enforce it everywhere).
-- Remove fabricated yearly `inputHash`; derive from period inputs.
-- Optional: read path that returns stored snapshot for a requested `(metricKey, calculationVersion, asOf)` without silent recompute under a newer formula.
+**Problem (historical):** Weak `inputHash`; bundle version stuffed into per-metric meta; hardcoded asOf; yearly fake hash; no historical version serve.
 
 ---
 
@@ -87,8 +83,8 @@ Narrow, acceptance-blocking fixes only. No P1 product expansion.
 3. ~~**P0-A3** float extract~~ **FIXED (R2)**  
 4. ~~**P0-A5** ledger-aligned reads / history invalidation~~ **FIXED (R2)**  
 5. ~~**P0-A4** refund HTTP + split persist~~ **FIXED (R3)**  
-6. **P0-A6** metric hash/asOf → **R4**  
+6. ~~**P0-A6** metric hash/asOf~~ **FIXED (R4)**  
 7. ~~**P0-A7** vehicle purchase paths~~ **FIXED (R3)**  
 8. ~~**P0-A8** reversal semantics~~ **FIXED (R3)**  
 
-Stop after listing. Implement only when a dedicated fix batch is instructed.
+All P0-A1…A8 closed. No remaining P0 fix batches required for financial core acceptance.

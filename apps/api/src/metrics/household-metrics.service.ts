@@ -15,7 +15,9 @@ import {
   estimateMortgageRateSavingMinor,
   forecastCashflowDeltas,
   METRIC_BUNDLE_VERSION,
+  metricCatalogCalculationVersion,
   metricInputHash,
+  metricVersionsMap,
   monthEndDates,
   netWorthFromTypedBalances,
   reconstructBalances,
@@ -104,6 +106,73 @@ export class HouseholdMetricsService {
       ...a,
       currentBalanceMinor: ledger.get(a.id) ?? a.openingBalanceMinor,
     }));
+  }
+
+  /**
+   * Composition-sensitive ledger fingerprint for metric inputHash.
+   * Totals-only hashes miss equal-sum / different-composition mutations.
+   */
+  async ledgerCompositionFingerprint(householdId: string) {
+    const db = getDb();
+    const postingRows = await db
+      .select({
+        accountId: ledgerPostings.accountId,
+        side: ledgerPostings.side,
+        amountMinor: ledgerPostings.amountMinor,
+        bookedOn: ledgerEntries.bookedOn,
+      })
+      .from(ledgerPostings)
+      .innerJoin(
+        ledgerEntries,
+        eq(ledgerPostings.ledgerEntryId, ledgerEntries.id),
+      )
+      .innerJoin(
+        financialEvents,
+        eq(ledgerEntries.financialEventId, financialEvents.id),
+      )
+      .where(
+        and(
+          eq(ledgerPostings.householdId, householdId),
+          eq(financialEvents.status, "ACTIVE"),
+        ),
+      );
+
+    let postingCount = 0;
+    let postingSumMinor = 0n;
+    let maxBookedOn = "";
+    for (const p of postingRows) {
+      postingCount += 1;
+      const amt = BigInt(p.amountMinor);
+      postingSumMinor += p.side === "debit" ? amt : -amt;
+      if (p.bookedOn > maxBookedOn) maxBookedOn = p.bookedOn;
+    }
+
+    const [eventAgg] = await db
+      .select({
+        maxUpdatedAt: sql<Date | null>`max(${financialEvents.updatedAt})`,
+      })
+      .from(financialEvents)
+      .where(
+        and(
+          eq(financialEvents.householdId, householdId),
+          eq(financialEvents.status, "ACTIVE"),
+        ),
+      );
+
+    const rawUpdated: unknown = eventAgg?.maxUpdatedAt ?? null;
+    const maxEventUpdatedAt =
+      rawUpdated instanceof Date
+        ? rawUpdated.toISOString()
+        : rawUpdated == null
+          ? ""
+          : String(rawUpdated);
+
+    return {
+      postingCount,
+      postingSumMinor,
+      maxBookedOn: maxBookedOn || "none",
+      maxEventUpdatedAt,
+    };
   }
 
   positionFromAccounts(
@@ -582,11 +651,24 @@ export class HouseholdMetricsService {
 
     const upcoming = await this.upcomingObligations(householdId, currency, asOf);
 
+    const composition = await this.ledgerCompositionFingerprint(householdId);
+    const accountBalanceLines = accountRows
+      .map((a) => `${a.id}:${a.currentBalanceMinor}`)
+      .sort()
+      .join(",");
+
+    const catalogCalculationVersion = metricCatalogCalculationVersion();
     const inputHash = metricInputHash([
       householdId,
       asOf,
       METRIC_BUNDLE_VERSION,
+      catalogCalculationVersion,
       accountRows.length,
+      accountBalanceLines,
+      composition.postingCount,
+      composition.postingSumMinor,
+      composition.maxBookedOn,
+      composition.maxEventUpdatedAt,
       position.netWorth.amountMinor,
       position.availableCash.amountMinor,
       position.investments.amountMinor,
@@ -617,7 +699,8 @@ export class HouseholdMetricsService {
       /** Shared registry metadata — all consumers must surface the same bundle. */
       metricMeta: {
         bundleVersion: METRIC_BUNDLE_VERSION,
-        calculationVersion: METRIC_BUNDLE_VERSION,
+        calculationVersion: catalogCalculationVersion,
+        metricVersions: metricVersionsMap(),
         inputHash,
         asOf,
       },

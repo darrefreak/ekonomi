@@ -3,12 +3,10 @@
 Priority model: **P0 before P1**.  
 These must be resolved (or explicitly accepted with risk) before claiming product completeness of downstream analytics.
 
-> **Adversarial P0 financial acceptance (2026-08-07): FAIL — FINANCIAL CORE NOT ACCEPTED.**  
-> **R1 (2026-08-08):** P0-A1 atomic persist + P0-A2 depreciation idempotency **FIXED**.  
-> **R2 (2026-08-08):** P0-A3 exact extract money + P0-A5 ledger-truth residuals **FIXED**.  
-> **R3 (2026-08-08):** P0-A4/A7/A8 runtime financial paths **FIXED**; **P0-A6** remains for R4; acceptance still **FAIL**.  
+> **Adversarial P0 financial acceptance (2026-08-08 R4): PASS — FINANCIAL CORE ACCEPTED.**  
+> **R1:** P0-A1/A2 **FIXED**. **R2:** P0-A3/A5 **FIXED**. **R3:** P0-A4/A7/A8 **FIXED**. **R4:** P0-A6 **FIXED**.  
 > See `docs/acceptance/p0/P0_FINANCIAL_ACCEPTANCE.md` and `P0_REMAINING_FIXES.md`.  
-> **P0 REMAINING: > 0** · **FINANCIAL CORE ACCEPTED: NO**
+> **P0 REMAINING: 0** · **FINANCIAL CORE ACCEPTED: YES**
 
 ---
 
@@ -91,10 +89,10 @@ These must be resolved (or explicitly accepted with risk) before claiming produc
 
 ## P0-8 — Metric consistency / registry absent
 
-**Status:** PARTIAL (Batch C2 foundation; integrity gaps)  
-**Evidence:** Registry + shared consumers + demo consistency test. Gaps: weak `inputHash`, hardcoded asOf, yearly fake meta, no historical version serve, NW history stale risk. Acceptance audit: PARTIAL. See `METRIC_REGISTRY_VERIFICATION.md`.
+**Status:** FIXED (Batch C2 foundation + Batch R4 integrity)  
+**Evidence:** Registry + shared consumers + demo consistency; R4 composition-sensitive `inputHash`, catalog `calculationVersion`/`metricVersions`, product `asOf`, derived yearly hash, stored snapshot serve. See `METRIC_REGISTRY_VERIFICATION.md` and `R4_REPORT.md`.
 
-**Impact:** Core totals agree across main surfaces for demo asOf; reproducibility/versioning claims not fully met.
+**Impact:** Core totals agree; reproducibility/versioning/asOf claims met for V1 acceptance.
 
 **Required:** Shared metric calculation path with `asOf` + version; all surfaces consume it; meaningful inputHash; coherent asOf.
 

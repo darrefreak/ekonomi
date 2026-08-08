@@ -1,4 +1,4 @@
-import { Inject, Injectable } from "@nestjs/common";
+import { Inject, Injectable, NotFoundException } from "@nestjs/common";
 import { and, eq } from "drizzle-orm";
 import { money, moneyToJson, type CurrencyCode } from "@ffos/domain";
 import {
@@ -253,5 +253,74 @@ export class MetricRegistryService {
     asOf: string,
   ) {
     return this.materializeSnapshots(householdId, currency, asOf);
+  }
+
+  /**
+   * Serve persisted snapshot rows without rematerializing under current formulas.
+   * Used for historical `(metricKey, calculationVersion, asOf)` reads.
+   */
+  async getStoredSnapshots(
+    householdId: string,
+    asOf: string,
+    opts?: { metricKey?: string; calculationVersion?: string },
+  ) {
+    const db = getDb();
+    const filters = [
+      eq(metricSnapshots.householdId, householdId),
+      eq(metricSnapshots.asOf, asOf),
+    ];
+    if (opts?.metricKey) {
+      filters.push(eq(metricSnapshots.metricKey, opts.metricKey));
+    }
+    if (opts?.calculationVersion) {
+      filters.push(
+        eq(metricSnapshots.calculationVersion, opts.calculationVersion),
+      );
+    }
+
+    const rows = await db
+      .select()
+      .from(metricSnapshots)
+      .where(and(...filters));
+
+    if (opts?.metricKey && opts?.calculationVersion && rows.length === 0) {
+      throw new NotFoundException(
+        `No stored metric snapshot for ${opts.metricKey}@${opts.calculationVersion} asOf ${asOf}`,
+      );
+    }
+
+    const items: SnapshotRow[] = rows.map((r) => ({
+      metricKey: r.metricKey,
+      calculationVersion: r.calculationVersion,
+      asOf: r.asOf,
+      period: r.period,
+      currency: (r.currency as CurrencyCode | null) ?? undefined,
+      valueMinor: r.valueMinor,
+      valueNumber:
+        r.valueNumber == null ? null : Number(r.valueNumber),
+      money:
+        r.valueMinor != null && r.currency
+          ? moneyToJson(
+              money(BigInt(r.valueMinor), r.currency as CurrencyCode),
+            )
+          : null,
+      inputHash: r.inputHash,
+      coveragePercent: r.coveragePercent,
+      freshnessLabel: r.freshnessLabel,
+      calculatedAt: r.calculatedAt.toISOString(),
+    }));
+
+    const first = items[0];
+    return {
+      householdId,
+      asOf,
+      bundleVersion: METRIC_BUNDLE_VERSION,
+      inputHash: first?.inputHash ?? "",
+      calculatedAt: first?.calculatedAt ?? new Date(0).toISOString(),
+      coveragePercent: first?.coveragePercent ?? null,
+      freshnessLabel: first?.freshnessLabel ?? null,
+      items,
+      servedFrom: "stored" as const,
+    };
   }
 }

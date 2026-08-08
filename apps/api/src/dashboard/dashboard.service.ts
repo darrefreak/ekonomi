@@ -19,10 +19,14 @@ export class DashboardService {
     @Inject(DecisionsService) private readonly decisions: DecisionsService,
   ) {}
 
-  async getDashboard(userId: string, householdId: string): Promise<DashboardResponse> {
+  async getDashboard(
+    userId: string,
+    householdId: string,
+    asOfInput?: string,
+  ): Promise<DashboardResponse> {
     const { household } = await this.access.requireMembership(userId, householdId);
     const currency = (household.baseCurrency || "SEK") as CurrencyCode;
-    const asOf = process.env.DEMO_AS_OF_DATE ?? "2026-08-01";
+    const asOf = asOfInput ?? process.env.DEMO_AS_OF_DATE ?? "2026-08-01";
 
     const [snap, coverage, review, budget, opps] = await Promise.all([
       this.metrics.getFinancialSnapshot(householdId, currency, asOf),

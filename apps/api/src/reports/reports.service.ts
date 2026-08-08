@@ -4,7 +4,11 @@ import {
   METRIC_BUNDLE_VERSION,
   calculateNetSavingsRate,
   getMetricDefinition,
+  metricCatalogCalculationVersion,
+  metricInputHash,
+  metricVersionsMap,
 } from "@ffos/financial-engine";
+import { resolveAsOf } from "../common/as-of";
 import { HouseholdAccessService } from "../households/household-access.service";
 import { HouseholdMetricsService } from "../metrics/household-metrics.service";
 
@@ -16,10 +20,15 @@ export class ReportsService {
     private readonly metrics: HouseholdMetricsService,
   ) {}
 
-  async monthly(userId: string, householdId: string, period?: string) {
+  async monthly(
+    userId: string,
+    householdId: string,
+    period?: string,
+    asOfInput?: string,
+  ) {
     const { household } = await this.access.requireMembership(userId, householdId);
     const currency = (household.baseCurrency || "SEK") as CurrencyCode;
-    const asOf = process.env.DEMO_AS_OF_DATE ?? "2026-08-01";
+    const asOf = resolveAsOf(asOfInput);
     const month =
       period ??
       (() => {
@@ -73,10 +82,15 @@ export class ReportsService {
     };
   }
 
-  async yearly(userId: string, householdId: string, year?: number) {
+  async yearly(
+    userId: string,
+    householdId: string,
+    year?: number,
+    asOfInput?: string,
+  ) {
     const { household } = await this.access.requireMembership(userId, householdId);
     const currency = (household.baseCurrency || "SEK") as CurrencyCode;
-    const asOf = process.env.DEMO_AS_OF_DATE ?? "2026-08-01";
+    const asOf = resolveAsOf(asOfInput);
     const y = year ?? Number(asOf.slice(0, 4));
     const months = Array.from({ length: 12 }, (_, i) =>
       `${y}-${String(i + 1).padStart(2, "0")}`,
@@ -96,13 +110,21 @@ export class ReportsService {
     });
     const savingsMinor = incomeMinor - spendingMinor;
     const savingsRateDef = getMetricDefinition("net_savings_rate");
+    const catalogCalculationVersion = metricCatalogCalculationVersion();
+    const inputHash = metricInputHash([
+      householdId,
+      `year:${y}`,
+      catalogCalculationVersion,
+      ...points.flatMap((p) => [p.month, p.incomeMinor, p.spendingMinor]),
+    ]);
     return {
       year: y,
       asOf,
       metricMeta: {
         bundleVersion: METRIC_BUNDLE_VERSION,
-        calculationVersion: METRIC_BUNDLE_VERSION,
-        inputHash: `yearly-${y}`,
+        calculationVersion: catalogCalculationVersion,
+        metricVersions: metricVersionsMap(),
+        inputHash,
         asOf,
       },
       income: moneyToJson(money(incomeMinor, currency)),
