@@ -1,89 +1,136 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useState } from "react";
-import type { AccountDetailDto } from "@ffos/schemas";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import { ensureHouseholdSession } from "@/lib/session";
+import { useHouseholdId } from "@/lib/use-household-id";
+import { queryKeys } from "@/lib/query-keys";
+import { kronorToMinorString, minorToKronorInput } from "@/lib/money-input";
+import { accountTypeLabel } from "@/lib/account-labels";
 import { MoneyValue } from "../financial/money-value";
 import { EmptyState } from "../feedback/empty-state";
 import { ErrorState } from "../feedback/error-state";
 import { LoadingState } from "../feedback/loading-state";
 
 export function AccountDetailPage({ accountId }: { accountId: string }) {
-  const [data, setData] = useState<AccountDetailDto | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
+  const householdId = useHouseholdId();
+  const queryClient = useQueryClient();
+  const router = useRouter();
+
+  const detailQuery = useQuery({
+    queryKey: householdId
+      ? queryKeys.accounts.detail(householdId, accountId)
+      : ["accounts", "detail", "pending"],
+    queryFn: () => api.getAccount(householdId!, accountId),
+    enabled: Boolean(householdId),
+  });
+
+  const settingsQuery = useQuery({
+    queryKey: householdId ? queryKeys.settings.all(householdId) : ["settings", "pending"],
+    queryFn: () => api.getSettings(householdId!),
+    enabled: Boolean(householdId),
+  });
+
+  const data = detailQuery.data;
   const [name, setName] = useState("");
   const [provider, setProvider] = useState("");
-  const [saving, setSaving] = useState(false);
+  const [isShared, setIsShared] = useState(true);
+  const [ownerMemberId, setOwnerMemberId] = useState("");
+  const [creditLimit, setCreditLimit] = useState("");
   const [actionError, setActionError] = useState<string | null>(null);
 
-  const load = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const householdId = await ensureHouseholdSession();
-      const detail = await api.getAccount(householdId, accountId);
-      setData(detail);
-      setName(detail.name);
-      setProvider(detail.provider ?? "");
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Fel");
-      setData(null);
-    } finally {
-      setLoading(false);
-    }
-  }, [accountId]);
-
   useEffect(() => {
-    void load();
-  }, [load]);
-
-  async function save() {
     if (!data) return;
-    setSaving(true);
-    setActionError(null);
-    try {
-      const householdId = await ensureHouseholdSession();
-      await api.updateAccount(accountId, {
-        householdId,
+    setName(data.name);
+    setProvider(data.provider ?? "");
+    setIsShared(data.isShared);
+    setOwnerMemberId(data.ownerMemberId ?? "");
+    setCreditLimit(
+      data.creditLimit ? minorToKronorInput(data.creditLimit.amountMinor) : "",
+    );
+  }, [data]);
+
+  const invalidateAll = async () => {
+    if (!householdId) return;
+    await Promise.all([
+      queryClient.invalidateQueries({ queryKey: ["accounts", householdId] }),
+      queryClient.invalidateQueries({ queryKey: queryKeys.dashboard.all(householdId) }),
+      queryClient.invalidateQueries({ queryKey: queryKeys.netWorth.all(householdId) }),
+    ]);
+  };
+
+  const saveMutation = useMutation({
+    mutationFn: async () => {
+      if (!data) throw new Error("Kontot är inte laddat.");
+      if (!name.trim()) throw new Error("Namn kan inte vara tomt.");
+      const id = await ensureHouseholdSession();
+      let creditLimitMinor: string | null | undefined;
+      if (data.accountType === "CREDIT_CARD") {
+        if (creditLimit.trim()) {
+          creditLimitMinor = kronorToMinorString(creditLimit);
+          if (creditLimitMinor == null || BigInt(creditLimitMinor) < 0n) {
+            throw new Error("Kreditgränsen måste vara ett giltigt belopp i kronor (≥ 0).");
+          }
+        } else {
+          creditLimitMinor = null;
+        }
+      }
+      return api.updateAccount(accountId, {
+        householdId: id,
         name: name.trim(),
         provider: provider.trim() || null,
+        isShared,
+        ownerMemberId: isShared ? null : ownerMemberId || null,
+        creditLimitMinor,
       });
-      await load();
-    } catch (err) {
-      setActionError(err instanceof Error ? err.message : "Kunde inte spara");
-    } finally {
-      setSaving(false);
-    }
-  }
+    },
+    onSuccess: async () => {
+      setActionError(null);
+      await Promise.all([
+        invalidateAll(),
+        householdId
+          ? queryClient.invalidateQueries({
+              queryKey: queryKeys.accounts.detail(householdId, accountId),
+            })
+          : Promise.resolve(),
+      ]);
+    },
+    onError: (err: unknown) => {
+      setActionError(err instanceof Error ? err.message : "Kunde inte spara ändringar.");
+    },
+  });
 
-  async function archive() {
-    if (!data) return;
-    if (!window.confirm(`Arkivera kontot “${data.name}”?`)) return;
-    setSaving(true);
-    setActionError(null);
-    try {
-      const householdId = await ensureHouseholdSession();
-      await api.archiveAccount(householdId, accountId);
-      window.location.href = "/accounts";
-    } catch (err) {
-      setActionError(err instanceof Error ? err.message : "Kunde inte arkivera");
-      setSaving(false);
-    }
-  }
+  const archiveMutation = useMutation({
+    mutationFn: async () => {
+      const id = await ensureHouseholdSession();
+      return api.archiveAccount(id, accountId);
+    },
+    onSuccess: async () => {
+      await invalidateAll();
+      router.push("/accounts");
+    },
+    onError: (err: unknown) => {
+      setActionError(err instanceof Error ? err.message : "Kunde inte arkivera kontot.");
+    },
+  });
 
-  if (loading) return <LoadingState label="Hämtar konto…" />;
-  if (error || !data) {
+  if (!householdId || detailQuery.isLoading) return <LoadingState label="Hämtar konto…" />;
+  if (detailQuery.isError || !data) {
     return (
       <ErrorState
         title="Kunde inte hämta kontot"
-        description={error ?? ""}
-        onRetry={() => void load()}
+        description={
+          detailQuery.error instanceof Error ? detailQuery.error.message : "Något gick fel"
+        }
+        onRetry={() => void detailQuery.refetch()}
       />
     );
   }
+
+  const members = settingsQuery.data?.members ?? [];
 
   return (
     <div className="space-y-6">
@@ -91,19 +138,31 @@ export function AccountDetailPage({ accountId }: { accountId: string }) {
         <Link href="/accounts" className="text-sm text-accent">
           ← Konton
         </Link>
-        <h1 className="mt-2 font-[family-name:var(--ffos-font-display)] text-3xl tracking-tight">
-          {data.name}
-        </h1>
+        <div className="mt-2 flex items-center gap-2">
+          <h1 className="font-[family-name:var(--ffos-font-display)] text-3xl tracking-tight">
+            {data.name}
+          </h1>
+          <span
+            className={`shrink-0 rounded-full px-2 py-0.5 text-[11px] font-medium ${
+              data.isShared
+                ? "bg-accent/10 text-accent"
+                : "bg-surface-muted text-text-secondary"
+            }`}
+          >
+            {data.isShared ? "Delat" : "Personligt"}
+          </span>
+        </div>
         <p className="mt-2 text-sm text-text-secondary">
-          {data.accountType}
+          {accountTypeLabel(data.accountType)}
           {data.provider ? ` · ${data.provider}` : ""}
           {` · ${data.connectionStatus}`}
           {data.freshnessLabel ? ` · ${data.freshnessLabel}` : ""}
+          {data.archivedAt ? " · Arkiverat" : ""}
         </p>
       </div>
 
       <section className="rounded-[16px] bg-surface-elevated p-5">
-        <p className="text-sm text-text-secondary">Saldo</p>
+        <p className="text-sm text-text-secondary">Saldo (ledger, ej redigerbart)</p>
         <p className="mt-1 text-3xl font-medium">
           <MoneyValue value={data.ledgerBalance ?? data.currentBalance} />
         </p>
@@ -161,6 +220,47 @@ export function AccountDetailPage({ accountId }: { accountId: string }) {
             className="mt-1 min-h-11 w-full rounded-[12px] border border-border bg-surface px-3"
           />
         </label>
+
+        <label className="flex min-h-11 items-center gap-2 text-sm">
+          <input
+            type="checkbox"
+            checked={isShared}
+            onChange={(e) => setIsShared(e.target.checked)}
+          />
+          Delat konto (hela hushållet)
+        </label>
+
+        {!isShared ? (
+          <label className="block text-sm">
+            <span className="text-text-secondary">Ägare (valfritt)</span>
+            <select
+              value={ownerMemberId}
+              onChange={(e) => setOwnerMemberId(e.target.value)}
+              className="mt-1 min-h-11 w-full rounded-[12px] border border-border bg-surface px-3"
+            >
+              <option value="">Ingen specifik ägare</option>
+              {members.map((m) => (
+                <option key={m.id} value={m.id}>
+                  {m.displayName}
+                </option>
+              ))}
+            </select>
+          </label>
+        ) : null}
+
+        {data.accountType === "CREDIT_CARD" ? (
+          <label className="block text-sm">
+            <span className="text-text-secondary">Kreditgräns (kr)</span>
+            <input
+              inputMode="decimal"
+              value={creditLimit}
+              onChange={(e) => setCreditLimit(e.target.value)}
+              placeholder="15000"
+              className="mt-1 min-h-11 w-full rounded-[12px] border border-border bg-surface px-3 tabular-nums"
+            />
+          </label>
+        ) : null}
+
         {actionError ? (
           <p className="text-sm text-negative" role="alert">
             {actionError}
@@ -169,20 +269,26 @@ export function AccountDetailPage({ accountId }: { accountId: string }) {
         <div className="flex flex-wrap gap-3">
           <button
             type="button"
-            disabled={saving}
-            onClick={() => void save()}
+            disabled={saveMutation.isPending}
+            onClick={() => void saveMutation.mutate()}
             className="min-h-11 rounded-[12px] bg-accent px-4 text-sm font-medium text-white disabled:opacity-60"
           >
-            Spara
+            {saveMutation.isPending ? "Sparar…" : "Spara"}
           </button>
-          <button
-            type="button"
-            disabled={saving}
-            onClick={() => void archive()}
-            className="min-h-11 rounded-[12px] border border-border-strong px-4 text-sm disabled:opacity-60"
-          >
-            Arkivera
-          </button>
+          {!data.archivedAt ? (
+            <button
+              type="button"
+              disabled={archiveMutation.isPending}
+              onClick={() => {
+                if (window.confirm(`Arkivera kontot "${data.name}"? Historiken bevaras.`)) {
+                  void archiveMutation.mutate();
+                }
+              }}
+              className="min-h-11 rounded-[12px] border border-border-strong px-4 text-sm disabled:opacity-60"
+            >
+              {archiveMutation.isPending ? "Arkiverar…" : "Arkivera"}
+            </button>
+          ) : null}
         </div>
       </section>
 

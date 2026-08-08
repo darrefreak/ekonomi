@@ -1,14 +1,16 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useState } from "react";
-import type { AccountDto, TransactionDto } from "@ffos/schemas";
+import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/api";
-import { ensureHouseholdSession } from "@/lib/session";
+import { useHouseholdId } from "@/lib/use-household-id";
+import { queryKeys } from "@/lib/query-keys";
 import { MoneyValue } from "../financial/money-value";
 import { EmptyState } from "../feedback/empty-state";
 import { ErrorState } from "../feedback/error-state";
 import { LoadingState } from "../feedback/loading-state";
+import { NewTransactionForm } from "./new-transaction-form";
 
 function readQueryAccountId() {
   if (typeof window === "undefined") return "";
@@ -16,88 +18,99 @@ function readQueryAccountId() {
 }
 
 export function TransactionsPage() {
-  const [items, setItems] = useState<TransactionDto[]>([]);
-  const [accounts, setAccounts] = useState<AccountDto[]>([]);
+  const householdId = useHouseholdId();
   const [q, setQ] = useState("");
-  const [accountId, setAccountId] = useState("");
+  const [accountId, setAccountId] = useState(readQueryAccountId());
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
   const [includeExcluded, setIncludeExcluded] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [showNew, setShowNew] = useState(false);
 
-  const load = useCallback(
-    async (opts?: {
-      q?: string;
-      accountId?: string;
-      from?: string;
-      to?: string;
-      includeExcluded?: boolean;
-    }) => {
-      setLoading(true);
-      setError(null);
-      try {
-        const householdId = await ensureHouseholdSession();
-        const [tx, acc] = await Promise.all([
-          api.listTransactions(householdId, {
-            limit: 80,
-            q: opts?.q || undefined,
-            accountId: opts?.accountId || undefined,
-            from: opts?.from || undefined,
-            to: opts?.to || undefined,
-            includeExcluded: opts?.includeExcluded,
-          }),
-          api.listAccounts(householdId),
-        ]);
-        setItems(tx.items);
-        setAccounts(acc.items);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "Fel");
-        setItems([]);
-      } finally {
-        setLoading(false);
-      }
-    },
-    [],
-  );
+  const filters = { q, accountId, from, to, includeExcluded };
 
-  useEffect(() => {
-    const initialAccount = readQueryAccountId();
-    if (initialAccount) setAccountId(initialAccount);
-    void load({ accountId: initialAccount || undefined });
-  }, [load]);
+  const transactionsQuery = useQuery({
+    queryKey: householdId
+      ? queryKeys.transactions.all(householdId, filters)
+      : ["transactions", "pending"],
+    queryFn: () =>
+      api.listTransactions(householdId!, {
+        limit: 80,
+        q: q || undefined,
+        accountId: accountId || undefined,
+        from: from || undefined,
+        to: to || undefined,
+        includeExcluded,
+      }),
+    enabled: Boolean(householdId),
+  });
 
-  if (loading && items.length === 0 && !error) {
+  const accountsQuery = useQuery({
+    queryKey: householdId ? queryKeys.accounts.all(householdId) : ["accounts", "pending"],
+    queryFn: () => api.listAccounts(householdId!),
+    enabled: Boolean(householdId),
+  });
+
+  const categoriesQuery = useQuery({
+    queryKey: householdId ? queryKeys.categories.all(householdId) : ["categories", "pending"],
+    queryFn: () => api.listCategories(householdId!),
+    enabled: Boolean(householdId),
+  });
+
+  const items = transactionsQuery.data?.items ?? [];
+  const accounts = accountsQuery.data?.items ?? [];
+  const categories = categoriesQuery.data?.items ?? [];
+
+  if (!householdId || (transactionsQuery.isLoading && items.length === 0 && !transactionsQuery.isError)) {
     return <LoadingState label="Hämtar transaktioner…" />;
   }
-  if (error && items.length === 0) {
+  if (transactionsQuery.isError && items.length === 0) {
     return (
       <ErrorState
         title="Kunde inte hämta transaktioner"
-        description={error}
-        onRetry={() =>
-          void load({ q, accountId, from, to, includeExcluded })
+        description={
+          transactionsQuery.error instanceof Error
+            ? transactionsQuery.error.message
+            : "Något gick fel"
         }
+        onRetry={() => void transactionsQuery.refetch()}
       />
     );
   }
 
   return (
     <div className="space-y-5">
-      <div>
-        <h1 className="font-[family-name:var(--ffos-font-display)] text-3xl tracking-tight">
-          Transaktioner
-        </h1>
-        <p className="mt-2 text-sm text-text-secondary">
-          Sök, filtrera och öppna poster för klassificering.
-        </p>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h1 className="font-[family-name:var(--ffos-font-display)] text-3xl tracking-tight">
+            Transaktioner
+          </h1>
+          <p className="mt-2 text-sm text-text-secondary">
+            Sök, filtrera och öppna poster för klassificering.
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={() => setShowNew((v) => !v)}
+          className="min-h-11 rounded-[12px] bg-accent px-4 text-sm font-medium text-white"
+        >
+          {showNew ? "Stäng" : "+ Ny händelse"}
+        </button>
       </div>
+
+      {showNew && householdId ? (
+        <NewTransactionForm
+          householdId={householdId}
+          accounts={accounts}
+          categories={categories}
+          onDone={() => setShowNew(false)}
+        />
+      ) : null}
 
       <form
         className="grid gap-3 md:grid-cols-2 lg:grid-cols-6"
         onSubmit={(e) => {
           e.preventDefault();
-          void load({ q, accountId, from, to, includeExcluded });
+          void transactionsQuery.refetch();
         }}
       >
         <input
@@ -142,11 +155,7 @@ export function TransactionsPage() {
           <input
             type="checkbox"
             checked={includeExcluded}
-            onChange={(e) => {
-              const next = e.target.checked;
-              setIncludeExcluded(next);
-              void load({ q, accountId, from, to, includeExcluded: next });
-            }}
+            onChange={(e) => setIncludeExcluded(e.target.checked)}
           />
           Visa exkluderade
         </label>
@@ -163,7 +172,6 @@ export function TransactionsPage() {
             setFrom("");
             setTo("");
             setIncludeExcluded(false);
-            void load({});
           }}
         />
       ) : (
