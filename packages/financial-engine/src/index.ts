@@ -14,6 +14,7 @@ export * from "./debt";
 export * from "./wealth";
 export * from "./lifestyle-creep";
 export * from "./opportunities";
+export * from "./anomaly";
 export * from "./risk";
 export * from "./metric-registry";
 export * from "./available-to-invest";
