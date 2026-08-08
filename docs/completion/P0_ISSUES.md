@@ -77,12 +77,12 @@ These must be resolved (or explicitly accepted with risk) before claiming produc
 
 ## P0-7 — Transaction splits / reconciliation / refunds not operational
 
-**Status:** PARTIAL (runtime builders/APIs for transfer/CC/mortgage/invest; product gaps remain)  
-**Evidence:** Mortgage splits + recon groups persist; refund service+test exist but **no HTTP refund**; no general category-split write API; persist not transactional. Acceptance audit: PARTIAL. See `P0_REMAINING_FIXES.md` P0-A4/A1.
+**Status:** PARTIAL (R1 fixed atomic multi-write + command idempotency; product gaps remain)  
+**Evidence:** Mortgage splits + recon groups persist; persist is transactional (R1 / P0-A1); depreciation/transfer/CC payment idempotent (R1 / P0-A2). Refund service+test exist but **no HTTP refund**; no general category-split product API/UI. See `P0_REMAINING_FIXES.md` P0-A4.
 
-**Impact:** Core economic events work; multi-category split product path and refund API incomplete; corruption risk on partial writes.
+**Impact:** Core economic events work with atomic persistence; multi-category split product path and refund API incomplete.
 
-**Required:** At least: refund HTTP + metrics netting; transfer dual-leg or reconciliation group usage; category splits persistence path; DB transaction around multi-write.
+**Required:** At least: refund HTTP + metrics netting; category splits product persistence path (beyond R1 atomic helpers).
 
 ---
 

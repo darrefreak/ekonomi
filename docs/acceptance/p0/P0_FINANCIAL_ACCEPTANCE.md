@@ -25,8 +25,8 @@ Acceptance criteria require **zero** unresolved P0 and **zero** known unsafe mon
 | Validation (S1) | **PASS** |
 | Reconciliation (no silent overwrite) | **PASS** |
 | Depreciation economics | **PASS** |
-| Depreciation idempotency | **FAIL** |
-| Atomic multi-write | **FAIL** |
+| Depreciation idempotency | **PASS** (R1) |
+| Atomic multi-write | **PASS** (R1) |
 | Metric Registry completeness | **FAIL** (PARTIAL implementation) |
 | Metric consistency (core totals) | **PASS** on demo |
 | Financial household isolation | **PASS** (authz + household-scoped account lookup; privacy tests green) |
@@ -69,8 +69,8 @@ Acceptance criteria require **zero** unresolved P0 and **zero** known unsafe mon
 
 See `P0_REMAINING_FIXES.md`:
 
-- **P0-A1** — Multi-write ledger persist lacks DB transactions  
-- **P0-A2** — Depreciation not idempotent (double write-down)  
+- **P0-A1** — ~~Multi-write ledger persist lacks DB transactions~~ **FIXED (R1)**  
+- **P0-A2** — ~~Depreciation not idempotent (double write-down)~~ **FIXED (R1)**  
 - **P0-A3** — Document mock-extract float kronor→öre  
 - **P0-A4** — P0-7 product gaps (refund HTTP, general splits API/UI)  
 - **P0-A5** — P0-1 residuals (accounts list / debt detail / NW history stale)  
