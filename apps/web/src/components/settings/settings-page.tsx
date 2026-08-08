@@ -155,8 +155,162 @@ export function SettingsPage() {
         onError={setError}
       />
 
+      <AuditLogsSection householdId={householdId} onError={setError} />
+
+      <AnalysisRunsSection householdId={householdId} onError={setError} />
+
       <DemoSection router={router} onError={setError} />
     </div>
+  );
+}
+
+function AuditLogsSection({
+  householdId,
+  onError,
+}: {
+  householdId: string;
+  onError: (msg: string | null) => void;
+}) {
+  const query = useQuery({
+    queryKey: queryKeys.settings.auditLogs(householdId),
+    queryFn: () => api.getAuditLogs(householdId),
+  });
+
+  if (query.isLoading) {
+    return (
+      <section className="space-y-3 rounded-[16px] bg-surface-elevated p-5">
+        <h2 className="text-sm text-text-secondary">Auditlogg</h2>
+        <p className="text-sm text-text-muted">Hämtar…</p>
+      </section>
+    );
+  }
+
+  if (query.isError) {
+    return (
+      <section className="space-y-3 rounded-[16px] bg-surface-elevated p-5">
+        <h2 className="text-sm text-text-secondary">Auditlogg</h2>
+        <p className="text-sm text-text-secondary">
+          Kräver OWNER/ADMIN.{" "}
+          {query.error instanceof Error ? query.error.message : "Kunde inte hämta."}
+        </p>
+        <button
+          type="button"
+          className="min-h-11 rounded-[12px] border border-border-strong px-4 text-sm"
+          onClick={() => {
+            onError(null);
+            void query.refetch();
+          }}
+        >
+          Försök igen
+        </button>
+      </section>
+    );
+  }
+
+  const items = query.data?.items ?? [];
+
+  return (
+    <section className="space-y-3 rounded-[16px] bg-surface-elevated p-5">
+      <div>
+        <h2 className="text-sm text-text-secondary">Auditlogg</h2>
+        <p className="mt-1 text-sm text-text-secondary">
+          Senaste hushållshändelser (OWNER/ADMIN).
+        </p>
+      </div>
+      {items.length === 0 ? (
+        <p className="text-sm text-text-muted">Inga poster ännu.</p>
+      ) : (
+        <ul className="divide-y divide-border rounded-[12px] border border-border">
+          {items.slice(0, 20).map((row) => (
+            <li key={row.id} className="px-4 py-3 text-sm">
+              <p className="font-medium">
+                {row.action} · {row.entity}
+              </p>
+              <p className="mt-1 text-xs text-text-muted">
+                {new Date(row.createdAt).toLocaleString("sv-SE")}
+                {row.entityId ? ` · ${row.entityId.slice(0, 8)}…` : ""}
+                {` · ${row.source}`}
+              </p>
+            </li>
+          ))}
+        </ul>
+      )}
+    </section>
+  );
+}
+
+function AnalysisRunsSection({
+  householdId,
+  onError,
+}: {
+  householdId: string;
+  onError: (msg: string | null) => void;
+}) {
+  const query = useQuery({
+    queryKey: queryKeys.settings.analysisRuns(householdId),
+    queryFn: () => api.getAnalysisRuns(householdId),
+  });
+
+  if (query.isLoading) {
+    return (
+      <section className="space-y-3 rounded-[16px] bg-surface-elevated p-5">
+        <h2 className="text-sm text-text-secondary">Jobbstatus</h2>
+        <p className="text-sm text-text-muted">Hämtar…</p>
+      </section>
+    );
+  }
+
+  if (query.isError) {
+    return (
+      <section className="space-y-3 rounded-[16px] bg-surface-elevated p-5">
+        <h2 className="text-sm text-text-secondary">Jobbstatus</h2>
+        <p className="text-sm text-warning">
+          {query.error instanceof Error ? query.error.message : "Kunde inte hämta."}
+        </p>
+        <button
+          type="button"
+          className="min-h-11 rounded-[12px] border border-border-strong px-4 text-sm"
+          onClick={() => {
+            onError(null);
+            void query.refetch();
+          }}
+        >
+          Försök igen
+        </button>
+      </section>
+    );
+  }
+
+  const items = query.data?.items ?? [];
+
+  return (
+    <section className="space-y-3 rounded-[16px] bg-surface-elevated p-5">
+      <div>
+        <h2 className="text-sm text-text-secondary">Jobbstatus</h2>
+        <p className="mt-1 text-sm text-text-secondary">
+          Senaste analyskörningar (metrics, forecast, opportunities, anomalies…).
+        </p>
+      </div>
+      {items.length === 0 ? (
+        <p className="text-sm text-text-muted">
+          Inga körningar registrerade ännu. Körningar skapas när bakgrundsjobb körs.
+        </p>
+      ) : (
+        <ul className="divide-y divide-border rounded-[12px] border border-border">
+          {items.slice(0, 15).map((row) => (
+            <li key={row.id} className="px-4 py-3 text-sm">
+              <p className="font-medium">
+                {row.kind} · {row.status}
+              </p>
+              <p className="mt-1 text-xs text-text-muted">
+                as of {row.asOf} · {new Date(row.startedAt).toLocaleString("sv-SE")}
+                {row.errorCode ? ` · ${row.errorCode}` : ""}
+              </p>
+            </li>
+          ))}
+        </ul>
+      )}
+    </section>
   );
 }
 

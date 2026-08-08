@@ -82,6 +82,14 @@ export const subscriptionsResponseSchema = z.object({
 
 export type SubscriptionsResponse = z.infer<typeof subscriptionsResponseSchema>;
 
+export const updateRecurringStatusSchema = z
+  .object({
+    householdId: z.string().uuid(),
+    status: z.enum(["CONFIRMED", "DISMISSED", "PAUSED", "DETECTED"]),
+  })
+  .strict();
+export type UpdateRecurringStatusInput = z.infer<typeof updateRecurringStatusSchema>;
+
 export const contractItemSchema = z.object({
   id: z.string(),
   name: z.string(),

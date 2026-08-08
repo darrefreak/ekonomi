@@ -174,6 +174,7 @@ export const anomalyFindings = pgTable(
       .default([]),
     identityKey: varchar("identity_key", { length: 200 }).notNull(),
     createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+    dismissedAt: timestamp("dismissed_at", { withTimezone: true }),
   },
   (t) => [
     uniqueIndex("anomaly_findings_household_identity_uidx").on(

@@ -1,6 +1,6 @@
 # Feature Completion Matrix
 
-Audit date: 2026-08-08 (P1-U1 update)  
+Audit date: 2026-08-08 (P1-U5 update)  
 Statuses: COMPLETE | PARTIAL | SCAFFOLD_ONLY | MOCK_ONLY | NOT_STARTED | BROKEN | BLOCKED  
 
 Columns: Status · Backend · Frontend · Tests · Mobile · Priority · Dependencies · Notes
@@ -18,7 +18,7 @@ Legend for layer columns: **C** complete · **P** partial · **S** scaffold · *
 | Household membership | COMPLETE | C | C | C | P | P0 | Auth | Invite/accept/role/remove + last-OWNER (P1-U1) |
 | Permissions / roles | COMPLETE | C | C | C | P | P0 | Members | Role change UI + authz tests (P1-U1) |
 | Member privacy policies | COMPLETE | C | C | C | P | P0 | Permissions | Human-readable policy labels in settings (P1-U1) |
-| Audit logging | PARTIAL | C | N | P | N | P1 | Auth | Account/policy/member/category audited (P1-U1); no UI |
+| Audit logging | PARTIAL | C | P | P | N | P1 | Auth | List API + Settings UI for OWNER/ADMIN (P1-U5); before/after detail deferred |
 | Settings (product) | COMPLETE | C | C | P | P | P1 | — | Full V1 sections + policies/categories/members (P1-U1) |
 | Localization sv-SE | PARTIAL | P | P | P | P | P2 | — | Swedish copy; en-US not wired |
 | Appearance / dark mode | PARTIAL | C | C | P | P | P2 | Tokens | Settings appearance applied via `.dark` (P1-U3); polish residual |
@@ -103,10 +103,10 @@ Legend for layer columns: **C** complete · **P** partial · **S** scaffold · *
 | Feature | Status | BE | FE | Test | Mobile | Pri | Deps | Missing / defects |
 |---|---|---|---|---|---|---|---|---|
 | Savings opportunities | PARTIAL | C | C | C | P | P1 | Core | Deterministic detectors + evidence/facts (P1-U4); more types deferred |
-| Subscription analysis | PARTIAL | C | P | C | P | P1 | Subs | Price-increase series detector (P1-U4) |
+| Subscription analysis | PARTIAL | C | P | C | P | P1 | Subs | Price-increase series + recurring confirm/dismiss (P1-U5) |
 | Contract renewal intel | PARTIAL | C | P | C | P | P1 | Contracts | Deadline review; no fake savings (P1-U4) |
 | Lifestyle creep | PARTIAL | C | P | C | P | P2 | Cashflow | Spending-trend opportunity (P1-U4) |
-| Anomaly detection | PARTIAL | C | N | C | N | P1 | Review | V1 rules + persist + job (P1-U4); no ML |
+| Anomaly detection | PARTIAL | C | P | C | N | P1 | Review | List/dismiss API + Insights/Review UI (P1-U5); no ML |
 | Recommendation outcomes | PARTIAL | P | P | P | B | P2 | AI | List + status actions (WS I) |
 
 ---
@@ -195,7 +195,7 @@ Legend for layer columns: **C** complete · **P** partial · **S** scaffold · *
 | Observability | PARTIAL | P | N | N | N | P2 | — | Structured logs + request IDs |
 | Performance (dashboard) | PARTIAL | P | P | N | P | P1 | — | Aggregated dashboard API exists |
 | Security baseline | PARTIAL | P | P | N | P | P0 | — | See P0_ISSUES |
-| Jobs catalog | PARTIAL | C | N | C | N | P2 | Redis | Typed registry + real V1 handlers (P1-U4); UI thin |
+| Jobs catalog | PARTIAL | C | P | C | N | P2 | Redis | analysis_runs persist + Settings status panel (P1-U5) |
 | iOS app | NOT_STARTED | — | — | — | N | P3 | Shared pkgs | Reserved |
 | Real external connectors | BLOCKED | — | — | — | — | — | Compliance | Explicitly out of V1 |
 

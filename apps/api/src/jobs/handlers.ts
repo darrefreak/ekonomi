@@ -1,9 +1,10 @@
-import type { JobPayload } from "@ffos/schemas";
+import type { JobPayload, JobType } from "@ffos/schemas";
 import { asc, eq } from "drizzle-orm";
 import { logger } from "../common/logger";
 import { getDb } from "../db/client";
 import { householdMembers } from "../db/schema";
 import { AdvisorService } from "../ai/advisor.service";
+import { AnalysisRunsService } from "../decisions/analysis-runs.service";
 import { AnomalyService } from "../decisions/anomaly.service";
 import { DecisionsService } from "../decisions/decisions.service";
 import {
@@ -24,6 +25,18 @@ import { VehiclesService } from "../vehicles/vehicles.service";
 
 const DEMO_AS_OF = () => process.env.DEMO_AS_OF_DATE ?? "2026-08-01";
 
+/** Job types that write a row to analysis_runs for the Settings status panel. */
+const TRACKED_ANALYSIS_JOBS = new Set<JobType>([
+  "CALCULATE_METRICS",
+  "CALCULATE_NET_WORTH",
+  "GENERATE_FORECAST",
+  "GENERATE_OPPORTUNITIES",
+  "RUN_RISK_ANALYSIS",
+  "RUN_ANOMALY_ANALYSIS",
+  "GENERATE_INSIGHTS",
+  "GENERATE_AI_BRIEF",
+]);
+
 /**
  * Manual construction of getDb()-based services for job workers.
  * All services below have no external (non-DB) dependencies, so this
@@ -38,6 +51,7 @@ function buildServices() {
   const generator = new OpportunitiesGeneratorService();
   const decisions = new DecisionsService(access, metrics, planning, debt, vehicles, generator);
   const anomaly = new AnomalyService();
+  const analysisRuns = new AnalysisRunsService();
   const metricRegistry = new MetricRegistryService(metrics);
   const flags = new FeatureFlagsService();
   const advisor = new AdvisorService(access, planning, decisions, vehicles, metrics, flags);
@@ -54,6 +68,7 @@ function buildServices() {
     generator,
     decisions,
     anomaly,
+    analysisRuns,
     metricRegistry,
     advisor,
     ledger,
@@ -74,13 +89,10 @@ async function resolveHouseholdActorUserId(householdId: string): Promise<string 
 
 export type JobHandlerResult = Record<string, unknown> | null;
 
-/**
- * Dispatches a validated job payload to real service logic.
- * Kept independent of BullMQ so it can also be exercised by tests.
- */
-export async function runJobHandler(payload: JobPayload): Promise<JobHandlerResult> {
-  const services = buildServices();
-
+async function executeJob(
+  services: ReturnType<typeof buildServices>,
+  payload: JobPayload,
+): Promise<JobHandlerResult> {
   switch (payload.type) {
     case "HEALTH_CHECK": {
       return { ok: true, at: new Date().toISOString() };
@@ -174,5 +186,46 @@ export async function runJobHandler(payload: JobPayload): Promise<JobHandlerResu
       const _exhaustive: never = payload;
       throw new Error(`Unhandled job type: ${JSON.stringify(_exhaustive)}`);
     }
+  }
+}
+
+/**
+ * Dispatches a validated job payload to real service logic.
+ * Kept independent of BullMQ so it can also be exercised by tests.
+ */
+export async function runJobHandler(payload: JobPayload): Promise<JobHandlerResult> {
+  const services = buildServices();
+  const track = TRACKED_ANALYSIS_JOBS.has(payload.type) && payload.householdId !== "system";
+  const asOf = ("asOf" in payload && payload.asOf) || DEMO_AS_OF();
+  const startedAt = new Date();
+
+  if (!track) {
+    return executeJob(services, payload);
+  }
+
+  try {
+    const result = await executeJob(services, payload);
+    await services.analysisRuns.record({
+      householdId: payload.householdId,
+      kind: payload.type,
+      status: "READY",
+      asOf: typeof result?.asOf === "string" ? result.asOf : asOf,
+      summary: result ?? {},
+      startedAt,
+      finishedAt: new Date(),
+    });
+    return result;
+  } catch (err) {
+    await services.analysisRuns.record({
+      householdId: payload.householdId,
+      kind: payload.type,
+      status: "FAILED",
+      asOf,
+      errorCode: err instanceof Error ? err.name : "JobError",
+      summary: { message: err instanceof Error ? err.message : String(err) },
+      startedAt,
+      finishedAt: new Date(),
+    });
+    throw err;
   }
 }

@@ -39,6 +39,11 @@ import {
   createSourceSchema,
   importsResponseSchema,
   insightsResponseSchema,
+  anomaliesResponseSchema,
+  dismissAnomalySchema,
+  analysisRunsResponseSchema,
+  auditLogsResponseSchema,
+  updateRecurringStatusSchema,
   integrationsResponseSchema,
   reconnectSourceSchema,
   sourceSchema,
@@ -121,6 +126,11 @@ import {
   type CreateSourceInput,
   type ImportsResponse,
   type InsightsResponse,
+  type AnomaliesResponse,
+  type DismissAnomalyInput,
+  type AnalysisRunsResponse,
+  type AuditLogsResponse,
+  type UpdateRecurringStatusInput,
   type IntegrationsResponse,
   type ReconnectSourceInput,
   type SourceDto,
@@ -808,6 +818,19 @@ export function createApiClient(options: ApiClientOptions) {
       );
       return subscriptionsResponseSchema.parse(data) as SubscriptionsResponse;
     },
+    updateRecurringStatus: async (
+      recurringId: string,
+      input: UpdateRecurringStatusInput,
+    ) => {
+      const data = await request<unknown>(
+        `/api/v1/recurring/${encodeURIComponent(recurringId)}`,
+        {
+          method: "PATCH",
+          body: JSON.stringify(updateRecurringStatusSchema.parse(input)),
+        },
+      );
+      return subscriptionsResponseSchema.parse(data) as SubscriptionsResponse;
+    },
     getContracts: async (householdId: string) => {
       const data = await request<unknown>(
         `/api/v1/contracts?householdId=${encodeURIComponent(householdId)}`,
@@ -946,6 +969,34 @@ export function createApiClient(options: ApiClientOptions) {
         `/api/v1/insights?householdId=${encodeURIComponent(householdId)}`,
       );
       return insightsResponseSchema.parse(data) as InsightsResponse;
+    },
+    getAnomalies: async (householdId: string) => {
+      const data = await request<unknown>(
+        `/api/v1/anomalies?householdId=${encodeURIComponent(householdId)}`,
+      );
+      return anomaliesResponseSchema.parse(data) as AnomaliesResponse;
+    },
+    dismissAnomaly: async (anomalyId: string, input: DismissAnomalyInput) => {
+      const data = await request<unknown>(
+        `/api/v1/anomalies/${encodeURIComponent(anomalyId)}/dismiss`,
+        {
+          method: "POST",
+          body: JSON.stringify(dismissAnomalySchema.parse(input)),
+        },
+      );
+      return anomaliesResponseSchema.parse(data) as AnomaliesResponse;
+    },
+    getAnalysisRuns: async (householdId: string) => {
+      const data = await request<unknown>(
+        `/api/v1/analysis-runs?householdId=${encodeURIComponent(householdId)}`,
+      );
+      return analysisRunsResponseSchema.parse(data) as AnalysisRunsResponse;
+    },
+    getAuditLogs: async (householdId: string) => {
+      const data = await request<unknown>(
+        `/api/v1/audit-logs?householdId=${encodeURIComponent(householdId)}`,
+      );
+      return auditLogsResponseSchema.parse(data) as AuditLogsResponse;
     },
     getVehicleMarket: async (householdId: string, vehicleId?: string) => {
       const qs = new URLSearchParams({ householdId });

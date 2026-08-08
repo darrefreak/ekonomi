@@ -18,13 +18,13 @@ import { SettingsService } from "./settings.service";
 @ApiTags("settings")
 @ApiBearerAuth()
 @UseGuards(AuthGuard)
-@Controller("api/v1/settings")
+@Controller("api/v1")
 export class SettingsController {
   constructor(
     @Inject(SettingsService) private readonly settings: SettingsService,
   ) {}
 
-  @Get()
+  @Get("settings")
   get(
     @CurrentUser() user: AuthenticatedUser,
     @Query(new ZodValidationPipe(householdIdQuerySchema))
@@ -33,7 +33,7 @@ export class SettingsController {
     return this.settings.get(user.userId, query.householdId);
   }
 
-  @Patch()
+  @Patch("settings")
   update(
     @CurrentUser() user: AuthenticatedUser,
     @Body(new ZodValidationPipe(updateSettingsSchema)) body: unknown,
@@ -42,5 +42,14 @@ export class SettingsController {
       user.userId,
       updateSettingsSchema.parse(body),
     );
+  }
+
+  @Get("audit-logs")
+  listAuditLogs(
+    @CurrentUser() user: AuthenticatedUser,
+    @Query(new ZodValidationPipe(householdIdQuerySchema))
+    query: { householdId: string },
+  ) {
+    return this.settings.listAuditLogs(user.userId, query.householdId);
   }
 }

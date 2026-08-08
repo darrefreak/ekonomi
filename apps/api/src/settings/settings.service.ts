@@ -18,6 +18,11 @@ export class SettingsService {
     @Inject(AuditService) private readonly audit: AuditService,
   ) {}
 
+  async listAuditLogs(userId: string, householdId: string) {
+    await this.access.requireAdmin(userId, householdId);
+    return this.audit.list(householdId);
+  }
+
   private async ensureRow(householdId: string) {
     const db = getDb();
     const [existing] = await db

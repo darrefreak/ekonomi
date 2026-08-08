@@ -169,6 +169,13 @@
       "when": 1754655600000,
       "tag": "0023_p1_u4_opportunities_jobs",
       "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1754659200000,
+      "tag": "0024_p1_u5_ops_surface",
+      "breakpoints": true
     }
   ]
 }
