@@ -39,6 +39,17 @@ P0 financial core remains protected. No U6 work started.
 
 - No ledger rewrite, no float money, Metric Registry still sole metric truth, cache not treated as financial truth.
 
+## Gates
+
+| Gate | Result |
+|---|---|
+| typecheck (schemas/api/api-client/web) | pass |
+| lint | pass |
+| build (api/web + Docker images) | pass |
+| API tests | **103/103** |
+| schemas + engine tests | pass |
+| Docker migrate + smoke | pass |
+
 ## Stop
 
 Await next instruction — do not start U6.
