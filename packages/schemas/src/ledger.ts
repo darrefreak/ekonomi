@@ -34,7 +34,8 @@ export const createCreditCardPurchaseSchema = z
   .object({
     householdId: uuidSchema,
     creditCardAccountId: uuidSchema,
-    expenseAccountId: uuidSchema,
+    /** Optional; resolved to the household's system EXPENSE book when omitted. */
+    expenseAccountId: uuidSchema.optional(),
     amountMinor: positiveAmountMinorStringSchema,
     occurredOn: isoDateSchema,
     description: descriptionSchema,
@@ -58,7 +59,8 @@ export const createMortgagePaymentSchema = z
     householdId: uuidSchema,
     cashAccountId: uuidSchema,
     mortgageAccountId: uuidSchema,
-    interestExpenseAccountId: uuidSchema,
+    /** Optional; resolved to the household's system EXPENSE book when omitted. */
+    interestExpenseAccountId: uuidSchema.optional(),
     principalMinor: positiveAmountMinorStringSchema,
     interestMinor: positiveAmountMinorStringSchema,
     occurredOn: isoDateSchema,
@@ -262,6 +264,18 @@ export const ledgerBalancesQuerySchema = z.object({
 
 export type CreateInternalTransferInput = z.infer<
   typeof createInternalTransferSchema
+>;
+export type CreateCreditCardPurchaseInput = z.infer<
+  typeof createCreditCardPurchaseSchema
+>;
+export type CreateCreditCardPaymentInput = z.infer<
+  typeof createCreditCardPaymentSchema
+>;
+export type CreateMortgagePaymentInput = z.infer<
+  typeof createMortgagePaymentSchema
+>;
+export type CreateInvestmentTransferInput = z.infer<
+  typeof createInvestmentTransferSchema
 >;
 export type CreateAssetDepreciationInput = z.infer<
   typeof createAssetDepreciationSchema

@@ -203,7 +203,7 @@ export class EconomicEventsService {
   async createCreditCardPurchase(input: {
     householdId: string;
     creditCardAccountId: string;
-    expenseAccountId: string;
+    expenseAccountId?: string;
     amountMinor: bigint;
     occurredOn: string;
     description?: string;
@@ -215,11 +215,12 @@ export class EconomicEventsService {
     await requireAccount(input.householdId, input.creditCardAccountId, [
       "CREDIT_CARD",
     ]);
-    await requireAccount(input.householdId, input.expenseAccountId, [
-      "EXPENSE",
-    ]);
+    const expenseAccountId =
+      input.expenseAccountId ??
+      (await this.resolveExpenseBook(input.householdId)).id;
+    await requireAccount(input.householdId, expenseAccountId, ["EXPENSE"]);
     const draft = buildCreditCardPurchase({
-      expenseAccountId: input.expenseAccountId,
+      expenseAccountId,
       creditCardAccountId: input.creditCardAccountId,
       amountMinor: input.amountMinor,
       currency: input.currency ?? "SEK",
@@ -281,7 +282,7 @@ export class EconomicEventsService {
     householdId: string;
     cashAccountId: string;
     mortgageAccountId: string;
-    interestExpenseAccountId: string;
+    interestExpenseAccountId?: string;
     principalMinor: bigint;
     interestMinor: bigint;
     occurredOn: string;
@@ -298,14 +299,17 @@ export class EconomicEventsService {
       "MORTGAGE",
       "LOAN",
     ]);
-    await requireAccount(input.householdId, input.interestExpenseAccountId, [
+    const interestExpenseAccountId =
+      input.interestExpenseAccountId ??
+      (await this.resolveExpenseBook(input.householdId)).id;
+    await requireAccount(input.householdId, interestExpenseAccountId, [
       "EXPENSE",
     ]);
     const total = input.principalMinor + input.interestMinor;
     const draft = buildMortgagePayment({
       cashAccountId: input.cashAccountId,
       mortgageAccountId: input.mortgageAccountId,
-      interestExpenseAccountId: input.interestExpenseAccountId,
+      interestExpenseAccountId,
       principalMinor: input.principalMinor,
       interestMinor: input.interestMinor,
       currency: input.currency ?? "SEK",
