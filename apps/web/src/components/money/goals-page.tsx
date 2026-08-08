@@ -2,7 +2,7 @@
 
 import { useState, type FormEvent } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import type { GoalItem } from "@ffos/schemas";
+import type { GoalItem, SinkingFundItem } from "@ffos/schemas";
 import { api } from "@/lib/api";
 import { kronorToMinorString, minorToKronorInput } from "@/lib/money-input";
 import { ensureHouseholdSession } from "@/lib/session";
@@ -49,6 +49,7 @@ export function GoalsPage() {
   const [goalAmounts, setGoalAmounts] = useState<Record<string, string>>({});
   const [fundAmounts, setFundAmounts] = useState<Record<string, string>>({});
   const [editingGoalId, setEditingGoalId] = useState<string | null>(null);
+  const [editingFundId, setEditingFundId] = useState<string | null>(null);
 
   const [newGoalName, setNewGoalName] = useState("");
   const [newGoalType, setNewGoalType] = useState<(typeof GOAL_TYPES)[number]>("CUSTOM");
@@ -419,7 +420,16 @@ export function GoalsPage() {
             description="Öronmärk pengar för bilunderhåll, semester eller andra framtida kostnader."
           />
         ) : (
-          data.sinkingFunds.map((fund) => (
+          data.sinkingFunds.map((fund) =>
+            editingFundId === fund.id ? (
+              <SinkingFundEditForm
+                key={fund.id}
+                fund={fund}
+                householdId={householdId}
+                onClose={() => setEditingFundId(null)}
+                onError={setActionError}
+              />
+            ) : (
             <article key={fund.id} className="rounded-[16px] bg-surface-elevated p-5">
               <div className="flex items-start justify-between gap-3">
                 <div>
@@ -429,9 +439,18 @@ export function GoalsPage() {
                     {fund.targetDate ? ` · till ${fund.targetDate}` : ""}
                   </p>
                 </div>
-                <p className="tabular-nums text-sm text-text-secondary">
-                  {fund.percentComplete.toFixed(0)} %
-                </p>
+                <div className="flex items-center gap-2">
+                  <p className="tabular-nums text-sm text-text-secondary">
+                    {fund.percentComplete.toFixed(0)} %
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => setEditingFundId(fund.id)}
+                    className="min-h-11 rounded-[12px] border border-border-strong px-3 text-sm"
+                  >
+                    Redigera
+                  </button>
+                </div>
               </div>
               <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-surface-muted">
                 <div
@@ -468,7 +487,8 @@ export function GoalsPage() {
                 </button>
               </div>
             </article>
-          ))
+            ),
+          )
         )}
       </section>
     </div>
@@ -551,6 +571,128 @@ function GoalEditForm({
             <option value="COMPLETED">Klart</option>
             <option value="CANCELLED">Avbrutet</option>
           </select>
+        </label>
+        <label className="block text-sm">
+          <span className="text-xs text-text-muted">Målbelopp (kr)</span>
+          <input
+            inputMode="decimal"
+            value={targetKr}
+            onChange={(e) => setTargetKr(e.target.value)}
+            className="mt-1 min-h-11 w-full rounded-[12px] border border-border bg-surface px-3 text-sm tabular-nums"
+          />
+        </label>
+        <label className="block text-sm">
+          <span className="text-xs text-text-muted">Plan / mån (kr)</span>
+          <input
+            inputMode="decimal"
+            value={monthlyKr}
+            onChange={(e) => setMonthlyKr(e.target.value)}
+            className="mt-1 min-h-11 w-full rounded-[12px] border border-border bg-surface px-3 text-sm tabular-nums"
+          />
+        </label>
+        <label className="block text-sm">
+          <span className="text-xs text-text-muted">Måldatum</span>
+          <input
+            type="date"
+            value={targetDate}
+            onChange={(e) => setTargetDate(e.target.value)}
+            className="mt-1 min-h-11 w-full rounded-[12px] border border-border bg-surface px-3 text-sm"
+          />
+        </label>
+        <label className="block text-sm">
+          <span className="text-xs text-text-muted">Prioritet (1–5)</span>
+          <input
+            type="number"
+            min={1}
+            max={5}
+            value={priority}
+            onChange={(e) => setPriority(Number(e.target.value))}
+            className="mt-1 min-h-11 w-full rounded-[12px] border border-border bg-surface px-3 text-sm tabular-nums"
+          />
+        </label>
+      </div>
+      <div className="flex flex-wrap gap-3">
+        <button
+          type="button"
+          disabled={saveMutation.isPending}
+          onClick={() => void saveMutation.mutate()}
+          className="min-h-11 rounded-[12px] bg-accent px-4 text-sm font-medium text-white disabled:opacity-60"
+        >
+          {saveMutation.isPending ? "Sparar…" : "Spara"}
+        </button>
+        <button
+          type="button"
+          onClick={onClose}
+          className="min-h-11 rounded-[12px] border border-border-strong px-4 text-sm"
+        >
+          Avbryt
+        </button>
+      </div>
+    </article>
+  );
+}
+
+function SinkingFundEditForm({
+  fund,
+  householdId,
+  onClose,
+  onError,
+}: {
+  fund: SinkingFundItem;
+  householdId: string;
+  onClose: () => void;
+  onError: (msg: string | null) => void;
+}) {
+  const queryClient = useQueryClient();
+  const [name, setName] = useState(fund.name);
+  const [targetKr, setTargetKr] = useState(minorToKronorInput(fund.target.amountMinor));
+  const [monthlyKr, setMonthlyKr] = useState(
+    minorToKronorInput(fund.monthlyContribution.amountMinor),
+  );
+  const [targetDate, setTargetDate] = useState(fund.targetDate ?? "");
+  const [priority, setPriority] = useState(fund.priority);
+
+  const saveMutation = useMutation({
+    mutationFn: async () => {
+      const id = await ensureHouseholdSession();
+      const targetMinor = kronorToMinorString(targetKr);
+      const monthlyContributionMinor = kronorToMinorString(monthlyKr);
+      if (!name.trim() || targetMinor == null || BigInt(targetMinor) <= 0n) {
+        throw new Error("Ange namn och ett positivt målbelopp.");
+      }
+      if (monthlyContributionMinor == null) {
+        throw new Error("Ange ett giltigt månadsbelopp.");
+      }
+      return api.updateSinkingFund(fund.id, {
+        householdId: id,
+        name: name.trim(),
+        targetMinor,
+        monthlyContributionMinor,
+        targetDate: targetDate || null,
+        priority,
+      });
+    },
+    onSuccess: async () => {
+      onError(null);
+      await queryClient.invalidateQueries({ queryKey: queryKeys.goals.all(householdId) });
+      onClose();
+    },
+    onError: (err: unknown) => {
+      onError(err instanceof Error ? err.message : "Kunde inte spara sinking funden");
+    },
+  });
+
+  return (
+    <article className="space-y-3 rounded-[16px] border border-accent/40 bg-surface-elevated p-5">
+      <h3 className="text-sm font-medium text-text-secondary">Redigera sinking fund</h3>
+      <div className="grid gap-3 md:grid-cols-2">
+        <label className="block text-sm">
+          <span className="text-xs text-text-muted">Namn</span>
+          <input
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            className="mt-1 min-h-11 w-full rounded-[12px] border border-border bg-surface px-3 text-sm"
+          />
         </label>
         <label className="block text-sm">
           <span className="text-xs text-text-muted">Målbelopp (kr)</span>
