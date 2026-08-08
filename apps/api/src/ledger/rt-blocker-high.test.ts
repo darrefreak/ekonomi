@@ -147,9 +147,7 @@ test("B2 concurrent retries with the same key produce one economic effect", asyn
   );
 
   const ids = new Set(
-    results
-      .filter((r): r is PromiseFulfilledResult<{ id: string }> => r.status === "fulfilled")
-      .map((r) => r.value.id),
+    results.flatMap((r) => (r.status === "fulfilled" ? [r.value.id] : [])),
   );
   assert.ok(ids.size >= 1, "at least one submission must succeed");
   assert.equal(ids.size, 1, "all winners must resolve to the same event");
