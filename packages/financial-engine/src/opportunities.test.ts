@@ -16,6 +16,7 @@ test("mortgage and subscription detectors fire on thresholds", () => {
   });
   assert.ok(m);
   assert.ok((m!.estimatedAnnualSavingMinor ?? 0n) > 0n);
+  assert.ok(m!.estimateBasis?.includes("heuristik"));
   assert.ok(m!.evidence.some((e) => e.href.includes("/debt")));
 
   const s = detectSubscriptionTrimOpportunity({
@@ -24,6 +25,7 @@ test("mortgage and subscription detectors fire on thresholds", () => {
   });
   assert.ok(s);
   assert.equal(s!.detectorKey, "subs-trim");
+  assert.ok(s!.estimateBasis?.includes("20"));
 });
 
 test("contract renewal and lifestyle creep detectors", () => {

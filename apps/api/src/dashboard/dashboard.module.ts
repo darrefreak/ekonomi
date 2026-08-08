@@ -5,6 +5,7 @@ import { HouseholdsModule } from "../households/households.module";
 import { MetricsModule } from "../metrics/metrics.module";
 import { PlanningModule } from "../planning/planning.module";
 import { ReviewModule } from "../review/review.module";
+import { SettingsModule } from "../settings/settings.module";
 import { DashboardController } from "./dashboard.controller";
 import { DashboardService } from "./dashboard.service";
 
@@ -16,6 +17,7 @@ import { DashboardService } from "./dashboard.service";
     ReviewModule,
     PlanningModule,
     DecisionsModule,
+    SettingsModule,
   ],
   controllers: [DashboardController],
   providers: [DashboardService],

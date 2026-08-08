@@ -21,12 +21,27 @@ export const dashboardOpportunitySchema = z.object({
   title: z.string(),
   description: z.string(),
   estimatedAnnualSaving: moneySchema.nullable(),
+  estimateBasis: z.string().nullable().optional(),
   confidence: z.number().nullable(),
   effort: z.string(),
   risk: z.string(),
   priority: z.number(),
   status: z.string(),
   category: z.string(),
+});
+
+export const availableToInvestSchema = z.object({
+  amount: moneySchema,
+  assumptions: z.array(z.string()),
+  deductions: z.object({
+    minimumCashBalance: moneySchema,
+    emergencyFundTarget: moneySchema,
+    safetyMargin: moneySchema,
+    reservedSinkingFunds: moneySchema,
+    upcoming30dOutflows: moneySchema,
+    total: moneySchema,
+  }),
+  disclaimer: z.string(),
 });
 
 export const dashboardResponseSchema = z.object({
@@ -41,6 +56,7 @@ export const dashboardResponseSchema = z.object({
     investments: moneySchema,
     debt: moneySchema,
   }),
+  availableToInvest: availableToInvestSchema.optional(),
   thisMonth: z.object({
     income: moneySchema,
     spending: moneySchema,

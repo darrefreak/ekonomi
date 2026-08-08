@@ -14,6 +14,8 @@ export type DetectedOpportunity = {
   title: string;
   description: string;
   estimatedAnnualSavingMinor: bigint | null;
+  /** Human-readable basis — heuristic estimates must be labeled. */
+  estimateBasis: string | null;
   confidence: number;
   effort: string;
   risk: string;
@@ -22,6 +24,22 @@ export type DetectedOpportunity = {
   category: string;
   evidence: OpportunityEvidence[];
 };
+
+/** Stable Swedish labels for detector heuristics (compliance transparency). */
+export function estimateBasisForDetector(detectorKey: string): string {
+  switch (detectorKey) {
+    case "mortgage-rate":
+      return "Uppskattning (heuristik): ~10 % av nuvarande årsränta vid räntesänkning.";
+    case "subs-trim":
+      return "Uppskattning (heuristik): ca 20 % av årlig abonnemangskostnad.";
+    case "contract-renewal":
+      return "Uppskattning (heuristik): 1 200 kr/år per avtal som förnyas snart.";
+    case "lifestyle-creep":
+      return "Uppskattning: 12 × (3-mån snittutgift − 12-mån baseline).";
+    default:
+      return "Uppskattning (heuristik) — inte garanterad besparing.";
+  }
+}
 
 export function detectMortgageRateOpportunity(input: {
   mortgageInterestAnnualMinor: bigint;
@@ -36,6 +54,7 @@ export function detectMortgageRateOpportunity(input: {
     description:
       "Live detektor: uppskattad årsbesparing från räntesänkning på nuvarande räntekostnad.",
     estimatedAnnualSavingMinor: saving,
+    estimateBasis: estimateBasisForDetector("mortgage-rate"),
     confidence: 0.72,
     effort: "medium",
     risk: "low",
@@ -75,6 +94,7 @@ export function detectSubscriptionTrimOpportunity(input: {
     description:
       "Live detektor: aktiva abonnemang ger utrymme att trimma ca 20 % årligen.",
     estimatedAnnualSavingMinor: input.subscriptionAnnualMinor / 5n,
+    estimateBasis: estimateBasisForDetector("subs-trim"),
     confidence: 0.65,
     effort: "low",
     risk: "low",
@@ -122,6 +142,7 @@ export function detectContractRenewalOpportunity(input: {
     title: "Omförhandla snart förnyade avtal",
     description: `Live detektor: ${due.length} avtal förnyas inom ${ahead} dagar.`,
     estimatedAnnualSavingMinor: BigInt(due.length) * 1_200_00n,
+    estimateBasis: estimateBasisForDetector("contract-renewal"),
     confidence: 0.6,
     effort: "medium",
     risk: "low",
@@ -150,6 +171,7 @@ export function detectLifestyleCreepOpportunity(
       creep.deltaPercent?.toFixed(1) ?? "?"
     } % över 12-månaders baseline.`,
     estimatedAnnualSavingMinor: annual > 0n ? annual : null,
+    estimateBasis: estimateBasisForDetector("lifestyle-creep"),
     confidence: 0.68,
     effort: "medium",
     risk: "moderate",

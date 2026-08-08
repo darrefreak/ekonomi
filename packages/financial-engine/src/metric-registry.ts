@@ -19,7 +19,8 @@ export type MetricDefinition = {
 };
 
 /** Bundle version covering the shared household snapshot set. */
-export const METRIC_BUNDLE_VERSION = "1.0.0";
+/** Bumped when the shared snapshot catalog set changes (P1-U2: available_to_invest). */
+export const METRIC_BUNDLE_VERSION = "1.1.0";
 
 export const METRIC_DEFINITIONS: readonly MetricDefinition[] = [
   {
@@ -116,6 +117,15 @@ export const METRIC_DEFINITIONS: readonly MetricDefinition[] = [
     calculationVersion: "1.0.0",
     valueKind: "ratio_percent",
     unit: "percent",
+  },
+  {
+    metricKey: "available_to_invest",
+    displayName: "Tillgängligt att investera",
+    formulaDescription:
+      "max(0, available_cash − minimum_cash − emergency_fund_target − safety_margin − reserved_sinking_funds − upcoming_30d_outflows). Policy math — not investment advice.",
+    calculationVersion: "1.0.0",
+    valueKind: "money_minor",
+    unit: "minor",
   },
 ] as const;
 

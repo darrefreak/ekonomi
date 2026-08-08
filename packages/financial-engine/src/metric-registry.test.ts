@@ -19,7 +19,7 @@ test("metric registry lists unique versioned definitions", () => {
     assert.ok(d.calculationVersion.length > 0);
     assert.ok(d.formulaDescription.length > 10);
   }
-  assert.equal(METRIC_BUNDLE_VERSION, "1.0.0");
+  assert.equal(METRIC_BUNDLE_VERSION, "1.1.0");
   assert.equal(getMetricDefinition("net_worth")?.metricKey, "net_worth");
   assert.equal(getMetricDefinition("nope"), null);
   assert.equal(requireMetricDefinition("debt_total").valueKind, "money_minor");

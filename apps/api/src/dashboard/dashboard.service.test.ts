@@ -6,12 +6,14 @@ import { dashboardResponseSchema } from "@ffos/schemas";
 import { buildBrief } from "./dashboard.service";
 import { getDb } from "../db/client";
 import { households } from "../db/schema";
+import { AuditService } from "../audit/audit.service";
 import { DashboardService } from "./dashboard.service";
 import { DebtService } from "../debt/debt.service";
 import { DecisionsService } from "../decisions/decisions.service";
 import { HouseholdMetricsService } from "../metrics/household-metrics.service";
 import { PlanningMetricsService } from "../planning/planning-metrics.service";
 import { ReviewService } from "../review/review.service";
+import { SettingsService } from "../settings/settings.service";
 import type { HouseholdAccessService } from "../households/household-access.service";
 import { VehiclesService } from "../vehicles/vehicles.service";
 
@@ -150,6 +152,7 @@ test("getDashboard aggregates opportunities and forecast from live services", as
       new DebtService(access, metrics),
       new VehiclesService(access),
     ),
+    new SettingsService(access, new AuditService()),
   );
 
   const dashboard = await service.getDashboard("user-1", household.id);
