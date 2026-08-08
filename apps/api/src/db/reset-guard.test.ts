@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { describeDatabaseTarget, DatabaseTargetError } from "./database-target";
+import { describeDatabaseTarget } from "./database-target";
 import {
   assertDatabaseResetAllowed,
   DatabaseResetRefused,
@@ -18,13 +18,16 @@ function env(overrides: Partial<ResetGuardEnv> = {}): ResetGuardEnv {
   };
 }
 
+/**
+ * Every rejection must arrive as `DatabaseResetRefused`, which is the only error
+ * `reset.ts` renders as a one-line reason. Anything else reaches the operator as
+ * a stack trace, so accepting a second error type here would hide that.
+ */
 function refusal(overrides: Partial<ResetGuardEnv>, options = {}) {
   try {
     assertDatabaseResetAllowed(env(overrides), options);
   } catch (err) {
-    if (err instanceof DatabaseResetRefused || err instanceof DatabaseTargetError) {
-      return err.message;
-    }
+    if (err instanceof DatabaseResetRefused) return err.message;
     throw err;
   }
   return null;
@@ -103,11 +106,18 @@ test("permission must be granted explicitly", () => {
 });
 
 test("missing or malformed URLs are refused", () => {
-  assert.match(refusal({ DATABASE_URL: undefined }) ?? "", /not set/i);
-  assert.match(refusal({ DATABASE_URL: "" }) ?? "", /not set/i);
-  assert.match(refusal({ DATABASE_URL: "not a url" }) ?? "", /valid URL/i);
-  assert.match(refusal({ DATABASE_URL: "mysql://x/ffos_test" }) ?? "", /postgres URL/i);
-  assert.match(refusal({ DATABASE_URL: `${HOST}/` }) ?? "", /no database name/i);
+  for (const [url, expected] of [
+    [undefined, /not set/i],
+    ["", /not set/i],
+    ["not a url", /valid URL/i],
+    ["mysql://x/ffos_test", /postgres URL/i],
+    [`${HOST}/`, /no database name/i],
+    ["postgres://ffos:hunter2@", /valid URL/i],
+  ] as const) {
+    const message = refusal({ DATABASE_URL: url });
+    assert.match(message ?? "", /Refusing to reset an unidentifiable target/, String(url));
+    assert.match(message ?? "", expected, String(url));
+  }
 });
 
 test("guard output never contains credentials", () => {

@@ -91,11 +91,14 @@ printing e.g. `Seeding ffos_dev at localhost:5436 (development)` before it start
 | `ffos`, `postgres`, `app`, `ffos_devx`, `testing` | refused, unrecognised name |
 | `NODE_ENV=production` | refused first, whatever the URL says |
 | `FFOS_ALLOW_DB_RESET` unset, `1`, or `yes` | refused — only the literal `true` grants permission |
-| `DATABASE_URL` missing, empty, `not a url`, `mysql://…`, or without a database name | refused |
+| `DATABASE_URL` missing, empty, `not a url`, `mysql://…`, or without a database name | refused as an unidentifiable target |
 | any refusal or success message | contains host, port, database and kind; never credentials |
 
-Ten unit tests in `apps/api/src/db/reset-guard.test.ts` cover exactly these rows and run in
-`pnpm test`.
+Eleven unit tests in `apps/api/src/db/reset-guard.test.ts` cover exactly these rows and run
+in `pnpm test`. They require every rejection to arrive as `DatabaseResetRefused`, because
+that is the only error `reset.ts` renders as a one-line reason: an unparseable URL used to be
+refused correctly but reported as a stack trace, which is the wrong output for an expected
+refusal.
 
 ## Usage
 

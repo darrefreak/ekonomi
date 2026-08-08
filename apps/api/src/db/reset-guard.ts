@@ -1,5 +1,6 @@
 import {
   describeDatabaseTarget,
+  DatabaseTargetError,
   type DatabaseTarget,
 } from "./database-target";
 
@@ -66,8 +67,19 @@ export function assertDatabaseResetAllowed(
   }
 
   // A malformed or absent URL is an unknown target, and unknown targets are
-  // refused; `describeDatabaseTarget` throws rather than guessing.
-  const target = describeDatabaseTarget(env.DATABASE_URL);
+  // refused. Restated as a refusal rather than rethrown, so the operator gets
+  // the same one-line reason as every other rejection instead of a stack trace.
+  let target: DatabaseTarget;
+  try {
+    target = describeDatabaseTarget(env.DATABASE_URL);
+  } catch (err) {
+    if (err instanceof DatabaseTargetError) {
+      throw new DatabaseResetRefused(
+        `Refusing to reset an unidentifiable target: ${err.message}`,
+      );
+    }
+    throw err;
+  }
 
   if (target.kind === "protected") {
     throw new DatabaseResetRefused(
