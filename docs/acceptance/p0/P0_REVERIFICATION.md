@@ -40,4 +40,21 @@ Classification: `VERIFIED_FIXED` | `PARTIAL` | `NOT_FIXED` | `REGRESSION`
 
 P0 acceptance requires **every** item above that is in the original P0 set to be `VERIFIED_FIXED`.
 
-**Result:** unmet — P0-1, P0-7, P0-8 remain `PARTIAL`; several financial blockers `NOT_FIXED`.
+**Result (audit date):** unmet — P0-1, P0-7, P0-8 remain `PARTIAL`; several financial blockers `NOT_FIXED`.
+
+---
+
+## R4 update (2026-08-08)
+
+Remediation batches R1–R4 closed the residual P0 identifiers. Reclassification:
+
+| ID | Classification after R1–R4 |
+|---|---|
+| P0-1 / P0-A5 | **VERIFIED_FIXED** (R2) |
+| P0-7 / P0-A4 | **VERIFIED_FIXED** (R3) |
+| P0-8 / P0-A6 | **VERIFIED_FIXED** (R4) |
+| Atomicity / depreciation idempotency | **VERIFIED_FIXED** (R1) |
+| Document float extract | **VERIFIED_FIXED** (R2) |
+| Purchase / financed / reverse | **VERIFIED_FIXED** (R3) |
+
+**Result after R4:** met — see `P0_FINANCIAL_ACCEPTANCE.md`.

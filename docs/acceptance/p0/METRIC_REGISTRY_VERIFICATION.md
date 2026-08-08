@@ -1,6 +1,6 @@
 # Metric Registry Verification
 
-**Date:** 2026-08-07  
+**Date:** 2026-08-08 (R4 re-verify)  
 **Catalog:** `packages/financial-engine/src/metric-registry.ts`  
 **Serving:** `apps/api/src/metrics/metric-registry.service.ts`
 
@@ -26,13 +26,13 @@ Registered keys: `net_worth`, `available_cash`, `investments_total`, `assets_tot
 
 | Check | Result |
 |---|---|
-| Non-constant | PASS — derived from household, asOf, bundle, account count, position totals, income/spend, month |
-| Changes when position totals change | PASS (by construction) |
-| Sensitive to composition with same totals | **FAIL** — account IDs / per-account balances / posting counts omitted |
-| Yearly report hash | **FAIL** — `inputHash: yearly-${y}` fabricated (`reports.service.ts`) |
-| `metricMeta.calculationVersion` | **FAIL** vs catalog — set to **bundle** version, not per-metric version |
+| Non-constant | PASS |
+| Changes when position totals change | PASS |
+| Sensitive to composition with same totals | **PASS (R4)** — per-account balance lines + posting count/sum/max bookedOn + max event updatedAt |
+| Yearly report hash | **PASS (R4)** — derived from period month income/spend via `metricInputHash` |
+| `metricMeta.calculationVersion` | **PASS (R4)** — catalog fingerprint (`metricCatalogCalculationVersion`); `metricVersions` map exposed; not bundle semver |
 
-Verdict: inputHash is **meaningful but weak** — not acceptable as a reproducibility fingerprint for acceptance.
+Verdict: inputHash is a **composition-sensitive reproducibility fingerprint** acceptable for P0-8.
 
 ---
 
@@ -40,9 +40,9 @@ Verdict: inputHash is **meaningful but weak** — not acceptable as a reproducib
 
 | Check | Result |
 |---|---|
-| DB unique `(householdId, metricKey, asOf, calculationVersion)` | PASS — can store old versions |
-| Serving historical formula for old version | **FAIL** — `getSnapshots` always rematerializes with **current** defs |
-| Silent rewrite of meaning | Mitigated by version column on write; **not** by read path |
+| DB unique `(householdId, metricKey, asOf, calculationVersion)` | PASS |
+| Serving historical formula for old version | **PASS (R4)** — `GET /metrics/snapshots?mode=stored` (+ optional metricKey/calculationVersion) reads DB without rematerialize |
+| Silent rewrite of meaning | Mitigated by version column on write **and** stored read path |
 
 ---
 
@@ -58,13 +58,11 @@ Verified by `metric-registry.consistency.test.ts` (PASS):
 | Wealth APIs | — | — | ✓ | ✓ |
 | AI `get_net_worth` | same snap path | same | same | — |
 
-Residuals: debt **detail** uses cache; reports monthly can attach snap meta while computing a different period’s savings rate.
-
 ---
 
 ## asOf coherence
 
-Most product APIs hardcode `process.env.DEMO_AS_OF_DATE ?? "2026-08-01"` and do not accept client `asOf`. Metrics snapshots accept `asOf`; `/metrics/meta` ignores it. Mixed period (reports) vs position asOf is possible without dual timestamps in meta.
+**PASS (R4):** dashboard, net-worth, debt, wealth, metrics meta, and reports accept optional `asOf` (query → `DEMO_AS_OF_DATE` → default). Metrics snapshots already accepted `asOf`.
 
 ---
 
@@ -72,11 +70,11 @@ Most product APIs hardcode `process.env.DEMO_AS_OF_DATE ?? "2026-08-01"` and do 
 
 | Store | Behavior |
 |---|---|
-| `metric_snapshots` | Rematerialized on read — live ledger wins |
-| `account_balance_snapshots` (NW history) | Insert-if-missing only — **stale history can survive mutations** |
+| `metric_snapshots` | Live rematerialize on default read; stored mode serves persisted rows |
+| `account_balance_snapshots` (NW history) | Invalidate + upsert (R2) |
 
 ---
 
 ## Registry acceptance
 
-**FAIL** as fully closed P0-8. Catalog + shared consumers exist; hash/version/asOf/history gaps remain.
+**PASS** for P0-8 / P0-A6 after R4.

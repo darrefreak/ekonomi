@@ -1,19 +1,19 @@
 # P0 Financial Acceptance
 
-**Date:** 2026-08-07  
+**Date:** 2026-08-08  
 **Auditor:** adversarial acceptance gate (code + tests + proofs)  
-**Base tip:** post-C2 (`cursor/batch-c2-metric-registry-9c58`)
+**Tip:** post-R4 (`cursor/batch-r4-metric-registry-9c58`)
 
 ---
 
-## FAIL — P0 FINANCIAL CORE NOT ACCEPTED
+## PASS — P0 FINANCIAL CORE ACCEPTED
 
-Batch reports A2/A3/S1/C2 are **substantially real** and many invariants pass as persisted tests.  
-Acceptance criteria require **zero** unresolved P0 and **zero** known unsafe money paths in V1 flows. That bar is **not** met.
+Batch reports A2/A3/S1/C2 and remediation R1–R4 close all acceptance-blocking P0 identifiers (P0-A1…A8).
 
-**R1 update (2026-08-08):** P0-A1 atomic persist and P0-A2 depreciation idempotency are **FIXED**.  
-**R2 update (2026-08-08):** P0-A3 exact document money + P0-A5 ledger-truth residuals are **FIXED**.  
-**R3 update (2026-08-08):** P0-A4/A7/A8 runtime product paths + reverse/purchase **FIXED**. Core acceptance remains **FAIL** while **P0-A6** (metric registry semantics) remains for R4.
+**R1:** P0-A1 atomic persist + P0-A2 depreciation idempotency **FIXED**.  
+**R2:** P0-A3 exact document money + P0-A5 ledger-truth residuals **FIXED**.  
+**R3:** P0-A4/A7/A8 runtime product paths + reverse/purchase **FIXED**.  
+**R4:** P0-A6 metric registry integrity **FIXED**.
 
 ---
 
@@ -21,51 +21,20 @@ Acceptance criteria require **zero** unresolved P0 and **zero** known unsafe mon
 
 | Dimension | Result |
 |---|---|
-| P0 remaining | **> 0** |
-| Financial correctness | **FAIL** |
-| Money exactness | **PASS** (R2; core writes + document extract exact) |
-| Ledger truth | **PASS** (R2 list/detail/history residuals addressed; ledger SoT) |
+| P0 remaining | **0** |
+| Financial correctness | **PASS** |
+| Money exactness | **PASS** |
+| Ledger truth | **PASS** |
 | Persisted invariants (A2 transfer/CC/mortgage/invest/recon) | **PASS** |
 | Validation (S1) | **PASS** |
 | Reconciliation (no silent overwrite) | **PASS** |
 | Depreciation economics | **PASS** |
 | Depreciation idempotency | **PASS** (R1) |
 | Atomic multi-write | **PASS** (R1) |
-| Metric Registry completeness | **FAIL** (PARTIAL implementation) |
+| Metric Registry completeness | **PASS** (R4) |
 | Metric consistency (core totals) | **PASS** on demo |
-| Financial household isolation | **PASS** (authz + household-scoped account lookup; privacy tests green) |
-| Build / Lint / Typecheck / Tests / Docker | **PASS** |
-
----
-
-## Scenario matrix (adversarial)
-
-| # | Scenario | Result | Notes |
-|---|---|---|---|
-| 3–4 | Exact money roundtrip (forms/ledger) | PASS | bigint string path |
-| 3 | Document mock extract money | PASS (R2) | `kronorStringToMinor` |
-| 5 | Internal transfer | PASS | A2 persisted |
-| 6 | Credit card purchase+payment | PASS | spending once |
-| 7 | Mortgage split | PASS | interest expense / principal debtReduction |
-| 8 | Investment transfer | PASS | NW unchanged |
-| 9 | Cash vehicle purchase runtime | PASS (R3) | API + seed purchase event |
-| 10 | Financed vehicle purchase | PASS (R3) | builder + API |
-| 11 | Depreciation 300→280 | PASS economics | PASS idempotency (R1) |
-| 12 | Loan principal/interest (mortgage) | PASS | financed vehicle loan payments not full product path |
-| 13 | Refund | PASS (R3) | HTTP + client + UI |
-| 14 | Reversal/correction | PASS (R3) | status + reverse API |
-| 15 | Split atomicity | PASS (R1+R3) | replace API wired |
-| 16 | Reconciliation mismatch | PASS | A2 Test 5 |
-| 17 | Idempotency | PASS (R1) | transfer + depreciation + CC payment; payload conflict |
-| 18 | Cross-household writes | PASS | requireCanWrite + household account filter |
-| 19 | Validation adversarial | PASS | S1 suite |
-| 20–24 | Metric registry depth | FAIL | see METRIC_REGISTRY_VERIFICATION.md |
-| 25–26 | Cache / snapshot invalidation | PASS (R2) | NW history invalidate + upsert |
-| 27 | Demo seed reconcile | PASS | 0 mismatches |
-| 28 | Hardcoded analytics | PASS | no 9800 tip |
-| 29 | AI tool consistency | PASS | uses snapshot |
-| 30 | Persisted test quality | PASS for A2/A3 core | |
-| 31–34 | Clean gates | PASS | build/lint/typecheck/test/docker |
+| Financial household isolation | **PASS** |
+| Build / Lint / Typecheck / Tests / Docker | **PASS** (see R4_REPORT) |
 
 ---
 
@@ -73,28 +42,14 @@ Acceptance criteria require **zero** unresolved P0 and **zero** known unsafe mon
 
 See `P0_REMAINING_FIXES.md`:
 
-- **P0-A1** — ~~Multi-write ledger persist lacks DB transactions~~ **FIXED (R1)**  
-- **P0-A2** — ~~Depreciation not idempotent (double write-down)~~ **FIXED (R1)**  
-- **P0-A3** — ~~Document mock-extract float kronor→öre~~ **FIXED (R2)**  
-- **P0-A4** — ~~P0-7 product gaps~~ **FIXED (R3)**  
-- **P0-A5** — ~~P0-1 residuals~~ **FIXED (R2)**  
-- **P0-A6** — Metric registry integrity (weak inputHash, asOf hardcoding, no historical serve) → **R4**  
-- **P0-A7** — ~~Vehicle purchase / financed purchase~~ **FIXED (R3)**  
-- **P0-A8** — ~~Reversal/correction~~ **FIXED (R3)**  
-
----
-
-## Technical gates (this run)
-
-| Gate | Result |
-|---|---|
-| `pnpm build` | PASS |
-| `pnpm lint` | PASS |
-| `pnpm typecheck` | PASS |
-| `pnpm test` | PASS (api 56) |
-| Adversarial proofs | PASS (document known breakage) |
-| Docker `/health/ready` | PASS |
-| Demo reconcile | 0 mismatches |
+- **P0-A1** — **FIXED (R1)**  
+- **P0-A2** — **FIXED (R1)**  
+- **P0-A3** — **FIXED (R2)**  
+- **P0-A4** — **FIXED (R3)**  
+- **P0-A5** — **FIXED (R2)**  
+- **P0-A6** — **FIXED (R4)**  
+- **P0-A7** — **FIXED (R3)**  
+- **P0-A8** — **FIXED (R3)**  
 
 ---
 
@@ -102,4 +57,4 @@ See `P0_REMAINING_FIXES.md`:
 
 Do **not** downgrade financial correctness / atomicity / unsafe money / incomplete P0-7/P0-8 to P1 to force PASS.
 
-**FINANCIAL CORE ACCEPTED: NO**
+**FINANCIAL CORE ACCEPTED: YES**

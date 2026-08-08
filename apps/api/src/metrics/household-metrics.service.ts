@@ -149,7 +149,7 @@ export class HouseholdMetricsService {
 
     const [eventAgg] = await db
       .select({
-        maxUpdatedAt: sql<string>`coalesce(max(${financialEvents.updatedAt}), '')`,
+        maxUpdatedAt: sql<Date | null>`max(${financialEvents.updatedAt})`,
       })
       .from(financialEvents)
       .where(
@@ -159,11 +159,19 @@ export class HouseholdMetricsService {
         ),
       );
 
+    const rawUpdated: unknown = eventAgg?.maxUpdatedAt ?? null;
+    const maxEventUpdatedAt =
+      rawUpdated instanceof Date
+        ? rawUpdated.toISOString()
+        : rawUpdated == null
+          ? ""
+          : String(rawUpdated);
+
     return {
       postingCount,
       postingSumMinor,
       maxBookedOn: maxBookedOn || "none",
-      maxEventUpdatedAt: String(eventAgg?.maxUpdatedAt ?? ""),
+      maxEventUpdatedAt,
     };
   }
 
