@@ -181,6 +181,35 @@ Health:
 - `/health/ready`
 - `/health/live`
 
+## 10b. Kommandoidentitet (idempotens)
+
+Tre identiteter finns i systemet och de är **inte** utbytbara. Att blanda ihop de två första
+gav RT2-003; att ignorera den första gav RT2-002.
+
+| Identitet | Svarar på | Källa | Vid träff |
+|---|---|---|---|
+| `Idempotency-Key` | "är detta HTTP-kommandot ett omförsök av **samma användaravsikt**?" | klienten, ogenomskinlig, per kommandotyp | returnera samma resultat; `409 IDEMPOTENCY_CONFLICT` om innehållet skiljer |
+| `externalId` | "är detta **samma post hos källan**?" | leverantören/importen | dedupliceras som samma post |
+| Naturlig affärsnyckel | "förbjuder domänen två entiteter med dessa egenskaper?" | domänen | domänfel — **aldrig** en idempotenskonflikt |
+
+Kanonisk kommandoidentitet är `householdId + commandType + Idempotency-Key`, med
+databasunikhet på just den tripeln (`command_idempotency` för aggregatkommandon,
+motsvarande nyckel för finansiella händelser). Samma nyckel för `CREATE_ACCOUNT` och
+`CREATE_VEHICLE` kolliderar därför inte.
+
+Ett aggregatkommando (t.ex. onboarding av ett finansierat fordon: fordon + tillgångskonto +
+lånekonto + öppningspositioner + audit) reserverar sin idempotensrad **i samma transaktion**
+som kommandots kropp, så antingen committas allt eller ingenting. Samtidiga anrop med samma
+nyckel serialiseras av unika indexet: förloraren väntar på vinnarens radlås och läser sedan
+tillbaka vinnarens resultat i stället för att göra arbetet igen.
+
+Utan nyckel körs kommandot bara: en klient som inte begär omförsöksskydd får det inte, och
+två identiska anrop är två genuina handlingar. Två kommandon med **olika** nycklar men samma
+ekonomiska form (t.ex. 10 000 kr till sparkontot två gånger samma dag) är två legitima
+händelser och båda registreras.
+
+Semantiken i sin helhet: [`docs/remediation/RT2_CRITICAL_REPORT.md`](./remediation/RT2_CRITICAL_REPORT.md).
+
 ## 11. Auth
 
 Access token + refresh token-modell (eller ekvivalent) som fungerar för web, framtida native iOS, passkeys/MFA. Inte beroende av browser-only session state. Se [ADR-0003](./adr/0003-authentication.md).
