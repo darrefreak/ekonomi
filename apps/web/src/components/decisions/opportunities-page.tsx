@@ -174,6 +174,11 @@ export function OpportunitiesPage() {
                   <div className="text-right text-sm">
                     <MoneyValue value={item.estimatedAnnualSaving} />
                     <p className="text-xs text-text-secondary">/ år</p>
+                    {item.estimateBasis ? (
+                      <p className="mt-1 max-w-[12rem] text-[11px] text-text-muted">
+                        {item.estimateBasis}
+                      </p>
+                    ) : null}
                   </div>
                 ) : null}
               </div>

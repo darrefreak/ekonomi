@@ -85,6 +85,69 @@ export function DashboardView({ data }: { data: DashboardResponse }) {
         </div>
       </section>
 
+      {data.availableToInvest ? (
+        <section
+          aria-labelledby="available-to-invest-heading"
+          className="rounded-[18px] bg-surface-elevated p-5 shadow-[var(--ffos-shadow-soft)]"
+        >
+          <h2
+            id="available-to-invest-heading"
+            className="text-sm font-medium text-text-secondary"
+          >
+            Tillgängligt att investera
+          </h2>
+          <p className="mt-1 text-2xl font-medium tracking-tight text-text-primary">
+            <MoneyValue value={data.availableToInvest.amount} />
+          </p>
+          <p className="mt-2 text-xs text-text-muted">
+            {data.availableToInvest.disclaimer} Detta är en beräkning, inte
+            investeringsrådgivning.
+          </p>
+          <details className="mt-3 text-sm">
+            <summary className="cursor-pointer select-none text-accent">
+              Så räknas det fram
+            </summary>
+            <ul className="mt-2 space-y-1 text-xs text-text-secondary">
+              {data.availableToInvest.assumptions.map((assumption, index) => (
+                <li key={index}>· {assumption}</li>
+              ))}
+            </ul>
+            <dl className="mt-3 grid gap-1 text-xs text-text-muted">
+              <div className="flex justify-between gap-3">
+                <dt>Minimikassa</dt>
+                <dd>
+                  <MoneyValue value={data.availableToInvest.deductions.minimumCashBalance} />
+                </dd>
+              </div>
+              <div className="flex justify-between gap-3">
+                <dt>Buffertmål</dt>
+                <dd>
+                  <MoneyValue value={data.availableToInvest.deductions.emergencyFundTarget} />
+                </dd>
+              </div>
+              <div className="flex justify-between gap-3">
+                <dt>Säkerhetsmarginal</dt>
+                <dd>
+                  <MoneyValue value={data.availableToInvest.deductions.safetyMargin} />
+                </dd>
+              </div>
+              <div className="flex justify-between gap-3">
+                <dt>Reserverade sinking funds</dt>
+                <dd>
+                  <MoneyValue value={data.availableToInvest.deductions.reservedSinkingFunds} />
+                </dd>
+              </div>
+              <div className="flex justify-between gap-3">
+                <dt>Kommande 30 dagars utbetalningar</dt>
+                <dd>
+                  <MoneyValue value={data.availableToInvest.deductions.upcoming30dOutflows} />
+                </dd>
+              </div>
+            </dl>
+          </details>
+        </section>
+      ) : null}
+
       <div className="grid gap-4 md:grid-cols-2">
         <section className="rounded-[18px] bg-surface-elevated p-5 shadow-[var(--ffos-shadow-soft)]">
           <div className="flex items-center justify-between gap-3">
@@ -199,6 +262,11 @@ export function DashboardView({ data }: { data: DashboardResponse }) {
                   <div className="shrink-0 text-right text-sm">
                     <MoneyValue value={item.estimatedAnnualSaving} />
                     <p className="text-xs text-text-muted">/ år</p>
+                    {item.estimateBasis ? (
+                      <p className="mt-1 max-w-[10rem] text-[11px] text-text-muted">
+                        {item.estimateBasis}
+                      </p>
+                    ) : null}
                   </div>
                 ) : null}
               </li>
