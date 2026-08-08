@@ -29,10 +29,10 @@ export class WealthService {
     return { start: startDate.toISOString().slice(0, 10), end };
   }
 
-  async investments(userId: string, householdId: string) {
+  async investments(userId: string, householdId: string, asOfInput?: string) {
     const { household } = await this.access.requireMembership(userId, householdId);
     const currency = (household.baseCurrency || "SEK") as CurrencyCode;
-    const asOf = process.env.DEMO_AS_OF_DATE ?? "2026-08-01";
+    const asOf = asOfInput ?? process.env.DEMO_AS_OF_DATE ?? "2026-08-01";
     const { start, end } = this.trailingWindow(asOf);
     const db = getDb();
     const [aligned, snap] = await Promise.all([
@@ -131,10 +131,10 @@ export class WealthService {
     };
   }
 
-  async assets(userId: string, householdId: string) {
+  async assets(userId: string, householdId: string, asOfInput?: string) {
     const { household } = await this.access.requireMembership(userId, householdId);
     const currency = (household.baseCurrency || "SEK") as CurrencyCode;
-    const asOf = process.env.DEMO_AS_OF_DATE ?? "2026-08-01";
+    const asOf = asOfInput ?? process.env.DEMO_AS_OF_DATE ?? "2026-08-01";
     const db = getDb();
     const [aligned, snap] = await Promise.all([
       this.metrics.getLedgerAlignedAccountRows(householdId),

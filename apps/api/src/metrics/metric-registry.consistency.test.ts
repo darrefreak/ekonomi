@@ -77,6 +77,8 @@ test("C2 — dashboard / net-worth / debt / wealth / registry agree", async () =
   assert.equal(nw.current.amountMinor, nwItem!.valueMinor);
   assert.equal(nw.metricMeta?.bundleVersion, METRIC_BUNDLE_VERSION);
   assert.equal(nw.metricMeta?.inputHash, snap.metricMeta.inputHash);
+  assert.notEqual(nw.metricMeta?.calculationVersion, METRIC_BUNDLE_VERSION);
+  assert.equal(nw.metricMeta?.metricVersions?.net_worth, "1.0.0");
 
   const debtService = new DebtService(access, metrics);
   const debt = await debtService.list("user-1", household.id);

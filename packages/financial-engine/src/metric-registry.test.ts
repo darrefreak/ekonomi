@@ -4,7 +4,9 @@ import {
   METRIC_BUNDLE_VERSION,
   getMetricDefinition,
   listMetricDefinitions,
+  metricCatalogCalculationVersion,
   metricInputHash,
+  metricVersionsMap,
   requireMetricDefinition,
 } from "./metric-registry";
 
@@ -29,4 +31,13 @@ test("metricInputHash is stable for same inputs", () => {
   const c = metricInputHash(["h1", "2026-08-01", 101n, 50n]);
   assert.equal(a, b);
   assert.notEqual(a, c);
+});
+
+test("catalog calculationVersion is not the bundle semver", () => {
+  const catalog = metricCatalogCalculationVersion();
+  assert.notEqual(catalog, METRIC_BUNDLE_VERSION);
+  assert.match(catalog, /^fnv1a_/);
+  const versions = metricVersionsMap();
+  assert.equal(versions.net_worth, "1.0.0");
+  assert.equal(versions.debt_total, "1.0.0");
 });

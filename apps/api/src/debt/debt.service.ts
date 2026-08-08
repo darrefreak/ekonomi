@@ -144,10 +144,10 @@ export class DebtService {
     };
   }
 
-  async list(userId: string, householdId: string) {
+  async list(userId: string, householdId: string, asOfInput?: string) {
     const { household } = await this.access.requireMembership(userId, householdId);
     const currency = (household.baseCurrency || "SEK") as CurrencyCode;
-    const asOf = process.env.DEMO_AS_OF_DATE ?? "2026-08-01";
+    const asOf = asOfInput ?? process.env.DEMO_AS_OF_DATE ?? "2026-08-01";
     const { start, end } = this.trailingWindow(asOf);
     const rows = await this.liabilityAccounts(householdId);
     // Ledger-aligned balances — same path as metric registry debt_total.
@@ -209,10 +209,15 @@ export class DebtService {
     };
   }
 
-  async detail(userId: string, householdId: string, accountId: string) {
+  async detail(
+    userId: string,
+    householdId: string,
+    accountId: string,
+    asOfInput?: string,
+  ) {
     const { household } = await this.access.requireMembership(userId, householdId);
     const currency = (household.baseCurrency || "SEK") as CurrencyCode;
-    const asOf = process.env.DEMO_AS_OF_DATE ?? "2026-08-01";
+    const asOf = asOfInput ?? process.env.DEMO_AS_OF_DATE ?? "2026-08-01";
     const { start, end } = this.trailingWindow(asOf);
 
     const [row] = await getDb()

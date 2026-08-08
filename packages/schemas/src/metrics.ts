@@ -41,6 +41,14 @@ export const metricSnapshotSchema = z.object({
 export const metricSnapshotsQuerySchema = z.object({
   householdId: uuidSchema,
   asOf: isoDateSchema.optional(),
+  /**
+   * `live` (default): rematerialize from ledger under current formulas.
+   * `stored`: serve persisted snapshot rows without recomputing under newer formulas.
+   */
+  mode: z.enum(["live", "stored"]).optional(),
+  /** Optional filter when mode=stored — exact metric + formula version. */
+  metricKey: z.string().min(1).max(80).optional(),
+  calculationVersion: z.string().min(1).max(40).optional(),
 });
 
 export const metricSnapshotsResponseSchema = z.object({
@@ -52,12 +60,20 @@ export const metricSnapshotsResponseSchema = z.object({
   coveragePercent: z.number().nullable().optional(),
   freshnessLabel: z.string().nullable().optional(),
   items: z.array(metricSnapshotSchema),
+  /** Present when mode=stored — confirms no live rematerialization. */
+  servedFrom: z.enum(["live", "stored"]).optional(),
 });
 
 /** Metadata attached to product responses that consume the registry. */
 export const metricMetaSchema = z.object({
   bundleVersion: z.string(),
+  /**
+   * Catalog fingerprint of per-metric formula versions — not the bundle semver.
+   * Bundle packaging lives in `bundleVersion`.
+   */
   calculationVersion: z.string(),
+  /** Per-metric calculation versions at the time of the snapshot. */
+  metricVersions: z.record(z.string(), z.string()).optional(),
   inputHash: z.string(),
   asOf: z.string(),
 });

@@ -11,10 +11,10 @@ export class NetWorthService {
     private readonly metrics: HouseholdMetricsService,
   ) {}
 
-  async get(userId: string, householdId: string) {
+  async get(userId: string, householdId: string, asOfInput?: string) {
     const { household } = await this.access.requireMembership(userId, householdId);
     const currency = (household.baseCurrency || "SEK") as CurrencyCode;
-    const asOf = process.env.DEMO_AS_OF_DATE ?? "2026-08-01";
+    const asOf = asOfInput ?? process.env.DEMO_AS_OF_DATE ?? "2026-08-01";
     const snap = await this.metrics.getFinancialSnapshot(
       householdId,
       currency,

@@ -99,6 +99,7 @@ export const reportsMonthlyQuerySchema = z.object({
     .string()
     .regex(/^\d{4}-\d{2}$/, "period måste vara YYYY-MM")
     .optional(),
+  asOf: isoDateSchema.optional(),
 });
 
 export const reportsYearlyQuerySchema = z.object({
@@ -111,6 +112,7 @@ export const reportsYearlyQuerySchema = z.object({
       (v) => v == null || (Number(v) >= 2000 && Number(v) <= 2100),
       "year måste vara 2000–2100",
     ),
+  asOf: isoDateSchema.optional(),
 });
 
 export const vehicleMarketQuerySchema = z.object({
