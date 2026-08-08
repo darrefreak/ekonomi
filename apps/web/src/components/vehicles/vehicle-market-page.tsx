@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import type { VehicleMarketResponse } from "@ffos/schemas";
 import { api } from "@/lib/api";
 import { ensureHouseholdSession } from "@/lib/session";
+import { kronorToMinorString } from "@/lib/money-input";
 import { MoneyValue } from "../financial/money-value";
 import { EmptyState } from "../feedback/empty-state";
 import { ErrorState } from "../feedback/error-state";
@@ -68,15 +69,22 @@ export function VehicleMarketPage({
     e.preventDefault();
     if (!householdId) return;
     setFormError(null);
+    const askMinor = kronorToMinorString(newAsk);
+    const monthlyMinor = kronorToMinorString(newMonthly);
+    const year = Number.parseInt(newYear, 10);
+    if (!askMinor || !monthlyMinor || !Number.isFinite(year)) {
+      setFormError("Ogiltigt belopp eller årsmodell");
+      return;
+    }
     try {
       await api.createVehicleCandidate({
         householdId,
         name: newName || `${newMake} ${newModel}`,
         make: newMake,
         model: newModel,
-        modelYear: Number(newYear),
-        askPriceMinor: String(Number(newAsk) * 100),
-        estimatedMonthlyEconomicMinor: String(Number(newMonthly) * 100),
+        modelYear: year,
+        askPriceMinor: askMinor,
+        estimatedMonthlyEconomicMinor: monthlyMinor,
       });
       await reload(householdId, vehicleId);
       setNewName("");

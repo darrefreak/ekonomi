@@ -9,7 +9,9 @@
 | **PRODUCT COMPLETE** | All in-scope completion-program workstreams are FEATURE COMPLETE. |
 
 Phase checkmarks (`✅`) below mean **foundation delivery of that phase**, not product completeness.  
-Do **not** treat this document as product-complete status. Authoritative gap tracking: `docs/completion/`.
+
+**V1 product status (2026-08-08):** **ACCEPTED** — see `docs/acceptance/V1_FINAL_PRODUCT_ACCEPTANCE.md`.  
+Authoritative gap tracking for post-V1 work: `docs/completion/` + `docs/acceptance/REMAINING_WORK.md`.
 
 ## Phase gates (hard)
 

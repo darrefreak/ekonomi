@@ -1,16 +1,21 @@
 # Acceptance package
 
-Independent V1 product acceptance audit (2026-08-07).
+## Current (authoritative)
 
 | Document | Purpose |
 |---|---|
-| `ORIGINAL_GAP_VERIFICATION.md` | P0–P3 gap statuses from code |
-| `FINAL_FEATURE_MATRIX.md` | Reality-based feature matrix |
-| `METRIC_TRACEABILITY.md` | Critical metric paths |
-| `FALSE_COMPLETENESS_FINAL.md` | Mock/stub sweep |
-| `ROUTE_ACCEPTANCE.md` | Route checklist |
-| `USER_FLOW_ACCEPTANCE.md` | User flows |
-| `MOBILE_ACCEPTANCE.md` | Mobile + desktop summary |
-| `SECURITY_ACCEPTANCE.md` | Security + a11y brief |
-| `FINAL_ACCEPTANCE_REPORT.md` | Outcome |
-| `REMAINING_WORK.md` | Batches if not ACCEPTED |
+| **`V1_FINAL_PRODUCT_ACCEPTANCE.md`** | **V1 FINAL PRODUCT — ACCEPTED (2026-08-08)** |
+| `p0/P0_FINANCIAL_ACCEPTANCE.md` | P0 financial core — ACCEPTED |
+| `../completion/p1/P1_FINAL_STATUS.md` | P1-U1…U6 closure |
+| `../completion/FEATURE_MATRIX.md` | Living feature matrix |
+
+## Historical (superseded — do not treat as current verdict)
+
+| Document | Note |
+|---|---|
+| `FINAL_ACCEPTANCE_REPORT.md` | 2026-08-07 **REJECTED** — pre P0/P1 completion |
+| `FINAL_FEATURE_MATRIX.md` | Tip-era matrix from REJECT audit |
+| `REMAINING_WORK.md` | Pre-completion backlog |
+| `ORIGINAL_GAP_VERIFICATION.md` | Early gap statuses |
+| `FALSE_COMPLETENESS_FINAL.md` | Early mock/stub sweep |
+| `ROUTE_ACCEPTANCE.md` / `USER_FLOW_ACCEPTANCE.md` / `MOBILE_ACCEPTANCE.md` / `SECURITY_ACCEPTANCE.md` | 2026-08-07 package artifacts |

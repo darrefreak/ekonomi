@@ -50,4 +50,5 @@ Intentionally deferred (not remaining P1 debt):
 
 ## Next step
 
-**V1 FINAL PRODUCT ACCEPTANCE** (separate instruction) — do not invent U7.
+**Done:** [`docs/acceptance/V1_FINAL_PRODUCT_ACCEPTANCE.md`](../../acceptance/V1_FINAL_PRODUCT_ACCEPTANCE.md) — **ACCEPTED**.  
+Do not invent U7.
