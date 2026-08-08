@@ -1020,8 +1020,8 @@ export async function seedDemoHousehold() {
         and(
           eq(financialEvents.householdId, household.id),
           eq(
-            financialEvents.externalId,
-            "seed-vehicle-financed-purchase-2022-04",
+            financialEvents.description,
+            "Köp familjebil finansierat (demo)",
           ),
         ),
       );
