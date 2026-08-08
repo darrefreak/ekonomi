@@ -290,6 +290,15 @@ export function AdvisorPage() {
                       Förväntad effekt: <MoneyValue value={o.expectedImpact} />
                     </p>
                   ) : null}
+                  <p className="mt-1 text-xs text-text-muted">
+                    Verifiering: {o.verificationStatus ?? "AWAITING_EVIDENCE"}
+                    {o.verifiedImpact ? (
+                      <>
+                        {" · Verifierad: "}
+                        <MoneyValue value={o.verifiedImpact} />
+                      </>
+                    ) : null}
+                  </p>
                 </div>
                 <div className="flex flex-wrap gap-2 text-sm">
                   {(

@@ -35,13 +35,25 @@ P0 financial core remains protected. No U7 / P2 / real integrations started.
 
 - `0025_p1_u6_vehicle_merchant_depth.sql`
 
+## Gates
+
+| Gate | Result |
+|---|---|
+| typecheck | pass |
+| lint | pass |
+| build (api/web + Docker) | pass |
+| financial-engine tests | **82/82** |
+| API tests (incl. P0) | **108/108** |
+| E2E U6 (chromium) | **7/7** |
+| Docker migrate + seed + health | pass |
+
 ## Explicitly out of V1 (unchanged)
 
 Real bank/open-banking · OCR/PDF/CSV · marketplace scraping · ML anomalies · native iOS.
 
 ## Remaining after U6
 
-See [`P1_FINAL_STATUS.md`](./P1_FINAL_STATUS.md).
+See [`P1_FINAL_STATUS.md`](./P1_FINAL_STATUS.md) — **P1 COMPLETE** (0 unexplained REQUIRED_FOR_V1 gaps).
 
 ## Stop
 

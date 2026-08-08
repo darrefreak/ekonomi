@@ -236,13 +236,21 @@ export class AdvisorService {
     };
 
     if (input.status === "COMPLETED") {
+      patch.completedAt = existing.completedAt ?? new Date();
       const verification = await this.tryVerifySubscriptionOutcome(
         input.householdId,
-        existing,
+        { ...existing, completedAt: patch.completedAt as Date },
       );
       patch.verificationStatus = verification.status;
       patch.verificationNotes = verification.notes;
-      // COMPLETED must NOT auto-set verifiedImpact — evidence path only.
+      // Persist verified amount only when evidence heuristic returns VERIFIED.
+      // Clicking COMPLETED alone never marks savings verified.
+      if (
+        verification.status === "VERIFIED" &&
+        verification.verifiedImpactMinor != null
+      ) {
+        patch.verifiedImpactMinor = verification.verifiedImpactMinor;
+      }
     }
 
     await db

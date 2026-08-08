@@ -715,9 +715,11 @@ export class VehicleIntelService {
       .limit(1);
     if (!listing) throw new NotFoundException("Listing not found");
 
-    const monthly =
-      input.estimatedMonthlyEconomicMinor ??
-      String(Math.round(Number(listing.askPriceMinor) / 72));
+    // Rough 6-year ownership heuristic (72 months) — exact integer öre.
+    const monthlyMinor =
+      input.estimatedMonthlyEconomicMinor != null
+        ? BigInt(input.estimatedMonthlyEconomicMinor)
+        : listing.askPriceMinor / 72n;
 
     const [row] = await db
       .insert(vehicleCandidates)
@@ -733,7 +735,7 @@ export class VehicleIntelService {
         fuelType: listing.fuelType,
         mileageKm: listing.mileageKm,
         askPriceMinor: listing.askPriceMinor,
-        estimatedMonthlyEconomicMinor: BigInt(monthly),
+        estimatedMonthlyEconomicMinor: monthlyMinor,
         source: "from_listing",
         sourceListingId: listing.id,
         holdingPeriodMonths: input.holdingPeriodMonths ?? KEEP_HORIZON_MONTHS,
