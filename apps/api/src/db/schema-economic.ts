@@ -224,26 +224,47 @@ export const accounts = pgTable("accounts", {
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
 });
 
-export const accountBalanceSnapshots = pgTable("account_balance_snapshots", {
-  id: uuid("id").defaultRandom().primaryKey(),
-  householdId: uuid("household_id")
-    .notNull()
-    .references(() => households.id, { onDelete: "cascade" }),
-  accountId: uuid("account_id")
-    .notNull()
-    .references(() => accounts.id, { onDelete: "cascade" }),
-  reportedBalanceMinor: bigint("reported_balance_minor", { mode: "bigint" }),
-  availableBalanceMinor: bigint("available_balance_minor", { mode: "bigint" }),
-  ledgerCalculatedBalanceMinor: bigint("ledger_calculated_balance_minor", {
-    mode: "bigint",
-  }),
-  reconciledBalanceMinor: bigint("reconciled_balance_minor", { mode: "bigint" }),
-  asOf: timestamp("as_of", { withTimezone: true }).notNull(),
-  source: varchar("source", { length: 40 }).notNull().default("seed"),
-  confidence: numeric("confidence", { precision: 5, scale: 4 }).default("1"),
-  userVerified: boolean("user_verified").notNull().default(false),
-  isEstimated: boolean("is_estimated").notNull().default(false),
-});
+/**
+ * One authoritative balance per account, per instant, PER SOURCE.
+ *
+ * Several writers legitimately describe the same account on the same day —
+ * `nw_history_reconstruct`, `ledger_reconcile`, `ledger_reconstruct` and
+ * `manual_opening` — and the history reader deliberately ranks them. So the
+ * uniqueness that matches the domain is `(account_id, as_of, source)`, not
+ * `(account_id, as_of)`. Without it two concurrent reconcile runs could both
+ * delete and both insert, which is how 113 duplicate groups accumulated
+ * (RT2-008). Writers upsert on this key rather than delete-then-insert.
+ */
+export const accountBalanceSnapshots = pgTable(
+  "account_balance_snapshots",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    householdId: uuid("household_id")
+      .notNull()
+      .references(() => households.id, { onDelete: "cascade" }),
+    accountId: uuid("account_id")
+      .notNull()
+      .references(() => accounts.id, { onDelete: "cascade" }),
+    reportedBalanceMinor: bigint("reported_balance_minor", { mode: "bigint" }),
+    availableBalanceMinor: bigint("available_balance_minor", { mode: "bigint" }),
+    ledgerCalculatedBalanceMinor: bigint("ledger_calculated_balance_minor", {
+      mode: "bigint",
+    }),
+    reconciledBalanceMinor: bigint("reconciled_balance_minor", { mode: "bigint" }),
+    asOf: timestamp("as_of", { withTimezone: true }).notNull(),
+    source: varchar("source", { length: 40 }).notNull().default("seed"),
+    confidence: numeric("confidence", { precision: 5, scale: 4 }).default("1"),
+    userVerified: boolean("user_verified").notNull().default(false),
+    isEstimated: boolean("is_estimated").notNull().default(false),
+  },
+  (t) => [
+    uniqueIndex("account_balance_snapshot_identity").on(
+      t.accountId,
+      t.asOf,
+      t.source,
+    ),
+  ],
+);
 
 export const sourceTransactions = pgTable(
   "source_transactions",
@@ -439,6 +460,44 @@ export const financialCommandIdempotency = pgTable(
       t.commandType,
       t.keySource,
       t.externalId,
+    ),
+  ],
+);
+
+/**
+ * Durable command idempotency for aggregate commands that are not a single
+ * financial event — creating an account, onboarding a vehicle and so on.
+ *
+ * `financial_command_idempotency` above keys a single `financial_event`; this
+ * table keys a whole command whose result may be several rows across several
+ * tables. Identity is (household, command type, client key), so the same
+ * `Idempotency-Key` used for two different command types does not collide.
+ *
+ * `result` holds only the identity of what was created, never a rendered
+ * response: a retry re-reads the entity so the caller always sees current
+ * state rather than a frozen snapshot.
+ */
+export const commandIdempotency = pgTable(
+  "command_idempotency",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    householdId: uuid("household_id")
+      .notNull()
+      .references(() => households.id, { onDelete: "cascade" }),
+    commandType: varchar("command_type", { length: 80 }).notNull(),
+    /** Client command identity from the HTTP `Idempotency-Key` header. */
+    idempotencyKey: varchar("idempotency_key", { length: 200 }).notNull(),
+    /** Detects the same key being reused for different economics. */
+    requestHash: varchar("request_hash", { length: 64 }).notNull(),
+    result: jsonb("result").$type<Record<string, unknown>>(),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+    completedAt: timestamp("completed_at", { withTimezone: true }),
+  },
+  (t) => [
+    uniqueIndex("command_idempotency_key").on(
+      t.householdId,
+      t.commandType,
+      t.idempotencyKey,
     ),
   ],
 );

@@ -21,6 +21,8 @@ import { HouseholdAccessService } from "../households/household-access.service";
 import { LedgerTruthService } from "../ledger/ledger-truth.service";
 import { AuditService } from "../audit/audit.service";
 import { resolveHouseholdAsOf } from "../common/as-of";
+import { openingSnapshotAsOf } from "../common/snapshot-as-of";
+import { runIdempotentCommand } from "../common/command-idempotency";
 
 const USER_ACCOUNT_TYPES = new Set([
   "CHECKING",
@@ -104,7 +106,21 @@ export class AccountsService {
     return { items };
   }
 
-  async create(userId: string, input: CreateAccountInput) {
+  /**
+   * Create one account, with its opening position and audit row, as a single
+   * atomic and idempotent command.
+   *
+   * A retry carrying the same `Idempotency-Key` returns the original account
+   * instead of booking a second opening balance (RT2-002). A *different* key
+   * with the same payload creates a second account on purpose: households
+   * legitimately hold two accounts of the same type at the same bank, and the
+   * domain declares no uniqueness there.
+   */
+  async create(
+    userId: string,
+    input: CreateAccountInput,
+    options: { idempotencyKey?: string | null } = {},
+  ) {
     await this.access.requireCanWrite(userId, input.householdId);
     if (!USER_ACCOUNT_TYPES.has(input.accountType)) {
       throw new BadRequestException("Invalid account type");
@@ -112,15 +128,17 @@ export class AccountsService {
     if (input.ownerMemberId) {
       await this.requireMemberInHousehold(input.householdId, input.ownerMemberId);
     }
-    const db = getDb();
     const opening = BigInt(input.openingBalanceMinor ?? "0");
     const creditLimit =
       input.creditLimitMinor != null && input.creditLimitMinor !== ""
         ? BigInt(input.creditLimitMinor)
         : null;
-    const [row] = await db
-      .insert(accounts)
-      .values({
+
+    const { accountId } = await runIdempotentCommand({
+      householdId: input.householdId,
+      commandType: "CREATE_ACCOUNT",
+      idempotencyKey: options.idempotencyKey,
+      request: {
         householdId: input.householdId,
         name: input.name.trim(),
         accountType: input.accountType,
@@ -128,47 +146,75 @@ export class AccountsService {
         provider: input.provider ?? null,
         ownerMemberId: input.ownerMemberId ?? null,
         isShared: input.isShared ?? true,
-        creditLimitMinor: creditLimit,
+        creditLimitMinor: creditLimit?.toString() ?? null,
         externalReference: input.externalReference ?? null,
-        openingBalanceMinor: opening,
-        currentBalanceMinor: opening,
-        reportedBalanceMinor: opening,
-        connectionStatus: "DISCONNECTED",
-        isSystem: false,
-        lastSyncedAt: null,
-      })
-      .returning();
+        openingBalanceMinor: opening.toString(),
+      },
+      command: async (tx) => {
+        const [row] = await tx
+          .insert(accounts)
+          .values({
+            householdId: input.householdId,
+            name: input.name.trim(),
+            accountType: input.accountType,
+            currency: input.currency ?? "SEK",
+            provider: input.provider ?? null,
+            ownerMemberId: input.ownerMemberId ?? null,
+            isShared: input.isShared ?? true,
+            creditLimitMinor: creditLimit,
+            externalReference: input.externalReference ?? null,
+            openingBalanceMinor: opening,
+            currentBalanceMinor: opening,
+            reportedBalanceMinor: opening,
+            connectionStatus: "DISCONNECTED",
+            isSystem: false,
+            lastSyncedAt: null,
+          })
+          .returning();
 
-    if (opening !== 0n) {
-      await db.insert(accountBalanceSnapshots).values({
-        householdId: input.householdId,
-        accountId: row.id,
-        reportedBalanceMinor: opening,
-        availableBalanceMinor: opening,
-        ledgerCalculatedBalanceMinor: opening,
-        reconciledBalanceMinor: opening,
-        asOf: new Date(),
-        source: "manual_opening",
-        confidence: "1",
-        userVerified: true,
-        isEstimated: false,
-      });
-    }
+        if (opening !== 0n) {
+          await tx.insert(accountBalanceSnapshots).values({
+            householdId: input.householdId,
+            accountId: row.id,
+            reportedBalanceMinor: opening,
+            availableBalanceMinor: opening,
+            ledgerCalculatedBalanceMinor: opening,
+            reconciledBalanceMinor: opening,
+            // Midday UTC, the convention every snapshot writer shares, so the
+            // (account, as_of, source) identity can actually see duplicates.
+            asOf: openingSnapshotAsOf(new Date()),
+            source: "manual_opening",
+            confidence: "1",
+            userVerified: true,
+            isEstimated: false,
+          });
+        }
 
-    await this.audit.record({
-      householdId: input.householdId,
-      actorUserId: userId,
-      action: "account.create",
-      entity: "account",
-      entityId: row.id,
-      after: {
-        name: row.name,
-        accountType: row.accountType,
-        ownerMemberId: row.ownerMemberId,
-        isShared: row.isShared,
+        await this.audit.record({
+          householdId: input.householdId,
+          actorUserId: userId,
+          action: "account.create",
+          entity: "account",
+          entityId: row.id,
+          after: {
+            name: row.name,
+            accountType: row.accountType,
+            ownerMemberId: row.ownerMemberId,
+            isShared: row.isShared,
+          },
+          executor: tx,
+        });
+
+        return { accountId: row.id };
       },
     });
 
+    const [row] = await getDb()
+      .select()
+      .from(accounts)
+      .where(eq(accounts.id, accountId as string))
+      .limit(1);
+    if (!row) throw new NotFoundException("Account not found");
     return this.toListItem(row);
   }
 

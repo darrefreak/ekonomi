@@ -34,6 +34,7 @@ import {
   persistBalancedEvent,
   replaceEventSplits,
   reviseEventEconomicMeaning,
+  type DbExecutor,
   type FinancialCommandType,
   type PersistFailPoint,
   type PersistSplit,
@@ -49,8 +50,10 @@ async function requireAccount(
   householdId: string,
   accountId: string,
   types?: string[],
+  /** Must be the enclosing transaction when the account was created in it. */
+  executor?: DbExecutor,
 ) {
-  const db = getDb();
+  const db = executor ?? getDb();
   const [row] = await db
     .select()
     .from(accounts)
@@ -137,6 +140,12 @@ export class EconomicEventsService {
     vehicleId?: string;
     commandType?: FinancialCommandType;
     failPoint?: PersistFailPoint;
+    /**
+     * Join an enclosing transaction — used when this event is one leg of a
+     * larger aggregate command such as onboarding a vehicle. Derived-cache
+     * refresh is then the caller's job, after its own commit.
+     */
+    executor?: DbExecutor;
   }) {
     try {
       const event = await persistBalancedEvent({
@@ -152,11 +161,21 @@ export class EconomicEventsService {
           source: "api",
         },
       });
-      await this.afterCommit(input.householdId, input.occurredOn);
+      if (!input.executor) {
+        await this.afterCommit(input.householdId, input.occurredOn);
+      }
       return event;
     } catch (err) {
       mapPersistError(err);
     }
+  }
+
+  /**
+   * Refresh derived caches for a command that committed in the caller's own
+   * transaction. Never call this inside the transaction.
+   */
+  async refreshAfterCommit(householdId: string, asOf: string) {
+    await this.afterCommit(householdId, asOf);
   }
 
   async createInternalTransfer(input: {
@@ -192,9 +211,12 @@ export class EconomicEventsService {
       currency,
     });
     const transferGroupId = randomUUID();
-    const externalId =
-      input.externalId ??
-      `api-transfer-${input.fromAccountId}-${input.toAccountId}-${input.occurredOn}-${input.amountMinor}`;
+    // `externalId` is SOURCE identity only. Synthesising one from the economic
+    // shape made a second legitimate transfer of the same amount, between the
+    // same accounts, on the same day collide on the source_transactions unique
+    // index and fail as an idempotency conflict (RT2-003). Retry protection is
+    // the client `Idempotency-Key`'s job, and it already does it.
+    const externalId = input.externalId;
     return this.persistDraft({
       householdId: input.householdId,
       draft,
@@ -210,7 +232,7 @@ export class EconomicEventsService {
       counterpartTx: {
         accountId: input.toAccountId,
         amountMinor: input.amountMinor,
-        externalId: `${externalId}-counterpart`,
+        externalId: externalId ? `${externalId}-counterpart` : undefined,
       },
       createReconciliationGroup: true,
       failPoint: input.failPoint,
@@ -283,9 +305,6 @@ export class EconomicEventsService {
       amountMinor: input.amountMinor,
       currency: input.currency ?? "SEK",
     });
-    const externalId =
-      input.externalId ??
-      `api-cc-pay-${input.cashAccountId}-${input.creditCardAccountId}-${input.occurredOn}-${input.amountMinor}`;
     return this.persistDraft({
       householdId: input.householdId,
       draft,
@@ -293,7 +312,7 @@ export class EconomicEventsService {
       description: input.description ?? "Kreditkortsbetalning",
       sourceAccountId: input.cashAccountId,
       sourceAmountMinor: -input.amountMinor,
-      externalId,
+      externalId: input.externalId,
       idempotencyKey: input.idempotencyKey,
       commandType: "CREDIT_CARD_PAYMENT",
     });
@@ -502,16 +521,23 @@ export class EconomicEventsService {
     currency?: CurrencyCode;
     externalId?: string;
     idempotencyKey?: string;
+    executor?: DbExecutor;
   }) {
     if (input.amountMinor <= 0n) {
       throw new BadRequestException("amountMinor must be positive");
     }
-    await requireAccount(input.householdId, input.cashAccountId, [
-      "CHECKING",
-      "SAVINGS",
-      "CASH",
-    ]);
-    await requireAccount(input.householdId, input.assetAccountId, ["ASSET"]);
+    await requireAccount(
+      input.householdId,
+      input.cashAccountId,
+      ["CHECKING", "SAVINGS", "CASH"],
+      input.executor,
+    );
+    await requireAccount(
+      input.householdId,
+      input.assetAccountId,
+      ["ASSET"],
+      input.executor,
+    );
     const draft = buildAssetPurchaseAtFairValue({
       cashAccountId: input.cashAccountId,
       assetAccountId: input.assetAccountId,
@@ -526,11 +552,10 @@ export class EconomicEventsService {
       sourceAccountId: input.cashAccountId,
       sourceAmountMinor: -input.amountMinor,
       vehicleId: input.vehicleId,
-      externalId:
-        input.externalId ??
-        `api-purchase-${input.assetAccountId}-${input.occurredOn}-${input.amountMinor}`,
+      externalId: input.externalId,
       idempotencyKey: input.idempotencyKey,
       commandType: "LEDGER_EVENT",
+      executor: input.executor,
     });
   }
 
@@ -547,17 +572,26 @@ export class EconomicEventsService {
     currency?: CurrencyCode;
     externalId?: string;
     idempotencyKey?: string;
+    executor?: DbExecutor;
   }) {
-    await requireAccount(input.householdId, input.cashAccountId, [
-      "CHECKING",
-      "SAVINGS",
-      "CASH",
-    ]);
-    await requireAccount(input.householdId, input.assetAccountId, ["ASSET"]);
-    await requireAccount(input.householdId, input.loanAccountId, [
-      "LOAN",
-      "MORTGAGE",
-    ]);
+    await requireAccount(
+      input.householdId,
+      input.cashAccountId,
+      ["CHECKING", "SAVINGS", "CASH"],
+      input.executor,
+    );
+    await requireAccount(
+      input.householdId,
+      input.assetAccountId,
+      ["ASSET"],
+      input.executor,
+    );
+    await requireAccount(
+      input.householdId,
+      input.loanAccountId,
+      ["LOAN", "MORTGAGE"],
+      input.executor,
+    );
     const draft = buildFinancedAssetPurchase({
       cashAccountId: input.cashAccountId,
       assetAccountId: input.assetAccountId,
@@ -574,11 +608,10 @@ export class EconomicEventsService {
       sourceAccountId: input.cashAccountId,
       sourceAmountMinor: -input.downPaymentMinor,
       vehicleId: input.vehicleId,
-      externalId:
-        input.externalId ??
-        `api-financed-${input.assetAccountId}-${input.occurredOn}-${input.purchasePriceMinor}`,
+      externalId: input.externalId,
       idempotencyKey: input.idempotencyKey,
       commandType: "LEDGER_EVENT",
+      executor: input.executor,
     });
   }
 
@@ -738,9 +771,7 @@ export class EconomicEventsService {
       occurredOn: input.occurredOn,
       description: input.description ?? "Värdeminskning",
       vehicleId: input.vehicleId,
-      externalId:
-        input.externalId ??
-        `api-depr-${input.assetAccountId}-${input.occurredOn}-${input.amountMinor}`,
+      externalId: input.externalId,
       idempotencyKey: input.idempotencyKey,
       commandType: "ASSET_DEPRECIATION",
       failPoint: input.failPoint,

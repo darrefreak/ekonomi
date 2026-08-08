@@ -23,6 +23,7 @@ import { AuthGuard } from "../auth/auth.guard";
 import { CurrentUser } from "../auth/current-user.decorator";
 import type { AuthenticatedUser } from "../auth/auth.types";
 import { ZodValidationPipe } from "../common/zod-validation.pipe";
+import { IdempotencyKey } from "../common/idempotency-key.decorator";
 import { AccountsService } from "./accounts.service";
 
 @ApiTags("accounts")
@@ -48,8 +49,11 @@ export class AccountsController {
   create(
     @CurrentUser() user: AuthenticatedUser,
     @Body(new ZodValidationPipe(createAccountSchema)) body: unknown,
+    @IdempotencyKey() idempotencyKey?: string,
   ) {
-    return this.accounts.create(user.userId, createAccountSchema.parse(body));
+    return this.accounts.create(user.userId, createAccountSchema.parse(body), {
+      idempotencyKey,
+    });
   }
 
   @Get(":id")

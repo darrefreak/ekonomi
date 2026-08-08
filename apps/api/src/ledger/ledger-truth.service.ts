@@ -152,34 +152,42 @@ export class LedgerTruthService {
           ),
         );
 
-      // Replace same calendar-day reconcile snapshot for idempotency.
+      // Upsert on the snapshot identity rather than delete-then-insert: two
+      // concurrent reconcile runs used to both delete and both insert, which is
+      // how the duplicate snapshots of RT2-008 accumulated.
+      const reconciledBalanceMinor =
+        row.reconcile.status === "MATCHED"
+          ? row.ledgerCalculatedBalanceMinor
+          : null;
       await db
-        .delete(accountBalanceSnapshots)
-        .where(
-          and(
-            eq(accountBalanceSnapshots.householdId, householdId),
-            eq(accountBalanceSnapshots.accountId, row.accountId),
-            eq(accountBalanceSnapshots.source, "ledger_reconcile"),
-            sql`(${accountBalanceSnapshots.asOf} AT TIME ZONE 'UTC')::date = ${asOf}::date`,
-          ),
-        );
-
-      await db.insert(accountBalanceSnapshots).values({
-        householdId,
-        accountId: row.accountId,
-        reportedBalanceMinor: row.reportedBalanceMinor,
-        availableBalanceMinor: row.ledgerCalculatedBalanceMinor,
-        ledgerCalculatedBalanceMinor: row.ledgerCalculatedBalanceMinor,
-        reconciledBalanceMinor:
-          row.reconcile.status === "MATCHED"
-            ? row.ledgerCalculatedBalanceMinor
-            : null,
-        asOf: asOfDate,
-        source: "ledger_reconcile",
-        confidence: "1",
-        userVerified: false,
-        isEstimated: false,
-      });
+        .insert(accountBalanceSnapshots)
+        .values({
+          householdId,
+          accountId: row.accountId,
+          reportedBalanceMinor: row.reportedBalanceMinor,
+          availableBalanceMinor: row.ledgerCalculatedBalanceMinor,
+          ledgerCalculatedBalanceMinor: row.ledgerCalculatedBalanceMinor,
+          reconciledBalanceMinor,
+          asOf: asOfDate,
+          source: "ledger_reconcile",
+          confidence: "1",
+          userVerified: false,
+          isEstimated: false,
+        })
+        .onConflictDoUpdate({
+          target: [
+            accountBalanceSnapshots.accountId,
+            accountBalanceSnapshots.asOf,
+            accountBalanceSnapshots.source,
+          ],
+          set: {
+            reportedBalanceMinor: row.reportedBalanceMinor,
+            availableBalanceMinor: row.ledgerCalculatedBalanceMinor,
+            ledgerCalculatedBalanceMinor: row.ledgerCalculatedBalanceMinor,
+            reconciledBalanceMinor,
+            isEstimated: false,
+          },
+        });
 
       updated += 1;
       if (row.reconcile.status === "MISMATCH") mismatches += 1;

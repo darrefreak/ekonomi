@@ -406,10 +406,11 @@ export function createApiClient(options: ApiClientOptions) {
       const data = await request<unknown>(`/api/v1/accounts?${params}`);
       return accountsResponseSchema.parse(data) as AccountsResponse;
     },
-    createAccount: async (input: CreateAccountInput) => {
+    createAccount: async (input: CreateAccountInput, opts?: MutationOptions) => {
       const data = await request<unknown>("/api/v1/accounts", {
         method: "POST",
         body: JSON.stringify(input),
+        idempotencyKey: opts?.idempotencyKey,
       });
       return accountSchema.parse(data) as AccountDto;
     },

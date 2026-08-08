@@ -1,6 +1,6 @@
 import { Injectable } from "@nestjs/common";
 import { and, desc, eq, isNotNull } from "drizzle-orm";
-import { getDb } from "../db/client";
+import { getDb, type DbExecutor } from "../db/client";
 import { auditLogs } from "../db/schema";
 
 export type AuditRecordInput = {
@@ -13,12 +13,14 @@ export type AuditRecordInput = {
   after?: Record<string, unknown> | null;
   requestId?: string | null;
   source?: string;
+  /** Join the caller's transaction so the audit row shares its fate. */
+  executor?: DbExecutor;
 };
 
 @Injectable()
 export class AuditService {
   async record(input: AuditRecordInput) {
-    const db = getDb();
+    const db = input.executor ?? getDb();
     const [row] = await db
       .insert(auditLogs)
       .values({
