@@ -1,11 +1,11 @@
-import { Queue, Worker, type JobsOptions } from "bullmq";
-import { jobPayloadSchema } from "@ffos/schemas";
-import { AuditService } from "../audit/audit.service";
+import { Queue, Worker } from "bullmq";
+import { jobPayloadSchema, type JobPayload, type JobType } from "@ffos/schemas";
 import { logger } from "../common/logger";
-import { LedgerTruthService } from "../ledger/ledger-truth.service";
+import { runJobHandler } from "./handlers";
+import { jobOptionsFor, jobRegistry, QUEUE_NAME } from "./registry";
 
-export const HEALTH_CHECK_JOB = "HEALTH_CHECK";
-export const RECONCILE_ACCOUNT_BALANCES_JOB = "RECONCILE_ACCOUNT_BALANCES";
+export const HEALTH_CHECK_JOB: JobType = "HEALTH_CHECK";
+export const RECONCILE_ACCOUNT_BALANCES_JOB: JobType = "RECONCILE_ACCOUNT_BALANCES";
 
 function redisConnection() {
   const url = new URL(process.env.REDIS_URL ?? "redis://localhost:6379");
@@ -16,50 +16,90 @@ function redisConnection() {
   };
 }
 
-export function createJobsQueue() {
-  return new Queue("ffos-jobs", { connection: redisConnection() });
+export function createJobsQueue(): Queue {
+  return new Queue(QUEUE_NAME, { connection: redisConnection() });
 }
 
-export async function enqueueHealthCheck(householdId = "system") {
-  const payload = jobPayloadSchema.parse({
-    type: HEALTH_CHECK_JOB,
-    householdId,
-  });
+/**
+ * Enqueue any registry-known job. Validates the payload against its schema
+ * and derives BullMQ options (jobId/attempts/backoff) from the registry —
+ * the single source of truth for job configuration. Opens and closes its
+ * own short-lived connection so callers (including fire-and-forget
+ * post-commit hooks) never leak Redis connections.
+ */
+export async function enqueueJob(rawPayload: JobPayload): Promise<string> {
+  const def = jobRegistry[rawPayload.type];
+  const payload = def.payloadSchema.parse(rawPayload);
   const queue = createJobsQueue();
-  const opts: JobsOptions = {
-    jobId: `health-${householdId}-${new Date().toISOString().slice(0, 13)}`,
-    removeOnComplete: 100,
-    removeOnFail: 100,
-  };
-  await queue.add(HEALTH_CHECK_JOB, payload, opts);
-  await queue.close();
+  try {
+    const opts = jobOptionsFor(payload);
+    const job = await queue.add(payload.type, payload, opts);
+    return job.id ?? opts.jobId ?? payload.type;
+  } finally {
+    await queue.close();
+  }
 }
 
-export async function enqueueReconcileAccountBalances(
+export async function enqueueHealthCheck(householdId: string = "system") {
+  return enqueueJob({ type: "HEALTH_CHECK", householdId });
+}
+
+export async function enqueueReconcileAccountBalances(householdId: string, asOf?: string) {
+  const day = asOf ?? process.env.DEMO_AS_OF_DATE ?? "2026-08-01";
+  return enqueueJob({ type: "RECONCILE_ACCOUNT_BALANCES", householdId, asOf: day });
+}
+
+export async function enqueueCalculateMetrics(householdId: string, asOf?: string) {
+  return enqueueJob({ type: "CALCULATE_METRICS", householdId, asOf });
+}
+
+export async function enqueueCalculateNetWorth(householdId: string, asOf?: string) {
+  return enqueueJob({ type: "CALCULATE_NET_WORTH", householdId, asOf });
+}
+
+export async function enqueueGenerateForecast(householdId: string, asOf?: string) {
+  return enqueueJob({ type: "GENERATE_FORECAST", householdId, asOf });
+}
+
+export async function enqueueGenerateOpportunities(householdId: string, asOf?: string) {
+  return enqueueJob({ type: "GENERATE_OPPORTUNITIES", householdId, asOf });
+}
+
+export async function enqueueRunRiskAnalysis(householdId: string, asOf?: string) {
+  return enqueueJob({ type: "RUN_RISK_ANALYSIS", householdId, asOf });
+}
+
+export async function enqueueRunAnomalyAnalysis(householdId: string, asOf?: string) {
+  return enqueueJob({ type: "RUN_ANOMALY_ANALYSIS", householdId, asOf });
+}
+
+export async function enqueueGenerateInsights(householdId: string, asOf?: string) {
+  return enqueueJob({ type: "GENERATE_INSIGHTS", householdId, asOf });
+}
+
+export async function enqueueGenerateAiBrief(householdId: string, asOf?: string) {
+  return enqueueJob({ type: "GENERATE_AI_BRIEF", householdId, asOf });
+}
+
+export async function enqueueProcessDocument(
   householdId: string,
+  entityId: string,
   asOf?: string,
 ) {
-  const day = asOf ?? process.env.DEMO_AS_OF_DATE ?? "2026-08-01";
-  const payload = jobPayloadSchema.parse({
-    type: RECONCILE_ACCOUNT_BALANCES_JOB,
-    householdId,
-    asOf: day,
-  });
-  const queue = createJobsQueue();
-  const opts: JobsOptions = {
-    jobId: `reconcile-balances-${householdId}-${day}`,
-    removeOnComplete: 100,
-    removeOnFail: 50,
-    attempts: 3,
-    backoff: { type: "exponential", delay: 2_000 },
-  };
-  await queue.add(RECONCILE_ACCOUNT_BALANCES_JOB, payload, opts);
-  await queue.close();
+  return enqueueJob({ type: "PROCESS_DOCUMENT", householdId, entityId, asOf });
+}
+
+export async function enqueueSyncIntegration(
+  householdId: string,
+  entityId?: string,
+  asOf?: string,
+) {
+  return enqueueJob({ type: "SYNC_INTEGRATION", householdId, entityId, asOf });
 }
 
 export function startWorker() {
   const worker = new Worker(
-    "ffos-jobs",
+    QUEUE_NAME,
     async (job) => {
       logger.info("job_start", {
         jobId: job.id,
@@ -79,28 +119,22 @@ export function startWorker() {
         throw new Error("Invalid job payload");
       }
 
-      if (parsed.data.type === HEALTH_CHECK_JOB) {
-        return { ok: true, at: new Date().toISOString() };
-      }
-
-      if (parsed.data.type === RECONCILE_ACCOUNT_BALANCES_JOB) {
-        const { householdId, asOf } = parsed.data;
-        const day = asOf ?? process.env.DEMO_AS_OF_DATE ?? "2026-08-01";
-        const audit = new AuditService();
-        const ledger = new LedgerTruthService(audit);
-        const result = await ledger.reconcileHousehold(householdId, day);
-        logger.info("job_reconcile_done", {
-          jobId: job.id,
-          householdId,
-          asOf: day,
-          updated: result.updated,
-          mismatches: result.mismatches,
-        });
+      const def = jobRegistry[parsed.data.type];
+      if (def?.timeoutMs) {
+        const started = Date.now();
+        const result = await runJobHandler(parsed.data);
+        const elapsedMs = Date.now() - started;
+        if (elapsedMs > def.timeoutMs) {
+          logger.warn("job_over_soft_budget", {
+            jobId: job.id,
+            type: parsed.data.type,
+            elapsedMs,
+            timeoutMs: def.timeoutMs,
+          });
+        }
         return result;
       }
-
-      logger.warn("job_unknown", { jobId: job.id, name: job.name });
-      throw new Error(`Unknown job type: ${job.name}`);
+      return runJobHandler(parsed.data);
     },
     { connection: redisConnection() },
   );
@@ -112,6 +146,6 @@ export function startWorker() {
     logger.error("job_failed", { jobId: job?.id, error: err.message });
   });
 
-  logger.info("worker_started", { queue: "ffos-jobs" });
+  logger.info("worker_started", { queue: QUEUE_NAME });
   return worker;
 }

@@ -17,16 +17,26 @@ test("forecast points grow with savings", () => {
   assert.ok(points[5]!.projectedCashMinor > points[0]!.projectedCashMinor);
 });
 
-test("savings optimizer emits mortgage and subscription ideas", () => {
+test("savings optimizer passes through deterministic opportunity impacts", () => {
   const items = savingsOptimizerSuggestions({
-    subscriptionAnnualMinor: 3_000_00n,
-    mortgageInterestAnnualMinor: 50_000_00n,
-    lifestyleOverBudgetMinor: 1_000_00n,
+    items: [
+      {
+        id: "mortgage-rate",
+        title: "Granska bolåneränta (scenario)",
+        estimatedAnnualSavingMinor: 8_000_00n,
+        effort: "medium",
+        estimateBasis: "scenario",
+      },
+      {
+        id: "zero",
+        title: "Skip",
+        estimatedAnnualSavingMinor: 0n,
+        effort: "low",
+      },
+    ],
   });
-  const mortgage = items.find((i) => i.id === "rate-negotiate");
-  assert.ok(mortgage);
-  assert.equal(mortgage!.estimatedAnnualSavingMinor, 5_000_00n);
-  assert.ok(items.some((i) => i.id === "subs-trim"));
+  assert.equal(items.length, 1);
+  assert.equal(items[0]?.id, "mortgage-rate");
 });
 
 test("health level bands", () => {

@@ -10,6 +10,148 @@ import { EmptyState } from "../feedback/empty-state";
 import { ErrorState } from "../feedback/error-state";
 import { LoadingState } from "../feedback/loading-state";
 
+type OpportunityItem = OpportunitiesResponse["items"][number];
+
+const CONFIDENCE_LABEL_SV: Record<string, string> = {
+  low: "Låg säkerhet",
+  medium: "Medel säkerhet",
+  high: "Hög säkerhet",
+};
+
+const EFFORT_LABEL_SV: Record<string, string> = {
+  low: "Låg insats",
+  medium: "Medel insats",
+  high: "Hög insats",
+};
+
+function Badge({ children, tone = "neutral" }: { children: React.ReactNode; tone?: "neutral" | "accent" }) {
+  return (
+    <span
+      className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-[11px] font-medium ${
+        tone === "accent"
+          ? "bg-accent/10 text-accent"
+          : "bg-surface-muted text-text-secondary"
+      }`}
+    >
+      {children}
+    </span>
+  );
+}
+
+function freshnessLabel(item: OpportunityItem): string | null {
+  if (!item.lastCalculatedAt) return null;
+  const calculated = new Date(item.lastCalculatedAt);
+  if (Number.isNaN(calculated.getTime())) return null;
+  const days = Math.floor((Date.now() - calculated.getTime()) / (24 * 60 * 60 * 1000));
+  if (days <= 0) return "Beräknad idag";
+  if (days === 1) return "Beräknad igår";
+  return `Beräknad ${days} dagar sedan`;
+}
+
+function OpportunityCard({
+  item,
+  householdId,
+}: {
+  item: OpportunityItem;
+  householdId: string | null;
+}) {
+  const confidenceLabel = item.confidenceLabel
+    ? CONFIDENCE_LABEL_SV[item.confidenceLabel] ?? item.confidenceLabel
+    : null;
+  const effortLabel = EFFORT_LABEL_SV[item.effort] ?? item.effort;
+  const facts = item.facts ?? [];
+  const fresh = freshnessLabel(item);
+
+  return (
+    <li className="rounded-[16px] bg-surface-elevated p-5">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+        <div className="min-w-0 flex-1">
+          <p className="font-medium">{item.title}</p>
+          <p className="mt-2 text-sm text-text-secondary">{item.description}</p>
+
+          <div className="mt-3 flex flex-wrap items-center gap-2">
+            {confidenceLabel ? <Badge>{confidenceLabel}</Badge> : null}
+            <Badge>{effortLabel} insats</Badge>
+            <Badge>{item.status}</Badge>
+            {item.detectorKey ? <Badge>{item.detectorKey}</Badge> : null}
+          </div>
+
+          {facts.length > 0 ? (
+            <details className="mt-3 text-xs text-text-secondary">
+              <summary className="cursor-pointer select-none text-accent">
+                Varför? ({facts.length})
+              </summary>
+              <dl className="mt-2 space-y-1.5 border-l border-surface-muted pl-3">
+                {facts.map((f) => (
+                  <div key={f.key} className="flex flex-wrap justify-between gap-2">
+                    <dt className="text-text-muted">{f.label}</dt>
+                    <dd className="tabular-nums">{f.value}</dd>
+                  </div>
+                ))}
+              </dl>
+              {item.assumptions.length > 0 ? (
+                <ul className="mt-2 list-disc space-y-1 pl-4 text-text-muted">
+                  {item.assumptions.map((a, i) => (
+                    <li key={i}>{a}</li>
+                  ))}
+                </ul>
+              ) : null}
+            </details>
+          ) : null}
+
+          {(item.evidence ?? []).length > 0 ? (
+            <div className="mt-3 flex flex-wrap gap-3 text-xs">
+              {(item.evidence ?? []).map((e) => (
+                <Link
+                  key={`${e.kind}-${e.id}-${e.href}`}
+                  href={e.href}
+                  className="text-accent hover:underline"
+                  onClick={() => {
+                    if (!householdId) return;
+                    void api.trackRecommendationOutcome({
+                      householdId,
+                      recommendationKey: `opp:${item.id}`,
+                      title: item.title,
+                      status: "OPENED",
+                      notes: `Opened evidence ${e.label}`,
+                    });
+                  }}
+                >
+                  {e.label} →
+                </Link>
+              ))}
+            </div>
+          ) : null}
+        </div>
+
+        {item.estimatedAnnualSaving ? (
+          <div className="text-left sm:min-w-[9rem] sm:text-right">
+            <p className="text-[11px] uppercase tracking-wide text-text-muted">ca</p>
+            <p className="text-lg font-semibold tabular-nums">
+              <MoneyValue value={item.estimatedAnnualSaving} />
+            </p>
+            <p className="text-xs text-text-secondary">/ år</p>
+            {item.estimatedMonthlyImpact ? (
+              <p className="mt-1 text-xs text-text-muted">
+                ca <MoneyValue value={item.estimatedMonthlyImpact} /> / mån
+              </p>
+            ) : null}
+            {item.estimateBasis ? (
+              <p className="mt-1 max-w-[12rem] text-[11px] text-text-muted sm:ml-auto">
+                {item.estimateBasis}
+              </p>
+            ) : null}
+          </div>
+        ) : null}
+      </div>
+
+      {fresh ? (
+        <p className="mt-3 text-[11px] text-text-muted">{fresh}</p>
+      ) : null}
+    </li>
+  );
+}
+
 export function OpportunitiesPage() {
   const [householdId, setHouseholdId] = useState<string | null>(null);
   const [data, setData] = useState<OpportunitiesResponse | null>(null);
@@ -89,7 +231,7 @@ export function OpportunitiesPage() {
               ? "Utgifterna har stigit mot baseline."
               : "Ingen tydlig lifestyle creep just nu."}
           </p>
-          <dl className="mt-4 grid gap-3 text-sm md:grid-cols-3">
+          <dl className="mt-4 grid gap-3 text-sm sm:grid-cols-3">
             <div>
               <dt className="text-text-secondary">Senaste 3 mån snitt</dt>
               <dd>
@@ -115,7 +257,7 @@ export function OpportunitiesPage() {
           {data.lifestyleCreep.drivers.length > 0 ? (
             <ul className="mt-4 space-y-2 text-sm">
               {data.lifestyleCreep.drivers.map((d) => (
-                <li key={d.categoryKey} className="flex justify-between gap-3">
+                <li key={d.categoryKey} className="flex flex-wrap justify-between gap-3">
                   <Link href={d.href} className="text-accent hover:underline">
                     {d.categoryName}
                   </Link>
@@ -135,54 +277,7 @@ export function OpportunitiesPage() {
       ) : (
         <ul className="space-y-3">
           {data.items.map((item) => (
-            <li key={item.id} className="rounded-[16px] bg-surface-elevated p-5">
-              <div className="flex justify-between gap-3">
-                <div>
-                  <p className="font-medium">{item.title}</p>
-                  <p className="mt-2 text-sm text-text-secondary">
-                    {item.description}
-                  </p>
-                  <p className="mt-2 text-xs text-text-muted">
-                    {item.status} · {item.effort} effort · prio {item.priority}
-                    {item.detectorKey ? ` · ${item.detectorKey}` : ""}
-                  </p>
-                  {(item.evidence ?? []).length > 0 ? (
-                    <div className="mt-3 flex flex-wrap gap-3 text-xs">
-                      {(item.evidence ?? []).map((e) => (
-                        <Link
-                          key={`${e.kind}-${e.id}-${e.href}`}
-                          href={e.href}
-                          className="text-accent hover:underline"
-                          onClick={() => {
-                            if (!householdId) return;
-                            void api.trackRecommendationOutcome({
-                              householdId,
-                              recommendationKey: `opp:${item.id}`,
-                              title: item.title,
-                              status: "OPENED",
-                              notes: `Opened evidence ${e.label}`,
-                            });
-                          }}
-                        >
-                          {e.label} →
-                        </Link>
-                      ))}
-                    </div>
-                  ) : null}
-                </div>
-                {item.estimatedAnnualSaving ? (
-                  <div className="text-right text-sm">
-                    <MoneyValue value={item.estimatedAnnualSaving} />
-                    <p className="text-xs text-text-secondary">/ år</p>
-                    {item.estimateBasis ? (
-                      <p className="mt-1 max-w-[12rem] text-[11px] text-text-muted">
-                        {item.estimateBasis}
-                      </p>
-                    ) : null}
-                  </div>
-                ) : null}
-              </div>
-            </li>
+            <OpportunityCard key={item.id} item={item} householdId={householdId} />
           ))}
         </ul>
       )}

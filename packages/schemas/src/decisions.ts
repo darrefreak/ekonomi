@@ -69,25 +69,54 @@ export const evidenceLinkSchema = z.object({
   href: z.string(),
 });
 
+export const opportunityFactSchema = z.object({
+  key: z.string(),
+  label: z.string(),
+  value: z.string(),
+  amountMinor: minorString.optional(),
+});
+
 export const opportunitiesResponseSchema = z.object({
   asOf: z.string(),
   source: z.enum(["live-engine", "seed"]).optional().default("live-engine"),
   items: z.array(
     z.object({
       id: z.string(),
+      /** V1 opportunity type, e.g. MORTGAGE_RATE / SUBSCRIPTION_PRICE_INCREASE. */
+      type: z.string().optional(),
       detectorKey: z.string().optional(),
       title: z.string(),
       description: z.string(),
       estimatedAnnualSaving: moneySchema.nullable(),
+      /** Nullable monthly impact — same sign/basis as estimatedAnnualSaving. */
+      estimatedMonthlyImpact: moneySchema.nullable().optional(),
       /** Heuristic / formula basis — never present savings as guaranteed. */
       estimateBasis: z.string().nullable().optional(),
+      /** Explicit assumptions behind the estimate (shown as "Why?" in UI). */
+      assumptions: z.array(z.string()).default([]),
+      /** Structured explainability facts (not AI prose). */
+      facts: z.array(opportunityFactSchema).default([]),
+      /** Data sources feeding the calculation. */
+      dataSources: z.array(z.string()).default([]),
       confidence: z.number().nullable(),
+      /** Human label mirroring `confidence` (low/medium/high). */
+      confidenceLabel: z.enum(["low", "medium", "high"]).optional(),
+      /** Composite deterministic priority score 0..1 (higher = more important). */
+      priorityScore: z.number().optional(),
       effort: z.string(),
       risk: z.string(),
       priority: z.number(),
       status: z.string(),
       category: z.string(),
       evidence: z.array(evidenceLinkSchema).default([]),
+      /** Opportunity engine catalog version this row was computed under. */
+      calculationVersion: z.string().optional(),
+      /** Deterministic fingerprint of the inputs used to compute this opportunity. */
+      inputHash: z.string().optional(),
+      /** When the underlying data was last (re)calculated — freshness for UI. */
+      lastCalculatedAt: z.string().nullable().optional(),
+      /** Analysis freshness state ("live" when computed synchronously). */
+      analysisStatus: z.enum(["live", "stale", "pending"]).optional(),
     }),
   ),
   lifestyleCreep: z

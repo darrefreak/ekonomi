@@ -162,6 +162,13 @@
       "when": 1754652000000,
       "tag": "0022_batch_p1_u1_workflows",
       "breakpoints": true
+    },
+    {
+      "idx": 23,
+      "version": "7",
+      "when": 1754655600000,
+      "tag": "0023_p1_u4_opportunities_jobs",
+      "breakpoints": true
     }
   ]
 }

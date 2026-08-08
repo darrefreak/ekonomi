@@ -5,7 +5,10 @@ export type ForecastSeed = {
   asOf: string;
 };
 
-/** Estimate annual saving from a modest mortgage rate renegotiation (~10% of interest). */
+/**
+ * @deprecated Heuristic (~10% of interest). Prefer mortgage scenario via
+ * `detectMortgageRateOpportunity` / `monthlyInterestFromRateMinor`.
+ */
 export function estimateMortgageRateSavingMinor(
   mortgageInterestAnnualMinor: bigint,
 ): bigint {
@@ -47,44 +50,22 @@ export function buildForecastPoints(seed: ForecastSeed): ForecastPoint[] {
   });
 }
 
+export type OptimizerSuggestion = {
+  id: string;
+  title: string;
+  estimatedAnnualSavingMinor: bigint;
+  effort: string;
+  estimateBasis?: string;
+};
+
+/**
+ * Optimizer items must not invent fake % savings.
+ * Pass through already-computed opportunity impacts (caller supplies).
+ */
 export function savingsOptimizerSuggestions(input: {
-  subscriptionAnnualMinor: bigint;
-  mortgageInterestAnnualMinor: bigint;
-  lifestyleOverBudgetMinor: bigint;
-}) {
-  const items: Array<{
-    id: string;
-    title: string;
-    estimatedAnnualSavingMinor: bigint;
-    effort: string;
-  }> = [];
-  if (input.subscriptionAnnualMinor > 1_500_00n) {
-    items.push({
-      id: "subs-trim",
-      title: "Trimma abonnemang",
-      estimatedAnnualSavingMinor: input.subscriptionAnnualMinor / 5n,
-      effort: "low",
-    });
-  }
-  if (input.mortgageInterestAnnualMinor > 20_000_00n) {
-    items.push({
-      id: "rate-negotiate",
-      title: "Förhandla bolåneränta",
-      estimatedAnnualSavingMinor: estimateMortgageRateSavingMinor(
-        input.mortgageInterestAnnualMinor,
-      ),
-      effort: "medium",
-    });
-  }
-  if (input.lifestyleOverBudgetMinor > 0n) {
-    items.push({
-      id: "lifestyle-cap",
-      title: "Sänk livsstilsbudgettak",
-      estimatedAnnualSavingMinor: input.lifestyleOverBudgetMinor * 6n,
-      effort: "medium",
-    });
-  }
-  return items;
+  items: OptimizerSuggestion[];
+}): OptimizerSuggestion[] {
+  return input.items.filter((i) => i.estimatedAnnualSavingMinor > 0n);
 }
 
 export function healthLevelFromScore(score: number): "LOW" | "MODERATE" | "HIGH" | "CRITICAL" {
