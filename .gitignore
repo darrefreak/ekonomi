@@ -45,3 +45,6 @@ packages/api-client/src/generated/
 e2e/.auth/
 test-results/
 playwright-report/
+
+# Operational state: backups and the erasure ledger never belong in git.
+var/

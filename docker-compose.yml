@@ -58,9 +58,16 @@ services:
       dockerfile: infrastructure/docker/Dockerfile.api
     environment:
       NODE_ENV: development
+      # Which deployment this is, separately from NODE_ENV: a pilot runs with
+      # production semantics but is not the production deployment, and treating
+      # them as the same value is how a pilot ends up on a development database.
+      APP_ENV: ${APP_ENV:-development}
       API_PORT: 3001
       DATABASE_URL: postgresql://ffos:ffos@postgres:5432/ffos_dev
       REDIS_URL: redis://redis:6379
+      # Where the erasure ledger lives. It is deliberately outside the database,
+      # so restoring a backup cannot roll back the record of what was erased.
+      FFOS_ERASURE_LEDGER_DIR: /var/ffos/erasure-ledger
       JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET:?run "pnpm secrets:dev" once to generate local signing secrets}
       JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:?run "pnpm secrets:dev" once to generate local signing secrets}
       JWT_ACCESS_TTL: 15m
@@ -84,6 +91,10 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+    volumes:
+      # Host-mounted so the ledger survives the container, and so a database
+      # restore cannot roll back the record of what was erased.
+      - ./var/erasure-ledger:/var/ffos/erasure-ledger
     command: ["node", "apps/api/dist/main.js"]
 
   worker:
@@ -92,12 +103,16 @@ services:
       dockerfile: infrastructure/docker/Dockerfile.api
     environment:
       NODE_ENV: development
+      APP_ENV: ${APP_ENV:-development}
       DATABASE_URL: postgresql://ffos:ffos@postgres:5432/ffos_dev
       REDIS_URL: redis://redis:6379
       JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET:?run "pnpm secrets:dev" once to generate local signing secrets}
       JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:?run "pnpm secrets:dev" once to generate local signing secrets}
+      FFOS_ERASURE_LEDGER_DIR: /var/ffos/erasure-ledger
       DEMO_AS_OF_DATE: "2026-08-01"
       DEMO_RANDOM_SEED: family-financial-os-demo-v1
+    volumes:
+      - ./var/erasure-ledger:/var/ffos/erasure-ledger
     depends_on:
       postgres:
         condition: service_healthy

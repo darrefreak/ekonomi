@@ -17,6 +17,7 @@ import { privacyRequests } from "../db/schema-ops";
 import { AuditService } from "../audit/audit.service";
 import { HouseholdAccessService } from "../households/household-access.service";
 import { ObjectStorageService } from "../storage/object-storage.service";
+import { recordErasure } from "./erasure-ledger";
 
 /** The seeded demo household, protected from erasure outside production. */
 const DEMO_HOUSEHOLD_NAME = "Familjen Demo";
@@ -237,6 +238,18 @@ export class ErasureService {
       // overstate what happened.
       const objectsRemoved = objects.deleted;
       const objectsAlreadyAbsent = objects.alreadyAbsent;
+
+      // Between the objects being provably gone and the rows going: the point
+      // where the erasure is already irreversible in storage but everything
+      // needed to retry is still in the database. If the ledger cannot be
+      // written, this throws and the whole erasure is retried later.
+      recordErasure({
+        householdId,
+        requestId,
+        erasedAt: new Date().toISOString(),
+        objects: objects.locators,
+      });
+
       const rowsRemoved = await this.removeHouseholdRows(householdId);
 
       await db
@@ -331,7 +344,11 @@ export class ErasureService {
    */
   private async removeStoredObjects(
     householdId: string,
-  ): Promise<{ deleted: number; alreadyAbsent: number }> {
+  ): Promise<{
+    deleted: number;
+    alreadyAbsent: number;
+    locators: Array<{ bucket: string | null; storageKey: string }>;
+  }> {
     const db = getDb();
     const stored = await db
       .select({
@@ -345,12 +362,18 @@ export class ErasureService {
     let deleted = 0;
     let alreadyAbsent = 0;
     const failures: string[] = [];
+    const locators: Array<{ bucket: string | null; storageKey: string }> = [];
 
     for (const object of stored) {
       const result = await this.storage.deleteObject(
         object.storageKey ?? "",
         object.bucket,
       );
+      if (object.storageKey) {
+        // Recorded whatever the outcome, so a restore of an older backup
+        // removes this object again rather than bringing it back.
+        locators.push({ bucket: object.bucket, storageKey: object.storageKey });
+      }
       if (result.outcome === "DELETED_CONFIRMED") {
         deleted += 1;
       } else if (result.outcome === "ALREADY_ABSENT_CONFIRMED") {
@@ -370,7 +393,7 @@ export class ErasureService {
     if (failures.length > 0) {
       throw new ErasureIncompleteError(failures);
     }
-    return { deleted, alreadyAbsent };
+    return { deleted, alreadyAbsent, locators };
   }
 
   /**
@@ -511,6 +534,12 @@ export class ErasureService {
       // Same ordering as a household erasure: an unreachable store aborts the
       // user deletion rather than orphaning their documents.
       const objects = await this.removeStoredObjects(householdId);
+      recordErasure({
+        householdId,
+        requestId: `user:${userId}`,
+        erasedAt: new Date().toISOString(),
+        objects: objects.locators,
+      });
       await this.removeHouseholdRows(householdId);
       this.log.log(
         `erasure_user_household household=${householdId} objects=${objects.deleted}`,
