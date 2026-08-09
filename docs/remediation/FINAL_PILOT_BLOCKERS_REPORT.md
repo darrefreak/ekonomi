@@ -11,6 +11,15 @@ from earlier audits.
 This report records what changed and how it was verified. It does **not** declare
 pilot readiness. That is decided by re-running the Final Pilot Acceptance.
 
+> **Superseded in part.** The Final Targeted Pilot Re-acceptance
+> ([`../acceptance/V1_FINAL_PILOT_REACCEPTANCE.md`](../acceptance/V1_FINAL_PILOT_REACCEPTANCE.md),
+> 2026-08-09) confirms FPA-002 and FPA-003 but overturns the FPA-001 and FPA-004
+> verdicts below: the onboarding form still offers a household base currency the
+> product then refuses to serve, a currency-excluded account stays writable so
+> money vanishes from net worth, and an erasure run while object storage is
+> unavailable reports success while the object survives. Read the PASS marks for
+> FPA-001 and FPA-004 in this report as scoped to the probes listed here.
+
 ---
 
 ## Verdict table
