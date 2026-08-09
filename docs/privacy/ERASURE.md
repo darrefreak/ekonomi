@@ -50,15 +50,56 @@ Three rules follow, and the code is arranged around them:
 
 1. **The backend that owns the object is the one that must delete it.** Which
    backend that is comes from the `bucket` recorded when the object was stored,
-   not from what this process can currently reach. An object in MinIO is not
-   deleted by removing a file from a local directory, however unavailable MinIO
-   happens to be.
+   not from what this process can currently reach and not from whatever
+   `S3_BUCKET` currently says. An object in MinIO is not deleted by removing a
+   file from a local directory, however unavailable MinIO happens to be, and a
+   locator naming bucket X is not satisfied by deleting from bucket Y. A locator
+   with a key but no bucket names no authority at all, and fails.
 2. **A deletion reports what it achieved, confirmed by reading back.**
-   `deleteObject` returns `DELETED`, `NOT_FOUND` or `FAILED`. `NOT_FOUND` is
-   only ever returned when the owning backend answered and said the object is
-   not there; a backend that does not answer is `FAILED`, never "already gone".
-3. **Only confirmed deletions are counted.** `objectsRemoved` counts objects the
-   backend confirmed, not keys that were looped over.
+   `deleteObject` returns `DELETED_CONFIRMED`, `ALREADY_ABSENT_CONFIRMED` or
+   `FAILED`. Both successes mean the owning backend says the object is not
+   there; a backend that does not answer, refuses, or does not have the bucket
+   is `FAILED`, never "already gone".
+3. **Only confirmed deletions are counted.** `objectsRemoved` counts objects
+   this run deleted and then confirmed gone. Objects that were already absent
+   are reported separately as `objectsAlreadyAbsent`, because "I removed it" and
+   "it was not there" are different facts.
+
+### Why the bucket is checked first
+
+A second version of the same defect survived the first fix (FIR-001):
+`NoSuchBucket` is an HTTP 404, and the code read any 404 as the object being
+absent. A locator pointing at a bucket that no longer exists — renamed, or a
+database restored into an environment that names buckets differently — reported
+`completed` while the document sat untouched in the bucket it was actually in.
+
+The shapes MinIO returns, measured rather than assumed
+(`apps/api/src/storage/error-shapes.probe.ts`):
+
+| request | bucket exists, key absent | bucket absent |
+|---|---|---|
+| `HeadObject` | `NotFound`, 404, no code | `NotFound`, 404, no code |
+| `DeleteObject` | 204, no error | `NoSuchBucket`, 404 |
+
+A HEAD response has no body, so the S3 error code is not there and the two
+left-hand cases are indistinguishable. So absence of an object is never
+concluded from a HEAD alone. Each deletion runs four steps:
+
+1. `HeadBucket` — a 404 here can only mean the bucket, so a missing bucket is
+   `BUCKET_NOT_FOUND` and the erasure stops.
+2. `HeadObject` — now that the bucket is known to exist, a 404 unambiguously
+   means the key is absent, and the object is `ALREADY_ABSENT_CONFIRMED`.
+3. `DeleteObject`.
+4. `HeadObject` again — the delete has to be shown to be true, not assumed.
+
+Step 2 also exists because `DeleteObject` answers 204 whether or not the key was
+there, so without a check beforehand a key that never existed would be counted
+as one this erasure removed.
+
+Failures are classified rather than guessed at: `OBJECT_NOT_FOUND`,
+`BUCKET_NOT_FOUND`, `ACCESS_DENIED`, `BACKEND_UNAVAILABLE`, `TIMEOUT`,
+`UNKNOWN_STORAGE_ERROR`. Only the first is absence. A 403 is not absence, and
+neither is silence.
 
 If any object cannot be confirmed gone, the erasure stops before touching a
 single row and returns `503 ERASURE_STORAGE_UNAVAILABLE`. The household, the
@@ -101,6 +142,11 @@ the object store is unavailable at the moment of erasure — by stopping MinIO,
 confirming the erasure refuses and keeps the locator, restarting it, and
 checking that the retry completes and the sensitive marker is no longer
 anywhere in the bucket.
+
+`apps/api/src/storage/bucket-authority.integration.test.ts` runs the same
+questions against real MinIO: a missing bucket, a missing key, a renamed default
+bucket, credentials that cannot delete, an unreachable endpoint, and the
+invariant that every object a completed erasure covered is confirmed absent.
 
 ## One storage service
 

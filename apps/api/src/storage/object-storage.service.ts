@@ -12,6 +12,12 @@ import {
   S3Client,
 } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
+import {
+  classifyStorageError,
+  describeStorageError,
+  isObjectAbsence,
+  type StorageErrorKind,
+} from "./storage-errors";
 
 export type StoredObject = {
   storageKey: string;
@@ -27,18 +33,28 @@ export type StorageBackend = "s3" | "local";
 /**
  * What a deletion actually achieved, as opposed to what was attempted.
  *
- * `NOT_FOUND` is only ever reported when the backend that owns the object
- * answered and said it is not there. A backend that cannot be reached is
- * `FAILED`, never "already gone" — that conflation is what let an erasure
- * report success while the object survived (FPR-003).
+ * Both successful outcomes mean the same thing for privacy — the object is not
+ * there any more, and the backend that owns it said so — but they are kept
+ * apart because "I removed it" and "it was already gone" are different facts
+ * and reporting one as the other is how the count stopped being true.
+ *
+ * Anything the backend did not confirm is `FAILED`: unreachable, forbidden,
+ * timed out, or a bucket that does not exist. That last one used to read as
+ * absence, and a household's documents outlived an erasure that reported
+ * success (FIR-001).
  */
-export type ObjectDeletionOutcome = "DELETED" | "NOT_FOUND" | "FAILED";
+export type ObjectDeletionOutcome =
+  | "DELETED_CONFIRMED"
+  | "ALREADY_ABSENT_CONFIRMED"
+  | "FAILED";
 
 export type ObjectDeletionResult = {
   outcome: ObjectDeletionOutcome;
   backend: StorageBackend;
   bucket: string;
   storageKey: string;
+  /** Set when the outcome is FAILED. */
+  errorKind?: StorageErrorKind;
   reason?: string;
 };
 
@@ -170,11 +186,39 @@ export class ObjectStorageService {
     return this.preferLocal ? "local" : "s3";
   }
 
-  private static isMissingObject(err: unknown): boolean {
-    const name = (err as { name?: string })?.name ?? "";
-    const status = (err as { $metadata?: { httpStatusCode?: number } })?.$metadata
-      ?.httpStatusCode;
-    return name === "NotFound" || name === "NoSuchKey" || status === 404;
+  /**
+   * Does the bucket this object claims to live in actually exist?
+   *
+   * Asked with `HeadBucket`, whose 404 can only mean one thing. `HeadObject`
+   * answers 404 for a missing key and a missing bucket alike — the response has
+   * no body, so the S3 error code is not there to tell them apart — which is
+   * why the bucket has to be established with its own request before any
+   * conclusion is drawn about a key.
+   */
+  private async confirmBucket(bucket: string): Promise<StorageErrorKind | null> {
+    try {
+      await this.client().send(new HeadBucketCommand({ Bucket: bucket }));
+      return null;
+    } catch (err) {
+      return classifyStorageError(err, "bucket");
+    }
+  }
+
+  /** Whether the key is present, once the bucket is known to exist. */
+  private async objectPresent(
+    bucket: string,
+    storageKey: string,
+  ): Promise<{ present: boolean } | { failure: StorageErrorKind }> {
+    try {
+      await this.client().send(
+        new HeadObjectCommand({ Bucket: bucket, Key: storageKey }),
+      );
+      return { present: true };
+    } catch (err) {
+      const kind = classifyStorageError(err, "object");
+      if (isObjectAbsence(kind)) return { present: false };
+      return { failure: kind };
+    }
   }
 
   /**
@@ -191,11 +235,29 @@ export class ObjectStorageService {
     bucket?: string | null,
   ): Promise<ObjectDeletionResult> {
     const backend = this.backendFor(bucket);
-    const resolvedBucket = backend === "local" ? "local" : bucket || this.bucket;
+    const resolvedBucket = backend === "local" ? "local" : bucket || "";
     const base = { backend, bucket: resolvedBucket, storageKey } as const;
 
     if (!storageKey) {
-      return { ...base, outcome: "NOT_FOUND", reason: "no storage key recorded" };
+      return {
+        ...base,
+        outcome: "ALREADY_ABSENT_CONFIRMED",
+        reason: "no storage key recorded, so there is no object",
+      };
+    }
+
+    // A locator names the bucket that holds the object. Falling back to
+    // whatever `S3_BUCKET` currently says would delete from a bucket nobody
+    // claimed the object was in, and then call that success.
+    if (backend === "s3" && !resolvedBucket) {
+      return {
+        ...base,
+        outcome: "FAILED",
+        errorKind: "UNKNOWN_STORAGE_ERROR",
+        reason:
+          "the locator records a storage key but no bucket, so the object's " +
+          "storage authority is unknown",
+      };
     }
 
     if (backend === "s3") {
@@ -203,46 +265,74 @@ export class ObjectStorageService {
         return {
           ...base,
           outcome: "FAILED",
+          errorKind: "BACKEND_UNAVAILABLE",
           reason:
             "the object is held in object storage but no S3 endpoint is configured",
         };
       }
+
+      // 1. Establish the authority. Everything after this reads a 404 as a
+      //    statement about the key, which is only sound once the bucket is
+      //    known to be there.
+      const bucketProblem = await this.confirmBucket(resolvedBucket);
+      if (bucketProblem) {
+        return {
+          ...base,
+          outcome: "FAILED",
+          errorKind: bucketProblem,
+          reason: describeStorageError(bucketProblem),
+        };
+      }
+
+      // 2. Was it ever there? `DeleteObject` answers 204 whether or not the key
+      //    existed, so asking afterwards cannot tell the two apart.
+      const before = await this.objectPresent(resolvedBucket, storageKey);
+      if ("failure" in before) {
+        return {
+          ...base,
+          outcome: "FAILED",
+          errorKind: before.failure,
+          reason: describeStorageError(before.failure),
+        };
+      }
+      if (!before.present) {
+        return { ...base, outcome: "ALREADY_ABSENT_CONFIRMED" };
+      }
+
+      // 3. Delete.
       try {
         await this.client().send(
           new DeleteObjectCommand({ Bucket: resolvedBucket, Key: storageKey }),
         );
       } catch (err) {
-        if (!ObjectStorageService.isMissingObject(err)) {
-          return {
-            ...base,
-            outcome: "FAILED",
-            reason: err instanceof Error ? err.message : "delete failed",
-          };
-        }
-      }
-      // Read back: a delete that returned without error still has to be true.
-      try {
-        await this.client().send(
-          new HeadObjectCommand({ Bucket: resolvedBucket, Key: storageKey }),
-        );
+        const kind = classifyStorageError(err, "object");
         return {
           ...base,
           outcome: "FAILED",
+          errorKind: kind,
+          reason: describeStorageError(kind),
+        };
+      }
+
+      // 4. Read back. A delete that returned without error still has to be true.
+      const after = await this.objectPresent(resolvedBucket, storageKey);
+      if ("failure" in after) {
+        return {
+          ...base,
+          outcome: "FAILED",
+          errorKind: after.failure,
+          reason: `could not confirm removal: ${describeStorageError(after.failure)}`,
+        };
+      }
+      if (after.present) {
+        return {
+          ...base,
+          outcome: "FAILED",
+          errorKind: "UNKNOWN_STORAGE_ERROR",
           reason: "the object is still present after the delete",
         };
-      } catch (err) {
-        if (ObjectStorageService.isMissingObject(err)) {
-          return { ...base, outcome: "DELETED" };
-        }
-        return {
-          ...base,
-          outcome: "FAILED",
-          reason:
-            err instanceof Error
-              ? `could not confirm removal: ${err.message}`
-              : "could not confirm removal",
-        };
       }
+      return { ...base, outcome: "DELETED_CONFIRMED" };
     }
 
     const full = path.join(this.localRoot, storageKey);
@@ -250,11 +340,12 @@ export class ObjectStorageService {
       await stat(full);
     } catch (err) {
       if ((err as { code?: string })?.code === "ENOENT") {
-        return { ...base, outcome: "NOT_FOUND" };
+        return { ...base, outcome: "ALREADY_ABSENT_CONFIRMED" };
       }
       return {
         ...base,
         outcome: "FAILED",
+        errorKind: "UNKNOWN_STORAGE_ERROR",
         reason: err instanceof Error ? err.message : "could not read local object",
       };
     }
@@ -264,15 +355,17 @@ export class ObjectStorageService {
       return {
         ...base,
         outcome: "FAILED",
+        errorKind: "UNKNOWN_STORAGE_ERROR",
         reason: "the object is still present after the delete",
       };
     } catch (err) {
       if ((err as { code?: string })?.code === "ENOENT") {
-        return { ...base, outcome: "DELETED" };
+        return { ...base, outcome: "DELETED_CONFIRMED" };
       }
       return {
         ...base,
         outcome: "FAILED",
+        errorKind: "UNKNOWN_STORAGE_ERROR",
         reason: err instanceof Error ? err.message : "delete failed",
       };
     }
@@ -290,18 +383,13 @@ export class ObjectStorageService {
   ): Promise<boolean | null> {
     if (!storageKey) return false;
     if (this.backendFor(bucket) === "s3") {
-      if (!this.endpoint) return null;
-      try {
-        await this.client().send(
-          new HeadObjectCommand({
-            Bucket: bucket || this.bucket,
-            Key: storageKey,
-          }),
-        );
-        return true;
-      } catch (err) {
-        return ObjectStorageService.isMissingObject(err) ? false : null;
-      }
+      const resolvedBucket = bucket || "";
+      if (!this.endpoint || !resolvedBucket) return null;
+      // Same two steps as the delete: a 404 only means "no such key" once the
+      // bucket has been shown to exist.
+      if (await this.confirmBucket(resolvedBucket)) return null;
+      const probe = await this.objectPresent(resolvedBucket, storageKey);
+      return "failure" in probe ? null : probe.present;
     }
     return (await this.readLocal(storageKey)) != null;
   }
