@@ -48,6 +48,33 @@ Everything already built and accepted, used the way a household would:
 - the AI advisor, restricted to its deterministic tools over the household's own data
 - export and erasure through Settings → Integritet
 
+## Capability matrix
+
+The state each capability must be in for the first pilot. Where a row says
+**absent from the codebase**, it is not a setting someone could turn on by
+mistake — the code to do it does not exist. Verified 2026-08-09.
+
+| Capability | Pilot state | How that is true |
+|---|---|---|
+| Households with real data | 1 | operator discipline, bounded by this document |
+| Base currency | SEK only | enforced: `AGGREGATION_CURRENCIES = ["SEK"]`, checked at the schema, the service and the ledger |
+| Users | named participants only | registration is open, so the deployment stays off the public internet |
+| Manual financial entry | allowed | the pilot's whole point |
+| Documents | limited pilot use, ≤ 100 | operator discipline |
+| AI | analysis and recommendation only | the advisor calls deterministic read-only tools over the household's own data |
+| AI financial execution | **absent from the codebase** | no tool writes a financial event |
+| Payments | **absent from the codebase** | no payment execution path exists |
+| Investment execution | **absent from the codebase** | no order or execution path exists |
+| Trading | **absent from the codebase** | no trading path exists |
+| Bank automation | **absent from the codebase** | no real bank client exists |
+| BankID | **absent from the codebase** | the only occurrences are `BANKID_MOCK` in the demo seed |
+| Browser connectors | **absent from the codebase** | no browser automation exists |
+| Real OCR | **absent from the codebase** | documents are stored, never read by machine |
+| Real marketplace scraping | **absent from the codebase** | vehicle market data is fixture data |
+| External integrations | none | the provider catalogue is `mockProviderCatalog` |
+| Demo and mock data | clearly distinguished | the demo household is named `Familjen Demo` and is refused by erasure outside production; mock providers are labelled mock |
+| Erasure | two-step, OWNER-confirmed | typing the household name is required; `ADULT` and `ADMIN` are refused |
+
 ## Explicitly excluded
 
 Not because they are unwelcome, but because none of them has been through

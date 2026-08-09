@@ -66,6 +66,17 @@ All of the above are checked mechanically:
 - [ ] the deployment is not reachable from the public internet
 - [ ] someone is reachable if something goes wrong during a session
 
+## Machine-verified
+
+The items above that a command can decide were executed on 2026-08-09 and the
+results are recorded in [`PILOT_GO_NO_GO_PACKAGE.md`](./PILOT_GO_NO_GO_PACKAGE.md).
+
+## Human decisions
+
+The items no command can decide — accepting the retention window, the
+local-host backup risk, and the introduction of real data — are in
+[`HUMAN_GO_NO_GO.md`](./HUMAN_GO_NO_GO.md).
+
 ## Sign-off
 
 I have run the checks above and seen them pass. I know how to stop the pilot,

@@ -3,12 +3,40 @@ import { ApiTags } from "@nestjs/swagger";
 import { getPool } from "../db/client";
 import Redis from "ioredis";
 
+/**
+ * Host, port, database and bucket names only. A connection string carries a
+ * password, and this endpoint is unauthenticated.
+ */
+function serving() {
+  let database: string | null = null;
+  let host: string | null = null;
+  try {
+    const url = new URL(process.env.DATABASE_URL ?? "");
+    database = decodeURIComponent(url.pathname.replace(/^\//, "")) || null;
+    host = url.hostname || null;
+  } catch {
+    database = null;
+  }
+  return {
+    environment: process.env.APP_ENV ?? "development",
+    database,
+    databaseHost: host,
+    bucket: process.env.S3_BUCKET ?? null,
+  };
+}
+
 @ApiTags("health")
 @Controller()
 export class HealthController {
+  /**
+   * Also states which environment and database this process is actually
+   * serving. Preflight can otherwise verify one database while the running
+   * application writes to another — the exact mistake the pilot guards exist
+   * to prevent, and one a green check would hide.
+   */
   @Get("health")
   health() {
-    return { status: "ok", service: "ffos-api" };
+    return { status: "ok", service: "ffos-api", serving: serving() };
   }
 
   @Get("health/live")
