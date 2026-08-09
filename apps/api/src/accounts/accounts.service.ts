@@ -23,7 +23,7 @@ import { AuditService } from "../audit/audit.service";
 import { resolveHouseholdAsOf } from "../common/as-of";
 import { openingSnapshotAsOf } from "../common/snapshot-as-of";
 import { runIdempotentCommand } from "../common/command-idempotency";
-import { assertAggregatableCurrency } from "../metrics/currency-support";
+import { assertAggregatableCurrency } from "../common/currency-policy";
 
 const USER_ACCOUNT_TYPES = new Set([
   "CHECKING",
@@ -131,9 +131,11 @@ export class AccountsService {
     }
     // An account the household's totals cannot include must not come into
     // existence: V1 has no FX engine, and letting it in used to break every
-    // aggregate surface irrecoverably (FPA-001).
+    // aggregate surface irrecoverably (FPA-001). This also refuses the account
+    // when the *household* is in a currency V1 cannot aggregate, so a legacy
+    // household cannot grow new money (FPR-001).
     assertAggregatableCurrency(
-      input.currency ?? "SEK",
+      input.currency ?? household.baseCurrency ?? "SEK",
       household.baseCurrency || "SEK",
     );
     if (input.ownerMemberId) {

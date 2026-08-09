@@ -2,6 +2,7 @@ import { createHash } from "node:crypto";
 import type { BalancedLedgerDraft } from "@ffos/financial-engine";
 import { and, eq, inArray } from "drizzle-orm";
 import { getDb, type Db, type DbExecutor } from "../client";
+import { assertPostingCurrencyInvariant } from "../posting-currency-guard";
 import { auditLogs } from "../schema";
 import {
   financialCommandIdempotency,
@@ -251,6 +252,15 @@ async function persistBalancedEventInTx(
     if (existing) return existing;
   }
 
+  // Before anything is written: no caller may post a currency the account does
+  // not hold, into an account the household does not hold, or inside a
+  // household V1 cannot aggregate.
+  const currency = await assertPostingCurrencyInvariant(
+    db,
+    input.householdId,
+    input.draft.postings,
+  );
+
   const [event] = await db
     .insert(financialEvents)
     .values({
@@ -258,7 +268,7 @@ async function persistBalancedEventInTx(
       eventType: input.draft.eventType,
       occurredOn: input.occurredOn,
       description: input.description,
-      currency: "SEK",
+      currency,
       expenseAmountMinor: input.draft.expenseAmountMinor,
       incomeAmountMinor: input.incomeAmountMinor ?? 0n,
       debtReductionMinor: input.draft.debtReductionMinor,
@@ -283,7 +293,7 @@ async function persistBalancedEventInTx(
       householdId: input.householdId,
       financialEventId: event.id,
       bookedOn: input.occurredOn,
-      currency: "SEK",
+      currency,
       memo: input.description,
     })
     .returning();
@@ -339,7 +349,7 @@ async function persistBalancedEventInTx(
         bookingDate: input.occurredOn,
         valueDate: input.occurredOn,
         amountMinor: input.sourceAmountMinor,
-        currency: "SEK",
+        currency,
         description: input.description,
         rawDescription: input.description,
         merchantId: input.merchantId,
@@ -374,7 +384,7 @@ async function persistBalancedEventInTx(
         bookingDate: input.occurredOn,
         valueDate: input.occurredOn,
         amountMinor: input.counterpartTx.amountMinor,
-        currency: "SEK",
+        currency,
         description: input.description,
         rawDescription: input.description,
         status: "BOOKED",
@@ -411,7 +421,7 @@ async function persistBalancedEventInTx(
         financialEventId: event.id,
         categoryId: split.categoryId,
         amountMinor: split.amountMinor,
-        currency: "SEK",
+        currency,
         memo: split.memo,
         vehicleId: input.vehicleId,
       });
@@ -620,6 +630,14 @@ export async function reviseEventEconomicMeaning(input: ReviseEventDraftInput) {
       );
     }
 
+    // A revision rebuilds the postings, so it is a write like any other and
+    // must clear the same guard.
+    const currency = await assertPostingCurrencyInvariant(
+      db,
+      input.householdId,
+      input.draft.postings,
+    );
+
     const [updated] = await db
       .update(financialEvents)
       .set({
@@ -641,7 +659,7 @@ export async function reviseEventEconomicMeaning(input: ReviseEventDraftInput) {
         householdId: input.householdId,
         financialEventId: input.financialEventId,
         bookedOn: input.occurredOn,
-        currency: "SEK",
+        currency,
         memo: input.description,
       })
       .returning();

@@ -414,8 +414,19 @@ export function createApiClient(options: ApiClientOptions) {
         },
       ),
     listHouseholds: () =>
-      request<Array<{ id: string; name: string; baseCurrency: string; role: string }>>(
-        "/api/v1/households",
+      request<
+        Array<{
+          id: string;
+          name: string;
+          baseCurrency: string;
+          role: string;
+          currencySupported: boolean;
+        }>
+      >("/api/v1/households"),
+    migrateHouseholdBaseCurrency: (householdId: string, baseCurrency: string) =>
+      request<{ householdId: string; baseCurrency: string; changed: boolean }>(
+        `/api/v1/households/${encodeURIComponent(householdId)}/base-currency`,
+        { method: "POST", body: JSON.stringify({ baseCurrency }) },
       ),
     getDashboard: async (householdId: string): Promise<DashboardResponse> => {
       const data = await request<unknown>(

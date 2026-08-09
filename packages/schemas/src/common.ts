@@ -17,8 +17,22 @@ export const isoDateSchema = z
     );
   }, "Ogiltigt kalenderdatum");
 
-/** Supported V1 currencies (must match domain CurrencyCode). */
+/** Currency codes the domain can represent (must match domain CurrencyCode). */
 export const currencyCodeSchema = z.enum(["SEK", "EUR", "USD", "NOK", "DKK"]);
+
+/**
+ * The currencies V1 can actually aggregate.
+ *
+ * Representing a currency and being able to total a household in it are
+ * different capabilities: there is no FX engine, so a household's money must
+ * all be in one currency and that currency must be one the product supports
+ * end to end. Offering any other is a promise the figures cannot keep.
+ *
+ * See `docs/architecture/CURRENCY_POLICY.md`.
+ */
+export const AGGREGATION_CURRENCIES = ["SEK"] as const;
+export const aggregationCurrencySchema = z.enum(AGGREGATION_CURRENCIES);
+export type AggregationCurrency = (typeof AGGREGATION_CURRENCIES)[number];
 
 /**
  * Minor-unit money as decimal digit string (optional leading minus).

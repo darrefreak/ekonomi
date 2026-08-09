@@ -1,6 +1,15 @@
-import { Body, Controller, Get, Inject, Post, Req, UseGuards } from "@nestjs/common";
+import {
+  Body,
+  Controller,
+  Get,
+  Inject,
+  Param,
+  Post,
+  Req,
+  UseGuards,
+} from "@nestjs/common";
 import { ApiBearerAuth, ApiTags } from "@nestjs/swagger";
-import { createHouseholdSchema } from "@ffos/schemas";
+import { createHouseholdSchema, migrateBaseCurrencySchema } from "@ffos/schemas";
 import type { Request } from "express";
 import { AuthGuard } from "../auth/auth.guard";
 import { CurrentUser } from "../auth/current-user.decorator";
@@ -33,5 +42,22 @@ export class HouseholdsController {
   @Get()
   list(@CurrentUser() user: AuthenticatedUser) {
     return this.households.listForUser(user.userId);
+  }
+
+  /** Remediation for a household created before the currency guard existed. */
+  @Post(":householdId/base-currency")
+  migrateBaseCurrency(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param("householdId") householdId: string,
+    @Body(new ZodValidationPipe(migrateBaseCurrencySchema)) body: unknown,
+    @Req() req: Request & { requestId?: string },
+  ) {
+    const parsed = migrateBaseCurrencySchema.parse(body);
+    return this.households.migrateBaseCurrency(
+      user.userId,
+      householdId,
+      parsed.baseCurrency,
+      req.requestId,
+    );
   }
 }
