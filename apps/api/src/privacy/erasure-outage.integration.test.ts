@@ -54,7 +54,7 @@ class FlakyStorage extends ObjectStorageService {
       };
     }
     this.removed.add(storageKey);
-    return { ...base, outcome: "DELETED" };
+    return { ...base, outcome: "DELETED_CONFIRMED" };
   }
 }
 
@@ -226,7 +226,9 @@ test("an object whose backend cannot be reached is never counted as already gone
   );
   if (process.env.S3_ENDPOINT) {
     assert.ok(
-      ["DELETED", "NOT_FOUND", "FAILED"].includes(result.outcome),
+      ["DELETED_CONFIRMED", "ALREADY_ABSENT_CONFIRMED", "FAILED"].includes(
+        result.outcome,
+      ),
       "a configured endpoint may answer any of the three",
     );
   } else {

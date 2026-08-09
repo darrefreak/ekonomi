@@ -55,7 +55,10 @@ export type ErasureSummary = {
   requestId: string;
   householdId: string;
   status: ErasureStatus;
+  /** Objects this run deleted and then confirmed gone. */
   objectsRemoved: number;
+  /** Objects the owning backend confirmed were not there to begin with. */
+  objectsAlreadyAbsent?: number;
   rowsRemoved: Record<string, number>;
   completedAt: string | null;
 };
@@ -229,7 +232,11 @@ export class ErasureService {
 
     try {
       const objects = await this.removeStoredObjects(householdId);
+      // Objects this run actually removed. One that was already gone is
+      // confirmed absent but was not removed by us, and saying otherwise would
+      // overstate what happened.
       const objectsRemoved = objects.deleted;
+      const objectsAlreadyAbsent = objects.alreadyAbsent;
       const rowsRemoved = await this.removeHouseholdRows(householdId);
 
       await db
@@ -240,6 +247,7 @@ export class ErasureService {
           note: null,
           payload: {
             objectsRemoved,
+            objectsAlreadyAbsent,
             rowsRemoved,
             completedAt: new Date().toISOString(),
           },
@@ -255,7 +263,7 @@ export class ErasureService {
         action: "privacy.erasure_completed",
         entity: "privacy_request",
         entityId: requestId,
-        after: { objectsRemoved, rowsRemoved },
+        after: { objectsRemoved, objectsAlreadyAbsent, rowsRemoved },
       });
 
       this.log.log(`erasure_completed request=${requestId}`);
@@ -264,6 +272,7 @@ export class ErasureService {
         householdId,
         status: ERASURE_STATUS.completed,
         objectsRemoved,
+        objectsAlreadyAbsent,
         rowsRemoved,
         completedAt: new Date().toISOString(),
       };
@@ -322,7 +331,7 @@ export class ErasureService {
    */
   private async removeStoredObjects(
     householdId: string,
-  ): Promise<{ deleted: number; notFound: number }> {
+  ): Promise<{ deleted: number; alreadyAbsent: number }> {
     const db = getDb();
     const stored = await db
       .select({
@@ -334,33 +343,34 @@ export class ErasureService {
       .where(eq(documents.householdId, householdId));
 
     let deleted = 0;
-    let notFound = 0;
+    let alreadyAbsent = 0;
     const failures: string[] = [];
 
     for (const object of stored) {
-      if (!object.storageKey) {
-        notFound += 1;
-        continue;
-      }
       const result = await this.storage.deleteObject(
-        object.storageKey,
+        object.storageKey ?? "",
         object.bucket,
       );
-      if (result.outcome === "DELETED") {
+      if (result.outcome === "DELETED_CONFIRMED") {
         deleted += 1;
-      } else if (result.outcome === "NOT_FOUND") {
-        notFound += 1;
+      } else if (result.outcome === "ALREADY_ABSENT_CONFIRMED") {
+        alreadyAbsent += 1;
       } else {
         failures.push(
-          `${result.backend}:${result.bucket} — ${result.reason ?? "delete failed"}`,
+          `${result.backend}:${result.bucket || "<no bucket recorded>"} ` +
+            `[${result.errorKind ?? "UNKNOWN_STORAGE_ERROR"}] — ` +
+            `${result.reason ?? "delete failed"}`,
         );
       }
     }
 
+    // Nothing may be counted that the backend did not confirm, and nothing may
+    // proceed while a single object is unaccounted for: the next step deletes
+    // the rows that say where these objects live.
     if (failures.length > 0) {
       throw new ErasureIncompleteError(failures);
     }
-    return { deleted, notFound };
+    return { deleted, alreadyAbsent };
   }
 
   /**
