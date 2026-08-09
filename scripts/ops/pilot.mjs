@@ -259,10 +259,45 @@ async function head(url) {
   }
 }
 
+async function json(url) {
+  try {
+    const response = await fetch(url, { signal: AbortSignal.timeout(5000) });
+    return response.ok ? await response.json() : null;
+  } catch {
+    return null;
+  }
+}
+
 const apiUrl = env.FFOS_API_URL ?? "http://localhost:3001";
 const webUrl = env.FFOS_WEB_URL ?? "http://localhost:3000";
-const apiStatus = await head(`${apiUrl}/health`);
-mandatory(apiStatus === 200, "the API is healthy", `${apiUrl}/health → ${apiStatus || "no response"}`);
+const health = await json(`${apiUrl}/health`);
+mandatory(health?.status === "ok", "the API is healthy", `${apiUrl}/health → ${health ? "ok" : "no response"}`);
+
+// Checking a database that the application is not using would be worse than
+// not checking at all: it produces a green result about the wrong system.
+if (health?.serving && db) {
+  mandatory(
+    health.serving.database === db.database,
+    "the running API is serving the database this preflight checked",
+    `API is on ${health.serving.database ?? "unknown"}, preflight checked ${db.database}`,
+  );
+  mandatory(
+    health.serving.environment === env.APP_ENV,
+    "the running API is in the same environment as this preflight",
+    `API says ${health.serving.environment}, preflight says ${env.APP_ENV}`,
+  );
+  if (env.S3_BUCKET) {
+    mandatory(
+      health.serving.bucket === env.S3_BUCKET,
+      "the running API is using the bucket this preflight checked",
+      `API is on ${health.serving.bucket ?? "unknown"}, preflight checked ${env.S3_BUCKET}`,
+    );
+  }
+} else if (health) {
+  mandatory(false, "the API reports which environment and database it serves",
+    "this build predates the identity check; redeploy before starting a pilot");
+}
+
 advisory((await head(webUrl)) === 200, "the web application answers", webUrl);
 
 if (env.REDIS_URL) {
