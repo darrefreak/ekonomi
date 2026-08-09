@@ -24,12 +24,21 @@ Keep entries short and factual. What was done, what was expected, what happened.
 
 **Preflight:** 25 mandatory checks, 0 failed, 0 advisories.
 
-**Pilot-start backup:** `20260809T213456Z-voohud`, status `COMPLETE`, taken of
+**Pilot-start backup:** `20260809T213734Z-o5ul2u`, status `COMPLETE`, taken of
 the empty database before any data existed. Verified: checksum matches, dump
 readable by `pg_restore`.
 
 **State at start:** 0 households, 0 users, 0 accounts, 0 postings, 0 documents,
 0 recorded erasures. Nothing in the pilot environment has ever held real data.
+
+**Deployment smoke test.** Before handover, the deployment was exercised with
+synthetic data through the pilot web origin: registration, household creation
+(SEK), an account, an income booking, and every main surface. Net worth came out
+at exactly 150 000 öre from a 100 000 opening balance plus 50 000 income. CORS
+allows the pilot web origin and not a foreign one, and `POST /demo/load` is
+refused with 403. The pilot database and bucket were then dropped, re-migrated
+and emptied, and this backup was taken of the pristine result — so the smoke
+test left nothing behind.
 
 **Notes.**
 

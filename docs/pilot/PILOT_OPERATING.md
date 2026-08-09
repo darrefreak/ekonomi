@@ -122,7 +122,7 @@ Before real data goes in, do one of these and record it in
 
 - **A** — copy the pilot-start backup to encrypted off-host storage:
   ```bash
-  cp -r var/pilot-backups/20260809T213456Z-voohud /path/to/encrypted/drive/
+  cp -r var/pilot-backups/20260809T213734Z-o5ul2u /path/to/encrypted/drive/
   ```
   and repeat after each session's backup. *Recommended.*
 - **B** — write down that you accept the local-host-only risk for this pilot.
