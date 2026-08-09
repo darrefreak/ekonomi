@@ -189,10 +189,7 @@ export class BudgetService {
   }
 
   async updateLine(userId: string, lineId: string, input: UpdateBudgetLineInput) {
-    const { household } = await this.access.requireCanWrite(
-      userId,
-      input.householdId,
-    );
+    await this.access.requireCanWrite(userId, input.householdId);
     const db = getDb();
     const [line] = await db
       .select()
