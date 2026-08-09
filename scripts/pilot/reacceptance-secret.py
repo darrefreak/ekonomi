@@ -35,6 +35,10 @@ PRODUCTION_BASE = {
     "S3_SECRET_KEY": secrets.token_urlsafe(36),
     "S3_BUCKET": "ffos",
     "FFOS_RATE_LIMIT": "2000",
+    # Stated rather than inherited: Compose interpolates from the calling shell
+    # first, so a shell that has sourced `.env.test` would supply a placeholder
+    # here and every "should start" case would fail for the wrong reason.
+    "JWT_REFRESH_SECRET": secrets.token_urlsafe(48),
 }
 
 

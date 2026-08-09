@@ -28,7 +28,7 @@ export const currencyCodeSchema = z.enum(["SEK", "EUR", "USD", "NOK", "DKK"]);
  * all be in one currency and that currency must be one the product supports
  * end to end. Offering any other is a promise the figures cannot keep.
  *
- * See `docs/architecture/CURRENCY_POLICY.md`.
+ * See `docs/CURRENCY_POLICY.md`.
  */
 export const AGGREGATION_CURRENCIES = ["SEK"] as const;
 export const aggregationCurrencySchema = z.enum(AGGREGATION_CURRENCIES);

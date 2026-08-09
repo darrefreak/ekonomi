@@ -4,7 +4,7 @@ import { AGGREGATION_CURRENCIES } from "@ffos/schemas";
 /**
  * V1 has one financial currency per household and no FX engine.
  *
- * The decision, recorded in `docs/architecture/CURRENCY_POLICY.md`: the only
+ * The decision, recorded in `docs/CURRENCY_POLICY.md`: the only
  * currency V1 can aggregate is SEK. Everything downstream — account creation,
  * ledger persistence, every total — is measured against the household's base
  * currency, and that base currency must be one V1 actually supports.
