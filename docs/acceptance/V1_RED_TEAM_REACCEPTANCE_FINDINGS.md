@@ -25,8 +25,19 @@ was found stays readable. Fix detail, evidence and acceptance:
 | RT2-006 | **HIGH** | `pnpm db:reset` can drop a production/pilot schema; no named test database | **FIXED** — four-condition guard, protected-name and host refusal, no credentials in output |
 | RT2-007 | MEDIUM | `drizzle-orm` 0.44.7 carries a HIGH SQL-injection advisory (not reachable here) | **RESOLVED** — upgraded to 0.45.2 |
 | RT2-008 | MEDIUM | No unique index on `account_balance_snapshots (account_id, as_of)`; RT-004 fixed read-side only | **FIXED** — unique on `(account_id, as_of, source)`, the domain-correct key; 113 duplicates resolved by documented rule |
-| RT2-009 | LOW | Ledger-derived aggregates scale linearly with postings | OPEN (out of scope) |
-| RT2-010 | LOW | The 404 page shows untranslated English inside the Swedish app shell | OPEN (out of scope) |
+| RT2-009 | LOW | Ledger-derived aggregates scale linearly with postings | OPEN (out of scope) — still present at the pilot audit |
+| RT2-010 | LOW | The 404 page shows untranslated English inside the Swedish app shell | OPEN (out of scope) — still present at the pilot audit |
+
+RT2-001…RT2-008 were re-verified independently by the final pilot acceptance on
+2026-08-09 and are **VERIFIED_FIXED**. RT2-001 in particular is corroborated
+from outside this work: the pristine demo net worth is now `549 834 768` öre,
+exactly the figure this re-acceptance computed as the correct value before any
+fix existed. See `V1_FINAL_PILOT_ACCEPTANCE.md`.
+
+RT-005 (empty household `GET /budget` → 404) was re-measured during that audit
+and **escalated to HIGH as FPA-003**: it is not an empty-household edge case.
+No product path creates a budget period, so `/budget` returns 404 for every
+household except the seeded demo, permanently.
 
 One further defect was found by the remediation and fixed with it: current positions ignored
 the requested `asOf`, so `/net-worth` disagreed with its own history series once any event
