@@ -33,12 +33,51 @@ somebody was an owner does not still execute after they stopped being one.
 
 In the product: **Inställningar → Integritet → Radera hushållet**.
 
+## Completed means the data is gone
+
+`completed` is a claim about the world, not about the attempt. It is only
+written after the store that owns each object has confirmed the object is no
+longer there.
+
+This was not true at first. Object deletion was best-effort: if the object store
+could not be reached, the code fell back to removing a local file that was never
+there, counted it as removed, and went on to delete the row holding the storage
+key. The erasure reported `completed` with `objectsRemoved: 1` while the
+document sat in the bucket with nothing left pointing at it, and no retry was
+possible because the request was finished and the locator was gone (FPR-003).
+
+Three rules follow, and the code is arranged around them:
+
+1. **The backend that owns the object is the one that must delete it.** Which
+   backend that is comes from the `bucket` recorded when the object was stored,
+   not from what this process can currently reach. An object in MinIO is not
+   deleted by removing a file from a local directory, however unavailable MinIO
+   happens to be.
+2. **A deletion reports what it achieved, confirmed by reading back.**
+   `deleteObject` returns `DELETED`, `NOT_FOUND` or `FAILED`. `NOT_FOUND` is
+   only ever returned when the owning backend answered and said the object is
+   not there; a backend that does not answer is `FAILED`, never "already gone".
+3. **Only confirmed deletions are counted.** `objectsRemoved` counts objects the
+   backend confirmed, not keys that were looped over.
+
+If any object cannot be confirmed gone, the erasure stops before touching a
+single row and returns `503 ERASURE_STORAGE_UNAVAILABLE`. The household, the
+documents and the storage keys are all still there, and the request is left
+`failed` — which is retryable.
+
+There is no transaction spanning Postgres and the object store, so the ordering
+is the safety mechanism: objects are removed and confirmed first, and only then
+are the rows that locate them deleted. A failure before that point leaves a
+state that can be retried; there is no point at which a locator is destroyed
+while its object survives.
+
 ## What a household erasure removes
 
 Objects in storage first, then rows in one transaction:
 
 1. **Object storage.** Every document's stored object is deleted from the
-   bucket. Deleting the database row alone would leave the file readable.
+   bucket and confirmed gone. Deleting the database row alone would leave the
+   file readable.
 2. **The tables nothing cascades from.** `source_transaction_links` has a
    `household_id` but no foreign key to `households`, so it would otherwise be
    left pointing at a household that no longer exists.
@@ -57,17 +96,40 @@ survives, that no orphan points at the deleted household, that the object is
 gone from the bucket, that the assistant and search cannot reach it, and that
 no audit row still quotes the household's data.
 
+`scripts/pilot/erasure-invariant.py` covers the other half — what happens when
+the object store is unavailable at the moment of erasure — by stopping MinIO,
+confirming the erasure refuses and keeps the locator, restarting it, and
+checking that the retry completes and the sensitive marker is no longer
+anywhere in the bucket.
+
+## One storage service
+
+`ObjectStorageService` is provided once, by a global `StorageModule`, and
+imported wherever it is needed. `IntakeModule` and `PrivacyModule` each used to
+declare it in their own `providers`, which asked Nest for two instances with two
+independent views of whether the object store was reachable: uploads went to
+MinIO through one, and the erasure path asked the other, got a different answer
+and deleted nothing.
+
 ## Retrying
 
 Erasure is retry-safe on purpose, because a run interrupted halfway must be
 resumable and must not leave a household half-deleted:
 
-- deleting an object that is already gone succeeds;
+- an object the owning backend confirms is absent counts as done, so a retry
+  does not trip over its own earlier progress;
 - the row deletion is a single transaction, so it either happened or it did not;
 - a request whose household has already been deleted is reported as completed;
 - every step only ever removes, so no retry can resurrect a deleted record.
 
-A `failed` request can be confirmed again to resume.
+A `failed` request can be confirmed again to resume, and simultaneous retries
+are safe: six at once erase the household exactly once and leave one completed
+request.
+
+Retry-safety is not the same as never failing. The first version achieved
+"always succeeds" by ignoring what the object store did, which is how a
+completed erasure came to leave personal data behind. Failing loudly and staying
+resumable is the property that was actually wanted.
 
 ## Deleting a user
 

@@ -10,11 +10,8 @@ import { useHouseholdId } from "@/lib/use-household-id";
 import { queryKeys } from "@/lib/query-keys";
 import { kronorToMinorString } from "@/lib/money-input";
 import { useSubmissionKey } from "@/lib/idempotency";
-import {
-  ACCOUNT_TYPES,
-  CURRENCIES,
-  accountTypeLabel,
-} from "@/lib/account-labels";
+import { ACCOUNT_TYPES, accountTypeLabel } from "@/lib/account-labels";
+import { useHouseholdCurrency } from "@/lib/use-household-currency";
 import { MoneyValue } from "../financial/money-value";
 import { EmptyState } from "../feedback/empty-state";
 import { ErrorState } from "../feedback/error-state";
@@ -23,7 +20,6 @@ import { LoadingState } from "../feedback/loading-state";
 type FormState = {
   name: string;
   accountType: (typeof ACCOUNT_TYPES)[number];
-  currency: (typeof CURRENCIES)[number];
   isShared: boolean;
   ownerMemberId: string;
   provider: string;
@@ -34,7 +30,6 @@ type FormState = {
 const INITIAL_FORM: FormState = {
   name: "",
   accountType: "CHECKING",
-  currency: "SEK",
   isShared: true,
   ownerMemberId: "",
   provider: "",
@@ -64,6 +59,9 @@ export function AccountsPage() {
     enabled: Boolean(householdId),
   });
 
+  const { currency, supported: currencySupported } =
+    useHouseholdCurrency(householdId);
+
   const createMutation = useMutation({
     mutationFn: async () => {
       const id = await ensureHouseholdSession();
@@ -88,7 +86,8 @@ export function AccountsPage() {
         householdId: id,
         name: form.name.trim(),
         accountType: form.accountType,
-        currency: form.currency,
+        // The household's own currency, not an assumption about it.
+        currency,
         provider: form.provider.trim() || null,
         isShared: form.isShared,
         ownerMemberId: form.isShared ? null : form.ownerMemberId || null,
@@ -143,6 +142,27 @@ export function AccountsPage() {
         </p>
       </div>
 
+      {!currencySupported ? (
+        <div
+          data-testid="household-currency-unsupported"
+          className="rounded-[16px] border border-warning/40 bg-warning/10 p-4 text-sm"
+          role="alert"
+        >
+          <p className="font-medium">
+            Hushållet räknar i {currency}, som den här versionen inte kan
+            summera.
+          </p>
+          <p className="mt-1 text-text-secondary">
+            Inga konton kan läggas till förrän hushållets valuta är ändrad till
+            SEK. Det gör du under{" "}
+            <Link href="/settings" className="text-accent underline">
+              Inställningar
+            </Link>
+            .
+          </p>
+        </div>
+      ) : null}
+
       <form
         onSubmit={(e: FormEvent) => {
           e.preventDefault();
@@ -182,9 +202,10 @@ export function AccountsPage() {
             </select>
           </label>
           {/*
-            Totals are calculated in the household's own currency and there is
-            no exchange-rate engine yet, so offering other currencies here would
-            promise something the figures cannot deliver.
+            An account is always held in the household's own currency: there is
+            no exchange-rate engine, so a total containing anything else would
+            be invented. The value is read from the household rather than
+            assumed, so this cannot disagree with what the backend accepts.
           */}
           <div className="block text-sm">
             <span className="text-text-muted">Valuta</span>
@@ -192,10 +213,10 @@ export function AccountsPage() {
               data-testid="account-currency"
               className="mt-1 flex min-h-11 w-full items-center rounded-[12px] border border-border bg-surface-muted px-3 text-sm text-text"
             >
-              {form.currency}
+              {currency}
             </div>
             <p className="mt-1 text-xs text-text-muted">
-              Hushållet räknar sina summor i {form.currency}. Fler valutor kommer
+              Hushållet räknar sina summor i {currency}. Fler valutor kommer
               senare.
             </p>
           </div>
@@ -275,7 +296,7 @@ export function AccountsPage() {
         ) : null}
         <button
           type="submit"
-          disabled={createMutation.isPending}
+          disabled={createMutation.isPending || !currencySupported}
           className="min-h-11 rounded-[12px] bg-accent px-4 text-sm font-medium text-white disabled:opacity-60"
         >
           {createMutation.isPending ? "Skapar…" : "Skapa konto"}

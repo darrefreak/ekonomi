@@ -64,6 +64,11 @@ PRODUCTION_BASE = {
     "S3_SECRET_KEY": secrets.token_urlsafe(36),
     "S3_BUCKET": "ffos",
     "FFOS_RATE_LIMIT": "2000",
+    # Stated rather than inherited. Compose interpolates from the calling
+    # shell first, so a shell that has sourced `.env.test` would otherwise feed
+    # the container `test-refresh-secret` and the guard would rightly refuse to
+    # start — a probe failure caused by the terminal, not by the product.
+    "JWT_REFRESH_SECRET": secrets.token_urlsafe(48),
 }
 
 

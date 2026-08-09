@@ -12,13 +12,20 @@ import {
 import { kronorToMinorString } from "@/lib/money-input";
 
 type Step = 0 | 1 | 2 | 3;
-type SupportedCurrency = "SEK" | "EUR" | "USD" | "NOK" | "DKK";
+
+/**
+ * V1 totals a household in one currency and has no exchange-rate engine, so
+ * SEK is the only currency it can carry end to end. This screen used to offer
+ * EUR and NOK, and a household created in either could never open an account
+ * (FPR-001). It is stated rather than chosen.
+ */
+const HOUSEHOLD_CURRENCY = "SEK";
 
 export function OnboardingPage() {
   const router = useRouter();
   const [step, setStep] = useState<Step>(0);
   const [name, setName] = useState("Mitt hushåll");
-  const [currency, setCurrency] = useState<SupportedCurrency>("SEK");
+  const currency = HOUSEHOLD_CURRENCY;
   const [buffer, setBuffer] = useState("120000");
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -112,17 +119,16 @@ export function OnboardingPage() {
       {step === 1 ? (
         <section className="space-y-3 rounded-[16px] bg-surface-elevated p-5">
           <h2 className="text-sm font-medium">Valuta</h2>
-          <select
-            className="min-h-11 w-full rounded-[12px] border border-border bg-surface px-3"
-            value={currency}
-            onChange={(e) =>
-              setCurrency(e.target.value as SupportedCurrency)
-            }
+          <div
+            data-testid="household-currency"
+            className="flex min-h-11 w-full items-center rounded-[12px] border border-border bg-surface-muted px-3 text-sm"
           >
-            <option value="SEK">SEK</option>
-            <option value="EUR">EUR</option>
-            <option value="NOK">NOK</option>
-          </select>
+            {currency}
+          </div>
+          <p className="text-xs text-text-secondary">
+            Hushållet räknar alla summor i {currency}. Fler valutor kommer
+            senare.
+          </p>
           <div className="flex gap-2">
             <button
               type="button"
