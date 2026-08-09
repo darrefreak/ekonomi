@@ -4,8 +4,11 @@
 
 | Document | Purpose |
 |---|---|
-| **`V1_FINAL_PILOT_ACCEPTANCE.md`** | **Final pilot acceptance — FAIL for a real-data pilot (2026-08-09). Latest verdict.** 2 BLOCKER + 2 HIGH remain; the financial core passes independent verification |
+| **`V1_FINAL_PILOT_REACCEPTANCE.md`** | **Final targeted pilot re-acceptance — FAIL for a real-data pilot (2026-08-09). Latest verdict.** FPA-002 and FPA-003 fixed and confirmed; FPA-001 and FPA-004 not fixed; 3 BLOCKER remain |
+| `V1_FINAL_PILOT_REACCEPTANCE_FINDINGS.md` | Defect inventory from the re-acceptance run (FPR-001…FPR-007) |
+| `V1_FINAL_PILOT_ACCEPTANCE.md` | Final pilot acceptance — FAIL (2026-08-09), the baseline the re-acceptance re-ran |
 | `V1_FINAL_PILOT_ACCEPTANCE_FINDINGS.md` | Defect inventory from the pilot audit (FPA-001…FPA-010) plus re-measurement of every deferred finding |
+| `../remediation/FINAL_PILOT_BLOCKERS_REPORT.md` | The FPA-001…FPA-004 remediation batch, two of whose four claims the re-acceptance overturns |
 | `V1_RED_TEAM_REACCEPTANCE.md` | Post-remediation red-team re-acceptance — FAIL (2026-08-08). Its RT2-001…RT2-008 blockers and highs are since fixed and independently confirmed by the pilot audit above |
 | `V1_RED_TEAM_REACCEPTANCE_FINDINGS.md` | Defect inventory from the re-acceptance run (RT2-001…RT2-010) plus original-finding re-verification |
 | `../remediation/RT2_CRITICAL_REPORT.md` | RT2 BLOCKER/HIGH + test-trust remediation, verified by the pilot audit |

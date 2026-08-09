@@ -35,8 +35,13 @@ def check(ident: str, claim: str, ok: bool, detail: str) -> None:
 
 
 def compose_run(env: dict[str, str], timeout: int = 90):
-    """Boot the API image once with the given environment; return (exit code, output)."""
-    args = ["docker", "compose", "run", "--rm", "-T", "--no-deps"]
+    """Boot the API image once with the given environment; return (exit code, output).
+
+    The throwaway container is named so cleaning it up cannot stop the
+    development stack's own `api` container.
+    """
+    name = f"ffos-production-secret-boot-{uuid.uuid4().hex[:8]}"
+    args = ["docker", "compose", "run", "--rm", "-T", "--no-deps", "--name", name]
     for key, value in env.items():
         args += ["-e", f"{key}={value}"]
     args += ["api", "node", "apps/api/dist/main.js"]
@@ -45,7 +50,7 @@ def compose_run(env: dict[str, str], timeout: int = 90):
         return done.returncode, (done.stdout + done.stderr)
     except subprocess.TimeoutExpired as expired:
         out = (expired.stdout or b"") + (expired.stderr or b"")
-        subprocess.run(["docker", "compose", "rm", "-f", "-s", "api"], capture_output=True)
+        subprocess.run(["docker", "rm", "-f", name], capture_output=True)
         return None, out.decode(errors="replace") if isinstance(out, bytes) else str(out)
 
 
