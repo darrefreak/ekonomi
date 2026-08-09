@@ -4,11 +4,15 @@
 **Commit** `7dd07f2` plus the health-identity change on this branch
 **Machine recommendation** **TECHNICALLY READY FOR HUMAN GO/NO-GO**
 
-This is not an approval. It says the technical preconditions are met and the
-decision is now a human one:
-[`HUMAN_GO_NO_GO.md`](./HUMAN_GO_NO_GO.md).
-
-**No real data has been entered. The pilot has not started.**
+> **Decision taken.** The operator gave GO on 2026-08-09. The pilot deployment
+> is running and the start is recorded in [`PILOT_LOG.md`](./PILOT_LOG.md).
+> Day-to-day operation: [`PILOT_OPERATING.md`](./PILOT_OPERATING.md).
+>
+> **No real data has been entered by this system.** Entering the household's
+> data is a person's job.
+>
+> One item from [`HUMAN_GO_NO_GO.md`](./HUMAN_GO_NO_GO.md) remains open: the
+> off-host backup choice, A or B.
 
 ---
 

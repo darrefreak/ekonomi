@@ -35,7 +35,12 @@
     "clean": "turbo run clean && rm -rf node_modules",
     "drill:recovery": "node scripts/ops/drill.mjs recovery",
     "drill:privacy": "node scripts/ops/drill.mjs privacy",
-    "drill:negative": "node scripts/ops/drill.mjs negative"
+    "drill:negative": "node scripts/ops/drill.mjs negative",
+    "pilot:up": "bash scripts/ops/pilot-stack.sh up",
+    "pilot:down": "bash scripts/ops/pilot-stack.sh down",
+    "pilot:stop": "bash scripts/ops/pilot-stack.sh stop",
+    "pilot:ps": "bash scripts/ops/pilot-stack.sh ps",
+    "pilot:logs": "bash scripts/ops/pilot-stack.sh logs"
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.12.1",

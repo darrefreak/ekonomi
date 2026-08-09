@@ -1,0 +1,98 @@
+# The pilot deployment.
+#
+#   docker compose --env-file .env.pilot -p ffos-pilot -f docker-compose.pilot.yml up -d --build
+#
+# Separate from the development stack in every way that matters: its own
+# project name, its own containers, its own ports, its own database and its own
+# bucket. It shares only the Postgres, Redis and MinIO servers, and inside those
+# it uses a different database and a different bucket.
+#
+# It runs with NODE_ENV=production, so the fail-closed secret guard and the
+# production configuration contract both apply, and demo reseeding is refused.
+# APP_ENV=pilot names the deployment for the operator tooling.
+#
+# Secrets come from .env.pilot, which is git-ignored. Nothing here contains one.
+
+services:
+  api:
+    image: ekonomi-api
+    build:
+      context: .
+      dockerfile: infrastructure/docker/Dockerfile.api
+    container_name: ffos-pilot-api
+    environment:
+      NODE_ENV: production
+      APP_ENV: pilot
+      API_PORT: 3010
+      DATABASE_URL: postgresql://ffos:ffos@postgres:5432/ffos_pilot
+      REDIS_URL: redis://redis:6379/2
+      JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET:?set in .env.pilot}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:?set in .env.pilot}
+      JWT_ACCESS_TTL: 15m
+      JWT_REFRESH_TTL: 30d
+      # Must match the origin the browser actually uses, and must not be
+      # localhost: the production contract refuses that.
+      CORS_ORIGIN: ${PILOT_WEB_ORIGIN:?set PILOT_WEB_ORIGIN in .env.pilot}
+      WEB_URL: ${PILOT_WEB_ORIGIN}
+      S3_ENDPOINT: http://minio:9000
+      S3_ACCESS_KEY: ${S3_ACCESS_KEY:?set in .env.pilot}
+      S3_SECRET_KEY: ${S3_SECRET_KEY:?set in .env.pilot}
+      S3_BUCKET: ffos-pilot
+      S3_REGION: us-east-1
+      FFOS_ERASURE_LEDGER_DIR: /var/ffos/erasure-ledger
+    volumes:
+      - ./var/pilot-erasure-ledger:/var/ffos/erasure-ledger
+    ports:
+      - "3010:3010"
+    restart: unless-stopped
+    command: ["node", "apps/api/dist/main.js"]
+
+  worker:
+    image: ekonomi-api
+    build:
+      context: .
+      dockerfile: infrastructure/docker/Dockerfile.api
+    container_name: ffos-pilot-worker
+    environment:
+      NODE_ENV: production
+      APP_ENV: pilot
+      DATABASE_URL: postgresql://ffos:ffos@postgres:5432/ffos_pilot
+      REDIS_URL: redis://redis:6379/2
+      JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET:?set in .env.pilot}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:?set in .env.pilot}
+      CORS_ORIGIN: ${PILOT_WEB_ORIGIN:?set PILOT_WEB_ORIGIN in .env.pilot}
+      S3_ENDPOINT: http://minio:9000
+      S3_ACCESS_KEY: ${S3_ACCESS_KEY:?set in .env.pilot}
+      S3_SECRET_KEY: ${S3_SECRET_KEY:?set in .env.pilot}
+      S3_BUCKET: ffos-pilot
+      S3_REGION: us-east-1
+      FFOS_ERASURE_LEDGER_DIR: /var/ffos/erasure-ledger
+    volumes:
+      - ./var/pilot-erasure-ledger:/var/ffos/erasure-ledger
+    restart: unless-stopped
+    command: ["node", "apps/api/dist/worker.js"]
+
+  web:
+    build:
+      context: .
+      dockerfile: infrastructure/docker/Dockerfile.web
+      args:
+        # Next.js inlines NEXT_PUBLIC_* at build time, so the pilot needs its
+        # own image pointed at the pilot API.
+        NEXT_PUBLIC_API_URL: ${PILOT_API_ORIGIN:?set PILOT_API_ORIGIN in .env.pilot}
+    container_name: ffos-pilot-web
+    environment:
+      NODE_ENV: production
+      NEXT_PUBLIC_API_URL: ${PILOT_API_ORIGIN}
+    ports:
+      - "3020:3000"
+    restart: unless-stopped
+    depends_on:
+      - api
+
+networks:
+  # Joins the running infrastructure rather than starting a second Postgres,
+  # Redis and MinIO with empty volumes.
+  default:
+    name: ekonomi_default
+    external: true
