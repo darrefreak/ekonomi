@@ -34,3 +34,35 @@ export const privacyDeleteResponseSchema = z.object({
   createdAt: z.string(),
 });
 export type PrivacyDeleteResponse = z.infer<typeof privacyDeleteResponseSchema>;
+
+/** The lifecycle a deletion request moves through. */
+export const privacyRequestStatusSchema = z.enum([
+  "requested",
+  "confirmed",
+  "processing",
+  "completed",
+  "failed",
+  "cancelled",
+]);
+export type PrivacyRequestStatus = z.infer<typeof privacyRequestStatusSchema>;
+
+/**
+ * Confirming is a separate, deliberate step: the participant types the
+ * household's name so that no single click can erase anything.
+ */
+export const erasureConfirmSchema = z
+  .object({
+    householdName: z.string().min(1).max(120),
+  })
+  .strict();
+export type ErasureConfirmInput = z.infer<typeof erasureConfirmSchema>;
+
+export const erasureSummarySchema = z.object({
+  requestId: z.string().uuid(),
+  householdId: z.string(),
+  status: privacyRequestStatusSchema,
+  objectsRemoved: z.number(),
+  rowsRemoved: z.record(z.string(), z.number()),
+  completedAt: z.string().nullable(),
+});
+export type ErasureSummary = z.infer<typeof erasureSummarySchema>;

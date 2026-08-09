@@ -1,11 +1,13 @@
 import { Injectable, Logger } from "@nestjs/common";
 import { createHash, randomUUID } from "node:crypto";
-import { mkdir, readFile, writeFile } from "node:fs/promises";
+import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
 import {
   CreateBucketCommand,
+  DeleteObjectCommand,
   GetObjectCommand,
   HeadBucketCommand,
+  HeadObjectCommand,
   PutObjectCommand,
   S3Client,
 } from "@aws-sdk/client-s3";
@@ -133,6 +135,49 @@ export class ObjectStorageService {
     }
     // Local driver: opaque path token for API download proxy.
     return `/api/v1/documents/local-file?key=${encodeURIComponent(storageKey)}`;
+  }
+
+  /**
+   * Remove a stored object. Deleting something that is already gone succeeds,
+   * so an interrupted erasure can be retried without tripping over its own
+   * earlier progress.
+   */
+  async deleteObject(storageKey: string, bucket?: string | null): Promise<void> {
+    if (!storageKey) return;
+    const useS3 = await this.ensureS3();
+    if (useS3 && (bucket ?? this.bucket) !== "local") {
+      await this.client().send(
+        new DeleteObjectCommand({
+          Bucket: bucket || this.bucket,
+          Key: storageKey,
+        }),
+      );
+      return;
+    }
+    try {
+      await rm(path.join(this.localRoot, storageKey), { force: true });
+    } catch (err) {
+      this.log.warn(
+        `Could not remove local object (${err instanceof Error ? err.message : "error"})`,
+      );
+    }
+  }
+
+  /** True when the object is still stored. Used to verify an erasure. */
+  async objectExists(storageKey: string, bucket?: string | null): Promise<boolean> {
+    if (!storageKey) return false;
+    const useS3 = await this.ensureS3();
+    if (useS3 && (bucket ?? this.bucket) !== "local") {
+      try {
+        await this.client().send(
+          new HeadObjectCommand({ Bucket: bucket || this.bucket, Key: storageKey }),
+        );
+        return true;
+      } catch {
+        return false;
+      }
+    }
+    return (await this.readLocal(storageKey)) != null;
   }
 
   async readLocal(storageKey: string): Promise<Buffer | null> {
