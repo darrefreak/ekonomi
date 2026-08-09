@@ -380,13 +380,37 @@ function validate() {
         .filter(Boolean)
         .map((row) => row.split(/\s+/).slice(3).join(" ")),
     );
-    const missing = wanted.filter((key) => !present.has(key));
-    if (missing.length === 0) ok("every restored document resolves to a restored object", `${wanted.length} documents`);
-    else {
-      bad("restored documents point at objects that are not there", `${missing.length} of ${wanted.length} missing`);
-      for (const key of missing.slice(0, 5)) note(`missing: ${key}`);
-      if (missing.length > 5) note(`… and ${missing.length - 5} more`);
+    // Two different questions, and only one of them is about the restore.
+    //
+    //   Did everything the backup held come back?  — restore fidelity, a failure.
+    //   Does every document row resolve to an object? — live data health, which
+    //   the backup faithfully preserved if it was already broken.
+    //
+    // Conflating them would make a recovery impossible precisely when it is
+    // needed: a pilot with one dangling locator could never be restored at all.
+    const backedUp = new Set(
+      JSON.parse(readFileSync(join(backup.path, manifest.objects.listing), "utf8")).objects.map(
+        (entry) => entry.key,
+      ),
+    );
+    const lost = wanted.filter((key) => backedUp.has(key) && !present.has(key));
+    const danglingInBackup = wanted.filter((key) => !backedUp.has(key));
+
+    if (lost.length === 0) {
+      ok("every object the backup held came back", `${wanted.length} documents checked`);
+    } else {
+      bad("objects that were in the backup did not restore", `${lost.length} lost`);
+      for (const key of lost.slice(0, 5)) note(`lost: ${key}`);
       good = false;
+    }
+
+    if (danglingInBackup.length > 0) {
+      note(
+        `${danglingInBackup.length} document rows already had no object when the backup was ` +
+          "taken; the restore reproduced the live state faithfully. Investigate these in the " +
+          "live system — see the erasure STOP condition in docs/pilot/PILOT_RUNBOOK.md.",
+      );
+      for (const key of danglingInBackup.slice(0, 3)) note(`  already dangling: ${key}`);
     }
   }
 

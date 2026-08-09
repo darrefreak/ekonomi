@@ -304,6 +304,34 @@ if (command === "check" && db) {
   );
   mandatory(!orphans.error && orphans.value === "0", "no posting belongs to a household that is gone", orphans.error ?? `orphans ${orphans.value}`);
 
+  // A document row whose object is not in the store. Usually the aftermath of
+  // an erasure that failed closed, which is the right behaviour but leaves work
+  // for a person. Reported here rather than in recovery validation, because it
+  // is a fact about the live system that a faithful restore will reproduce.
+  if (env.S3_BUCKET) {
+    const keys = psqlValue(
+      env,
+      db.database,
+      "select coalesce(string_agg(storage_key, '|'), '') from documents where storage_key is not null and storage_key <> ''",
+    );
+    const wanted = (keys.value ?? "").split("|").filter(Boolean);
+    const listed = aws(env, ["s3", "ls", `s3://${env.S3_BUCKET}`, "--recursive"]);
+    const present = new Set(
+      (listed.stdout || "")
+        .split("\n")
+        .filter(Boolean)
+        .map((row) => row.split(/\s+/).slice(3).join(" ")),
+    );
+    const dangling = wanted.filter((key) => !present.has(key));
+    advisory(
+      dangling.length === 0,
+      "every document row resolves to an object in the bucket",
+      dangling.length === 0
+        ? `${wanted.length} documents`
+        : `${dangling.length} of ${wanted.length} have no object — see the erasure STOP condition in the runbook`,
+    );
+  }
+
   const failedErasures = psqlValue(
     env,
     db.database,
