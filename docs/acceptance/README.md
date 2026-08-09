@@ -4,7 +4,10 @@
 
 | Document | Purpose |
 |---|---|
-| **`V1_FINAL_PILOT_REACCEPTANCE.md`** | **Final targeted pilot re-acceptance — FAIL for a real-data pilot (2026-08-09). Latest verdict.** FPA-002 and FPA-003 fixed and confirmed; FPA-001 and FPA-004 not fixed; 3 BLOCKER remain |
+| **`V1_FINAL_INVARIANT_REACCEPTANCE.md`** | **Final invariant re-acceptance — FAIL for a real-data pilot (2026-08-09). Latest verdict.** The currency invariant holds; erasure still reports `completed` when an object's recorded bucket does not exist; 1 BLOCKER remains |
+| `V1_FINAL_INVARIANT_REACCEPTANCE_FINDINGS.md` | Defect inventory from the invariant audit (FIR-001…FIR-004) |
+| `../remediation/FINAL_INVARIANT_BLOCKERS_REPORT.md` | The invariant remediation batch, two of whose three claims this audit confirms |
+| `V1_FINAL_PILOT_REACCEPTANCE.md` | Final targeted pilot re-acceptance — FAIL (2026-08-09), the audit that raised FPR-001…FPR-003 |
 | `V1_FINAL_PILOT_REACCEPTANCE_FINDINGS.md` | Defect inventory from the re-acceptance run (FPR-001…FPR-007) |
 | `V1_FINAL_PILOT_ACCEPTANCE.md` | Final pilot acceptance — FAIL (2026-08-09), the baseline the re-acceptance re-ran |
 | `V1_FINAL_PILOT_ACCEPTANCE_FINDINGS.md` | Defect inventory from the pilot audit (FPA-001…FPA-010) plus re-measurement of every deferred finding |
