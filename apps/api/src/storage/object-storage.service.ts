@@ -1,6 +1,6 @@
 import { Injectable, Logger } from "@nestjs/common";
 import { createHash, randomUUID } from "node:crypto";
-import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
+import { mkdir, readFile, rm, stat, writeFile } from "node:fs/promises";
 import path from "node:path";
 import {
   CreateBucketCommand,
@@ -20,6 +20,26 @@ export type StoredObject = {
   byteSize: number;
   checksumSha256: string;
   driver: "s3" | "local";
+};
+
+export type StorageBackend = "s3" | "local";
+
+/**
+ * What a deletion actually achieved, as opposed to what was attempted.
+ *
+ * `NOT_FOUND` is only ever reported when the backend that owns the object
+ * answered and said it is not there. A backend that cannot be reached is
+ * `FAILED`, never "already gone" — that conflation is what let an erasure
+ * report success while the object survived (FPR-003).
+ */
+export type ObjectDeletionOutcome = "DELETED" | "NOT_FOUND" | "FAILED";
+
+export type ObjectDeletionResult = {
+  outcome: ObjectDeletionOutcome;
+  backend: StorageBackend;
+  bucket: string;
+  storageKey: string;
+  reason?: string;
 };
 
 @Injectable()
@@ -138,43 +158,149 @@ export class ObjectStorageService {
   }
 
   /**
-   * Remove a stored object. Deleting something that is already gone succeeds,
-   * so an interrupted erasure can be retried without tripping over its own
-   * earlier progress.
+   * Which backend owns an object, taken from what was recorded when it was
+   * stored rather than from what this process happens to be able to reach.
+   *
+   * An object written to MinIO is not deleted by removing a file from a local
+   * directory, however unavailable MinIO is right now.
    */
-  async deleteObject(storageKey: string, bucket?: string | null): Promise<void> {
-    if (!storageKey) return;
-    const useS3 = await this.ensureS3();
-    if (useS3 && (bucket ?? this.bucket) !== "local") {
-      await this.client().send(
-        new DeleteObjectCommand({
-          Bucket: bucket || this.bucket,
-          Key: storageKey,
-        }),
-      );
-      return;
+  private backendFor(bucket?: string | null): StorageBackend {
+    if (bucket === "local") return "local";
+    if (bucket) return "s3";
+    return this.preferLocal ? "local" : "s3";
+  }
+
+  private static isMissingObject(err: unknown): boolean {
+    const name = (err as { name?: string })?.name ?? "";
+    const status = (err as { $metadata?: { httpStatusCode?: number } })?.$metadata
+      ?.httpStatusCode;
+    return name === "NotFound" || name === "NoSuchKey" || status === 404;
+  }
+
+  /**
+   * Remove a stored object from the backend that owns it and report what
+   * actually happened, confirmed by reading back.
+   *
+   * There is no fallback here on purpose. The local driver is a convenience for
+   * a laptop with no MinIO; it is not a stand-in for an object store that is
+   * merely unreachable, and treating it as one deletes nothing while reporting
+   * success.
+   */
+  async deleteObject(
+    storageKey: string,
+    bucket?: string | null,
+  ): Promise<ObjectDeletionResult> {
+    const backend = this.backendFor(bucket);
+    const resolvedBucket = backend === "local" ? "local" : bucket || this.bucket;
+    const base = { backend, bucket: resolvedBucket, storageKey } as const;
+
+    if (!storageKey) {
+      return { ...base, outcome: "NOT_FOUND", reason: "no storage key recorded" };
+    }
+
+    if (backend === "s3") {
+      if (!this.endpoint) {
+        return {
+          ...base,
+          outcome: "FAILED",
+          reason:
+            "the object is held in object storage but no S3 endpoint is configured",
+        };
+      }
+      try {
+        await this.client().send(
+          new DeleteObjectCommand({ Bucket: resolvedBucket, Key: storageKey }),
+        );
+      } catch (err) {
+        if (!ObjectStorageService.isMissingObject(err)) {
+          return {
+            ...base,
+            outcome: "FAILED",
+            reason: err instanceof Error ? err.message : "delete failed",
+          };
+        }
+      }
+      // Read back: a delete that returned without error still has to be true.
+      try {
+        await this.client().send(
+          new HeadObjectCommand({ Bucket: resolvedBucket, Key: storageKey }),
+        );
+        return {
+          ...base,
+          outcome: "FAILED",
+          reason: "the object is still present after the delete",
+        };
+      } catch (err) {
+        if (ObjectStorageService.isMissingObject(err)) {
+          return { ...base, outcome: "DELETED" };
+        }
+        return {
+          ...base,
+          outcome: "FAILED",
+          reason:
+            err instanceof Error
+              ? `could not confirm removal: ${err.message}`
+              : "could not confirm removal",
+        };
+      }
+    }
+
+    const full = path.join(this.localRoot, storageKey);
+    try {
+      await stat(full);
+    } catch (err) {
+      if ((err as { code?: string })?.code === "ENOENT") {
+        return { ...base, outcome: "NOT_FOUND" };
+      }
+      return {
+        ...base,
+        outcome: "FAILED",
+        reason: err instanceof Error ? err.message : "could not read local object",
+      };
     }
     try {
-      await rm(path.join(this.localRoot, storageKey), { force: true });
+      await rm(full, { force: true });
+      await stat(full);
+      return {
+        ...base,
+        outcome: "FAILED",
+        reason: "the object is still present after the delete",
+      };
     } catch (err) {
-      this.log.warn(
-        `Could not remove local object (${err instanceof Error ? err.message : "error"})`,
-      );
+      if ((err as { code?: string })?.code === "ENOENT") {
+        return { ...base, outcome: "DELETED" };
+      }
+      return {
+        ...base,
+        outcome: "FAILED",
+        reason: err instanceof Error ? err.message : "delete failed",
+      };
     }
   }
 
-  /** True when the object is still stored. Used to verify an erasure. */
-  async objectExists(storageKey: string, bucket?: string | null): Promise<boolean> {
+  /**
+   * Whether the object is still stored, asked of the backend that owns it.
+   *
+   * `null` means the question could not be answered — the owning backend did
+   * not respond — which is not the same as "no" and must not be read as one.
+   */
+  async objectExists(
+    storageKey: string,
+    bucket?: string | null,
+  ): Promise<boolean | null> {
     if (!storageKey) return false;
-    const useS3 = await this.ensureS3();
-    if (useS3 && (bucket ?? this.bucket) !== "local") {
+    if (this.backendFor(bucket) === "s3") {
+      if (!this.endpoint) return null;
       try {
         await this.client().send(
-          new HeadObjectCommand({ Bucket: bucket || this.bucket, Key: storageKey }),
+          new HeadObjectCommand({
+            Bucket: bucket || this.bucket,
+            Key: storageKey,
+          }),
         );
         return true;
-      } catch {
-        return false;
+      } catch (err) {
+        return ObjectStorageService.isMissingObject(err) ? false : null;
       }
     }
     return (await this.readLocal(storageKey)) != null;

@@ -2,6 +2,8 @@ import {
   BadRequestException,
   ConflictException,
   ForbiddenException,
+  HttpException,
+  HttpStatus,
   Inject,
   Injectable,
   Logger,
@@ -57,6 +59,26 @@ export type ErasureSummary = {
   rowsRemoved: Record<string, number>;
   completedAt: string | null;
 };
+
+/**
+ * The erasure stopped because a store it must reach did not answer. Nothing has
+ * been removed, the request stays retryable, and — the point — it does not say
+ * completed.
+ */
+export class ErasureIncompleteError extends HttpException {
+  constructor(readonly failures: string[]) {
+    super(
+      {
+        code: "ERASURE_STORAGE_UNAVAILABLE",
+        message:
+          "Raderingen kunde inte slutföras: lagringen som innehåller filerna " +
+          "svarade inte. Ingenting har tagits bort och begäran kan köras igen.",
+        fields: { objects: failures.join("; ") },
+      },
+      HttpStatus.SERVICE_UNAVAILABLE,
+    );
+  }
+}
 
 @Injectable()
 export class ErasureService {
@@ -165,13 +187,18 @@ export class ErasureService {
   }
 
   /**
-   * Do the erasure.
+   * Do the erasure, as a saga rather than a transaction.
    *
-   * Retry-safe by construction: object deletion tolerates objects that are
-   * already gone, the row deletion is one transaction that either happens or
-   * does not, and a request whose household has already vanished is simply
-   * marked completed. Nothing here can resurrect a deleted record, because
-   * every step only ever removes.
+   * Postgres cannot enlist an object store, so the two are ordered instead:
+   * every object is deleted and confirmed gone *before* the rows that hold the
+   * keys are touched. If storage cannot be reached the erasure stops there,
+   * having removed nothing, with the request left `failed` and every locator
+   * still in place — so the retry has something to work from.
+   *
+   * The previous version deleted the rows regardless and reported completion,
+   * which is how a document survived its own erasure with nothing left pointing
+   * at it (FPR-003). Retry-safety was implemented as "never fail"; it is now
+   * "fail, keep the evidence, and mean it when it says completed".
    */
   async execute(requestId: string, actorUserId: string | null): Promise<ErasureSummary> {
     const db = getDb();
@@ -201,7 +228,8 @@ export class ErasureService {
       .where(eq(privacyRequests.id, requestId));
 
     try {
-      const objectsRemoved = await this.removeStoredObjects(householdId);
+      const objects = await this.removeStoredObjects(householdId);
+      const objectsRemoved = objects.deleted;
       const rowsRemoved = await this.removeHouseholdRows(householdId);
 
       await db
@@ -283,23 +311,56 @@ export class ErasureService {
     }
   }
 
-  private async removeStoredObjects(householdId: string): Promise<number> {
+  /**
+   * Delete every stored object the household owns, and report only what the
+   * owning backend confirmed.
+   *
+   * Counting the keys we looped over was the bug: it reported one object
+   * removed while the object was untouched. Anything not confirmed gone stops
+   * the erasure, because the next step destroys the only record of where that
+   * object lives.
+   */
+  private async removeStoredObjects(
+    householdId: string,
+  ): Promise<{ deleted: number; notFound: number }> {
     const db = getDb();
     const stored = await db
       .select({
+        id: documents.id,
         storageKey: documents.storageKey,
         bucket: documents.bucket,
       })
       .from(documents)
       .where(eq(documents.householdId, householdId));
 
-    let removed = 0;
+    let deleted = 0;
+    let notFound = 0;
+    const failures: string[] = [];
+
     for (const object of stored) {
-      if (!object.storageKey) continue;
-      await this.storage.deleteObject(object.storageKey, object.bucket);
-      removed += 1;
+      if (!object.storageKey) {
+        notFound += 1;
+        continue;
+      }
+      const result = await this.storage.deleteObject(
+        object.storageKey,
+        object.bucket,
+      );
+      if (result.outcome === "DELETED") {
+        deleted += 1;
+      } else if (result.outcome === "NOT_FOUND") {
+        notFound += 1;
+      } else {
+        failures.push(
+          `${result.backend}:${result.bucket} — ${result.reason ?? "delete failed"}`,
+        );
+      }
     }
-    return removed;
+
+    if (failures.length > 0) {
+      throw new ErasureIncompleteError(failures);
+    }
+    return { deleted, notFound };
   }
 
   /**
@@ -437,10 +498,12 @@ export class ErasureService {
     // A household only this user could reach goes with them; leaving it behind
     // would leave financial data nobody can read or delete.
     for (const householdId of soleOwnerOfEmpty) {
+      // Same ordering as a household erasure: an unreachable store aborts the
+      // user deletion rather than orphaning their documents.
       const objects = await this.removeStoredObjects(householdId);
       await this.removeHouseholdRows(householdId);
       this.log.log(
-        `erasure_user_household household=${householdId} objects=${objects}`,
+        `erasure_user_household household=${householdId} objects=${objects.deleted}`,
       );
     }
 

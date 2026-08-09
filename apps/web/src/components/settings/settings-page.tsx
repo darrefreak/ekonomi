@@ -1210,11 +1210,88 @@ function PrivacySection({ householdId }: { householdId: string }) {
         </ul>
       ) : null}
 
+      <HouseholdCurrencyRemediation householdId={householdId} />
+
       <HouseholdErasure
         householdId={householdId}
         onChanged={() => void requestsQuery.refetch()}
       />
     </section>
+  );
+}
+
+/**
+ * A way out for a household created in a currency V1 cannot total.
+ *
+ * Such a household could be created through onboarding and could then never
+ * open an account, with no way back (FPR-001). Migration is offered only while
+ * the household holds no money: renaming the currency on an account holding
+ * 100 EUR would turn it into 100 SEK, which is an invented exchange rate. When
+ * money is present the backend refuses and says what has to be cleared first.
+ */
+function HouseholdCurrencyRemediation({ householdId }: { householdId: string }) {
+  const queryClient = useQueryClient();
+  const [busy, setBusy] = useState(false);
+  const [message, setMessage] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  const householdsQuery = useQuery({
+    queryKey: ["households", "list"],
+    queryFn: () => api.listHouseholds(),
+  });
+  const household = householdsQuery.data?.find((row) => row.id === householdId);
+
+  if (!household || household.currencySupported) return null;
+
+  async function migrate() {
+    setBusy(true);
+    setError(null);
+    setMessage(null);
+    try {
+      await api.migrateHouseholdBaseCurrency(householdId, "SEK");
+      setMessage("Hushållet räknar nu i SEK. Du kan lägga till konton igen.");
+      await queryClient.invalidateQueries({ queryKey: ["households", "list"] });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Bytet misslyckades");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <div
+      className="space-y-3 rounded-[12px] border border-warning/40 bg-warning/10 p-4"
+      data-testid="household-currency-remediation"
+    >
+      <h3 className="text-sm font-medium text-text-primary">
+        Hushållets valuta stöds inte
+      </h3>
+      <p className="text-xs text-text-muted">
+        {household.name} räknar i {household.baseCurrency}, men den här
+        versionen kan bara summera SEK. Inga konton kan läggas till förrän
+        valutan är ändrad. Byte är bara tillåtet så länge hushållet är tomt —
+        belopp räknas aldrig om automatiskt.
+      </p>
+      {message ? <p className="text-xs text-positive">{message}</p> : null}
+      {error ? (
+        <p className="text-xs text-negative" role="alert">
+          {error}
+        </p>
+      ) : null}
+      <button
+        type="button"
+        disabled={busy || household.role !== "OWNER"}
+        className="min-h-11 rounded-[12px] border border-border-strong px-4 text-sm disabled:opacity-60"
+        onClick={() => void migrate()}
+      >
+        {busy ? "Byter…" : "Byt till SEK"}
+      </button>
+      {household.role !== "OWNER" ? (
+        <p className="text-xs text-text-muted">
+          Bara hushållets ägare kan byta valuta.
+        </p>
+      ) : null}
+    </div>
   );
 }
 
