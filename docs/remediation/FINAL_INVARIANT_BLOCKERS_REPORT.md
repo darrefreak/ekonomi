@@ -11,6 +11,16 @@ FPA-003, which were re-run unchanged.
 This report records what changed and how it was verified. It does **not** declare
 pilot readiness.
 
+> **Superseded in part.** The Final Invariant Re-acceptance
+> ([`../acceptance/V1_FINAL_INVARIANT_REACCEPTANCE.md`](../acceptance/V1_FINAL_INVARIANT_REACCEPTANCE.md),
+> 2026-08-09) confirms the currency invariant against fourteen endpoints it had
+> not been tested through, and confirms erasure fails closed on an outage. It
+> overturns the erasure completion claim below: an object whose recorded bucket
+> does not exist is still reported as confirmed gone, because `NoSuchBucket` is
+> a 404 and the delete path reads any 404 as object-level absence. Read the
+> "Erasure authoritative storage" and "Sensitive object deletion" PASS marks as
+> scoped to a reachable, correctly named bucket.
+
 ---
 
 ## Verdict table
