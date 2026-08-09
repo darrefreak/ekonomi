@@ -177,6 +177,7 @@ import {
   type TransactionDetailDto,
   type TransactionsResponse,
   type UpdateAccountInput,
+  type CreateBudgetInput,
   type UpdateBudgetLineInput,
   type UpdateGoalInput,
   type UpdateSinkingFundInput,
@@ -897,6 +898,16 @@ export function createApiClient(options: ApiClientOptions) {
       const data = await request<unknown>(
         `/api/v1/budget?householdId=${encodeURIComponent(householdId)}`,
       );
+      return budgetResponseSchema.parse(data) as BudgetResponse;
+    },
+    createBudget: async (input: CreateBudgetInput, options: MutationOptions = {}) => {
+      const data = await request<unknown>("/api/v1/budget", {
+        method: "POST",
+        body: JSON.stringify(input),
+        headers: options.idempotencyKey
+          ? { "Idempotency-Key": options.idempotencyKey }
+          : undefined,
+      });
       return budgetResponseSchema.parse(data) as BudgetResponse;
     },
     updateBudgetLine: async (lineId: string, input: UpdateBudgetLineInput) => {

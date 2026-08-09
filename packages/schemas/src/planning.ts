@@ -18,15 +18,29 @@ export const budgetLineSchema = z.object({
   utilizationPercent: z.number(),
 });
 
+export const budgetGroupSuggestionSchema = z.object({
+  categoryKey: z.string(),
+  name: z.string(),
+  sortOrder: z.number(),
+});
+
 export const budgetResponseSchema = z.object({
+  /**
+   * False for a household that has not made a budget yet. The rest of the
+   * response is still present and zeroed, so the surface renders an empty state
+   * to act on rather than an error.
+   */
+  hasBudget: z.boolean().optional().default(true),
   asOf: z.string(),
-  period: z.object({
-    id: z.string(),
-    label: z.string(),
-    startDate: z.string(),
-    endDate: z.string(),
-    status: z.string(),
-  }),
+  period: z
+    .object({
+      id: z.string(),
+      label: z.string(),
+      startDate: z.string(),
+      endDate: z.string(),
+      status: z.string(),
+    })
+    .nullable(),
   currency: z.enum(["SEK", "EUR", "USD", "NOK", "DKK"]),
   totals: z.object({
     planned: moneySchema,
@@ -36,9 +50,34 @@ export const budgetResponseSchema = z.object({
     utilizationPercent: z.number(),
   }),
   lines: z.array(budgetLineSchema),
+  suggestedGroups: z.array(budgetGroupSuggestionSchema).optional().default([]),
 });
 
 export type BudgetResponse = z.infer<typeof budgetResponseSchema>;
+
+export const createBudgetSchema = z
+  .object({
+    householdId: z.string().uuid(),
+    /** `YYYY-MM`; defaults to the household's current month. */
+    month: z
+      .string()
+      .regex(/^\d{4}-(0[1-9]|1[0-2])$/, "Ange månad som YYYY-MM")
+      .optional(),
+    template: z.enum(["SIMPLE"]).optional(),
+    /** Overrides the template when supplied. */
+    lines: z
+      .array(
+        z.object({
+          categoryKey: z.string().min(1).max(80),
+          name: z.string().min(1).max(120),
+          plannedMinor: nonNegativeAmountMinorStringSchema,
+        }),
+      )
+      .max(50)
+      .optional(),
+  })
+  .strict();
+export type CreateBudgetInput = z.infer<typeof createBudgetSchema>;
 
 export const updateBudgetLineSchema = z
   .object({

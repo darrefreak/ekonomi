@@ -5,11 +5,13 @@ import {
   Inject,
   Param,
   Patch,
+  Post,
   Query,
   UseGuards,
 } from "@nestjs/common";
 import { ApiBearerAuth, ApiTags } from "@nestjs/swagger";
 import {
+  createBudgetSchema,
   householdIdQuerySchema,
   lineIdParamSchema,
   updateBudgetLineSchema,
@@ -17,6 +19,7 @@ import {
 import { AuthGuard } from "../auth/auth.guard";
 import { CurrentUser } from "../auth/current-user.decorator";
 import type { AuthenticatedUser } from "../auth/auth.types";
+import { IdempotencyKey } from "../common/idempotency-key.decorator";
 import { ZodValidationPipe } from "../common/zod-validation.pipe";
 import { BudgetService } from "./budget.service";
 
@@ -34,6 +37,17 @@ export class BudgetController {
     query: { householdId: string },
   ) {
     return this.budget.get(user.userId, query.householdId);
+  }
+
+  @Post()
+  create(
+    @CurrentUser() user: AuthenticatedUser,
+    @Body(new ZodValidationPipe(createBudgetSchema)) body: unknown,
+    @IdempotencyKey() idempotencyKey: string | null,
+  ) {
+    return this.budget.create(user.userId, createBudgetSchema.parse(body), {
+      idempotencyKey,
+    });
   }
 
   @Patch("lines/:lineId")

@@ -1,5 +1,5 @@
 import { Injectable } from "@nestjs/common";
-import { and, asc, eq, gte, lt, sql } from "drizzle-orm";
+import { and, asc, desc, eq, gte, lt, sql } from "drizzle-orm";
 import { money, moneyToJson, type CurrencyCode } from "@ffos/domain";
 import {
   annualizeSubscription,
@@ -21,6 +21,7 @@ import {
   subscriptions,
 } from "../db/schema-planning";
 import { lastNMonths } from "../metrics/household-metrics.service";
+import { monthBoundsFor, monthLabelOf } from "./budget-defaults";
 
 @Injectable()
 export class PlanningMetricsService {
@@ -45,6 +46,89 @@ export class PlanningMetricsService {
     return BigInt(row?.amountMinor ?? "0");
   }
 
+  /**
+   * Carry a household's budget into the current month.
+   *
+   * A budget created in August has to mean something in September without
+   * anyone editing the database, so the most recent month's groups and amounts
+   * are copied forward the first time the new month is read. The unique index
+   * on (household, label) makes a concurrent or repeated call a no-op rather
+   * than a second period.
+   *
+   * Only ever called when the household has no period for the current month, so
+   * it cannot disturb a household that already has one.
+   */
+  async rolloverIntoCurrentMonth(
+    householdId: string,
+    asOf: string,
+  ): Promise<boolean> {
+    const db = getDb();
+    const currentLabel = monthLabelOf(asOf);
+
+    const [alreadyThere] = await db
+      .select({ id: budgetPeriods.id })
+      .from(budgetPeriods)
+      .where(
+        and(
+          eq(budgetPeriods.householdId, householdId),
+          eq(budgetPeriods.label, currentLabel),
+        ),
+      )
+      .limit(1);
+    if (alreadyThere) return true;
+
+    const [previous] = await db
+      .select()
+      .from(budgetPeriods)
+      .where(
+        and(
+          eq(budgetPeriods.householdId, householdId),
+          lt(budgetPeriods.label, currentLabel),
+        ),
+      )
+      .orderBy(desc(budgetPeriods.label))
+      .limit(1);
+    if (!previous) return false;
+
+    const previousLines = await db
+      .select()
+      .from(budgetLines)
+      .where(eq(budgetLines.budgetPeriodId, previous.id))
+      .orderBy(asc(budgetLines.sortOrder));
+
+    const { start, end } = monthBoundsFor(currentLabel);
+    const [created] = await db
+      .insert(budgetPeriods)
+      .values({
+        householdId,
+        label: currentLabel,
+        startDate: start,
+        endDate: end,
+        currency: previous.currency,
+        status: "ACTIVE",
+      })
+      .onConflictDoNothing({
+        target: [budgetPeriods.householdId, budgetPeriods.label],
+      })
+      .returning();
+    if (!created) return true; // Another request got there first.
+
+    if (previousLines.length > 0) {
+      await db.insert(budgetLines).values(
+        previousLines.map((line) => ({
+          householdId,
+          budgetPeriodId: created.id,
+          categoryId: line.categoryId,
+          categoryKey: line.categoryKey,
+          name: line.name,
+          plannedMinor: line.plannedMinor,
+          sortOrder: line.sortOrder,
+        })),
+      );
+    }
+    return true;
+  }
+
   async resolveBudgetLabel(householdId: string, asOf: string): Promise<string> {
     const months = lastNMonths(asOf, 3);
     const current = months[months.length - 1]!;
@@ -54,7 +138,10 @@ export class PlanningMetricsService {
     const currentSpend = await this.monthExpenseTotal(householdId, current);
     const preferred = currentSpend > 0n ? current : previous;
 
-    for (const label of [preferred, previous, current]) {
+    // The month you are in wins whenever it has a budget, so a plan carried
+    // into a new month is what you see rather than last month's. Falling back
+    // to the previous month only matters before the new one is materialised.
+    for (const label of [current, preferred, previous]) {
       const [period] = await db
         .select()
         .from(budgetPeriods)
@@ -110,12 +197,13 @@ export class PlanningMetricsService {
 
     const budgetKeys = lines.map((l) => l.categoryKey);
     const rolled = rollupActualByBudgetKey(
-      actualRows
-        .filter((r) => r.categoryKey)
-        .map((r) => ({
-          categoryKey: r.categoryKey!,
-          amountMinor: BigInt(r.amountMinor),
-        })),
+      // Uncategorised spending is kept rather than dropped: it matches no named
+      // group, so it lands in the catch-all when the budget has one. Without a
+      // catch-all it is ignored exactly as before.
+      actualRows.map((r) => ({
+        categoryKey: r.categoryKey ?? "",
+        amountMinor: BigInt(r.amountMinor),
+      })),
       budgetKeys,
     );
 

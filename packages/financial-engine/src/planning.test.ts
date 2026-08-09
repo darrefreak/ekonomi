@@ -47,3 +47,35 @@ test("annualize subscription cadences", () => {
   assert.equal(annualizeSubscription(1_200_00n, "YEARLY"), 1_200_00n);
   assert.equal(annualizeSubscription(50_00n, "WEEKLY"), 2_600_00n);
 });
+
+test("spend that matches no group lands in the catch-all when the budget has one", () => {
+  const spends = [
+    { categoryKey: "food.groceries", amountMinor: 1_000_00n },
+    { categoryKey: "pets.vet", amountMinor: 750_00n },
+    { categoryKey: "", amountMinor: 250_00n },
+  ];
+
+  const withCatchAll = rollupActualByBudgetKey(spends, ["food", "other"]);
+  assert.equal(withCatchAll.get("food"), 1_000_00n);
+  assert.equal(
+    withCatchAll.get("other"),
+    1_000_00n,
+    "unclaimed and uncategorised spend both belong to Övrigt",
+  );
+
+  const withoutCatchAll = rollupActualByBudgetKey(spends, ["food", "transport"]);
+  assert.equal(withoutCatchAll.get("food"), 1_000_00n);
+  assert.equal(
+    withoutCatchAll.get("transport"),
+    0n,
+    "a budget without a catch-all ignores unclaimed spend exactly as before",
+  );
+});
+
+test("the catch-all never steals spend a named group claims", () => {
+  const map = rollupActualByBudgetKey(
+    [{ categoryKey: "other.something", amountMinor: 500_00n }],
+    ["other"],
+  );
+  assert.equal(map.get("other"), 500_00n);
+});
