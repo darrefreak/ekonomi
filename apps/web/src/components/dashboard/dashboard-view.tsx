@@ -12,6 +12,7 @@ export function DashboardView({ data }: { data: DashboardResponse }) {
   const opportunities = data.opportunities ?? [];
   const cashflowPoints = data.cashflowPoints ?? [];
   const hasAccounts = data.hasAccounts ?? cashflowPoints.length > 0;
+  const excludedByCurrency = data.excludedByCurrency ?? [];
 
   return (
     <div className="space-y-6">
@@ -36,6 +37,33 @@ export function DashboardView({ data }: { data: DashboardResponse }) {
             className="inline-flex min-h-11 items-center text-sm font-medium text-accent"
           >
             Gå till konton →
+          </Link>
+        </div>
+      ) : null}
+
+      {excludedByCurrency.length > 0 ? (
+        <div
+          role="status"
+          data-testid="excluded-currency-warning"
+          className="rounded-[18px] border border-warning/40 bg-warning/10 p-4 text-sm"
+        >
+          <p className="font-medium text-text-primary">
+            Summorna nedan omfattar inte alla konton
+          </p>
+          <p className="mt-1 text-text-secondary">
+            {excludedByCurrency.length === 1
+              ? `Kontot ${excludedByCurrency[0]!.name} använder ${excludedByCurrency[0]!.currency}`
+              : `${excludedByCurrency.length} konton använder en annan valuta`}
+            , men hushållet räknar sina summor i {data.position.netWorth.currency}.
+            Växelkursberäkning finns inte ännu, så de räknas inte med. Arkivera
+            kontot eller lägg in det i {data.position.netWorth.currency} för att
+            få en fullständig bild.
+          </p>
+          <Link
+            href="/accounts"
+            className="mt-2 inline-flex min-h-11 items-center text-sm font-medium text-accent"
+          >
+            Hantera konton →
           </Link>
         </div>
       ) : null}

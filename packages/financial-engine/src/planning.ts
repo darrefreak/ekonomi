@@ -49,18 +49,38 @@ export function summarizeBudget(lines: BudgetLineInput[]) {
   };
 }
 
-/** Roll leaf category spend into parent budget keys (e.g. food.groceries → food). */
+/** The budget key that collects spend no other key claims, when a budget has one. */
+const CATCH_ALL_BUDGET_KEY = "other";
+
+/**
+ * Roll leaf category spend into parent budget keys (e.g. food.groceries → food).
+ *
+ * Spend that matches no key goes to `other` when the budget has such a line;
+ * without one it is left out, as before. That keeps a household's "Övrigt" row
+ * meaningful instead of permanently zero, and changes nothing for a budget
+ * whose groups are all named.
+ */
 export function rollupActualByBudgetKey(
   spends: Array<{ categoryKey: string; amountMinor: bigint }>,
   budgetKeys: string[],
 ): Map<string, bigint> {
   const map = new Map<string, bigint>(budgetKeys.map((k) => [k, 0n]));
+  const hasCatchAll = budgetKeys.includes(CATCH_ALL_BUDGET_KEY);
   for (const spend of spends) {
+    let claimed = false;
     for (const key of budgetKeys) {
+      if (key === CATCH_ALL_BUDGET_KEY) continue;
       if (spend.categoryKey === key || spend.categoryKey.startsWith(`${key}.`)) {
         map.set(key, (map.get(key) ?? 0n) + spend.amountMinor);
+        claimed = true;
         break;
       }
+    }
+    if (!claimed && hasCatchAll) {
+      map.set(
+        CATCH_ALL_BUDGET_KEY,
+        (map.get(CATCH_ALL_BUDGET_KEY) ?? 0n) + spend.amountMinor,
+      );
     }
   }
   return map;

@@ -6,9 +6,14 @@ import { AppModule } from "./app.module";
 import { requestIdMiddleware } from "./common/request-id.middleware";
 import { ValidationExceptionFilter } from "./common/validation-exception.filter";
 import { logger } from "./common/logger";
+import { assertProductionConfiguration } from "./common/production-config";
 import { enqueueHealthCheck } from "./jobs/queue";
 
 async function bootstrap() {
+  // Before anything is wired up, so a misconfigured production process never
+  // reaches the point of serving a request.
+  assertProductionConfiguration();
+
   const app = await NestFactory.create(AppModule, { logger: ["error", "warn"] });
   app.use(helmet());
   app.use(requestIdMiddleware);

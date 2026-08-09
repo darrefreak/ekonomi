@@ -1209,7 +1209,138 @@ function PrivacySection({ householdId }: { householdId: string }) {
           ))}
         </ul>
       ) : null}
+
+      <HouseholdErasure
+        householdId={householdId}
+        onChanged={() => void requestsQuery.refetch()}
+      />
     </section>
+  );
+}
+
+/**
+ * Erasing a household is irreversible, so it takes two deliberate steps and the
+ * participant has to type the household's name. Nothing here can happen by
+ * accident from a single click.
+ */
+function HouseholdErasure({
+  householdId,
+  onChanged,
+}: {
+  householdId: string;
+  onChanged: () => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const [confirmation, setConfirmation] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [status, setStatus] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  const erasableQuery = useQuery({
+    queryKey: ["privacy", "erasable"],
+    queryFn: () => api.listErasableHouseholds(),
+    retry: false,
+  });
+  const household = (erasableQuery.data?.items ?? []).find(
+    (item) => item.id === householdId,
+  );
+
+  if (!household) return null;
+
+  async function eraseHousehold() {
+    setBusy(true);
+    setError(null);
+    try {
+      const request = await api.requestPrivacyDelete({
+        householdId,
+        kind: "delete_household",
+        note: "Radering begärd från inställningar",
+      });
+      const summary = await api.confirmErasure(request.id, {
+        householdName: confirmation,
+      });
+      setStatus(
+        `Hushållet är raderat (${summary.objectsRemoved} filer och ` +
+          `${Object.values(summary.rowsRemoved ?? {}).reduce(
+            (total, count) => total + count,
+            0,
+          )} poster togs bort).`,
+      );
+      setOpen(false);
+      setConfirmation("");
+      onChanged();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Raderingen misslyckades");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <div
+      className="space-y-3 rounded-[12px] border border-negative/40 p-4"
+      data-testid="household-erasure"
+    >
+      <h3 className="text-sm font-medium text-text-primary">Radera hushållet</h3>
+      <p className="text-xs text-text-muted">
+        Raderar {household.name} och allt som hör till det: konton,
+        transaktioner, bokföring, budget, fordon, dokument och uppladdade filer.
+        Det går inte att ångra.
+      </p>
+      {status ? (
+        <p className="text-sm text-text-secondary" role="status">
+          {status}
+        </p>
+      ) : null}
+      {error ? (
+        <p className="text-sm text-negative" role="alert">
+          {error}
+        </p>
+      ) : null}
+      {!open ? (
+        <button
+          type="button"
+          className="min-h-11 rounded-[12px] border border-negative/60 px-4 text-sm text-negative"
+          onClick={() => setOpen(true)}
+        >
+          Radera hushållet…
+        </button>
+      ) : (
+        <div className="space-y-2">
+          <label className="block text-sm">
+            <span className="text-text-secondary">
+              Skriv <strong>{household.name}</strong> för att bekräfta
+            </span>
+            <input
+              value={confirmation}
+              onChange={(e) => setConfirmation(e.target.value)}
+              className="mt-1 min-h-11 w-full rounded-[12px] border border-border bg-surface px-3 text-sm"
+            />
+          </label>
+          <div className="flex flex-wrap gap-2">
+            <button
+              type="button"
+              disabled={busy || confirmation.trim() !== household.name.trim()}
+              onClick={() => void eraseHousehold()}
+              className="min-h-11 rounded-[12px] bg-negative px-4 text-sm font-medium text-white disabled:opacity-50"
+            >
+              {busy ? "Raderar…" : "Radera permanent"}
+            </button>
+            <button
+              type="button"
+              disabled={busy}
+              onClick={() => {
+                setOpen(false);
+                setConfirmation("");
+              }}
+              className="min-h-11 rounded-[12px] border border-border-strong px-4 text-sm"
+            >
+              Avbryt
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
   );
 }
 

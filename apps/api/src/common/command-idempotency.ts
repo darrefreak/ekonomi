@@ -22,7 +22,11 @@ import { commandIdempotency } from "../db/schema-economic";
  * RT2-002. This helper implements only the first.
  */
 
-export type CommandType = "CREATE_ACCOUNT" | "CREATE_VEHICLE";
+export type CommandType =
+  | "CREATE_ACCOUNT"
+  | "CREATE_VEHICLE"
+  | "CREATE_BUDGET"
+  | "ERASE_HOUSEHOLD";
 
 export function hashCommandRequest(request: unknown): string {
   const canonical = JSON.stringify(request, (_key, value) =>

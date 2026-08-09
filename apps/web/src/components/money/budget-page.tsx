@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState, type ReactNode } from "react";
 import type { BudgetResponse } from "@ffos/schemas";
 import { api } from "@/lib/api";
+import { useSubmissionKey } from "@/lib/idempotency";
 import { kronorToMinorString, minorToKronorInput } from "@/lib/money-input";
 import { ensureHouseholdSession } from "@/lib/session";
 import { MoneyValue } from "../financial/money-value";
@@ -18,6 +19,8 @@ export function BudgetPage() {
   const [drafts, setDrafts] = useState<Record<string, string>>({});
   const [savingId, setSavingId] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
+  const [creating, setCreating] = useState(false);
+  const creationKey = useSubmissionKey();
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -77,6 +80,34 @@ export function BudgetPage() {
     }
   }
 
+  async function createBudget() {
+    if (!householdId) return;
+    setCreating(true);
+    setActionError(null);
+    try {
+      const next = await api.createBudget(
+        { householdId, template: "SIMPLE" },
+        { idempotencyKey: creationKey.current() },
+      );
+      creationKey.renew();
+      setData(next);
+      setDrafts(
+        Object.fromEntries(
+          next.lines.map((line) => [
+            line.id,
+            minorToKronorInput(line.planned.amountMinor),
+          ]),
+        ),
+      );
+    } catch (err) {
+      setActionError(
+        err instanceof Error ? err.message : "Kunde inte skapa budget",
+      );
+    } finally {
+      setCreating(false);
+    }
+  }
+
   if (loading) return <LoadingState label="Hämtar budget…" />;
   if (error) {
     return (
@@ -91,10 +122,60 @@ export function BudgetPage() {
     return (
       <EmptyState
         title="Ingen budgetperiod"
-        description="Skapa eller seeda en budgetperiod för hushållet för att planera utgifter."
+        description="Budgeten kunde inte hämtas just nu."
         actionLabel="Försök igen"
         onAction={() => void load()}
       />
+    );
+  }
+
+  if (data.hasBudget === false) {
+    return (
+      <div className="space-y-6" data-testid="budget-empty-state">
+        <div>
+          <h1 className="font-[family-name:var(--ffos-font-display)] text-3xl tracking-tight">
+            Budget
+          </h1>
+          <p className="mt-2 text-sm text-text-secondary">
+            Ingen budget ännu · as of {data.asOf}
+          </p>
+        </div>
+
+        <section className="rounded-[18px] bg-surface-elevated p-6">
+          <h2 className="text-lg font-medium text-text-primary">
+            Ingen budget ännu
+          </h2>
+          <p className="mt-2 max-w-prose text-sm text-text-secondary">
+            En budget låter dig sätta ett planerat belopp per område och följa
+            hur mycket som är kvar under månaden. Vi föreslår dessa områden att
+            börja med — du fyller i beloppen efteråt, och de följer med till
+            nästa månad.
+          </p>
+          <ul className="mt-4 flex flex-wrap gap-2">
+            {(data.suggestedGroups ?? []).map((group) => (
+              <li
+                key={group.categoryKey}
+                className="rounded-full bg-surface-muted px-3 py-1 text-sm text-text-secondary"
+              >
+                {group.name}
+              </li>
+            ))}
+          </ul>
+          {actionError ? (
+            <p className="mt-4 text-sm text-negative" role="alert">
+              {actionError}
+            </p>
+          ) : null}
+          <button
+            type="button"
+            disabled={creating}
+            onClick={() => void createBudget()}
+            className="mt-5 min-h-11 rounded-[12px] bg-accent px-5 text-sm font-medium text-white disabled:opacity-60"
+          >
+            {creating ? "Skapar…" : "Skapa budget"}
+          </button>
+        </section>
+      </div>
     );
   }
 
@@ -105,8 +186,8 @@ export function BudgetPage() {
           Budget
         </h1>
         <p className="mt-2 text-sm text-text-secondary">
-          Planerat vs faktiskt (från financial events) · {data.period.label} · as
-          of {data.asOf}
+          Planerat vs faktiskt (från financial events) · {data.period?.label} ·
+          as of {data.asOf}
         </p>
       </div>
 

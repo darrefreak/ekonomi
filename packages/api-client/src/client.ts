@@ -157,6 +157,9 @@ import {
   type LogoutInput,
   type NetWorthResponse,
   type OpportunitiesResponse,
+  type ErasureConfirmInput,
+  type ErasureSummary,
+  erasureSummarySchema,
   type PrivacyDeleteRequest,
   type PrivacyExportResponse,
   type PrivacyDeleteResponse,
@@ -177,6 +180,7 @@ import {
   type TransactionDetailDto,
   type TransactionsResponse,
   type UpdateAccountInput,
+  type CreateBudgetInput,
   type UpdateBudgetLineInput,
   type UpdateGoalInput,
   type UpdateSinkingFundInput,
@@ -379,6 +383,28 @@ export function createApiClient(options: ApiClientOptions) {
       });
       return data as PrivacyDeleteResponse;
     },
+    /** Households the signed-in user owns, and could therefore erase. */
+    listErasableHouseholds: () =>
+      request<{ items: Array<{ id: string; name: string; role: string }> }>(
+        "/api/v1/privacy/erasable",
+      ),
+    /** Executes a deletion request; the name must match the household exactly. */
+    confirmErasure: async (requestId: string, input: ErasureConfirmInput) => {
+      const data = await request<unknown>(
+        `/api/v1/privacy/requests/${encodeURIComponent(requestId)}/confirm`,
+        { method: "POST", body: JSON.stringify(input) },
+      );
+      return erasureSummarySchema.parse(data) as ErasureSummary;
+    },
+    cancelErasure: (requestId: string) =>
+      request<{ id: string; status: string }>(
+        `/api/v1/privacy/requests/${encodeURIComponent(requestId)}/cancel`,
+        { method: "POST" },
+      ),
+    deleteOwnAccount: () =>
+      request<{ deleted: true; householdsErased: number }>("/api/v1/privacy/me", {
+        method: "DELETE",
+      }),
     createHousehold: (input: { name: string; baseCurrency?: string }) =>
       request<{ id: string; name: string; baseCurrency: string }>(
         "/api/v1/households",
@@ -897,6 +923,16 @@ export function createApiClient(options: ApiClientOptions) {
       const data = await request<unknown>(
         `/api/v1/budget?householdId=${encodeURIComponent(householdId)}`,
       );
+      return budgetResponseSchema.parse(data) as BudgetResponse;
+    },
+    createBudget: async (input: CreateBudgetInput, options: MutationOptions = {}) => {
+      const data = await request<unknown>("/api/v1/budget", {
+        method: "POST",
+        body: JSON.stringify(input),
+        headers: options.idempotencyKey
+          ? { "Idempotency-Key": options.idempotencyKey }
+          : undefined,
+      });
       return budgetResponseSchema.parse(data) as BudgetResponse;
     },
     updateBudgetLine: async (lineId: string, input: UpdateBudgetLineInput) => {
