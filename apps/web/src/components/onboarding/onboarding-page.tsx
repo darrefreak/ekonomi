@@ -30,6 +30,9 @@ export function OnboardingPage() {
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [householdId, setHouseholdId] = useState<string | null>(null);
+  // Whether this deployment has demo data at all. A pilot or production
+  // deployment does not, and offering the choice there only leads to a refusal.
+  const [demoAvailable, setDemoAvailable] = useState<boolean | null>(null);
 
   async function createHousehold() {
     setBusy(true);
@@ -41,6 +44,12 @@ export function OnboardingPage() {
       });
       setHouseholdAfterCreate(created.id);
       setHouseholdId(created.id);
+      try {
+        const demo = await api.getDemoInfo();
+        setDemoAvailable(demo.reseedAllowed);
+      } catch {
+        setDemoAvailable(false);
+      }
       await api.updateSettings({
         householdId: created.id,
         financialPolicies: {
@@ -62,20 +71,27 @@ export function OnboardingPage() {
     router.refresh();
   }
 
+  /**
+   * Demo data is refused in deployments that hold real data, and in those the
+   * demo household does not exist either. Swallowing the refusal and going on
+   * to sign in as the demo user produced "Invalid credentials" — which reads
+   * like a mistyped password rather than "this deployment has no demo".
+   */
   async function finishDemo() {
     setBusy(true);
     setError(null);
     try {
-      try {
-        await api.loadDemo();
-      } catch {
-        // reseed may be gated; demo login still works if seed exists
-      }
+      await api.loadDemo();
       await loginWithDemo();
       router.replace("/");
       router.refresh();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Demo misslyckades");
+      const message = err instanceof Error ? err.message : "";
+      setError(
+        /forbidden|disabled|403/i.test(message)
+          ? "Demodata är avstängt i den här installationen, som innehåller riktiga uppgifter. Välj “Börja tomt”."
+          : message || "Demo misslyckades",
+      );
     } finally {
       setBusy(false);
     }
@@ -180,8 +196,9 @@ export function OnboardingPage() {
         <section className="space-y-3 rounded-[16px] bg-surface-elevated p-5">
           <h2 className="text-sm font-medium">Hur vill du börja?</h2>
           <p className="text-sm text-text-secondary">
-            Hushåll {householdId ? "skapades" : "klart"}. Välj tom start eller demodata (
-            {DEMO_CREDENTIALS.email}).
+            {demoAvailable
+              ? `Hushåll ${householdId ? "skapades" : "klart"}. Välj tom start eller demodata (${DEMO_CREDENTIALS.email}).`
+              : `Hushåll ${householdId ? "skapades" : "klart"}. Börja med dina egna uppgifter.`}
           </p>
           <button
             type="button"
@@ -191,28 +208,36 @@ export function OnboardingPage() {
           >
             Börja tomt
           </button>
-          <button
-            type="button"
-            disabled={busy}
-            className="min-h-11 w-full rounded-[12px] border border-border px-4 text-sm disabled:opacity-60"
-            onClick={() => void finishDemo()}
-          >
-            Ladda demodata
-          </button>
-          <button
-            type="button"
-            className="text-sm text-accent"
-            onClick={() =>
-              void loginWithCredentials(
-                DEMO_CREDENTIALS.email,
-                DEMO_CREDENTIALS.password,
-              ).then(() => {
-                router.replace("/");
-              })
-            }
-          >
-            Redan har demo? Logga in →
-          </button>
+          {demoAvailable ? (
+            <button
+              type="button"
+              disabled={busy}
+              className="min-h-11 w-full rounded-[12px] border border-border px-4 text-sm disabled:opacity-60"
+              onClick={() => void finishDemo()}
+            >
+              Ladda demodata
+            </button>
+          ) : (
+            <p className="text-xs text-text-muted">
+              Demodata är avstängt i den här installationen.
+            </p>
+          )}
+          {demoAvailable ? (
+            <button
+              type="button"
+              className="text-sm text-accent"
+              onClick={() =>
+                void loginWithCredentials(
+                  DEMO_CREDENTIALS.email,
+                  DEMO_CREDENTIALS.password,
+                ).then(() => {
+                  router.replace("/");
+                })
+              }
+            >
+              Redan har demo? Logga in →
+            </button>
+          ) : null}
         </section>
       ) : null}
     </div>

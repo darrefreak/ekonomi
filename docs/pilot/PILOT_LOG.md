@@ -60,6 +60,41 @@ this host loses the pilot data.
 
 ---
 
+## 2026-08-09 21:46 — First household created; demo button removed from the pilot
+
+**What happened.** The operator registered and created the household
+`Mitt hushåll` (SEK) through the pilot at http://192.168.0.30:3020, then pressed
+"Ladda demodata" on the last onboarding step and got **"Invalid credentials"**.
+
+**Cause.** Onboarding called `POST /demo/load`, which this deployment refuses
+with 403 because it holds real data, swallowed that refusal, and went on to sign
+in as `demo@ffos.local` — a user that does not exist in the pilot database. The
+401 from that login was shown raw. The message was misleading: nothing was wrong
+with any credentials, the deployment simply has no demo.
+
+**Fix.** Onboarding now asks `GET /demo/info` after the household is created and
+only offers the demo option where demo data exists. Where it does not, the
+button is replaced by "Demodata är avstängt i den här installationen." The
+refusal is no longer swallowed either: if a load fails, the reason is shown
+instead of falling through to a login that cannot work.
+
+Rebuilt on the pilot and on development; E2E 59 passed on both projects.
+
+**Not a financial issue.** No figure, no balance and no stored data was
+affected. Recorded here rather than treated as an abort, per
+`PILOT_ABORT_CRITERIA.md`.
+
+**State now.** 1 user, 1 household (`Mitt hushåll`, SEK), 0 accounts, 0 postings,
+0 documents. Backup taken with the first real data present:
+`20260809T215221Z-85jtkc`, status `COMPLETE`, verified. Daily check: 29
+mandatory checks, 0 failed, 0 advisories.
+
+**Next.** Add the household's accounts with their real opening balances, then
+reconcile before entering a month of activity. Do not run onboarding again —
+it would create a second household.
+
+---
+
 ## Entry template
 
 ```
