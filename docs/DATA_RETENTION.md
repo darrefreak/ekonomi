@@ -49,14 +49,37 @@ Metrics/forecasts ska kunna beräknas om från ledger + assumptions. Snapshots s
 
 Vid `calculationVersion`-bump: ny beräkning, gamla snapshots behålls med version.
 
-## 6. Backup (V1 docs)
+## 6. Backup
 
-Dokumentera backup för:
+Implementerad i OR1. Se [`pilot/PILOT_DATA_POLICY.md`](./pilot/PILOT_DATA_POLICY.md)
+för policyn och [`pilot/PILOT_RUNBOOK.md`](./pilot/PILOT_RUNBOOK.md) för
+handhavandet.
 
-- PostgreSQL (volume snapshots / `pg_dump` i dev)
-- MinIO (bucket versioning/export senare)
+| Del | Verktyg |
+|---|---|
+| PostgreSQL | `pnpm backup:postgres` — `pg_dump -Fc`, checksummad, verifierad med `pg_restore --list` |
+| Objektlagring | `pnpm backup:objects` — kopia till separat destination utanför bucketen |
+| Båda + manifest | `pnpm backup:pilot` |
+| Återställning | `pnpm recovery:prepare` — till isolerad recovery-databas och recovery-bucket |
 
-Ingen avancerad cloud backup i V1. Production ska kunna använda plattformens backup för Postgres + S3.
+Backupdestinationen är en host-katalog utanför alla containervolymer. Retention
+för pilot: 14 dagar, minst tre kompletta backuper.
+
+> **Bucket versioning får inte användas som backup.**
+>
+> Tidigare rekommenderade det här dokumentet "MinIO (bucket versioning/export
+> senare)". Den rekommendationen är återkallad, och `pnpm pilot:preflight`
+> vägrar numera starta en pilot mot en versionerad bucket.
+>
+> Skälet är uppmätt, inte teoretiskt: med versioning påslaget raderar
+> applikationen ett objekt, lagringen bekräftar att den aktuella versionen är
+> borta, raderingen rapporterar korrekt `completed` — och den föregående
+> versionen går fortfarande att läsa i sin helhet, personnummer och allt.
+> Versioning skulle göra varje slutförd radering till ett osant påstående.
+>
+> Backup är därför en separat kopia på separat medium, med egen bounded
+> retention, och raderingsliggaren är det som hindrar backuperna från att
+> motsäga en radering.
 
 ## 7. Deletion design
 
