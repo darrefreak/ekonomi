@@ -178,6 +178,11 @@ export class DashboardService {
       coverageFreshness: coverage.freshness,
       reviewCount: review.total,
       hasAccounts,
+      /**
+       * Accounts whose currency the totals above cannot include. Surfaced so a
+       * partial figure is never presented as a complete one.
+       */
+      excludedByCurrency: snap.excludedByCurrency,
     };
   }
 }

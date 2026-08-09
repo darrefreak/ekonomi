@@ -35,8 +35,13 @@ import {
   sourceTransactionLinks,
   sourceTransactions,
 } from "../db/schema-economic";
+import { households } from "../db/schema";
 import { contracts, subscriptions } from "../db/schema-planning";
 import { snapshotAsOfDate } from "../common/snapshot-as-of";
+import {
+  activeCurrencyWarnings,
+  partitionByAggregationCurrency,
+} from "./currency-support";
 
 /** Period metrics: ACTIVE events only; exclude when primary source tx isExcluded. */
 function activeNonExcludedEventSql() {
@@ -54,11 +59,42 @@ function activeNonExcludedEventSql() {
 
 @Injectable()
 export class HouseholdMetricsService {
-  async getAccountRows(householdId: string) {
+  /** Every non-system account of the household, whatever currency it holds. */
+  async getAllAccountRows(householdId: string) {
     return getDb()
       .select()
       .from(accounts)
       .where(and(eq(accounts.householdId, householdId), ne(accounts.isSystem, true)));
+  }
+
+  private async baseCurrencyOf(householdId: string): Promise<CurrencyCode> {
+    const [row] = await getDb()
+      .select({ baseCurrency: households.baseCurrency })
+      .from(households)
+      .where(eq(households.id, householdId))
+      .limit(1);
+    return (row?.baseCurrency || "SEK") as CurrencyCode;
+  }
+
+  /**
+   * The accounts a base-currency total may include.
+   *
+   * V1 has no FX engine, so an account in another currency cannot be added to
+   * the total. It is left out here rather than allowed to reach the aggregate,
+   * where it used to throw and take the whole dashboard down with it (FPA-001).
+   * `getUnsupportedCurrencyAccounts` reports what was left out.
+   */
+  async getAccountRows(householdId: string) {
+    const all = await this.getAllAccountRows(householdId);
+    const baseCurrency = await this.baseCurrencyOf(householdId);
+    return partitionByAggregationCurrency(all, baseCurrency).aggregatable;
+  }
+
+  /** Accounts excluded from the household's totals because of their currency. */
+  async getUnsupportedCurrencyAccounts(householdId: string) {
+    const all = await this.getAllAccountRows(householdId);
+    const baseCurrency = await this.baseCurrencyOf(householdId);
+    return partitionByAggregationCurrency(all, baseCurrency).unsupported;
   }
 
   /**
@@ -184,11 +220,14 @@ export class HouseholdMetricsService {
     accountRows: Awaited<ReturnType<HouseholdMetricsService["getAccountRows"]>>,
     currency: CurrencyCode,
   ) {
-    // V1: household position aggregation is SEK-only — never silent-cross-currency sum.
+    // Defence in depth. Callers receive rows from getAccountRows, which has
+    // already dropped anything in another currency, so this cannot fire in
+    // normal operation — but a cross-currency sum would silently misstate a
+    // household's wealth, so it stays as an assertion rather than a comment.
     for (const a of accountRows) {
       if (a.currency !== currency) {
         throw new Error(
-          `V1 multi-currency aggregation unsupported: account ${a.id} is ${a.currency}, household base is ${currency}`,
+          `Refusing to aggregate across currencies: account ${a.id} is ${a.currency}, household base is ${currency}`,
         );
       }
     }
@@ -708,6 +747,9 @@ export class HouseholdMetricsService {
     const mortgageSavingMinor = estimateMortgageRateSavingMinor(annualInterest);
 
     const upcoming = await this.upcomingObligations(householdId, currency, asOf);
+    const excludedByCurrency = activeCurrencyWarnings(
+      await this.getUnsupportedCurrencyAccounts(householdId),
+    );
 
     const composition = await this.ledgerCompositionFingerprint(householdId);
     const accountBalanceLines = accountRows
@@ -754,6 +796,13 @@ export class HouseholdMetricsService {
       mortgageSavingMinor,
       upcoming,
       monthLabel,
+      /**
+       * Accounts left out of every figure above because V1 cannot convert their
+       * currency. Empty for an ordinary household; when it is not, the totals
+       * are true for what they cover but do not cover everything, and the
+       * participant is told so rather than shown a silently partial number.
+       */
+      excludedByCurrency,
       /** Shared registry metadata — all consumers must surface the same bundle. */
       metricMeta: {
         bundleVersion: METRIC_BUNDLE_VERSION,

@@ -181,25 +181,24 @@ export function AccountsPage() {
               ))}
             </select>
           </label>
-          <label className="block text-sm">
+          {/*
+            Totals are calculated in the household's own currency and there is
+            no exchange-rate engine yet, so offering other currencies here would
+            promise something the figures cannot deliver.
+          */}
+          <div className="block text-sm">
             <span className="text-text-muted">Valuta</span>
-            <select
-              value={form.currency}
-              onChange={(e) =>
-                setForm((f) => ({
-                  ...f,
-                  currency: e.target.value as (typeof CURRENCIES)[number],
-                }))
-              }
-              className="mt-1 min-h-11 w-full rounded-[12px] border border-border bg-surface px-3 text-sm"
+            <div
+              data-testid="account-currency"
+              className="mt-1 flex min-h-11 w-full items-center rounded-[12px] border border-border bg-surface-muted px-3 text-sm text-text"
             >
-              {CURRENCIES.map((c) => (
-                <option key={c} value={c}>
-                  {c}
-                </option>
-              ))}
-            </select>
-          </label>
+              {form.currency}
+            </div>
+            <p className="mt-1 text-xs text-text-muted">
+              Hushållet räknar sina summor i {form.currency}. Fler valutor kommer
+              senare.
+            </p>
+          </div>
           <label className="block text-sm">
             <span className="text-text-muted">Provider (valfritt)</span>
             <input

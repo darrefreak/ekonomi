@@ -23,6 +23,7 @@ import { AuditService } from "../audit/audit.service";
 import { resolveHouseholdAsOf } from "../common/as-of";
 import { openingSnapshotAsOf } from "../common/snapshot-as-of";
 import { runIdempotentCommand } from "../common/command-idempotency";
+import { assertAggregatableCurrency } from "../metrics/currency-support";
 
 const USER_ACCOUNT_TYPES = new Set([
   "CHECKING",
@@ -121,10 +122,20 @@ export class AccountsService {
     input: CreateAccountInput,
     options: { idempotencyKey?: string | null } = {},
   ) {
-    await this.access.requireCanWrite(userId, input.householdId);
+    const { household } = await this.access.requireCanWrite(
+      userId,
+      input.householdId,
+    );
     if (!USER_ACCOUNT_TYPES.has(input.accountType)) {
       throw new BadRequestException("Invalid account type");
     }
+    // An account the household's totals cannot include must not come into
+    // existence: V1 has no FX engine, and letting it in used to break every
+    // aggregate surface irrecoverably (FPA-001).
+    assertAggregatableCurrency(
+      input.currency ?? "SEK",
+      household.baseCurrency || "SEK",
+    );
     if (input.ownerMemberId) {
       await this.requireMemberInHousehold(input.householdId, input.ownerMemberId);
     }

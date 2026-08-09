@@ -112,6 +112,21 @@ export const dashboardResponseSchema = z.object({
     .default([]),
   reviewCount: z.number().optional().default(0),
   hasAccounts: z.boolean().optional().default(false),
+  /**
+   * Accounts left out of the totals because the household cannot convert their
+   * currency yet. Normally empty.
+   */
+  excludedByCurrency: z
+    .array(
+      z.object({
+        id: z.string(),
+        name: z.string(),
+        currency: z.string(),
+        archived: z.boolean(),
+      }),
+    )
+    .optional()
+    .default([]),
 });
 
 export type DashboardResponse = z.infer<typeof dashboardResponseSchema>;
