@@ -21,7 +21,6 @@ import {
   buildSebCsv,
   generateSyntheticStatement,
   referenceStatementRows,
-  minorToSebDecimal,
 } from "./seb/__fixtures__/make-statement";
 import { SEB_HEADERS } from "./seb/seb-csv-format";
 

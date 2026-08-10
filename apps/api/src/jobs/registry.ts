@@ -179,10 +179,24 @@ export const jobRegistry: Record<JobType, JobDefinition> = {
   },
 };
 
+/**
+ * BullMQ rejects a custom job id containing a colon, because it namespaces its
+ * own keys with one: `queue.add` throws `Custom Id cannot contain :`.
+ *
+ * `defaultAsOfJobId` joins its parts with colons and eleven of the thirteen job
+ * types use it, so every one of those enqueues was failing — including the
+ * analysis jobs queued after a ledger mutation. Nothing surfaced it because the
+ * callers treat enqueueing as fire-and-forget. Sanitising here rather than in each
+ * builder means a new job type cannot reintroduce it.
+ */
+export function sanitizeJobId(jobId: string): string {
+  return jobId.replace(/:/g, "-");
+}
+
 export function jobOptionsFor(payload: JobPayload): JobsOptions {
   const def = jobRegistry[payload.type];
   return {
-    jobId: def.buildJobId(payload),
+    jobId: sanitizeJobId(def.buildJobId(payload)),
     attempts: def.attempts,
     backoff: def.backoff,
     removeOnComplete: 100,

@@ -1,5 +1,6 @@
 import "reflect-metadata";
 import { NestFactory } from "@nestjs/core";
+import type { NestExpressApplication } from "@nestjs/platform-express";
 import { DocumentBuilder, SwaggerModule } from "@nestjs/swagger";
 import helmet from "helmet";
 import { AppModule } from "./app.module";
@@ -14,7 +15,24 @@ async function bootstrap() {
   // reaches the point of serving a request.
   assertProductionConfiguration();
 
-  const app = await NestFactory.create(AppModule, { logger: ["error", "warn"] });
+  const app = await NestFactory.create<NestExpressApplication>(AppModule, {
+    logger: ["error", "warn"],
+  });
+
+  /**
+   * Request bodies large enough for a real bank statement.
+   *
+   * Express defaults to 100 kB, which rejected a five-year SEB export — roughly
+   * 8 000 rows, about 700 kB once base64-encoded — with a bare
+   * `413 request entity too large`. Uploads arrive as base64 in JSON (the same
+   * shape as document upload), so the transport limit has to clear the
+   * per-feature caps rather than sit under them: the statement importer refuses
+   * anything over 12 M base64 characters itself, with a message that says what
+   * to do.
+   */
+  app.useBodyParser("json", { limit: "20mb" });
+  app.useBodyParser("urlencoded", { extended: true, limit: "20mb" });
+
   app.use(helmet());
   app.use(requestIdMiddleware);
   app.useGlobalFilters(new ValidationExceptionFilter());

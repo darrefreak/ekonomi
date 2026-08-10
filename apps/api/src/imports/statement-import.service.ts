@@ -6,12 +6,12 @@ import {
 } from "@nestjs/common";
 import { and, asc, desc, eq, inArray, isNotNull, isNull, sql } from "drizzle-orm";
 import { buildCashExpense, buildIncome } from "@ffos/financial-engine";
+import { logger } from "../common/logger";
 import { getDb } from "../db/client";
 import { auditLogs } from "../db/schema";
 import {
   accountBalanceSnapshots,
   accounts,
-  categories,
   dataSources,
   importBatches,
   rawImportRecords,
@@ -586,9 +586,15 @@ export class StatementImportService {
         trigger: "import.confirm",
       });
       return { batchId: batch.id, status: "IMPORTING" as const, queued: true };
-    } catch {
+    } catch (err) {
       // No queue reachable: do the work inline rather than leave the household
-      // with a batch that says IMPORTING and never moves.
+      // with a batch that says IMPORTING and never moves. Logged rather than
+      // swallowed, because a silent fallback means nobody learns the queue is
+      // down until a request takes a minute.
+      logger.warn("statement_import_enqueue_failed", {
+        batchId: batch.id,
+        error: err instanceof Error ? err.message : String(err),
+      });
       const result = await this.commit(userId, input);
       return { batchId: batch.id, status: result.status, queued: false };
     }

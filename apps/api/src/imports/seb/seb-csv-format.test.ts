@@ -108,9 +108,10 @@ describe("SEB exact money", () => {
     assert.equal(minorOf("0.100"), 10n);
     assert.equal(minorOf("0.200"), 20n);
     assert.equal(minorOf("999999999999999.990"), 99999999999999999n);
-    // The same value through a float loses the last digit entirely. Compared as
-    // strings, because the corrupted number cannot be written as a literal.
-    assert.equal(String(Math.round(999999999999999.99 * 100)), "100000000000000000");
+    // The same value through a float loses the last digit entirely. Built with
+    // Number() so no literal in this file loses precision on its own.
+    const viaFloat = Math.round(Number("999999999999999.99") * 100);
+    assert.equal(String(viaFloat), "100000000000000000");
     assert.equal(minorOf("999999999999999.990").toString(), "99999999999999999");
   });
 });

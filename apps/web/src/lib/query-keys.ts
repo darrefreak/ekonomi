@@ -70,3 +70,50 @@ export const queryKeys = {
     requests: (householdId: string) => ["privacy", householdId, "requests"] as const,
   },
 } as const;
+
+/**
+ * Everything an imported bank statement can change.
+ *
+ * A statement import writes financial events, so almost every financial surface
+ * is downstream of it: balances, transaction lists, the dashboard, net worth,
+ * cashflow, the budget's actuals, review items, insights and merchant history.
+ * Listing them in one place keeps a caller from inventing its own subset and
+ * leaving a stale screen behind — and is narrower than invalidating everything.
+ */
+export const FINANCIAL_IMPORT_QUERY_ROOTS = [
+  "accounts",
+  "transactions",
+  "dashboard",
+  "net-worth",
+  "cashflow",
+  "budget",
+  "debt",
+  "investments",
+  "review",
+  "metrics",
+  "goals",
+  "anomalies",
+  "subscriptions",
+  "merchants",
+  "imports",
+] as const;
+
+/**
+ * Invalidate the surfaces an import touches, for one household.
+ *
+ * Deliberately keyed on the household so another household's cached data is not
+ * discarded, and deliberately root-scoped so a detail view refreshes with its
+ * list.
+ */
+export async function invalidateAfterFinancialImport(
+  queryClient: {
+    invalidateQueries: (filters: { queryKey: readonly unknown[] }) => Promise<void>;
+  },
+  householdId: string,
+): Promise<void> {
+  await Promise.all(
+    FINANCIAL_IMPORT_QUERY_ROOTS.map((root) =>
+      queryClient.invalidateQueries({ queryKey: [root, householdId] }),
+    ),
+  );
+}
