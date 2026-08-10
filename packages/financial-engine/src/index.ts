@@ -26,6 +26,7 @@ export * from "./available-to-invest";
 // Financial Intelligence V1 — deterministic engines. AI explains; these compute.
 export * from "./intelligence/statistics";
 export * from "./intelligence/signature";
+export * from "./intelligence/merchant-rules";
 export * from "./intelligence/recurring";
 export * from "./intelligence/baseline";
 export * from "./intelligence/liquidity";

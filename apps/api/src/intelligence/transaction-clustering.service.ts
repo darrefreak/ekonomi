@@ -2,14 +2,18 @@ import { Inject, Injectable } from "@nestjs/common";
 import { and, eq, sql } from "drizzle-orm";
 import {
   detectRecurrence,
+  inferMerchantCandidate,
   matchMerchant,
   medianMinor,
+  shouldAutoAccept,
   transactionSignature,
+  type MerchantCandidate,
   type MerchantRecord,
 } from "@ffos/financial-engine";
 import { getDb } from "../db/client";
 import { auditLogs } from "../db/schema";
 import {
+  categories,
   merchantClusters,
   merchants,
   sourceTransactions,
@@ -116,6 +120,18 @@ export class TransactionClusteringService {
         .where(eq(merchants.householdId, householdId)),
     ]);
 
+    /*
+     * The household's own taxonomy. A candidate proposes a category *key*; only an
+     * id that already exists may be stored, so a rule can never invent a category.
+     */
+    const categoryRows = await db
+      .select({ id: categories.id, key: categories.key })
+      .from(categories)
+      .where(
+        sql`${categories.householdId} = ${householdId} or ${categories.householdId} is null`,
+      );
+    const categoryIdByKey = new Map(categoryRows.map((row) => [row.key, row.id]));
+
     const merchantRecords: MerchantRecord[] = merchantRows.map((row) => ({
       id: row.id,
       canonicalName: row.canonicalName,
@@ -216,7 +232,45 @@ export class TransactionClusteringService {
         bucket.opaque || !example
           ? null
           : matchMerchant(example, merchantRecords).match;
-      if (match) merchantResolved += 1;
+
+      /*
+       * When the household has no merchant to match against — which is every
+       * freshly imported statement — fall back to the system rule catalogue. This
+       * is the link whose absence made the last acceptance report 0 % classified:
+       * clustering worked, but there was nothing to compare a cluster to.
+       */
+      const tokens = transactionSignature(example).tokens;
+      const candidate: MerchantCandidate | null = match
+        ? {
+            merchant: match.canonicalName,
+            categoryKey: null,
+            confidence: match.confidence,
+            source: "USER_VERIFIED",
+            subscriptionLikely: false,
+            evidence: "Matchar en merchant hushållet redan har.",
+          }
+        : inferMerchantCandidate({
+            tokens,
+            opaque: bucket.opaque,
+            transactionCount: bucket.transactionIds.length,
+          });
+
+      /*
+       * A candidate becomes a stored merchant only when it is confident enough to
+       * apply without asking. Below that it stays a suggestion on the cluster and
+       * the household is asked, which is the difference between classifying and
+       * guessing.
+       */
+      let resolvedMerchantId: string | null = match?.merchantId ?? null;
+      if (!resolvedMerchantId && candidate && shouldAutoAccept(candidate)) {
+        resolvedMerchantId = await this.ensureMerchant(householdId, candidate.merchant);
+      }
+      if (resolvedMerchantId) merchantResolved += 1;
+
+      const candidateCategoryId =
+        candidate?.categoryKey && shouldAutoAccept(candidate)
+          ? (categoryIdByKey.get(candidate.categoryKey) ?? null)
+          : null;
 
       await db
         .insert(merchantClusters)
@@ -234,10 +288,11 @@ export class TransactionClusteringService {
           direction: bucket.inflow > bucket.outflow ? "INFLOW" : "OUTFLOW",
           medianIntervalDays: recurrence.medianIntervalDays,
           intervalSpreadDays: recurrence.intervalSpreadDays,
-          merchantId: match?.merchantId ?? null,
-          merchantCandidate: match?.canonicalName ?? null,
-          merchantConfidence: match ? String(match.confidence) : null,
-          classificationSource: match ? "DETERMINISTIC_MATCH" : "UNKNOWN",
+          merchantId: resolvedMerchantId,
+          merchantCandidate: candidate?.merchant ?? null,
+          merchantConfidence: candidate ? String(candidate.confidence) : null,
+          categoryId: candidateCategoryId,
+          classificationSource: resolvedMerchantId ? "DETERMINISTIC_MATCH" : "UNKNOWN",
           opaque: bucket.opaque,
           updatedAt: new Date(),
         })
@@ -256,9 +311,11 @@ export class TransactionClusteringService {
             medianAmountMinor: medianMinor(bucket.amounts),
             medianIntervalDays: recurrence.medianIntervalDays,
             intervalSpreadDays: recurrence.intervalSpreadDays,
-            merchantId: match?.merchantId ?? null,
-            merchantCandidate: match?.canonicalName ?? null,
-            merchantConfidence: match ? String(match.confidence) : null,
+            merchantId: resolvedMerchantId,
+            merchantCandidate: candidate?.merchant ?? null,
+            merchantConfidence: candidate ? String(candidate.confidence) : null,
+            categoryId: candidateCategoryId,
+            classificationSource: resolvedMerchantId ? "DETERMINISTIC_MATCH" : "UNKNOWN",
             updatedAt: new Date(),
           },
         });
@@ -268,13 +325,14 @@ export class TransactionClusteringService {
        * user-verified classification. Rule precedence starts with the household's
        * own decision, and a re-run must not quietly undo one.
        */
-      if (match) {
+      if (resolvedMerchantId) {
         for (let start = 0; start < bucket.transactionIds.length; start += WRITE_BATCH) {
           const chunk = bucket.transactionIds.slice(start, start + WRITE_BATCH);
           await db
             .update(sourceTransactions)
             .set({
-              merchantId: match.merchantId,
+              merchantId: resolvedMerchantId,
+              ...(candidateCategoryId ? { categoryId: candidateCategoryId } : {}),
               classificationSource: "DETERMINISTIC_MATCH",
             })
             .where(
@@ -360,6 +418,37 @@ export class TransactionClusteringService {
       meaningfullyClassifiedPercent:
         total === 0 ? 0 : Math.round((meaningful / total) * 1000) / 10,
     };
+  }
+
+  /**
+   * The merchant row for a canonical name, created once.
+   *
+   * Confidence is recorded as the rule's, not as certainty, and `userVerified`
+   * stays false: the system proposed this, the household has not confirmed it.
+   */
+  private async ensureMerchant(householdId: string, canonicalName: string): Promise<string> {
+    const db = getDb();
+    const [existing] = await db
+      .select({ id: merchants.id })
+      .from(merchants)
+      .where(
+        and(
+          eq(merchants.householdId, householdId),
+          sql`lower(${merchants.canonicalName}) = lower(${canonicalName})`,
+        ),
+      )
+      .limit(1);
+    if (existing) return existing.id;
+    const [created] = await db
+      .insert(merchants)
+      .values({
+        householdId,
+        canonicalName,
+        confidence: "0.9",
+        userVerified: false,
+      })
+      .returning({ id: merchants.id });
+    return created.id;
   }
 
   /** Clusters a person still has to answer for, largest first. */
