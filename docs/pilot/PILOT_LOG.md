@@ -107,3 +107,27 @@ What was expected:
 What happened:
 Follow-up:
 ```
+
+## 2026-08-10 — SEB CSV-import driftsatt till piloten
+
+Operatören begärde senaste koden på 3020. Utfört i den ordningen:
+
+1. **Backup före allt annat:** `20260810T125255Z-vsnf7u` — databasens checksumma verifierad,
+   dumpen läsbar av `pg_restore`, 0 objekt att kopiera.
+2. **Migrering av `ffos_pilot`.** Pilot-API:t kör inte migreringar vid start, så
+   den kördes separat. Migration 0028 lade till 7 kolumner på `import_batches`,
+   3 på `source_transactions` och `row_number` på `raw_import_records`, alla
+   verifierade efteråt.
+3. **Ombyggnad av stacken** via `scripts/ops/pilot-stack.sh up`.
+
+Verifierat efteråt:
+
+- Importrutterna svarar `401` (finns, kräver inloggning) istället för `404`.
+- `GET /imports` svarar `200` och webbdelen innehåller sidan.
+- Inloggningssidan erbjuder fortfarande inget demokonto — UX-arbetet följde med
+  i samma image.
+- Data intakt: 1 hushåll, 1 användare, 0 transaktioner.
+- `pilot:preflight` 25/25, `pilot:check` 29/29, båda utan anmärkningar.
+
+Imagen innehåller allt arbete från 2026-08-10: UX-passet och SEB-importen. Ingen
+riktig data har importerats — piloten har fortfarande 0 transaktioner.

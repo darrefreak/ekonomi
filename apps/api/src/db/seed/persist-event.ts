@@ -44,7 +44,9 @@ export type FinancialCommandType =
   | "ASSET_DEPRECIATION"
   | "LEDGER_EVENT"
   | "REPLACE_SPLITS"
-  | "REVISE_CLASSIFICATION";
+  | "REVISE_CLASSIFICATION"
+  /** One row of an imported bank statement, keyed on its source fingerprint. */
+  | "IMPORT_STATEMENT_ROW";
 
 export class IdempotencyConflictError extends Error {
   readonly code = "IDEMPOTENCY_CONFLICT";
@@ -79,6 +81,27 @@ export type PersistBalancedEventInput = {
   transferGroupId?: string;
   importBatchId?: string;
   externalId?: string;
+  /**
+   * Provenance for the primary source transaction, for callers that know more
+   * about the row than the generic path can infer.
+   *
+   * An imported bank statement has a value date distinct from its booking date,
+   * a verbatim description that must not be replaced by the normalized one, its
+   * own reference, and a reported balance. Every field is optional and falls
+   * back to the previous behaviour, so existing callers are unchanged.
+   */
+  sourceTx?: {
+    fingerprint?: string;
+    valueDate?: string | null;
+    rawDescription?: string;
+    providerReference?: string | null;
+    reportedBalanceAfterMinor?: bigint | null;
+    sourceRecordId?: string;
+    sourceId?: string;
+    reviewReason?: string | null;
+    merchantId?: string;
+    categoryId?: string;
+  };
   /**
    * Client command identity (HTTP `Idempotency-Key`). Independent of
    * `externalId`, which is source-provider identity, so manual user commands
@@ -345,15 +368,23 @@ async function persistBalancedEventInTx(
         householdId: input.householdId,
         accountId: input.sourceAccountId,
         externalId: input.externalId ?? `${sourceType}-${event.id}`,
-        fingerprint: `fp-${event.id}`,
+        fingerprint: input.sourceTx?.fingerprint ?? `fp-${event.id}`,
+        providerReference: input.sourceTx?.providerReference ?? null,
+        reportedBalanceAfterMinor: input.sourceTx?.reportedBalanceAfterMinor ?? null,
+        reviewReason: input.sourceTx?.reviewReason ?? null,
         bookingDate: input.occurredOn,
-        valueDate: input.occurredOn,
+        valueDate:
+          input.sourceTx?.valueDate === undefined
+            ? input.occurredOn
+            : input.sourceTx.valueDate,
         amountMinor: input.sourceAmountMinor,
         currency,
         description: input.description,
-        rawDescription: input.description,
-        merchantId: input.merchantId,
-        categoryId: input.categoryId,
+        rawDescription: input.sourceTx?.rawDescription ?? input.description,
+        merchantId: input.sourceTx?.merchantId ?? input.merchantId,
+        categoryId: input.sourceTx?.categoryId ?? input.categoryId,
+        sourceId: input.sourceTx?.sourceId,
+        sourceRecordId: input.sourceTx?.sourceRecordId,
         notes: input.notes ?? null,
         status: "BOOKED",
         importBatchId: input.importBatchId,

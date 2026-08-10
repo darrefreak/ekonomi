@@ -18,6 +18,7 @@ import {
   sourceTransactions,
 } from "../db/schema-economic";
 import { HouseholdAccessService } from "../households/household-access.service";
+import { logger } from "../common/logger";
 import { LedgerTruthService } from "../ledger/ledger-truth.service";
 import { AuditService } from "../audit/audit.service";
 import { resolveHouseholdAsOf } from "../common/as-of";
@@ -275,11 +276,40 @@ export class AccountsService {
           : BigInt(input.creditLimitMinor);
     }
 
+    /*
+     * Correcting the starting balance is a ledger-affecting change, so it does
+     * more than write a column: the derived balance cache and the opening
+     * snapshot both describe the same starting point and would otherwise keep
+     * describing the old one.
+     */
+    if (input.openingBalanceMinor !== undefined) {
+      // Guarded here rather than only at the HTTP edge. A negative starting
+      // balance silently corrupts every total downstream, and this codebase has
+      // already learned that a rule living only in one route is a rule the next
+      // caller skips.
+      if (BigInt(input.openingBalanceMinor) < 0n) {
+        throw new BadRequestException({
+          code: "INVALID_OPENING_BALANCE",
+          message: "Ingående saldo kan inte vara negativt.",
+        });
+      }
+    }
+    const openingChanged =
+      input.openingBalanceMinor !== undefined &&
+      BigInt(input.openingBalanceMinor) !== existing.openingBalanceMinor;
+    const newOpening = openingChanged
+      ? BigInt(input.openingBalanceMinor!)
+      : existing.openingBalanceMinor;
+    if (openingChanged) {
+      patch.openingBalanceMinor = newOpening;
+    }
+
     const before = {
       name: existing.name,
       provider: existing.provider,
       isShared: existing.isShared,
       ownerMemberId: existing.ownerMemberId,
+      openingBalanceMinor: existing.openingBalanceMinor.toString(),
     };
 
     const [row] = await db
@@ -288,10 +318,58 @@ export class AccountsService {
       .where(eq(accounts.id, accountId))
       .returning();
 
+    if (openingChanged) {
+      // The opening snapshot is the recorded claim about where the account
+      // started; upserted on the writer's own identity key so two corrections do
+      // not leave two competing claims.
+      await db
+        .insert(accountBalanceSnapshots)
+        .values({
+          householdId: input.householdId,
+          accountId,
+          reportedBalanceMinor: newOpening,
+          availableBalanceMinor: newOpening,
+          ledgerCalculatedBalanceMinor: newOpening,
+          reconciledBalanceMinor: newOpening,
+          asOf: openingSnapshotAsOf(existing.createdAt ?? new Date()),
+          source: "manual_opening",
+          confidence: "1",
+          userVerified: true,
+          isEstimated: false,
+        })
+        .onConflictDoUpdate({
+          target: [
+            accountBalanceSnapshots.accountId,
+            accountBalanceSnapshots.asOf,
+            accountBalanceSnapshots.source,
+          ],
+          set: {
+            reportedBalanceMinor: newOpening,
+            availableBalanceMinor: newOpening,
+            ledgerCalculatedBalanceMinor: newOpening,
+            reconciledBalanceMinor: newOpening,
+          },
+        });
+
+      // Every total that reads the cached balance — accounts, net worth, the
+      // dashboard — has to be told the starting point moved.
+      try {
+        const asOf = await resolveHouseholdAsOf(input.householdId);
+        // Injected optionally, so a context without it still corrects the column
+        // rather than refusing the correction outright.
+        await this.ledger?.refreshDerivedCaches(input.householdId, asOf);
+      } catch (err) {
+        logger.warn("account_opening_balance_refresh_failed", {
+          accountId,
+          error: err instanceof Error ? err.message : String(err),
+        });
+      }
+    }
+
     await this.audit.record({
       householdId: input.householdId,
       actorUserId: userId,
-      action: "account.update",
+      action: openingChanged ? "account.opening_balance_correct" : "account.update",
       entity: "account",
       entityId: accountId,
       before,
@@ -459,6 +537,10 @@ export class AccountsService {
       }),
       ledgerBalance: moneyToJson({
         amountMinor: ledgerBalanceMinor,
+        currency: row.currency as "SEK",
+      }),
+      openingBalance: moneyToJson({
+        amountMinor: row.openingBalanceMinor,
         currency: row.currency as "SEK",
       }),
       reportedBalance:

@@ -34,6 +34,16 @@ export const recurringCadenceEnum = pgEnum("recurring_cadence", [
   "MONTHLY",
   "QUARTERLY",
   "YEARLY",
+  /*
+   * Added for the periodicity detector, which finds these in real statements.
+   * A four-weekly charge is thirteen payments a year, not twelve, so it is stored
+   * as itself rather than mapped onto MONTHLY.
+   */
+  "BIWEEKLY",
+  "EVERY_4_WEEKS",
+  "SEMIANNUAL",
+  "ANNUAL",
+  "VARIABLE_RECURRING",
 ]);
 
 export const subscriptionStatusEnum = pgEnum("subscription_status", [

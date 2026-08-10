@@ -913,6 +913,66 @@ export function createApiClient(options: ApiClientOptions) {
       );
       return yearlyReportSchema.parse(data) as YearlyReport;
     },
+    /* ------------------------------------------- bank statement imports */
+
+    /**
+     * Parse and preserve a statement, and return the preview.
+     *
+     * Writes no financial event: the household has confirmed nothing yet.
+     */
+    inspectStatementImport: async (input: {
+      householdId: string;
+      accountId: string;
+      filename: string;
+      contentBase64: string;
+    }) => {
+      return request<StatementImportPreview>("/api/v1/imports/statements/inspect", {
+        method: "POST",
+        body: JSON.stringify(input),
+      });
+    },
+
+    /** Confirm a previewed batch. Returns once queued; poll the batch for progress. */
+    commitStatementImport: async (input: { householdId: string; batchId: string }) => {
+      return request<{ batchId: string; status: string; queued: boolean }>(
+        "/api/v1/imports/statements/commit",
+        { method: "POST", body: JSON.stringify(input) },
+      );
+    },
+
+    getImportHistory: async (householdId: string) => {
+      return request<{ items: ImportHistoryItem[] }>(
+        `/api/v1/imports/history?householdId=${encodeURIComponent(householdId)}`,
+      );
+    },
+
+    getImportBatch: async (householdId: string, batchId: string) => {
+      return request<ImportBatchDetail>(
+        `/api/v1/imports/batches/${encodeURIComponent(batchId)}?householdId=${encodeURIComponent(householdId)}`,
+      );
+    },
+
+    /* ------------------------------------------ financial intelligence */
+
+    /** The household's liquidity requirement, derived from its own history. */
+    getLiquidityRequirement: async (householdId: string) => {
+      return request<LiquidityRequirementResponse>(
+        `/api/v1/intelligence/liquidity?householdId=${encodeURIComponent(householdId)}`,
+      );
+    },
+
+    getSpendingBaselines: async (householdId: string) => {
+      return request<SpendingBaselinesResponse>(
+        `/api/v1/intelligence/baselines?householdId=${encodeURIComponent(householdId)}`,
+      );
+    },
+
+    getSavingsTarget: async (householdId: string) => {
+      return request<SavingsTargetResponse>(
+        `/api/v1/intelligence/savings-target?householdId=${encodeURIComponent(householdId)}`,
+      );
+    },
+
     getDemoInfo: async () => {
       return request<{
         email: string;
@@ -1351,3 +1411,214 @@ export function createApiClient(options: ApiClientOptions) {
 }
 
 export type ApiClient = ReturnType<typeof createApiClient>;
+
+/* ----------------------------------------------- bank statement imports */
+
+export type StatementBalanceChainStatus =
+  | "RECONCILED"
+  | "RECONCILED_WITH_WARNINGS"
+  | "BROKEN"
+  | "INSUFFICIENT_DATA";
+
+export type StatementPreviewRow = {
+  rowNumber: number;
+  bookingDate: string;
+  text: string;
+  amountMinor: string | null;
+  reportedBalanceMinor: string | null;
+  status: "NEW" | "ALREADY_IMPORTED" | "INVALID";
+  issue?: string;
+  detail?: string;
+};
+
+export type StatementImportPreview = {
+  batchId: string;
+  provider: string;
+  format: string;
+  formatVersion: number;
+  fileName: string;
+  accountId: string;
+  accountName: string;
+  currency: string;
+  periodStart: string | null;
+  periodEnd: string | null;
+  totalRows: number;
+  newRows: number;
+  existingRows: number;
+  invalidRows: number;
+  closingBalanceMinor: string | null;
+  balanceChain: {
+    status: StatementBalanceChainStatus;
+    direction: "ASCENDING" | "DESCENDING" | "UNDETERMINED";
+    rowsChecked: number;
+    rowsReconciled: number;
+    breakCount: number;
+    breaks: Array<{
+      rowNumber: number;
+      bookingDate: string;
+      expectedBalanceMinor: string;
+      reportedBalanceMinor: string;
+      differenceMinor: string;
+    }>;
+  };
+  sample: StatementPreviewRow[];
+  invalidSample: StatementPreviewRow[];
+};
+
+export type ImportHistoryItem = {
+  id: string;
+  provider: string | null;
+  format: string | null;
+  fileName: string | null;
+  startedAt: string;
+  completedAt: string | null;
+  status: string;
+  totalRecords: number;
+  newRecords: number;
+  existingRecords: number;
+  reviewRecords: number;
+  invalidRecords: number;
+  failedCount: number;
+  periodStart: string | null;
+  periodEnd: string | null;
+  balanceChainStatus: string | null;
+  closingBalanceMinor: string | null;
+  accountName: string | null;
+  accountId: string | null;
+};
+
+export type ImportBatchDetail = {
+  id: string;
+  provider: string | null;
+  format: string | null;
+  fileName: string | null;
+  fileHash: string | null;
+  status: string;
+  startedAt: string;
+  completedAt: string | null;
+  accountId: string | null;
+  accountName: string | null;
+  currency: string;
+  periodStart: string | null;
+  periodEnd: string | null;
+  totalRecords: number;
+  newRecords: number;
+  existingRecords: number;
+  reviewRecords: number;
+  invalidRecords: number;
+  failedCount: number;
+  balanceChainStatus: string | null;
+  balanceChain: Record<string, unknown> | null;
+  closingBalanceMinor: string | null;
+  invalidRows: Array<{ rowNumber: number | null; detail: string; issue: string | null }>;
+};
+
+/* --------------------------------------------- financial intelligence */
+
+export type LiquidityComponentKey =
+  | "OPERATING_CASH"
+  | "EMERGENCY_RESERVE"
+  | "IRREGULAR_EXPENSE_RESERVE"
+  | "EXPENSE_VOLATILITY_BUFFER"
+  | "INCOME_RISK_BUFFER"
+  | "UPCOMING_PLANNED_EXPENSES"
+  | "SAFETY_MARGIN"
+  | "SINKING_FUNDS";
+
+export type LiquidityRequirementResponse = {
+  asOf: string;
+  currency: string;
+  requirement: {
+    minimumMinor: string;
+    recommendedMinor: string;
+    conservativeMinor: string;
+    surplusMinor: string;
+    shortfallMinor: string;
+    confidence: "LOW" | "MODERATE" | "HIGH";
+    confidenceReasons: string[];
+    components: Array<{
+      key: LiquidityComponentKey;
+      amountMinor: string;
+      reason: string;
+    }>;
+  };
+  liquidCashMinor: string;
+  policyComparison: {
+    configuredEmergencyFundMinor: string;
+    derivedEmergencyReserveMinor: string;
+    differenceMinor: string;
+  } | null;
+  runway: {
+    normalMonths: number | null;
+    essentialOnlyMonths: number | null;
+    incomeReducedMonths: number | null;
+  };
+  stress: Array<{
+    key: string;
+    label: string;
+    remainingCashMinor: string;
+    survives: boolean;
+  }>;
+  backtest: {
+    monthsTested: number;
+    monthsSurvived: number;
+    breachCount: number;
+    largestBreachMinor: string | null;
+    breaches: Array<{ month: string; shortfallMinor: string }>;
+  };
+  resilience: {
+    dimensions: Array<{
+      key: string;
+      label: string;
+      level: "STRONG" | "MODERATE" | "WEAK" | "UNKNOWN";
+      detail: string;
+    }>;
+  };
+  basis: {
+    monthsOfHistory: number;
+    firstMonth: string | null;
+    lastMonth: string | null;
+    essentialMedianMinor: string | null;
+    essentialP75Minor: string | null;
+    essentialP90Minor: string | null;
+    incomeVolatilityBps: number | null;
+    expenseVolatilityBps: number | null;
+    largestIncomeShareBps: number | null;
+    coveragePercent: number;
+    dataAgeDays: number;
+    categorisedShareBps: number | null;
+    unknownNecessityShareBps: number | null;
+    emptyMonths: number;
+  };
+};
+
+export type SpendingBaselineWindow = {
+  window: string;
+  monthsObserved: number;
+  insufficient: boolean;
+  medianMinor: string | null;
+  trimmedMeanMinor: string | null;
+  p25Minor: string | null;
+  p75Minor: string | null;
+  p90Minor: string | null;
+};
+
+export type SpendingBaselinesResponse = {
+  asOf: string;
+  currency: string;
+  windows: Record<"3m" | "6m" | "12m" | "24m", SpendingBaselineWindow>;
+  monthsOfHistory: number;
+};
+
+export type SavingsTargetResponse = {
+  asOf: string;
+  currency: string;
+  normalMonthlySurplusMinor: string;
+  cashflowNegative: boolean;
+  totalAllocatedMinor: string;
+  allocations: Array<{ key: string; label: string; amountMinor: string }>;
+  notes: string[];
+  availableSurplusMinor: string;
+  shortfallMinor: string;
+  confidence: "LOW" | "MODERATE" | "HIGH";
+};

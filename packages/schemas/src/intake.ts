@@ -220,3 +220,30 @@ export const syncResultSchema = z.object({
   sourceId: z.string().uuid().nullable().optional(),
 });
 export type SyncResultDto = z.infer<typeof syncResultSchema>;
+
+/**
+ * Bank-statement file import (V1: SEB CSV account statement).
+ *
+ * The file arrives base64-encoded in the JSON body, matching the existing
+ * document upload. The cap is generous enough for a multi-year statement — a
+ * five-year SEB export of roughly 8 000 rows is well under a megabyte — and low
+ * enough to refuse an accidental upload of something else entirely.
+ */
+export const inspectStatementImportSchema = z
+  .object({
+    householdId: z.string().uuid(),
+    /** The destination account. Never inferred from the file. */
+    accountId: z.string().uuid(),
+    filename: z.string().min(1).max(260),
+    contentBase64: z.string().min(1).max(12_000_000),
+  })
+  .strict();
+export type InspectStatementImportInput = z.input<typeof inspectStatementImportSchema>;
+
+export const commitStatementImportSchema = z
+  .object({
+    householdId: z.string().uuid(),
+    batchId: z.string().uuid(),
+  })
+  .strict();
+export type CommitStatementImportInput = z.input<typeof commitStatementImportSchema>;

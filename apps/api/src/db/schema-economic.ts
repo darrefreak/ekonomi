@@ -2,6 +2,7 @@ import {
   bigint,
   boolean,
   date,
+  index,
   integer,
   jsonb,
   numeric,
@@ -83,6 +84,13 @@ export const importBatchStatusEnum = pgEnum("import_batch_status", [
   "COMPLETED",
   "FAILED",
   "PARTIAL",
+  // A statement import must be able to stop after parsing and before any
+  // financial write, which the original four states could not express.
+  "UPLOADED",
+  "INSPECTING",
+  "READY_FOR_REVIEW",
+  "IMPORTING",
+  "COMPLETED_WITH_WARNINGS",
 ]);
 
 export const dataSources = pgTable("data_sources", {
@@ -106,23 +114,62 @@ export const dataSources = pgTable("data_sources", {
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
 });
 
-export const importBatches = pgTable("import_batches", {
-  id: uuid("id").defaultRandom().primaryKey(),
-  householdId: uuid("household_id")
-    .notNull()
-    .references(() => households.id, { onDelete: "cascade" }),
-  sourceId: uuid("source_id").references(() => dataSources.id, {
-    onDelete: "set null",
-  }),
-  startedAt: timestamp("started_at", { withTimezone: true }).defaultNow().notNull(),
-  completedAt: timestamp("completed_at", { withTimezone: true }),
-  status: importBatchStatusEnum("status").notNull().default("RUNNING"),
-  totalRecords: integer("total_records").notNull().default(0),
-  createdCount: integer("created_count").notNull().default(0),
-  updatedCount: integer("updated_count").notNull().default(0),
-  ignoredCount: integer("ignored_count").notNull().default(0),
-  failedCount: integer("failed_count").notNull().default(0),
-});
+export const importBatches = pgTable(
+  "import_batches",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    householdId: uuid("household_id")
+      .notNull()
+      .references(() => households.id, { onDelete: "cascade" }),
+    sourceId: uuid("source_id").references(() => dataSources.id, {
+      onDelete: "set null",
+    }),
+    startedAt: timestamp("started_at", { withTimezone: true }).defaultNow().notNull(),
+    completedAt: timestamp("completed_at", { withTimezone: true }),
+    status: importBatchStatusEnum("status").notNull().default("RUNNING"),
+    totalRecords: integer("total_records").notNull().default(0),
+    createdCount: integer("created_count").notNull().default(0),
+    updatedCount: integer("updated_count").notNull().default(0),
+    ignoredCount: integer("ignored_count").notNull().default(0),
+    failedCount: integer("failed_count").notNull().default(0),
+
+    /* Statement imports: what the batch was. */
+    provider: varchar("provider", { length: 80 }),
+    format: varchar("format", { length: 80 }),
+    formatVersion: integer("format_version"),
+    fileName: varchar("file_name", { length: 260 }),
+    /**
+     * SHA-256 of the uploaded bytes. Audit and recognising a file the household
+     * already uploaded — never the transaction dedupe key, because the same
+     * transactions can arrive in a differently-cut export.
+     */
+    fileHash: varchar("file_hash", { length: 64 }),
+    fileByteSize: integer("file_byte_size"),
+    storageKey: varchar("storage_key", { length: 320 }),
+    bucket: varchar("bucket", { length: 120 }),
+    targetAccountId: uuid("target_account_id").references(() => accounts.id, {
+      onDelete: "set null",
+    }),
+
+    /* Counts with statement meaning. */
+    newRecords: integer("new_records").notNull().default(0),
+    existingRecords: integer("existing_records").notNull().default(0),
+    reviewRecords: integer("review_records").notNull().default(0),
+    invalidRecords: integer("invalid_records").notNull().default(0),
+
+    /* The period covered, and the source's own reconciliation verdict. */
+    periodStart: date("period_start"),
+    periodEnd: date("period_end"),
+    balanceChainStatus: varchar("balance_chain_status", { length: 40 }),
+    balanceChain: jsonb("balance_chain").$type<Record<string, unknown>>(),
+    closingBalanceMinor: bigint("closing_balance_minor", { mode: "bigint" }),
+    message: text("message"),
+  },
+  (t) => [
+    index("import_batches_household_started_idx").on(t.householdId, t.startedAt),
+    index("import_batches_file_hash_idx").on(t.householdId, t.fileHash),
+  ],
+);
 
 export const rawImportRecords = pgTable(
   "raw_import_records",
@@ -145,9 +192,45 @@ export const rawImportRecords = pgTable(
       .notNull()
       .default("PENDING"),
     schemaVersion: varchar("schema_version", { length: 40 }).notNull().default("1"),
+    /** 1-based data-line index, so a preserved row can be named to the user. */
+    rowNumber: integer("row_number"),
   },
-  (t) => [uniqueIndex("raw_import_records_household_hash").on(t.householdId, t.hash)],
+  (t) => [
+    uniqueIndex("raw_import_records_household_hash").on(t.householdId, t.hash),
+    index("raw_import_records_batch_row_idx").on(t.importBatchId, t.rowNumber),
+  ],
 );
+
+/**
+ * Whether the household would still be paying this if income fell.
+ *
+ * A separate dimension from `kind`: that says expense/income/transfer, this says
+ * how avoidable the cost is. The liquidity engine sizes a buffer on essentials,
+ * so conflating the two would size it on everything.
+ */
+/**
+ * How a transaction came to have the classification it has.
+ *
+ * The distinction the first acceptance run lacked: a transaction that fell back to
+ * a default category is not "automatically classified", and counting it as such
+ * produced a 100 % figure that described the test's own SQL rather than the
+ * product.
+ */
+export const classificationSourceEnum = pgEnum("classification_source", [
+  "USER_VERIFIED",
+  "DETERMINISTIC_MATCH",
+  "LEARNED_RULE",
+  "AI_MATCH",
+  "DEFAULTED",
+  "UNKNOWN",
+]);
+
+export const categoryNecessityEnum = pgEnum("category_necessity", [
+  "ESSENTIAL",
+  "SEMI_DISCRETIONARY",
+  "DISCRETIONARY",
+  "UNKNOWN",
+]);
 
 export const categories = pgTable("categories", {
   id: uuid("id").defaultRandom().primaryKey(),
@@ -158,6 +241,9 @@ export const categories = pgTable("categories", {
   key: varchar("key", { length: 80 }).notNull(),
   name: varchar("name", { length: 120 }).notNull(),
   kind: varchar("kind", { length: 40 }).notNull().default("expense"),
+  necessity: categoryNecessityEnum("necessity").notNull().default("UNKNOWN"),
+  /** The household said so, which outranks the system default. */
+  necessityUserSet: boolean("necessity_user_set").notNull().default(false),
   isSystem: boolean("is_system").notNull().default(true),
   archivedAt: timestamp("archived_at", { withTimezone: true }),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
@@ -278,6 +364,35 @@ export const sourceTransactions = pgTable(
       .references(() => accounts.id, { onDelete: "cascade" }),
     externalId: varchar("external_id", { length: 160 }),
     fingerprint: varchar("fingerprint", { length: 128 }),
+    /**
+     * The provider's own reference — SEB's `Verifikationsnummer`.
+     *
+     * Deliberately not `externalId`: SEB reuses it across unrelated
+     * transactions, so it cannot carry identity on its own.
+     */
+    providerReference: varchar("provider_reference", { length: 160 }),
+    /**
+     * The balance the provider reported after this transaction.
+     *
+     * Evidence for reconciliation and for distinguishing two identical-looking
+     * transactions. Never a posting, and never a competing balance truth.
+     */
+    reportedBalanceAfterMinor: bigint("reported_balance_after_minor", {
+      mode: "bigint",
+    }),
+    /**
+     * Why this row needs a person.
+     *
+     * Needs Review is derived from this table rather than stored in a queue, so
+     * an import ambiguity has to live on the row itself.
+     */
+    reviewReason: varchar("review_reason", { length: 40 }),
+    /** Deterministic grouping key, and the algorithm version that produced it. */
+    signature: varchar("signature", { length: 200 }),
+    signatureVersion: varchar("signature_version", { length: 20 }),
+    classificationSource: classificationSourceEnum("classification_source")
+      .notNull()
+      .default("UNKNOWN"),
     bookingDate: date("booking_date").notNull(),
     valueDate: date("value_date"),
     amountMinor: bigint("amount_minor", { mode: "bigint" }).notNull(),
@@ -316,6 +431,67 @@ export const sourceTransactions = pgTable(
       t.accountId,
       t.externalId,
     ),
+    index("source_tx_fingerprint_idx").on(t.householdId, t.accountId, t.fingerprint),
+    index("source_tx_review_reason_idx").on(t.householdId, t.reviewReason),
+    index("source_tx_account_date_amount_idx").on(
+      t.accountId,
+      t.bookingDate,
+      t.amountMinor,
+    ),
+  ],
+);
+
+/**
+ * Transactions that probably share an economic meaning.
+ *
+ * One row per signature per household per algorithm version, so re-running the
+ * analysis updates a cluster rather than creating a second one.
+ */
+export const merchantClusters = pgTable(
+  "merchant_clusters",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    householdId: uuid("household_id")
+      .notNull()
+      .references(() => households.id, { onDelete: "cascade" }),
+    signature: varchar("signature", { length: 200 }).notNull(),
+    signatureVersion: varchar("signature_version", { length: 20 }).notNull(),
+    representativeDescriptions: jsonb("representative_descriptions")
+      .$type<string[]>()
+      .notNull()
+      .default([]),
+    transactionCount: integer("transaction_count").notNull().default(0),
+    firstSeen: date("first_seen"),
+    lastSeen: date("last_seen"),
+    medianAmountMinor: bigint("median_amount_minor", { mode: "bigint" }),
+    minAmountMinor: bigint("min_amount_minor", { mode: "bigint" }),
+    maxAmountMinor: bigint("max_amount_minor", { mode: "bigint" }),
+    direction: varchar("direction", { length: 16 }).notNull().default("OUTFLOW"),
+    medianIntervalDays: integer("median_interval_days"),
+    intervalSpreadDays: integer("interval_spread_days"),
+    merchantId: uuid("merchant_id").references(() => merchants.id, {
+      onDelete: "set null",
+    }),
+    merchantCandidate: varchar("merchant_candidate", { length: 200 }),
+    merchantConfidence: numeric("merchant_confidence", { precision: 5, scale: 4 }),
+    categoryId: uuid("category_id").references(() => categories.id, {
+      onDelete: "set null",
+    }),
+    classificationSource: classificationSourceEnum("classification_source")
+      .notNull()
+      .default("UNKNOWN"),
+    /** A bare reference number with nothing identifying in it. */
+    opaque: boolean("opaque").notNull().default(false),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (t) => [
+    uniqueIndex("merchant_clusters_identity").on(
+      t.householdId,
+      t.signature,
+      t.signatureVersion,
+    ),
+    index("merchant_clusters_household_count_idx").on(t.householdId, t.transactionCount),
   ],
 );
 

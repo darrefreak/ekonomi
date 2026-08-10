@@ -10,6 +10,7 @@ export const desktopNav: NavItem[] = [
   { href: "/accounts", label: "Konton", section: "Pengar" },
   { href: "/cashflow", label: "Kassaflöde", section: "Pengar" },
   { href: "/budget", label: "Budget", section: "Pengar" },
+  { href: "/liquidity", label: "Likviditet", section: "Pengar" },
   { href: "/net-worth", label: "Nettoförmögenhet", section: "Förmögenhet" },
   { href: "/investments", label: "Investeringar", section: "Förmögenhet" },
   { href: "/assets", label: "Tillgångar", section: "Förmögenhet" },

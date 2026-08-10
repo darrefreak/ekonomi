@@ -1,6 +1,7 @@
 import type { JobsOptions } from "bullmq";
 import {
   calculateMetricsJobPayloadSchema,
+  commitStatementImportJobPayloadSchema,
   calculateNetWorthJobPayloadSchema,
   generateAiBriefJobPayloadSchema,
   generateForecastJobPayloadSchema,
@@ -143,6 +144,21 @@ export const jobRegistry: Record<JobType, JobDefinition> = {
     timeoutMs: 45_000,
     buildJobId: defaultAsOfJobId,
   },
+  COMMIT_STATEMENT_IMPORT: {
+    type: "COMMIT_STATEMENT_IMPORT",
+    payloadSchema: commitStatementImportJobPayloadSchema,
+    queue: QUEUE_NAME,
+    /**
+     * One attempt. The commit is resumable by design — rows already written are
+     * recognised by fingerprint — so a human retry is safer than an automatic
+     * one that races a still-running import.
+     */
+    attempts: 1,
+    backoff: { type: "fixed", delay: 5_000 },
+    /** Thousands of rows, each its own transaction. */
+    timeoutMs: 600_000,
+    buildJobId: defaultAsOfJobId,
+  },
   PROCESS_DOCUMENT: {
     type: "PROCESS_DOCUMENT",
     payloadSchema: processDocumentJobPayloadSchema,
@@ -163,10 +179,24 @@ export const jobRegistry: Record<JobType, JobDefinition> = {
   },
 };
 
+/**
+ * BullMQ rejects a custom job id containing a colon, because it namespaces its
+ * own keys with one: `queue.add` throws `Custom Id cannot contain :`.
+ *
+ * `defaultAsOfJobId` joins its parts with colons and eleven of the thirteen job
+ * types use it, so every one of those enqueues was failing — including the
+ * analysis jobs queued after a ledger mutation. Nothing surfaced it because the
+ * callers treat enqueueing as fire-and-forget. Sanitising here rather than in each
+ * builder means a new job type cannot reintroduce it.
+ */
+export function sanitizeJobId(jobId: string): string {
+  return jobId.replace(/:/g, "-");
+}
+
 export function jobOptionsFor(payload: JobPayload): JobsOptions {
   const def = jobRegistry[payload.type];
   return {
-    jobId: def.buildJobId(payload),
+    jobId: sanitizeJobId(def.buildJobId(payload)),
     attempts: def.attempts,
     backoff: def.backoff,
     removeOnComplete: 100,

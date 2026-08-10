@@ -39,6 +39,12 @@ export const ROUTE_IDENTITY: Record<string, RouteIdentity> = {
     heading: /^Familjen Demo$/,
     control: (page) => page.getByRole("link", { name: /^Nettoförmögenhet →$/ }),
   },
+  "/liquidity": {
+    title: "Likviditet",
+    heading: /^Likviditet$/,
+    // Only this page explains the buffer in terms of the household's own months.
+    control: (page) => page.getByText(/räknat ur din egen historik/i).first(),
+  },
   "/transactions": {
     title: "Transaktioner",
     heading: /^Transaktioner$/,
