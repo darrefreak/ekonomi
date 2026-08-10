@@ -952,6 +952,27 @@ export function createApiClient(options: ApiClientOptions) {
       );
     },
 
+    /* ------------------------------------------ financial intelligence */
+
+    /** The household's liquidity requirement, derived from its own history. */
+    getLiquidityRequirement: async (householdId: string) => {
+      return request<LiquidityRequirementResponse>(
+        `/api/v1/intelligence/liquidity?householdId=${encodeURIComponent(householdId)}`,
+      );
+    },
+
+    getSpendingBaselines: async (householdId: string) => {
+      return request<SpendingBaselinesResponse>(
+        `/api/v1/intelligence/baselines?householdId=${encodeURIComponent(householdId)}`,
+      );
+    },
+
+    getSavingsTarget: async (householdId: string) => {
+      return request<SavingsTargetResponse>(
+        `/api/v1/intelligence/savings-target?householdId=${encodeURIComponent(householdId)}`,
+      );
+    },
+
     getDemoInfo: async () => {
       return request<{
         email: string;
@@ -1490,4 +1511,114 @@ export type ImportBatchDetail = {
   balanceChain: Record<string, unknown> | null;
   closingBalanceMinor: string | null;
   invalidRows: Array<{ rowNumber: number | null; detail: string; issue: string | null }>;
+};
+
+/* --------------------------------------------- financial intelligence */
+
+export type LiquidityComponentKey =
+  | "OPERATING_CASH"
+  | "EMERGENCY_RESERVE"
+  | "IRREGULAR_EXPENSE_RESERVE"
+  | "EXPENSE_VOLATILITY_BUFFER"
+  | "INCOME_RISK_BUFFER"
+  | "UPCOMING_PLANNED_EXPENSES"
+  | "SAFETY_MARGIN"
+  | "SINKING_FUNDS";
+
+export type LiquidityRequirementResponse = {
+  asOf: string;
+  currency: string;
+  requirement: {
+    minimumMinor: string;
+    recommendedMinor: string;
+    conservativeMinor: string;
+    surplusMinor: string;
+    shortfallMinor: string;
+    confidence: "LOW" | "MODERATE" | "HIGH";
+    confidenceReasons: string[];
+    components: Array<{
+      key: LiquidityComponentKey;
+      amountMinor: string;
+      reason: string;
+    }>;
+  };
+  liquidCashMinor: string;
+  policyComparison: {
+    configuredEmergencyFundMinor: string;
+    derivedEmergencyReserveMinor: string;
+    differenceMinor: string;
+  } | null;
+  runway: {
+    normalMonths: number | null;
+    essentialOnlyMonths: number | null;
+    incomeReducedMonths: number | null;
+  };
+  stress: Array<{
+    key: string;
+    label: string;
+    remainingCashMinor: string;
+    survives: boolean;
+  }>;
+  backtest: {
+    monthsTested: number;
+    monthsSurvived: number;
+    breachCount: number;
+    largestBreachMinor: string | null;
+    breaches: Array<{ month: string; shortfallMinor: string }>;
+  };
+  resilience: {
+    dimensions: Array<{
+      key: string;
+      label: string;
+      level: "STRONG" | "MODERATE" | "WEAK" | "UNKNOWN";
+      detail: string;
+    }>;
+  };
+  basis: {
+    monthsOfHistory: number;
+    firstMonth: string | null;
+    lastMonth: string | null;
+    essentialMedianMinor: string | null;
+    essentialP75Minor: string | null;
+    essentialP90Minor: string | null;
+    incomeVolatilityBps: number | null;
+    expenseVolatilityBps: number | null;
+    largestIncomeShareBps: number | null;
+    coveragePercent: number;
+    dataAgeDays: number;
+    categorisedShareBps: number | null;
+    unknownNecessityShareBps: number | null;
+    emptyMonths: number;
+  };
+};
+
+export type SpendingBaselineWindow = {
+  window: string;
+  monthsObserved: number;
+  insufficient: boolean;
+  medianMinor: string | null;
+  trimmedMeanMinor: string | null;
+  p25Minor: string | null;
+  p75Minor: string | null;
+  p90Minor: string | null;
+};
+
+export type SpendingBaselinesResponse = {
+  asOf: string;
+  currency: string;
+  windows: Record<"3m" | "6m" | "12m" | "24m", SpendingBaselineWindow>;
+  monthsOfHistory: number;
+};
+
+export type SavingsTargetResponse = {
+  asOf: string;
+  currency: string;
+  normalMonthlySurplusMinor: string;
+  cashflowNegative: boolean;
+  totalAllocatedMinor: string;
+  allocations: Array<{ key: string; label: string; amountMinor: string }>;
+  notes: string[];
+  availableSurplusMinor: string;
+  shortfallMinor: string;
+  confidence: "LOW" | "MODERATE" | "HIGH";
 };

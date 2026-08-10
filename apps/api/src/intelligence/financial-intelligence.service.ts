@@ -37,9 +37,42 @@ export class FinancialIntelligenceService {
     const input = await this.input.build(userId, householdId);
     const { series, policy } = input;
 
+    /*
+     * Months with no recorded activity are dropped before the engine sees them.
+     *
+     * The series spans first activity to last, and a month inside it with nothing
+     * recorded is stored as a real zero. That is right for a household that
+     * genuinely spent nothing, and wrong for one whose history is sparse: with
+     * three populated months inside a fifty-two-month span, the median essential
+     * cost is zero and the page then presents a confident range built on nothing.
+     * Observed on a household with 52 months of span and a median of 0 kr.
+     *
+     * A month is kept only if it recorded something. The count of dropped months is
+     * carried into the confidence reasons, so sparse history reads as sparse rather
+     * than as a household that lives on nothing.
+     */
+    const populated = series.costs.filter(
+      (month, index) =>
+        month.essentialMinor > 0n ||
+        month.semiDiscretionaryMinor > 0n ||
+        month.discretionaryMinor > 0n ||
+        (series.income[index]?.amountMinor ?? 0n) > 0n,
+    );
+    const populatedIncome = series.income.filter((_, index) => {
+      const cost = series.costs[index];
+      if (!cost) return false;
+      return (
+        cost.essentialMinor > 0n ||
+        cost.semiDiscretionaryMinor > 0n ||
+        cost.discretionaryMinor > 0n ||
+        series.income[index]!.amountMinor > 0n
+      );
+    });
+    const droppedMonths = series.costs.length - populated.length;
+
     const requirement = calculateLiquidityRequirement({
-      monthlyCosts: series.costs,
-      monthlyIncome: series.income,
+      monthlyCosts: populated,
+      monthlyIncome: populatedIncome,
       upcomingObligations: input.upcomingObligations,
       sinkingFunds: input.sinkingFunds,
       liquidCashMinor: input.liquidCashMinor,
@@ -48,12 +81,19 @@ export class FinancialIntelligenceService {
       policy,
     });
 
-    const essentials = series.costs.map((month) => month.essentialMinor);
-    const totals = series.costs.map(
+    const confidenceReasons = [...requirement.confidenceReasons];
+    if (droppedMonths > 0) {
+      confidenceReasons.push(
+        `${droppedMonths} av ${series.costs.length} månader i perioden saknar registrerad aktivitet och räknas inte som månader du levde på noll.`,
+      );
+    }
+
+    const essentials = populated.map((month) => month.essentialMinor);
+    const totals = populated.map(
       (month) =>
         month.essentialMinor + month.semiDiscretionaryMinor + month.discretionaryMinor,
     );
-    const incomes = series.income.map((month) => month.amountMinor);
+    const incomes = populatedIncome.map((month) => month.amountMinor);
 
     const runway = calculateCashRunway({
       liquidCashMinor: input.liquidCashMinor,
@@ -64,13 +104,13 @@ export class FinancialIntelligenceService {
 
     const stress = runStressScenarios({
       liquidCashMinor: input.liquidCashMinor,
-      monthlyCosts: series.costs,
-      monthlyIncome: series.income,
+      monthlyCosts: populated,
+      monthlyIncome: populatedIncome,
     });
 
     const backtest = backtestLiquidityRecommendation({
-      monthlyCosts: series.costs,
-      monthlyIncome: series.income,
+      monthlyCosts: populated,
+      monthlyIncome: populatedIncome,
     });
 
     // Fixed-cost share is approximated by the essential share until recurring
@@ -100,7 +140,7 @@ export class FinancialIntelligenceService {
         surplusMinor: requirement.surplusMinor.toString(),
         shortfallMinor: requirement.shortfallMinor.toString(),
         confidence: requirement.confidence,
-        confidenceReasons: requirement.confidenceReasons,
+        confidenceReasons,
         components: requirement.components.map((component) => ({
           key: component.key,
           amountMinor: component.amountMinor.toString(),
@@ -165,7 +205,7 @@ export class FinancialIntelligenceService {
         categorisedShareBps: input.provenance.categorisedShareBps,
         /** How much of the essential total rests on spending nobody has classified. */
         unknownNecessityShareBps: input.provenance.unknownNecessityShareBps,
-        emptyMonths: series.emptyMonths.length,
+        emptyMonths: droppedMonths,
       },
     };
   }
@@ -173,11 +213,15 @@ export class FinancialIntelligenceService {
   /** Spending baselines over every window the history supports (DEL 9). */
   async baselines(userId: string, householdId: string) {
     const input = await this.input.build(userId, householdId);
-    const totals = input.series.costs.map((month) => ({
-      month: month.month,
-      amountMinor:
-        month.essentialMinor + month.semiDiscretionaryMinor + month.discretionaryMinor,
-    }));
+    // Same reasoning as the liquidity path: a month with nothing recorded is not
+    // evidence that the household spent nothing that month.
+    const totals = input.series.costs
+      .map((month) => ({
+        month: month.month,
+        amountMinor:
+          month.essentialMinor + month.semiDiscretionaryMinor + month.discretionaryMinor,
+      }))
+      .filter((month) => month.amountMinor > 0n);
     const all = calculateAllBaselines(totals);
     const serialise = (baseline: (typeof all)["3m"]) => ({
       window: baseline.window,
