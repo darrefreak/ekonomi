@@ -37,8 +37,10 @@ semantics, out of scope here by instruction.
 The form no longer arrives with anyone's credentials. Demo affordances — the
 pre-filled fields, the printed credentials, the *Använd demo-konto* button — are
 now opt-in per build through `NEXT_PUBLIC_FFOS_SHOW_DEMO`, which development sets
-and no other deployment does. The live pilot was rebuilt and verified to show a
-clean screen.
+and no other deployment does. The live pilot was rebuilt and verified: no demo address, no demo
+password, no demo button, empty fields, a working reveal control, and 16px
+inputs — checked against the running deployment on port 3020, not only in
+development.
 
 A session that can no longer be refreshed now ends the visit and returns the
 person to sign-in, carrying the intended URL so they come back to the page they
@@ -161,7 +163,7 @@ the symptom to recognise it by.
 | Lint | PASS — 18 tasks, 0 errors, 0 warnings |
 | Typecheck | PASS — 18 tasks |
 | Unit tests | PASS — 355 tests, 0 failures |
-| E2E | PASS — 104 passed, 0 failed, 10 skipped (viewport gating: mobile-only specs on desktop and vice versa) |
+| E2E | PASS — 113 passed, 0 failed, 10 skipped (viewport gating: mobile-only specs on desktop and vice versa) |
 | Docker | PASS — dev and pilot stacks build and run |
 
 ### Pilot invariants (§56)
@@ -176,8 +178,14 @@ the symptom to recognise it by.
 | Invariant re-acceptance | **27/27** |
 | Pilot preflight | **PASS** — 25 mandatory checks, 0 failed, 0 advisories |
 
-**107 invariant checks, 0 failures.** No UI change regressed an accepted
-invariant.
+**107 invariant checks, 0 failures**, re-run against the finished code. No UI
+change regressed an accepted invariant.
+
+One regression did occur during this pass and was caught: the new not-found page
+broke the navigation route contract, which distinguishes a real page from a
+not-found one by the framework's English copy. That helper already anticipated a
+custom page via `data-testid="not-found"`, and the page now declares it —
+otherwise every route assertion in that suite would have been checking nothing.
 
 Four probes report pre-existing failures unrelated to this pass, all in API and
 domain behaviour this workstream did not touch: an orphan-row count in

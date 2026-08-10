@@ -12,7 +12,16 @@ export const metadata: Metadata = {
  */
 export default function NotFound() {
   return (
-    <main className="mx-auto flex min-h-[70vh] w-full max-w-md flex-col justify-center px-4 py-10">
+    <main
+      /*
+       * The navigation route contract distinguishes a real page from a
+       * not-found one, and it recognises a custom page by this marker rather
+       * than by the framework's English copy. Without it, every route
+       * assertion in that suite would be checking nothing.
+       */
+      data-testid="not-found"
+      className="mx-auto flex min-h-[70vh] w-full max-w-md flex-col justify-center px-4 py-10"
+    >
       <div className="rounded-[18px] bg-surface-elevated p-6 shadow-[var(--ffos-shadow-soft)]">
         <p className="text-sm text-text-muted">Sidan finns inte</p>
         <h1 className="mt-2 font-[family-name:var(--ffos-font-display)] text-2xl tracking-tight text-text-primary">
