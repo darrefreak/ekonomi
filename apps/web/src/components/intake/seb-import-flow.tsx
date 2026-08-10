@@ -172,20 +172,41 @@ export function SebImportFlow({ householdId }: { householdId: string }) {
           </p>
         </div>
 
-        <label className="block text-sm">
+        {/*
+          A native file input renders the browser's own control, and its label is
+          the browser's language: "Choose File / No file chosen" in an otherwise
+          Swedish product, with no attribute able to change it. The input is kept
+          for behaviour and assistive technology, positioned off-screen rather than
+          `display: none` so it stays focusable, and the visible trigger is ours.
+        */}
+        <div className="block text-sm">
           <span className="text-text-muted">Fil</span>
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept=".csv,text/csv"
-            aria-label="Välj CSV-fil från SEB"
-            onChange={(event) => {
-              setFile(event.target.files?.[0] ?? null);
-              setError(null);
-            }}
-            className="mt-1 block w-full rounded-[12px] border border-border bg-surface px-3 py-2.5 text-text-primary"
-          />
-        </label>
+          <div className="mt-1 flex flex-col gap-2 sm:flex-row sm:items-center">
+            <input
+              ref={fileInputRef}
+              id="seb-csv-file"
+              type="file"
+              accept=".csv,text/csv"
+              aria-label="Välj CSV-fil från SEB"
+              onChange={(event) => {
+                setFile(event.target.files?.[0] ?? null);
+                setError(null);
+              }}
+              className="sr-only"
+            />
+            <label
+              htmlFor="seb-csv-file"
+              className="inline-flex min-h-11 cursor-pointer items-center justify-center rounded-[12px] border border-border-strong px-4 text-sm text-text-primary focus-within:outline focus-within:outline-2 focus-within:outline-accent"
+            >
+              Välj fil…
+            </label>
+            <span
+              className={`min-w-0 truncate text-sm ${file ? "text-text-primary" : "text-text-muted"}`}
+            >
+              {file ? file.name : "Ingen fil vald än"}
+            </span>
+          </div>
+        </div>
 
         <label className="block text-sm">
           <span className="text-text-muted">Konto</span>
