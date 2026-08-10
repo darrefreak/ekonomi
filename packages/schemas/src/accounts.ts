@@ -61,6 +61,20 @@ export const updateAccountSchema = z
     isShared: z.boolean().optional(),
     ownerMemberId: z.string().uuid().optional().nullable(),
     creditLimitMinor: amountMinorStringSchema.optional().nullable(),
+    /**
+     * Correct the account's authoritative starting balance.
+     *
+     * Needed after importing bank history: a statement that begins partway
+     * through an account's life implies a balance the ledger never received, and
+     * an account opened at 0 then reports a total that is wrong by exactly that
+     * amount — correct about every transaction, wrong in the sum, with nothing
+     * obviously broken to look at. Without this field the only remedy was to
+     * delete the account and import again.
+     *
+     * Non-negative, matching account creation: the same field must not accept a
+     * value on one route that the other refuses.
+     */
+    openingBalanceMinor: nonNegativeAmountMinorStringSchema.optional(),
     externalReference: z.string().max(160).optional().nullable(),
     connectionStatus: z
       .enum([
@@ -88,6 +102,8 @@ export const accountDetailSchema = accountSchema.extend({
   externalReference: z.string().nullable().optional(),
   /** Ledger-calculated balance (authoritative). */
   ledgerBalance: moneySchema.optional(),
+  /** The account's authoritative starting point, and correctable. */
+  openingBalance: moneySchema.optional(),
   /** Provider/bank-reported balance for reconciliation. */
   reportedBalance: moneySchema.nullable().optional(),
   reconciliation: z

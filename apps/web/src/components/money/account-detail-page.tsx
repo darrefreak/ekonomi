@@ -41,6 +41,9 @@ export function AccountDetailPage({ accountId }: { accountId: string }) {
   const [isShared, setIsShared] = useState(true);
   const [ownerMemberId, setOwnerMemberId] = useState("");
   const [creditLimit, setCreditLimit] = useState("");
+  const [openingBalance, setOpeningBalance] = useState("");
+  /** What the account already claims, so an unchanged field sends nothing. */
+  const [originalOpening, setOriginalOpening] = useState("");
   const [actionError, setActionError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -52,6 +55,11 @@ export function AccountDetailPage({ accountId }: { accountId: string }) {
     setCreditLimit(
       data.creditLimit ? minorToKronorInput(data.creditLimit.amountMinor) : "",
     );
+    const opening = data.openingBalance
+      ? minorToKronorInput(data.openingBalance.amountMinor)
+      : "0";
+    setOpeningBalance(opening);
+    setOriginalOpening(opening);
   }, [data]);
 
   const invalidateAll = async () => {
@@ -79,6 +87,17 @@ export function AccountDetailPage({ accountId }: { accountId: string }) {
           creditLimitMinor = null;
         }
       }
+      // Only sent when it actually changed: it is a ledger-affecting correction,
+      // not something to rewrite every time the name is edited.
+      let openingBalanceMinor: string | undefined;
+      const openingTrimmed = openingBalance.trim();
+      if (openingTrimmed && openingTrimmed !== originalOpening) {
+        const parsed = kronorToMinorString(openingTrimmed);
+        if (parsed == null || BigInt(parsed) < 0n) {
+          throw new Error("Ingående saldo måste vara ett giltigt belopp i kronor (≥ 0).");
+        }
+        openingBalanceMinor = parsed;
+      }
       return api.updateAccount(accountId, {
         householdId: id,
         name: name.trim(),
@@ -86,6 +105,7 @@ export function AccountDetailPage({ accountId }: { accountId: string }) {
         isShared,
         ownerMemberId: isShared ? null : ownerMemberId || null,
         creditLimitMinor,
+        openingBalanceMinor,
       });
     },
     onSuccess: async () => {
@@ -220,6 +240,22 @@ export function AccountDetailPage({ accountId }: { accountId: string }) {
             onChange={(e) => setProvider(e.target.value)}
             className="mt-1 min-h-11 w-full rounded-[12px] border border-border bg-surface px-3"
           />
+        </label>
+
+        <label className="block text-sm">
+          <span className="text-text-secondary">Ingående saldo (kr)</span>
+          <input
+            inputMode="decimal"
+            value={openingBalance}
+            onChange={(e) => setOpeningBalance(e.target.value)}
+            className="mt-1 min-h-11 w-full rounded-[12px] border border-border bg-surface px-3 tabular-nums"
+          />
+          <span className="mt-1 block text-xs text-text-muted">
+            Vad kontot innehöll innan den första bokförda transaktionen. Har du
+            importerat ett kontoutdrag som börjar mitt i kontots historik ska det
+            här vara utdragets startsaldo — annars blir varje transaktion rätt men
+            totalsumman fel med skillnaden.
+          </span>
         </label>
 
         <label className="flex min-h-11 items-center gap-2 text-sm">
