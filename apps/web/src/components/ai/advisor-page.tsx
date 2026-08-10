@@ -221,7 +221,7 @@ export function AdvisorPage() {
           <button
             type="button"
             disabled={chatBusy || !chatInput.trim()}
-            className="rounded-[12px] bg-accent px-4 py-2 text-sm text-white disabled:opacity-60"
+            className="rounded-[12px] bg-accent px-4 py-2 text-sm text-on-accent disabled:opacity-60"
             onClick={() => void sendChat()}
           >
             {chatBusy ? "Tänker…" : "Skicka"}

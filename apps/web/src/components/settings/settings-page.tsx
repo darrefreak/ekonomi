@@ -372,7 +372,7 @@ function HouseholdSection({
       <button
         type="button"
         disabled={saveMutation.isPending || householdId === undefined}
-        className="min-h-11 rounded-[12px] bg-accent px-4 text-sm text-white disabled:opacity-60"
+        className="min-h-11 rounded-[12px] bg-accent px-4 text-sm text-on-accent disabled:opacity-60"
         onClick={() => void saveMutation.mutate()}
       >
         {saveMutation.isPending ? "Sparar…" : "Spara"}
@@ -634,7 +634,7 @@ function MembersSection({
           <button
             type="submit"
             disabled={inviteMutation.isPending}
-            className="min-h-11 rounded-[12px] bg-accent px-4 text-sm font-medium text-white disabled:opacity-60"
+            className="min-h-11 rounded-[12px] bg-accent px-4 text-sm font-medium text-on-accent disabled:opacity-60"
           >
             {inviteMutation.isPending ? "Skickar…" : "Bjud in"}
           </button>
@@ -827,7 +827,7 @@ function PoliciesSection({
       <button
         type="button"
         disabled={saveMutation.isPending}
-        className="min-h-11 rounded-[12px] bg-accent px-4 text-sm text-white disabled:opacity-60"
+        className="min-h-11 rounded-[12px] bg-accent px-4 text-sm text-on-accent disabled:opacity-60"
         onClick={() => void saveMutation.mutate()}
       >
         {saveMutation.isPending ? "Sparar…" : "Spara"}
@@ -948,7 +948,7 @@ function CategoriesSection({
                     type="button"
                     disabled={updateMutation.isPending}
                     onClick={() => updateMutation.mutate(c)}
-                    className="min-h-11 rounded-[12px] bg-accent px-3 text-sm text-white"
+                    className="min-h-11 rounded-[12px] bg-accent px-3 text-sm text-on-accent"
                   >
                     Spara
                   </button>
@@ -1041,7 +1041,7 @@ function CategoriesSection({
         <button
           type="submit"
           disabled={createMutation.isPending}
-          className="min-h-11 rounded-[12px] bg-accent px-4 text-sm font-medium text-white disabled:opacity-60"
+          className="min-h-11 rounded-[12px] bg-accent px-4 text-sm font-medium text-on-accent disabled:opacity-60"
         >
           {createMutation.isPending ? "Skapar…" : "Skapa"}
         </button>
@@ -1447,7 +1447,7 @@ function AppearanceSection({
       <button
         type="button"
         disabled={saveMutation.isPending}
-        className="min-h-11 rounded-[12px] bg-accent px-4 text-sm text-white disabled:opacity-60"
+        className="min-h-11 rounded-[12px] bg-accent px-4 text-sm text-on-accent disabled:opacity-60"
         onClick={() => void saveMutation.mutate()}
       >
         {saveMutation.isPending ? "Sparar…" : "Spara"}
@@ -1501,7 +1501,7 @@ function DemoSection({
         <button
           type="button"
           disabled={demoBusy}
-          className="min-h-11 rounded-[12px] bg-accent px-4 text-sm text-white disabled:opacity-60"
+          className="min-h-11 rounded-[12px] bg-accent px-4 text-sm text-on-accent disabled:opacity-60"
           onClick={() => void reloadDemo()}
         >
           {demoBusy ? "Laddar…" : "Ladda om demodata"}

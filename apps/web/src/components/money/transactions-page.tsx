@@ -91,7 +91,7 @@ export function TransactionsPage() {
         <button
           type="button"
           onClick={() => setShowNew((v) => !v)}
-          className="min-h-11 rounded-[12px] bg-accent px-4 text-sm font-medium text-white"
+          className="min-h-11 rounded-[12px] bg-accent px-4 text-sm font-medium text-on-accent"
         >
           {showNew ? "Stäng" : "+ Ny händelse"}
         </button>
@@ -150,7 +150,7 @@ export function TransactionsPage() {
         />
         <button
           type="submit"
-          className="min-h-11 rounded-[12px] bg-accent px-4 text-sm font-medium text-white"
+          className="min-h-11 rounded-[12px] bg-accent px-4 text-sm font-medium text-on-accent"
         >
           Filtrera
         </button>

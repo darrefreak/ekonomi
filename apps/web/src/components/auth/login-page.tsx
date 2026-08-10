@@ -184,7 +184,7 @@ export function LoginPage() {
         <button
           type="submit"
           disabled={loading}
-          className="min-h-11 w-full rounded-[12px] bg-accent px-4 text-sm font-medium text-white disabled:opacity-60"
+          className="min-h-11 w-full rounded-[12px] bg-accent px-4 text-sm font-medium text-on-accent disabled:opacity-60"
         >
           {loading
             ? "Vänta…"

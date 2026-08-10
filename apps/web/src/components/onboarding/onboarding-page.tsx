@@ -125,7 +125,7 @@ export function OnboardingPage() {
           />
           <button
             type="button"
-            className="min-h-11 rounded-[12px] bg-accent px-4 text-sm text-white"
+            className="min-h-11 rounded-[12px] bg-accent px-4 text-sm text-on-accent"
             onClick={() => setStep(1)}
           >
             Fortsätt
@@ -156,7 +156,7 @@ export function OnboardingPage() {
             </button>
             <button
               type="button"
-              className="min-h-11 rounded-[12px] bg-accent px-4 text-sm text-white"
+              className="min-h-11 rounded-[12px] bg-accent px-4 text-sm text-on-accent"
               onClick={() => setStep(2)}
             >
               Fortsätt
@@ -184,7 +184,7 @@ export function OnboardingPage() {
             <button
               type="button"
               disabled={busy}
-              className="min-h-11 rounded-[12px] bg-accent px-4 text-sm text-white disabled:opacity-60"
+              className="min-h-11 rounded-[12px] bg-accent px-4 text-sm text-on-accent disabled:opacity-60"
               onClick={() => void createHousehold()}
             >
               {busy ? "Skapar…" : "Skapa hushåll"}
@@ -204,7 +204,7 @@ export function OnboardingPage() {
           <button
             type="button"
             disabled={busy}
-            className="min-h-11 w-full rounded-[12px] bg-accent px-4 text-sm text-white disabled:opacity-60"
+            className="min-h-11 w-full rounded-[12px] bg-accent px-4 text-sm text-on-accent disabled:opacity-60"
             onClick={() => void finishEmpty()}
           >
             Börja tomt

@@ -273,7 +273,7 @@ export function TransactionDetailPage({ transactionId }: { transactionId: string
           type="button"
           disabled={saveMutation.isPending}
           onClick={() => void saveMutation.mutate()}
-          className="min-h-11 rounded-[12px] bg-accent px-4 text-sm font-medium text-white disabled:opacity-60"
+          className="min-h-11 rounded-[12px] bg-accent px-4 text-sm font-medium text-on-accent disabled:opacity-60"
         >
           {saveMutation.isPending ? "Sparar…" : "Spara ändringar"}
         </button>

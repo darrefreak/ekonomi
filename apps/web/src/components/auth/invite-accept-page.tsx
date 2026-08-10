@@ -64,7 +64,7 @@ export function InviteAcceptPage() {
         </p>
         <button
           type="button"
-          className="mt-6 min-h-11 rounded-[12px] bg-accent px-4 text-sm font-medium text-white"
+          className="mt-6 min-h-11 rounded-[12px] bg-accent px-4 text-sm font-medium text-on-accent"
           onClick={() => router.replace("/")}
         >
           Gå till översikten
@@ -129,7 +129,7 @@ export function InviteAcceptPage() {
         <button
           type="submit"
           disabled={busy || !token}
-          className="min-h-11 w-full rounded-[12px] bg-accent px-4 text-sm font-medium text-white disabled:opacity-60"
+          className="min-h-11 w-full rounded-[12px] bg-accent px-4 text-sm font-medium text-on-accent disabled:opacity-60"
         >
           {busy ? "Accepterar…" : "Acceptera inbjudan"}
         </button>

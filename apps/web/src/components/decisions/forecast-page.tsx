@@ -143,7 +143,7 @@ export function ForecastPage() {
             type="button"
             disabled={backtestBusy}
             onClick={() => void runBacktest()}
-            className="min-h-11 rounded-[12px] bg-accent px-4 text-sm font-medium text-white disabled:opacity-60"
+            className="min-h-11 rounded-[12px] bg-accent px-4 text-sm font-medium text-on-accent disabled:opacity-60"
           >
             {backtestBusy ? "Kör…" : "Kör backtest"}
           </button>

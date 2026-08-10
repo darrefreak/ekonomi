@@ -262,7 +262,7 @@ export function GoalsPage() {
         <button
           type="submit"
           disabled={createGoalMutation.isPending}
-          className="min-h-11 rounded-[12px] bg-accent px-4 text-sm font-medium text-white disabled:opacity-60"
+          className="min-h-11 rounded-[12px] bg-accent px-4 text-sm font-medium text-on-accent disabled:opacity-60"
         >
           {createGoalMutation.isPending ? "Skapar…" : "Skapa mål"}
         </button>
@@ -364,7 +364,7 @@ export function GoalsPage() {
                       type="button"
                       disabled={contributeGoalMutation.isPending}
                       onClick={() => void contributeGoalMutation.mutate(goal.id)}
-                      className="min-h-11 rounded-[12px] bg-accent px-4 text-sm font-medium text-white disabled:opacity-60"
+                      className="min-h-11 rounded-[12px] bg-accent px-4 text-sm font-medium text-on-accent disabled:opacity-60"
                     >
                       Bidra
                     </button>
@@ -411,7 +411,7 @@ export function GoalsPage() {
           <button
             type="submit"
             disabled={createFundMutation.isPending}
-            className="min-h-11 rounded-[12px] bg-accent px-4 text-sm font-medium text-white disabled:opacity-60"
+            className="min-h-11 rounded-[12px] bg-accent px-4 text-sm font-medium text-on-accent disabled:opacity-60"
           >
             {createFundMutation.isPending ? "Skapar…" : "Skapa buffertpost"}
           </button>
@@ -487,7 +487,7 @@ export function GoalsPage() {
                   type="button"
                   disabled={contributeFundMutation.isPending}
                   onClick={() => void contributeFundMutation.mutate(fund.id)}
-                  className="min-h-11 rounded-[12px] bg-accent px-4 text-sm font-medium text-white disabled:opacity-60"
+                  className="min-h-11 rounded-[12px] bg-accent px-4 text-sm font-medium text-on-accent disabled:opacity-60"
                 >
                   Bidra
                 </button>
@@ -622,7 +622,7 @@ function GoalEditForm({
           type="button"
           disabled={saveMutation.isPending}
           onClick={() => void saveMutation.mutate()}
-          className="min-h-11 rounded-[12px] bg-accent px-4 text-sm font-medium text-white disabled:opacity-60"
+          className="min-h-11 rounded-[12px] bg-accent px-4 text-sm font-medium text-on-accent disabled:opacity-60"
         >
           {saveMutation.isPending ? "Sparar…" : "Spara"}
         </button>
@@ -744,7 +744,7 @@ function SinkingFundEditForm({
           type="button"
           disabled={saveMutation.isPending}
           onClick={() => void saveMutation.mutate()}
-          className="min-h-11 rounded-[12px] bg-accent px-4 text-sm font-medium text-white disabled:opacity-60"
+          className="min-h-11 rounded-[12px] bg-accent px-4 text-sm font-medium text-on-accent disabled:opacity-60"
         >
           {saveMutation.isPending ? "Sparar…" : "Spara"}
         </button>

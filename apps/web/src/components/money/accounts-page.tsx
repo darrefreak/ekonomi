@@ -298,7 +298,7 @@ export function AccountsPage() {
         <button
           type="submit"
           disabled={createMutation.isPending || !currencySupported}
-          className="min-h-11 rounded-[12px] bg-accent px-4 text-sm font-medium text-white disabled:opacity-60"
+          className="min-h-11 rounded-[12px] bg-accent px-4 text-sm font-medium text-on-accent disabled:opacity-60"
         >
           {createMutation.isPending ? "Skapar…" : "Skapa konto"}
         </button>

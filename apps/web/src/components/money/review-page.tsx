@@ -185,7 +185,7 @@ export function ReviewPage() {
                   <button
                     type="button"
                     disabled={busyId === item.id || !categoryPick[item.id]}
-                    className="min-h-11 rounded-[12px] bg-accent px-3 text-sm text-white disabled:opacity-50"
+                    className="min-h-11 rounded-[12px] bg-accent px-3 text-sm text-on-accent disabled:opacity-50"
                     onClick={() => void resolve(item, "set_category")}
                   >
                     Sätt kategori
@@ -196,7 +196,7 @@ export function ReviewPage() {
                 <button
                   type="button"
                   disabled={busyId === item.id}
-                  className="min-h-11 rounded-[12px] bg-accent px-3 text-sm text-white disabled:opacity-50"
+                  className="min-h-11 rounded-[12px] bg-accent px-3 text-sm text-on-accent disabled:opacity-50"
                   onClick={() => void resolve(item, "mark_internal_transfer")}
                 >
                   Markera överföring
@@ -213,7 +213,7 @@ export function ReviewPage() {
                   <button
                     type="button"
                     disabled={busyId === item.id}
-                    className="min-h-11 rounded-[12px] bg-accent px-3 text-sm text-white disabled:opacity-50"
+                    className="min-h-11 rounded-[12px] bg-accent px-3 text-sm text-on-accent disabled:opacity-50"
                     onClick={() => void resolve(item, "archive_document")}
                   >
                     Arkivera

@@ -171,7 +171,7 @@ export function BudgetPage() {
             type="button"
             disabled={creating}
             onClick={() => void createBudget()}
-            className="mt-5 min-h-11 rounded-[12px] bg-accent px-5 text-sm font-medium text-white disabled:opacity-60"
+            className="mt-5 min-h-11 rounded-[12px] bg-accent px-5 text-sm font-medium text-on-accent disabled:opacity-60"
           >
             {creating ? "Skapar…" : "Skapa budget"}
           </button>
@@ -251,7 +251,7 @@ export function BudgetPage() {
                       type="button"
                       disabled={savingId === line.id}
                       onClick={() => void saveLine(line.id)}
-                      className="min-h-11 rounded-[12px] bg-accent px-4 text-sm font-medium text-white disabled:opacity-60"
+                      className="min-h-11 rounded-[12px] bg-accent px-4 text-sm font-medium text-on-accent disabled:opacity-60"
                     >
                       {savingId === line.id ? "Sparar…" : "Spara"}
                     </button>

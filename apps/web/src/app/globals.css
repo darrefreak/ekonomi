@@ -15,6 +15,7 @@
   --color-warning: var(--ffos-warning);
   --color-info: var(--ffos-info);
   --color-accent: var(--ffos-accent);
+  --color-on-accent: var(--ffos-on-accent);
   --font-sans: var(--ffos-font-sans);
   --font-display: var(--ffos-font-display);
 }
@@ -60,7 +61,7 @@ body {
   transform: translateY(-200%);
   border-radius: 12px;
   background: var(--ffos-accent);
-  color: white;
+  color: var(--ffos-on-accent);
   padding: 0.5rem 1rem;
   font-size: 0.875rem;
 }

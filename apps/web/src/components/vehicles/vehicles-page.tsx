@@ -50,7 +50,7 @@ export function VehiclesPage() {
         <button
           type="button"
           onClick={() => setAdding((v) => !v)}
-          className="mt-4 min-h-11 rounded-[12px] bg-accent px-4 text-sm font-medium text-white"
+          className="mt-4 min-h-11 rounded-[12px] bg-accent px-4 text-sm font-medium text-on-accent"
         >
           {adding ? "Stäng formuläret" : "Lägg till fordon"}
         </button>

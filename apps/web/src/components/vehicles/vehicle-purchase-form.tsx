@@ -138,7 +138,7 @@ export function VehiclePurchaseForm({
           type="button"
           className={`min-h-11 rounded-[12px] px-4 text-sm ${
             mode === "cash"
-              ? "bg-accent text-white"
+              ? "bg-accent text-on-accent"
               : "border border-border bg-surface"
           }`}
           onClick={() => setMode("cash")}
@@ -149,7 +149,7 @@ export function VehiclePurchaseForm({
           type="button"
           className={`min-h-11 rounded-[12px] px-4 text-sm ${
             mode === "financed"
-              ? "bg-accent text-white"
+              ? "bg-accent text-on-accent"
               : "border border-border bg-surface"
           }`}
           onClick={() => setMode("financed")}
@@ -260,7 +260,7 @@ export function VehiclePurchaseForm({
           <button
             type="submit"
             disabled={mutation.isPending || accountsQuery.isLoading}
-            className="min-h-11 rounded-[12px] bg-accent px-4 text-sm text-white disabled:opacity-60"
+            className="min-h-11 rounded-[12px] bg-accent px-4 text-sm text-on-accent disabled:opacity-60"
           >
             {mutation.isPending ? "Sparar…" : "Bokför köp"}
           </button>

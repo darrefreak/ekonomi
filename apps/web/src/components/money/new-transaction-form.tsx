@@ -294,7 +294,7 @@ export function NewTransactionForm({
             }}
             className={`min-h-11 rounded-[12px] px-4 text-sm font-medium ${
               kind === k
-                ? "bg-accent text-white"
+                ? "bg-accent text-on-accent"
                 : "border border-border bg-surface text-text-secondary"
             }`}
           >
@@ -479,7 +479,7 @@ export function NewTransactionForm({
         <button
           type="submit"
           disabled={createMutation.isPending}
-          className="min-h-11 rounded-[12px] bg-accent px-4 text-sm font-medium text-white disabled:opacity-60 md:col-span-2"
+          className="min-h-11 rounded-[12px] bg-accent px-4 text-sm font-medium text-on-accent disabled:opacity-60 md:col-span-2"
         >
           {createMutation.isPending ? "Sparar…" : `Skapa ${KIND_LABELS[kind].toLowerCase()}`}
         </button>

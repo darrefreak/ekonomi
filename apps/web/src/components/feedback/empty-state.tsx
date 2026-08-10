@@ -21,7 +21,7 @@ export function EmptyState({
         <button
           type="button"
           onClick={onAction}
-          className="mt-5 min-h-11 rounded-[12px] bg-accent px-4 text-sm font-medium text-white"
+          className="mt-5 min-h-11 rounded-[12px] bg-accent px-4 text-sm font-medium text-on-accent"
         >
           {actionLabel}
         </button>

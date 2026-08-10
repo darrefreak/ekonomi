@@ -174,7 +174,7 @@ export function AddVehicleForm({
               }}
               className={`min-h-11 rounded-[12px] px-4 text-sm font-medium ${
                 acquisitionMode === value
-                  ? "bg-accent text-white"
+                  ? "bg-accent text-on-accent"
                   : "border border-border bg-surface text-text-secondary"
               }`}
             >
@@ -206,7 +206,7 @@ export function AddVehicleForm({
               onClick={() => setPurchaseType(value)}
               className={`min-h-11 rounded-[12px] px-4 text-sm font-medium ${
                 purchaseType === value
-                  ? "bg-accent text-white"
+                  ? "bg-accent text-on-accent"
                   : "border border-border bg-surface text-text-secondary"
               }`}
             >
@@ -458,7 +458,7 @@ export function AddVehicleForm({
         <button
           type="submit"
           disabled={pending}
-          className="min-h-11 rounded-[12px] bg-accent px-4 text-sm font-medium text-white disabled:opacity-60"
+          className="min-h-11 rounded-[12px] bg-accent px-4 text-sm font-medium text-on-accent disabled:opacity-60"
         >
           {pending ? "Sparar…" : "Spara fordon"}
         </button>

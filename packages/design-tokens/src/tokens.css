@@ -15,6 +15,16 @@
   --ffos-warning: #9a6b16;
   --ffos-info: #2f5d8c;
   --ffos-accent: #1f4d3a;
+  /*
+   * Text and icons drawn on top of the accent.
+   *
+   * The accent inverts between schemes — a dark green in light mode, a light
+   * sage in dark mode — so a fixed white foreground only works in one of them.
+   * On the dark scheme's accent, white measured 2.06:1, which made the label on
+   * every primary button in the product nearly unreadable. This token flips with
+   * the accent so both schemes clear WCAG AA.
+   */
+  --ffos-on-accent: #ffffff;
 
   --ffos-radius-sm: 8px;
   --ffos-radius-md: 12px;
@@ -40,11 +50,17 @@
   --ffos-border-strong: #45463f;
   --ffos-text-primary: #f3f1ea;
   --ffos-text-secondary: #b7b4ab;
-  --ffos-text-muted: #8a877d;
+  /*
+   * Nudged from #8a877d, which measured 4.40:1 on the elevated surface and so
+   * missed AA for normal text on every route. This clears it on both the base
+   * and elevated surfaces while staying visibly quieter than secondary text.
+   */
+  --ffos-text-muted: #918e84;
   --ffos-positive: #5dba8f;
   --ffos-negative: #e08a7a;
   --ffos-warning: #e0b35c;
   --ffos-info: #7aa7d4;
   --ffos-accent: #8fbfa8;
+  --ffos-on-accent: #10231a;
   --ffos-shadow-soft: 0 1px 2px rgb(0 0 0 / 30%), 0 10px 28px rgb(0 0 0 / 25%);
 }

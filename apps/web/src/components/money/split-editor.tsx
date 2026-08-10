@@ -129,7 +129,7 @@ export function SplitEditor({
           onClick={() => setMode("category")}
           className={`min-h-11 rounded-[12px] px-4 text-sm font-medium ${
             mode === "category"
-              ? "bg-accent text-white"
+              ? "bg-accent text-on-accent"
               : "border border-border bg-surface text-text-secondary"
           }`}
         >
@@ -140,7 +140,7 @@ export function SplitEditor({
           onClick={() => setMode("mortgage")}
           className={`min-h-11 rounded-[12px] px-4 text-sm font-medium ${
             mode === "mortgage"
-              ? "bg-accent text-white"
+              ? "bg-accent text-on-accent"
               : "border border-border bg-surface text-text-secondary"
           }`}
         >
@@ -256,7 +256,7 @@ export function SplitEditor({
         type="button"
         disabled={saveMutation.isPending || !balanced}
         onClick={() => void saveMutation.mutate()}
-        className="min-h-11 rounded-[12px] bg-accent px-4 text-sm font-medium text-white disabled:opacity-60"
+        className="min-h-11 rounded-[12px] bg-accent px-4 text-sm font-medium text-on-accent disabled:opacity-60"
       >
         {saveMutation.isPending ? "Sparar…" : "Spara delning"}
       </button>
