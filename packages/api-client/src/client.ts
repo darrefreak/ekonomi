@@ -913,6 +913,45 @@ export function createApiClient(options: ApiClientOptions) {
       );
       return yearlyReportSchema.parse(data) as YearlyReport;
     },
+    /* ------------------------------------------- bank statement imports */
+
+    /**
+     * Parse and preserve a statement, and return the preview.
+     *
+     * Writes no financial event: the household has confirmed nothing yet.
+     */
+    inspectStatementImport: async (input: {
+      householdId: string;
+      accountId: string;
+      filename: string;
+      contentBase64: string;
+    }) => {
+      return request<StatementImportPreview>("/api/v1/imports/statements/inspect", {
+        method: "POST",
+        body: JSON.stringify(input),
+      });
+    },
+
+    /** Confirm a previewed batch. Returns once queued; poll the batch for progress. */
+    commitStatementImport: async (input: { householdId: string; batchId: string }) => {
+      return request<{ batchId: string; status: string; queued: boolean }>(
+        "/api/v1/imports/statements/commit",
+        { method: "POST", body: JSON.stringify(input) },
+      );
+    },
+
+    getImportHistory: async (householdId: string) => {
+      return request<{ items: ImportHistoryItem[] }>(
+        `/api/v1/imports/history?householdId=${encodeURIComponent(householdId)}`,
+      );
+    },
+
+    getImportBatch: async (householdId: string, batchId: string) => {
+      return request<ImportBatchDetail>(
+        `/api/v1/imports/batches/${encodeURIComponent(batchId)}?householdId=${encodeURIComponent(householdId)}`,
+      );
+    },
+
     getDemoInfo: async () => {
       return request<{
         email: string;
@@ -1351,3 +1390,104 @@ export function createApiClient(options: ApiClientOptions) {
 }
 
 export type ApiClient = ReturnType<typeof createApiClient>;
+
+/* ----------------------------------------------- bank statement imports */
+
+export type StatementBalanceChainStatus =
+  | "RECONCILED"
+  | "RECONCILED_WITH_WARNINGS"
+  | "BROKEN"
+  | "INSUFFICIENT_DATA";
+
+export type StatementPreviewRow = {
+  rowNumber: number;
+  bookingDate: string;
+  text: string;
+  amountMinor: string | null;
+  reportedBalanceMinor: string | null;
+  status: "NEW" | "ALREADY_IMPORTED" | "INVALID";
+  issue?: string;
+  detail?: string;
+};
+
+export type StatementImportPreview = {
+  batchId: string;
+  provider: string;
+  format: string;
+  formatVersion: number;
+  fileName: string;
+  accountId: string;
+  accountName: string;
+  currency: string;
+  periodStart: string | null;
+  periodEnd: string | null;
+  totalRows: number;
+  newRows: number;
+  existingRows: number;
+  invalidRows: number;
+  closingBalanceMinor: string | null;
+  balanceChain: {
+    status: StatementBalanceChainStatus;
+    direction: "ASCENDING" | "DESCENDING" | "UNDETERMINED";
+    rowsChecked: number;
+    rowsReconciled: number;
+    breakCount: number;
+    breaks: Array<{
+      rowNumber: number;
+      bookingDate: string;
+      expectedBalanceMinor: string;
+      reportedBalanceMinor: string;
+      differenceMinor: string;
+    }>;
+  };
+  sample: StatementPreviewRow[];
+  invalidSample: StatementPreviewRow[];
+};
+
+export type ImportHistoryItem = {
+  id: string;
+  provider: string | null;
+  format: string | null;
+  fileName: string | null;
+  startedAt: string;
+  completedAt: string | null;
+  status: string;
+  totalRecords: number;
+  newRecords: number;
+  existingRecords: number;
+  reviewRecords: number;
+  invalidRecords: number;
+  failedCount: number;
+  periodStart: string | null;
+  periodEnd: string | null;
+  balanceChainStatus: string | null;
+  closingBalanceMinor: string | null;
+  accountName: string | null;
+  accountId: string | null;
+};
+
+export type ImportBatchDetail = {
+  id: string;
+  provider: string | null;
+  format: string | null;
+  fileName: string | null;
+  fileHash: string | null;
+  status: string;
+  startedAt: string;
+  completedAt: string | null;
+  accountId: string | null;
+  accountName: string | null;
+  currency: string;
+  periodStart: string | null;
+  periodEnd: string | null;
+  totalRecords: number;
+  newRecords: number;
+  existingRecords: number;
+  reviewRecords: number;
+  invalidRecords: number;
+  failedCount: number;
+  balanceChainStatus: string | null;
+  balanceChain: Record<string, unknown> | null;
+  closingBalanceMinor: string | null;
+  invalidRows: Array<{ rowNumber: number | null; detail: string; issue: string | null }>;
+};

@@ -1,6 +1,7 @@
 import type { JobsOptions } from "bullmq";
 import {
   calculateMetricsJobPayloadSchema,
+  commitStatementImportJobPayloadSchema,
   calculateNetWorthJobPayloadSchema,
   generateAiBriefJobPayloadSchema,
   generateForecastJobPayloadSchema,
@@ -141,6 +142,21 @@ export const jobRegistry: Record<JobType, JobDefinition> = {
     attempts: 2,
     backoff: { type: "exponential", delay: 3_000 },
     timeoutMs: 45_000,
+    buildJobId: defaultAsOfJobId,
+  },
+  COMMIT_STATEMENT_IMPORT: {
+    type: "COMMIT_STATEMENT_IMPORT",
+    payloadSchema: commitStatementImportJobPayloadSchema,
+    queue: QUEUE_NAME,
+    /**
+     * One attempt. The commit is resumable by design — rows already written are
+     * recognised by fingerprint — so a human retry is safer than an automatic
+     * one that races a still-running import.
+     */
+    attempts: 1,
+    backoff: { type: "fixed", delay: 5_000 },
+    /** Thousands of rows, each its own transaction. */
+    timeoutMs: 600_000,
     buildJobId: defaultAsOfJobId,
   },
   PROCESS_DOCUMENT: {

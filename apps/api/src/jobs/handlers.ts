@@ -16,6 +16,7 @@ import { HouseholdAccessService } from "../households/household-access.service";
 import { HouseholdMetricsService } from "../metrics/household-metrics.service";
 import { MetricRegistryService } from "../metrics/metric-registry.service";
 import { IntakeService } from "../intake/intake.service";
+import { StatementImportService } from "../imports/statement-import.service";
 import { AuditService } from "../audit/audit.service";
 import { resolveHouseholdAsOf } from "../common/as-of";
 import { DebtService } from "../debt/debt.service";
@@ -70,6 +71,7 @@ function buildServices() {
   const ledger = new LedgerTruthService(audit);
   const storage = new ObjectStorageService();
   const intake = new IntakeService(access, storage);
+  const statementImports = new StatementImportService(access, storage);
   return {
     access,
     metrics,
@@ -84,6 +86,7 @@ function buildServices() {
     advisor,
     ledger,
     intake,
+    statementImports,
   };
 }
 
@@ -191,6 +194,29 @@ async function executeJob(
         "Scheduled sync job",
       );
       return { syncRunId: result.syncRunId, importBatchId: result.importBatchId };
+    }
+
+    case "COMMIT_STATEMENT_IMPORT": {
+      const userId = await resolveHouseholdActorUserId(payload.householdId);
+      if (!userId || !payload.entityId) {
+        return {
+          skipped: true,
+          reason: !userId ? "no_household_member" : "missing_entityId",
+        };
+      }
+      // The batch's own status carries progress, so a caller that polls sees the
+      // import move through IMPORTING to a terminal state.
+      const result = await services.statementImports.commit(userId, {
+        householdId: payload.householdId,
+        batchId: payload.entityId,
+      });
+      return {
+        batchId: result.batchId,
+        status: result.status,
+        created: result.created,
+        existing: result.existing,
+        failed: result.failed,
+      };
     }
 
     default: {

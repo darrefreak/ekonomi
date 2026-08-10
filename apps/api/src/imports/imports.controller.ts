@@ -38,13 +38,19 @@ export class ImportsController {
     );
   }
 
-  /** Confirm a previewed batch. This is the step that writes to the ledger. */
+  /**
+   * Confirm a previewed batch. This is the step that leads to ledger writes.
+   *
+   * Returns as soon as the work is queued; the batch's status carries progress,
+   * so the client polls `batches/:id` rather than holding a request open for
+   * thousands of rows.
+   */
   @Post("statements/commit")
   commit(
     @CurrentUser() user: AuthenticatedUser,
     @Body(new ZodValidationPipe(commitStatementImportSchema)) body: unknown,
   ) {
-    return this.imports.commit(user.userId, commitStatementImportSchema.parse(body));
+    return this.imports.confirm(user.userId, commitStatementImportSchema.parse(body));
   }
 
   @Get("history")

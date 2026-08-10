@@ -233,8 +233,6 @@ export type SebRowIssue =
   | "INVALID_VALUE_DATE"
   | "INVALID_AMOUNT"
   | "INVALID_AMOUNT_PRECISION"
-  | "INVALID_BALANCE"
-  | "INVALID_BALANCE_PRECISION"
   | "ROW_TOO_LONG";
 
 /** Exactly what SEB provided, with nothing interpreted. */
@@ -247,6 +245,15 @@ export type SebParsedRow = {
   rawDescription: string;
   amountMinor: bigint;
   reportedBalanceAfterMinor: bigint | null;
+  /**
+   * The row is usable, but something about it deserves a person's attention.
+   *
+   * Currently only an unreadable `Saldo`. The amount is the money; the balance is
+   * the bank's evidence about it. Discarding a real transaction because its
+   * evidence field is malformed would lose money data to protect a cross-check,
+   * so the transaction is kept and the balance is dropped instead.
+   */
+  warning?: "UNREADABLE_BALANCE";
 };
 
 export type SebRowResult =
@@ -364,25 +371,15 @@ export function parseSebRow(line: string, rowNumber: number): SebRowResult {
     };
   }
 
-  // Saldo may legitimately be absent on an export without running balances.
+  // Saldo may legitimately be absent on an export without running balances, and
+  // an unreadable one costs the cross-check rather than the transaction.
   const balanceRaw = fields[5]!.trim();
   let reportedBalanceAfterMinor: bigint | null = null;
+  let warning: SebParsedRow["warning"];
   if (balanceRaw) {
     const balance = parseSebAmountToMinor(balanceRaw);
-    if (!balance.ok) {
-      return {
-        ok: false,
-        rowNumber,
-        issue:
-          balance.reason === "PRECISION" ? "INVALID_BALANCE_PRECISION" : "INVALID_BALANCE",
-        payload,
-        detail:
-          balance.reason === "PRECISION"
-            ? `Saldot "${balanceRaw}" har fler decimaler än ören kan uttrycka exakt.`
-            : `Saldot "${balanceRaw.slice(0, 40)}" kunde inte läsas.`,
-      };
-    }
-    reportedBalanceAfterMinor = balance.minor;
+    if (balance.ok) reportedBalanceAfterMinor = balance.minor;
+    else warning = "UNREADABLE_BALANCE";
   }
 
   return {
@@ -396,6 +393,7 @@ export function parseSebRow(line: string, rowNumber: number): SebRowResult {
       rawDescription: fields[3]!,
       amountMinor: amount.minor,
       reportedBalanceAfterMinor,
+      ...(warning ? { warning } : {}),
     },
   };
 }

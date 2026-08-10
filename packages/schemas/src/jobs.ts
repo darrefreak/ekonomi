@@ -111,6 +111,21 @@ export const syncIntegrationJobPayloadSchema = z
   })
   .strict();
 
+/**
+ * Commit a previewed bank-statement import.
+ *
+ * A five-year statement is thousands of rows and takes far longer than a request
+ * should be held open, so confirmation enqueues this and the batch's own status
+ * carries progress. `entityId` is the import batch.
+ */
+export const commitStatementImportJobPayloadSchema = z
+  .object({
+    type: z.literal("COMMIT_STATEMENT_IMPORT"),
+    householdId: uuidSchema,
+    ...jobCommonFields,
+  })
+  .strict();
+
 export const jobPayloadSchema = z.discriminatedUnion("type", [
   healthCheckJobPayloadSchema,
   reconcileAccountBalancesJobPayloadSchema,
@@ -124,6 +139,7 @@ export const jobPayloadSchema = z.discriminatedUnion("type", [
   generateAiBriefJobPayloadSchema,
   processDocumentJobPayloadSchema,
   syncIntegrationJobPayloadSchema,
+  commitStatementImportJobPayloadSchema,
 ]);
 
 export type JobPayload = z.infer<typeof jobPayloadSchema>;

@@ -18,6 +18,7 @@ import {
   sourceTransactions,
 } from "../db/schema-economic";
 import { persistBalancedEvent } from "../db/seed/persist-event";
+import { enqueueJob } from "../jobs/queue";
 import { HouseholdAccessService } from "../households/household-access.service";
 import { ObjectStorageService } from "../storage/object-storage.service";
 import {
@@ -538,6 +539,61 @@ export class StatementImportService {
     };
   }
 
+  /**
+   * Confirm a previewed batch, and hand the work to the worker.
+   *
+   * A five-year statement is thousands of rows, each its own transaction, which
+   * takes far longer than a request should be held open. The batch moves to
+   * IMPORTING here and the caller polls it; `commit` itself is what the worker
+   * runs, and is also callable directly by tests and by a retry.
+   */
+  async confirm(userId: string, input: { householdId: string; batchId: string }) {
+    await this.access.requireMembership(userId, input.householdId);
+    const db = getDb();
+    const [batch] = await db
+      .select()
+      .from(importBatches)
+      .where(
+        and(
+          eq(importBatches.id, input.batchId),
+          eq(importBatches.householdId, input.householdId),
+        ),
+      )
+      .limit(1);
+    if (!batch) {
+      throw new NotFoundException({
+        code: "IMPORT_BATCH_NOT_FOUND",
+        message: "Importen hittades inte.",
+      });
+    }
+    if (!["READY_FOR_REVIEW", "FAILED", "PARTIAL", "IMPORTING"].includes(batch.status)) {
+      throw new BadRequestException({
+        code: "IMPORT_BATCH_NOT_CONFIRMABLE",
+        message: `Importen har status ${batch.status} och kan inte bekräftas.`,
+      });
+    }
+
+    await db
+      .update(importBatches)
+      .set({ status: "IMPORTING", message: null })
+      .where(eq(importBatches.id, batch.id));
+
+    try {
+      await enqueueJob({
+        type: "COMMIT_STATEMENT_IMPORT",
+        householdId: input.householdId,
+        entityId: batch.id,
+        trigger: "import.confirm",
+      });
+      return { batchId: batch.id, status: "IMPORTING" as const, queued: true };
+    } catch {
+      // No queue reachable: do the work inline rather than leave the household
+      // with a batch that says IMPORTING and never moves.
+      const result = await this.commit(userId, input);
+      return { batchId: batch.id, status: result.status, queued: false };
+    }
+  }
+
   /* -------------------------------------------------------------- commit */
 
   /**
@@ -621,7 +677,15 @@ export class StatementImportService {
     const incomeAccountId = await this.systemAccountId(input.householdId, "INCOME");
 
     let created = 0;
-    let existing = 0;
+    /**
+     * Rows this commit skipped because they were already represented.
+     *
+     * Distinct from the batch's own `existingRecords`: a row the file shares with
+     * an earlier import is deduplicated when raw rows are preserved and never
+     * reaches this loop at all, so counting only skips here would report no
+     * overlap for a genuinely overlapping export.
+     */
+    let skipped = 0;
     let failed = 0;
     let review = 0;
 
@@ -665,16 +729,15 @@ export class StatementImportService {
             .update(rawImportRecords)
             .set({ processingStatus: "IGNORED" })
             .where(eq(rawImportRecords.id, record.id));
-          existing += 1;
+          skipped += 1;
           continue;
         }
 
         const row = parsed.row;
-        const reviewReason = await this.reviewReasonFor(
-          input.householdId,
-          account.id,
-          row,
-        );
+        const reviewReason =
+          row.warning === "UNREADABLE_BALANCE"
+            ? "UNREADABLE_BALANCE"
+            : await this.reviewReasonFor(input.householdId, account.id, row);
 
         try {
           const isIncome = row.amountMinor > 0n;
@@ -686,7 +749,7 @@ export class StatementImportService {
               .update(rawImportRecords)
               .set({ processingStatus: "IGNORED" })
               .where(eq(rawImportRecords.id, record.id));
-            existing += 1;
+            skipped += 1;
             continue;
           }
 
@@ -779,6 +842,10 @@ export class StatementImportService {
         .where(eq(accounts.id, account.id));
     }
 
+    // What the whole file amounted to: rows recognised at preservation plus rows
+    // this commit skipped.
+    const existing = (batch.existingRecords ?? 0) + skipped;
+
     const hasWarnings =
       failed > 0 ||
       review > 0 ||
@@ -800,6 +867,7 @@ export class StatementImportService {
         reviewRecords: review,
         newRecords: created,
         existingRecords: existing,
+        message: null,
       })
       .where(eq(importBatches.id, batch.id))
       .returning();
