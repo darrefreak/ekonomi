@@ -10,11 +10,11 @@
         },
         {
           "name": "ffos.accessToken",
-          "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJiMGUyOWI4MC01N2JiLTQyODEtOGE2OS1jN2Y3YTIwZWIwYzAiLCJlbWFpbCI6ImRlbW9AZmZvcy5sb2NhbCIsInR5cCI6ImFjY2VzcyIsImlhdCI6MTc4NjM0ODI5MCwiZXhwIjoxNzg2MzQ5MTkwfQ.1QjoymYHhSurE-nOZ-7uoPM3S8hSTgcGpY-X-jyZuLo"
+          "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJiMGUyOWI4MC01N2JiLTQyODEtOGE2OS1jN2Y3YTIwZWIwYzAiLCJlbWFpbCI6ImRlbW9AZmZvcy5sb2NhbCIsInR5cCI6ImFjY2VzcyIsImlhdCI6MTc4NjM0OTg3OSwiZXhwIjoxNzg2MzUwNzc5fQ._DWavO49u7Jwgle0cO_g66xdwjsubcsj_Yl1230pJ90"
         },
         {
           "name": "ffos.refreshToken",
-          "value": "GmxXAGmizsGPmYIDpwi6BotdLGAogk0jI6a6cK97kxl5AVmZiH73PyW3ztRGWEX6"
+          "value": "rXkh5ZX36X37m6ezUZA7izjKxaw0j3tlzPBFTOah9Tq2Kv6gq3HQgjMW9rKZTt8G"
         }
       ]
     }

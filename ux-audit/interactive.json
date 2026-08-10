@@ -256,5 +256,269 @@
     "where": "/",
     "viewport": "mobile",
     "detail": "dashboard revisited after account creation (values compared manually in the report)"
+  },
+  {
+    "kind": "auth-form",
+    "where": "/login",
+    "viewport": "desktop",
+    "detail": "email {\"type\":\"email\",\"name\":\"email\",\"id\":\"\",\"autocomplete\":\"username\",\"inputmode\":\"email\",\"labelled\":true,\"fontSize\":\"16px\"}"
+  },
+  {
+    "kind": "auth-form",
+    "where": "/login",
+    "viewport": "desktop",
+    "detail": "password {\"type\":\"password\",\"autocomplete\":\"current-password\",\"labelled\":true,\"fontSize\":\"16px\"}"
+  },
+  {
+    "kind": "auth-form",
+    "where": "/login",
+    "viewport": "desktop",
+    "detail": "show/hide password control present: true"
+  },
+  {
+    "kind": "auth-empty-submit",
+    "where": "/login",
+    "viewport": "desktop",
+    "detail": "url=/login visible error: none"
+  },
+  {
+    "kind": "auth-wrong-password",
+    "where": "/login",
+    "viewport": "desktop",
+    "detail": "error=\"\" emailPreserved=true passwordCleared=true"
+  },
+  {
+    "kind": "auth-enter-key",
+    "where": "/login",
+    "viewport": "desktop",
+    "detail": "still on login: true"
+  },
+  {
+    "kind": "auth-valid-login",
+    "where": "/login",
+    "viewport": "desktop",
+    "detail": "landed on / after 259ms"
+  },
+  {
+    "kind": "auth-refresh",
+    "where": "/",
+    "viewport": "desktop",
+    "detail": "after reload path=/"
+  },
+  {
+    "kind": "auth-protected-while-logged-out",
+    "where": "/accounts",
+    "viewport": "desktop",
+    "detail": "path=/login bodyStart=\"Family Financial OS  Logga in för att se hushållets ekonomi.  E-post Lösenord Visa Logga i\""
+  },
+  {
+    "kind": "logout-control",
+    "where": "/settings",
+    "viewport": "desktop",
+    "detail": "logout control found: true"
+  },
+  {
+    "kind": "logout-result",
+    "where": "/settings",
+    "viewport": "desktop",
+    "detail": "path=/login"
+  },
+  {
+    "kind": "logout-then-protected",
+    "where": "/accounts",
+    "viewport": "desktop",
+    "detail": "path=/login"
+  },
+  {
+    "kind": "dead-control",
+    "where": "/accounts",
+    "viewport": "desktop",
+    "detail": "\"Skapa konto\" produced no navigation, no request and no DOM change"
+  },
+  {
+    "kind": "dead-control",
+    "where": "/transactions",
+    "viewport": "desktop",
+    "detail": "\"Utgift\" produced no navigation, no request and no DOM change"
+  },
+  {
+    "kind": "dead-control",
+    "where": "/goals",
+    "viewport": "desktop",
+    "detail": "\"Skapa buffertpost\" produced no navigation, no request and no DOM change"
+  },
+  {
+    "kind": "dead-control",
+    "where": "/settings",
+    "viewport": "desktop",
+    "detail": "\"Bjud in\" produced no navigation, no request and no DOM change"
+  },
+  {
+    "kind": "dead-control",
+    "where": "/settings",
+    "viewport": "desktop",
+    "detail": "\"Redigera\" produced no navigation, no request and no DOM change"
+  },
+  {
+    "kind": "dead-control",
+    "where": "/settings",
+    "viewport": "desktop",
+    "detail": "\"Avbryt\" produced no navigation, no request and no DOM change"
+  },
+  {
+    "kind": "dead-control",
+    "where": "/settings",
+    "viewport": "desktop",
+    "detail": "\"Redigera\" produced no navigation, no request and no DOM change"
+  },
+  {
+    "kind": "dead-control",
+    "where": "/settings",
+    "viewport": "desktop",
+    "detail": "\"Avbryt\" produced no navigation, no request and no DOM change"
+  },
+  {
+    "kind": "dead-control",
+    "where": "/settings",
+    "viewport": "desktop",
+    "detail": "\"Redigera\" produced no navigation, no request and no DOM change"
+  },
+  {
+    "kind": "dead-control",
+    "where": "/settings",
+    "viewport": "desktop",
+    "detail": "\"Avbryt\" produced no navigation, no request and no DOM change"
+  },
+  {
+    "kind": "dead-control",
+    "where": "/settings",
+    "viewport": "desktop",
+    "detail": "\"Redigera\" produced no navigation, no request and no DOM change"
+  },
+  {
+    "kind": "dead-control",
+    "where": "/settings",
+    "viewport": "desktop",
+    "detail": "\"Avbryt\" produced no navigation, no request and no DOM change"
+  },
+  {
+    "kind": "dead-control",
+    "where": "/settings",
+    "viewport": "desktop",
+    "detail": "\"Skapa\" produced no navigation, no request and no DOM change"
+  },
+  {
+    "kind": "mutation-freshness",
+    "where": "/accounts",
+    "viewport": "desktop",
+    "detail": "new account visible without reload: true"
+  },
+  {
+    "kind": "mutation-feedback",
+    "where": "/accounts",
+    "viewport": "desktop",
+    "detail": "form cleared after save: true"
+  },
+  {
+    "kind": "mutation-feedback",
+    "where": "/accounts",
+    "viewport": "desktop",
+    "detail": "visible confirmation element: true"
+  },
+  {
+    "kind": "mutation-freshness",
+    "where": "/",
+    "viewport": "desktop",
+    "detail": "dashboard revisited after account creation (values compared manually in the report)"
+  },
+  {
+    "kind": "auth-form",
+    "where": "/login",
+    "viewport": "mobile",
+    "detail": "email {\"type\":\"email\",\"name\":\"email\",\"id\":\"\",\"autocomplete\":\"username\",\"inputmode\":\"email\",\"labelled\":true,\"fontSize\":\"16px\"}"
+  },
+  {
+    "kind": "auth-form",
+    "where": "/login",
+    "viewport": "mobile",
+    "detail": "password {\"type\":\"password\",\"autocomplete\":\"current-password\",\"labelled\":true,\"fontSize\":\"16px\"}"
+  },
+  {
+    "kind": "auth-form",
+    "where": "/login",
+    "viewport": "mobile",
+    "detail": "show/hide password control present: true"
+  },
+  {
+    "kind": "auth-empty-submit",
+    "where": "/login",
+    "viewport": "mobile",
+    "detail": "url=/login visible error: none"
+  },
+  {
+    "kind": "auth-wrong-password",
+    "where": "/login",
+    "viewport": "mobile",
+    "detail": "error=\"\" emailPreserved=true passwordCleared=true"
+  },
+  {
+    "kind": "auth-enter-key",
+    "where": "/login",
+    "viewport": "mobile",
+    "detail": "still on login: true"
+  },
+  {
+    "kind": "auth-valid-login",
+    "where": "/login",
+    "viewport": "mobile",
+    "detail": "landed on / after 270ms"
+  },
+  {
+    "kind": "auth-refresh",
+    "where": "/",
+    "viewport": "mobile",
+    "detail": "after reload path=/"
+  },
+  {
+    "kind": "auth-protected-while-logged-out",
+    "where": "/accounts",
+    "viewport": "mobile",
+    "detail": "path=/login bodyStart=\"Family Financial OS  Logga in för att se hushållets ekonomi.  E-post Lösenord Visa Logga i\""
+  },
+  {
+    "kind": "logout-control",
+    "where": "/settings",
+    "viewport": "mobile",
+    "detail": "logout control found: true"
+  },
+  {
+    "kind": "logout-result",
+    "where": "/settings",
+    "viewport": "mobile",
+    "detail": "path=/login"
+  },
+  {
+    "kind": "logout-then-protected",
+    "where": "/accounts",
+    "viewport": "mobile",
+    "detail": "path=/login"
+  },
+  {
+    "kind": "dead-control",
+    "where": "/budget",
+    "viewport": "mobile",
+    "detail": "\"Försök igen\" produced no navigation, no request and no DOM change"
+  },
+  {
+    "kind": "dead-control",
+    "where": "/documents",
+    "viewport": "mobile",
+    "detail": "\"Försök igen\" produced no navigation, no request and no DOM change"
+  },
+  {
+    "kind": "mutation-freshness",
+    "where": "/accounts",
+    "viewport": "mobile",
+    "detail": "could not find a labelled name field on the create form"
   }
 ]

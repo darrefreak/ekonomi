@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import {
   DEMO_CREDENTIALS,
   loginWithCredentials,
@@ -42,8 +42,23 @@ function signInMessage(error: unknown): string {
   return describeError(error, "Inloggningen misslyckades. Försök igen.");
 }
 
+/**
+ * Where to go after signing in.
+ *
+ * Only in-product paths are accepted, so a crafted `?next=` cannot bounce
+ * somebody to another site straight after they authenticate.
+ */
+function safeReturnPath(next: string | null): string {
+  if (!next) return "/";
+  if (!next.startsWith("/") || next.startsWith("//")) return "/";
+  if (next.startsWith("/login")) return "/";
+  return next;
+}
+
 export function LoginPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const returnTo = safeReturnPath(searchParams.get("next"));
   const [mode, setMode] = useState<"login" | "register">("login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -61,7 +76,7 @@ export function LoginPage() {
       if (result === "onboarding") {
         router.replace("/onboarding");
       } else {
-        router.replace("/");
+        router.replace(returnTo);
       }
       router.refresh();
     } catch (err) {

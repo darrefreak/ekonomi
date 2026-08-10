@@ -116,9 +116,19 @@ async function auditPage(page: Page, route: string, viewport: string) {
         }
       }
 
-      // Tap targets.
+      // Tap targets. Inline links inside a sentence are exempt (WCAG 2.5.8),
+      // and the skip link is deliberately off-screen until focused.
       for (const el of Array.from(document.querySelectorAll("button, a, [role=button], input[type=checkbox], select"))) {
         if (!visible(el)) continue;
+        if (el.classList.contains("skip-link")) continue;
+        const inSentence = (() => {
+          const parent = el.parentElement;
+          if (!parent) return false;
+          const own = (el as HTMLElement).innerText ?? "";
+          const around = (parent as HTMLElement).innerText ?? "";
+          return around.length > own.length + 12;
+        })();
+        if (el.tagName === "A" && inSentence) continue;
         const rect = el.getBoundingClientRect();
         if (rect.height < 40 || rect.width < 40) {
           const name = accessibleName(el).slice(0, 30);
