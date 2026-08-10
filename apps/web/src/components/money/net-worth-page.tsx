@@ -9,6 +9,7 @@ import { MoneyValue } from "../financial/money-value";
 import { EmptyState } from "../feedback/empty-state";
 import { ErrorState } from "../feedback/error-state";
 import { LoadingState } from "../feedback/loading-state";
+import { describeError } from "@/lib/error-message";
 
 export function NetWorthPage() {
   const [data, setData] = useState<NetWorthResponse | null>(null);
@@ -22,7 +23,7 @@ export function NetWorthPage() {
       const id = await ensureHouseholdSession();
       setData(await api.getNetWorth(id));
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Något gick fel");
+      setError(describeError(err, "Något gick fel"));
       setData(null);
     } finally {
       setLoading(false);

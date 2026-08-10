@@ -1,0 +1,22 @@
+{
+  "cookies": [],
+  "origins": [
+    {
+      "origin": "http://localhost:3000",
+      "localStorage": [
+        {
+          "name": "ffos.householdId",
+          "value": "8ae2abf5-d252-44c6-8731-798441dc0a16"
+        },
+        {
+          "name": "ffos.accessToken",
+          "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJiMGUyOWI4MC01N2JiLTQyODEtOGE2OS1jN2Y3YTIwZWIwYzAiLCJlbWFpbCI6ImRlbW9AZmZvcy5sb2NhbCIsInR5cCI6ImFjY2VzcyIsImlhdCI6MTc4NjM0NjgzMSwiZXhwIjoxNzg2MzQ3NzMxfQ.2cGSYPC7CFquGosjVPcfbJikirYCCpDhpWRAOv4CjR8"
+        },
+        {
+          "name": "ffos.refreshToken",
+          "value": "384HImMb_X9T-Vx6KtSKpxf-MqnqPMemkG-TviRyke1pbMcKJyRG5t9GbapXZCj3"
+        }
+      ]
+    }
+  ]
+}

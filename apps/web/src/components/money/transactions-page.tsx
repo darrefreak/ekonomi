@@ -116,12 +116,15 @@ export function TransactionsPage() {
         <input
           value={q}
           onChange={(e) => setQ(e.target.value)}
+          aria-label="Sök transaktioner"
+          type="search"
           placeholder="Sök merchant, kategori…"
           className="min-h-11 rounded-[12px] border border-border bg-surface-elevated px-3 text-sm lg:col-span-2"
         />
         <select
           value={accountId}
           onChange={(e) => setAccountId(e.target.value)}
+          aria-label="Filtrera på konto"
           className="min-h-11 rounded-[12px] border border-border bg-surface-elevated px-3 text-sm"
         >
           <option value="">Alla konton</option>

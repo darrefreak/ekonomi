@@ -8,6 +8,7 @@ import { ensureHouseholdSession } from "@/lib/session";
 import { EmptyState } from "../feedback/empty-state";
 import { ErrorState } from "../feedback/error-state";
 import { LoadingState } from "../feedback/loading-state";
+import { describeError } from "@/lib/error-message";
 
 export function RiskPage() {
   const [data, setData] = useState<RiskResponse | null>(null);
@@ -21,7 +22,7 @@ export function RiskPage() {
       const id = await ensureHouseholdSession();
       setData(await api.getRisk(id));
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Något gick fel");
+      setError(describeError(err, "Något gick fel"));
       setData(null);
     } finally {
       setLoading(false);

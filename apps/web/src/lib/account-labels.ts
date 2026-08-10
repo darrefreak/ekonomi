@@ -34,7 +34,6 @@ export function accountTypeLabel(accountType: string): string {
   );
 }
 
-export const CURRENCIES = ["SEK", "EUR", "USD", "NOK", "DKK"] as const;
 
 export const PRIVACY_POLICY_LABELS: Record<string, string> = {
   FULL_DETAILS: "Fullständiga detaljer",

@@ -15,6 +15,7 @@ import { MoneyValue } from "../financial/money-value";
 import { EmptyState } from "../feedback/empty-state";
 import { ErrorState } from "../feedback/error-state";
 import { LoadingState } from "../feedback/loading-state";
+import { describeError } from "@/lib/error-message";
 
 const DOC_TYPES = [
   "INVOICE",
@@ -59,7 +60,7 @@ export function DocumentsPage() {
       setAccounts(accs);
       setVehicles(vehs);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Något gick fel");
+      setError(describeError(err, "Något gick fel"));
       setData(null);
     } finally {
       setLoading(false);
@@ -105,7 +106,7 @@ export function DocumentsPage() {
       await load();
       setSelected(created);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Uppladdning misslyckades");
+      setError(describeError(err, "Uppladdning misslyckades"));
     } finally {
       setBusy(false);
     }
@@ -222,6 +223,7 @@ export function DocumentsPage() {
         </div>
         <input
           type="file"
+          aria-label="Välj fil att ladda upp"
           className="block w-full text-sm"
           onChange={(e) => setFile(e.target.files?.[0] ?? null)}
         />

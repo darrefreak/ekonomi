@@ -14,6 +14,7 @@ import { MoneyValue } from "../financial/money-value";
 import { EmptyState } from "../feedback/empty-state";
 import { ErrorState } from "../feedback/error-state";
 import { LoadingState } from "../feedback/loading-state";
+import { describeError } from "@/lib/error-message";
 
 export function AccountDetailPage({ accountId }: { accountId: string }) {
   const householdId = useHouseholdId();
@@ -99,7 +100,7 @@ export function AccountDetailPage({ accountId }: { accountId: string }) {
       ]);
     },
     onError: (err: unknown) => {
-      setActionError(err instanceof Error ? err.message : "Kunde inte spara ändringar.");
+      setActionError(describeError(err, "Kunde inte spara ändringar."));
     },
   });
 
@@ -113,7 +114,7 @@ export function AccountDetailPage({ accountId }: { accountId: string }) {
       router.push("/accounts");
     },
     onError: (err: unknown) => {
-      setActionError(err instanceof Error ? err.message : "Kunde inte arkivera kontot.");
+      setActionError(describeError(err, "Kunde inte arkivera kontot."));
     },
   });
 

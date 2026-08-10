@@ -9,6 +9,7 @@ import { MoneyValue } from "../financial/money-value";
 import { EmptyState } from "../feedback/empty-state";
 import { ErrorState } from "../feedback/error-state";
 import { LoadingState } from "../feedback/loading-state";
+import { describeError } from "@/lib/error-message";
 
 export function ReviewPage() {
   const [householdId, setHouseholdId] = useState<string | null>(null);
@@ -62,7 +63,7 @@ export function ReviewPage() {
       });
       setData(next);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Kunde inte lösa post");
+      setError(describeError(err, "Kunde inte lösa post"));
     } finally {
       setBusyId(null);
     }
@@ -164,6 +165,7 @@ export function ReviewPage() {
               {item.kind === "unknown_transaction" ? (
                 <>
                   <select
+                    aria-label="Välj kategori för posten"
                     className="min-h-11 rounded-[12px] border border-border bg-surface px-3 text-sm"
                     value={categoryPick[item.id] ?? ""}
                     onChange={(e) =>

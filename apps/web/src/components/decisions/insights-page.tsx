@@ -7,6 +7,7 @@ import { api } from "@/lib/api";
 import { ensureHouseholdSession } from "@/lib/session";
 import { ErrorState } from "../feedback/error-state";
 import { LoadingState } from "../feedback/loading-state";
+import { describeError } from "@/lib/error-message";
 
 export function InsightsPage() {
   const [householdId, setHouseholdId] = useState<string | null>(null);
@@ -41,7 +42,7 @@ export function InsightsPage() {
       const next = await api.dismissAnomaly(anomalyId, { householdId });
       setAnomalies(next);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Kunde inte avvisa");
+      setError(describeError(err, "Kunde inte avvisa"));
     } finally {
       setBusyId(null);
     }

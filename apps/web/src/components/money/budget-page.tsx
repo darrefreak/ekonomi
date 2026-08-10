@@ -10,6 +10,7 @@ import { MoneyValue } from "../financial/money-value";
 import { EmptyState } from "../feedback/empty-state";
 import { ErrorState } from "../feedback/error-state";
 import { LoadingState } from "../feedback/loading-state";
+import { describeError } from "@/lib/error-message";
 
 export function BudgetPage() {
   const [householdId, setHouseholdId] = useState<string | null>(null);
@@ -39,7 +40,7 @@ export function BudgetPage() {
         ),
       );
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Något gick fel");
+      setError(describeError(err, "Något gick fel"));
       setData(null);
     } finally {
       setLoading(false);
@@ -74,7 +75,7 @@ export function BudgetPage() {
         ),
       );
     } catch (err) {
-      setActionError(err instanceof Error ? err.message : "Kunde inte spara");
+      setActionError(describeError(err, "Kunde inte spara"));
     } finally {
       setSavingId(null);
     }
@@ -101,7 +102,7 @@ export function BudgetPage() {
       );
     } catch (err) {
       setActionError(
-        err instanceof Error ? err.message : "Kunde inte skapa budget",
+        describeError(err, "Kunde inte skapa budget"),
       );
     } finally {
       setCreating(false);

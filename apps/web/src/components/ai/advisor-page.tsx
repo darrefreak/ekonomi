@@ -13,6 +13,7 @@ import { MoneyValue } from "../financial/money-value";
 import { EmptyState } from "../feedback/empty-state";
 import { ErrorState } from "../feedback/error-state";
 import { LoadingState } from "../feedback/loading-state";
+import { describeError } from "@/lib/error-message";
 
 type ChatTurn = {
   role: "user" | "assistant";
@@ -55,7 +56,7 @@ export function AdvisorPage() {
       setData(brief);
       setOutcomes(outs);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Något gick fel");
+      setError(describeError(err, "Något gick fel"));
       setData(null);
     } finally {
       setLoading(false);
@@ -210,6 +211,7 @@ export function AdvisorPage() {
           <input
             className="min-h-11 min-w-[16rem] flex-1 rounded-[12px] border border-border bg-surface px-3 text-sm"
             value={chatInput}
+            aria-label="Din fråga till rådgivaren"
             placeholder="Ställ en fråga…"
             onChange={(e) => setChatInput(e.target.value)}
             onKeyDown={(e) => {

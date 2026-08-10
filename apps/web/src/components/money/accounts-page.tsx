@@ -16,6 +16,7 @@ import { MoneyValue } from "../financial/money-value";
 import { EmptyState } from "../feedback/empty-state";
 import { ErrorState } from "../feedback/error-state";
 import { LoadingState } from "../feedback/loading-state";
+import { describeError } from "@/lib/error-message";
 
 type FormState = {
   name: string;
@@ -107,7 +108,7 @@ export function AccountsPage() {
       ]);
     },
     onError: (err: unknown) => {
-      setFormError(err instanceof Error ? err.message : "Kunde inte skapa konto.");
+      setFormError(describeError(err, "Kunde inte skapa konto."));
     },
   });
 

@@ -9,6 +9,7 @@ import { DashboardView } from "./dashboard-view";
 import { EmptyState } from "../feedback/empty-state";
 import { ErrorState } from "../feedback/error-state";
 import { LoadingState } from "../feedback/loading-state";
+import { describeError } from "@/lib/error-message";
 
 export function DashboardPage() {
   const router = useRouter();
@@ -24,7 +25,7 @@ export function DashboardPage() {
       const dashboard = await api.getDashboard(householdId);
       setData(dashboard);
     } catch (err) {
-      const message = err instanceof Error ? err.message : "Något gick fel";
+      const message = describeError(err, "Något gick fel");
       if (
         err instanceof AuthRequiredError ||
         /unauthorized|jwt|token|401/i.test(message)

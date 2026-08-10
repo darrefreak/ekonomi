@@ -9,6 +9,7 @@ import { MoneyValue } from "../financial/money-value";
 import { EmptyState } from "../feedback/empty-state";
 import { ErrorState } from "../feedback/error-state";
 import { LoadingState } from "../feedback/loading-state";
+import { describeError } from "@/lib/error-message";
 
 export function AssetsPage() {
   const [data, setData] = useState<AssetsResponse | null>(null);
@@ -22,7 +23,7 @@ export function AssetsPage() {
       const id = await ensureHouseholdSession();
       setData(await api.getAssets(id));
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Något gick fel");
+      setError(describeError(err, "Något gick fel"));
       setData(null);
     } finally {
       setLoading(false);

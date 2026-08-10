@@ -81,6 +81,25 @@ body {
   border-width: 0;
 }
 
+/*
+ * Form controls never render below 16px.
+ *
+ * iOS Safari zooms the whole page when a focused input's font is smaller than
+ * 16px, and it does not zoom back out. Most inputs in the product inherit
+ * `text-sm` (14px) from their surrounding label, so every form did this: tap a
+ * field, the layout jumps, and the rest of the form is off-screen. Setting it
+ * once here fixes all of them, which is also the only way to keep it fixed as
+ * new forms are added.
+ *
+ * The visual difference on desktop is slight; the mobile difference is the
+ * product being usable one-handed.
+ */
+input,
+select,
+textarea {
+  font-size: 1rem;
+}
+
 @media (max-width: 767px) {
   body {
     padding-bottom: env(safe-area-inset-bottom, 0);

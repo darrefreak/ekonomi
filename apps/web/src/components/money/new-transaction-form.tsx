@@ -10,6 +10,7 @@ import { ensureHouseholdSession } from "@/lib/session";
 import { useSubmissionKey } from "@/lib/idempotency";
 import { kronorToMinorString } from "@/lib/money-input";
 import { queryKeys } from "@/lib/query-keys";
+import { describeError } from "@/lib/error-message";
 
 const CASH_LIKE_TYPES = new Set(["CHECKING", "SAVINGS", "CASH"]);
 const CREDIT_CARD_TYPES = new Set(["CREDIT_CARD"]);
@@ -254,7 +255,7 @@ export function NewTransactionForm({
       onDone();
     },
     onError: (err: unknown) => {
-      setFormError(err instanceof Error ? err.message : "Kunde inte skapa händelsen.");
+      setFormError(describeError(err, "Kunde inte skapa händelsen."));
     },
   });
 

@@ -10,6 +10,7 @@ import { EmptyState } from "../feedback/empty-state";
 import { ErrorState } from "../feedback/error-state";
 import { LoadingState } from "../feedback/loading-state";
 import { VehicleDetailNav, VehicleHouseholdNav } from "./vehicle-subnav";
+import { describeError } from "@/lib/error-message";
 
 export type MarketFocus =
   | "market"
@@ -89,7 +90,7 @@ export function VehicleMarketPage({
       await reload(householdId, vehicleId);
       setNewName("");
     } catch (err) {
-      setFormError(err instanceof Error ? err.message : "Kunde inte skapa");
+      setFormError(describeError(err, "Kunde inte skapa"));
     }
   }
 
@@ -100,7 +101,7 @@ export function VehicleMarketPage({
       await api.archiveVehicleCandidate(householdId, candidateId);
       await reload(householdId, vehicleId);
     } catch (err) {
-      setFormError(err instanceof Error ? err.message : "Kunde inte arkivera");
+      setFormError(describeError(err, "Kunde inte arkivera"));
     }
   }
 

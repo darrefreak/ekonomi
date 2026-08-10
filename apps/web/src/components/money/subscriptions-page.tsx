@@ -7,6 +7,7 @@ import { ensureHouseholdSession } from "@/lib/session";
 import { MoneyValue } from "../financial/money-value";
 import { ErrorState } from "../feedback/error-state";
 import { LoadingState } from "../feedback/loading-state";
+import { describeError } from "@/lib/error-message";
 
 type RecurringStatus = "CONFIRMED" | "DISMISSED" | "PAUSED" | "DETECTED";
 
@@ -40,7 +41,7 @@ export function SubscriptionsPage() {
       });
       setData(next);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Kunde inte uppdatera");
+      setError(describeError(err, "Kunde inte uppdatera"));
     } finally {
       setBusyId(null);
     }

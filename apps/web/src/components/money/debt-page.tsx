@@ -8,6 +8,7 @@ import { MoneyValue } from "../financial/money-value";
 import { EmptyState } from "../feedback/empty-state";
 import { ErrorState } from "../feedback/error-state";
 import { LoadingState } from "../feedback/loading-state";
+import { describeError } from "@/lib/error-message";
 
 export function DebtPage() {
   const [householdId, setHouseholdId] = useState<string | null>(null);
@@ -32,7 +33,7 @@ export function DebtPage() {
         setSelectedId(firstMortgage.id);
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Något gick fel");
+      setError(describeError(err, "Något gick fel"));
       setData(null);
     } finally {
       setLoading(false);

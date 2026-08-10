@@ -15,10 +15,11 @@ import {
 import { useHouseholdId } from "@/lib/use-household-id";
 import { queryKeys } from "@/lib/query-keys";
 import { minorToKronorInput, kronorToMinorString } from "@/lib/money-input";
-import { CURRENCIES, MEMBER_ROLE_LABELS, PRIVACY_POLICY_LABELS } from "@/lib/account-labels";
+import { MEMBER_ROLE_LABELS, PRIVACY_POLICY_LABELS } from "@/lib/account-labels";
 import { ErrorState } from "../feedback/error-state";
 import { LoadingState } from "../feedback/loading-state";
 import { writeStoredAppearance } from "../providers/theme-applicator";
+import { describeError } from "@/lib/error-message";
 
 const POLICY_OPTIONS = [
   "FULL_DETAILS",
@@ -106,15 +107,7 @@ export function SettingsPage() {
         onError={setError}
       />
 
-      <CurrencySection
-        data={data}
-        onSaved={async () => {
-          setMessage("Valuta sparad.");
-          setError(null);
-          await invalidateSettings();
-        }}
-        onError={setError}
-      />
+      <CurrencySection data={data} />
 
       <PoliciesSection
         data={data}
@@ -350,7 +343,7 @@ function HouseholdSection({
       await onSaved();
     },
     onError: (err: unknown) => {
-      onError(err instanceof Error ? err.message : "Kunde inte spara hushållet");
+      onError(describeError(err, "Kunde inte spara hushållet"));
     },
   });
 
@@ -424,7 +417,7 @@ function MembersSection({
       await onChanged("Sekretesspolicy uppdaterad.");
     },
     onError: (err: unknown) => {
-      onError(err instanceof Error ? err.message : "Kunde inte uppdatera policyn");
+      onError(describeError(err, "Kunde inte uppdatera policyn"));
     },
   });
 
@@ -527,6 +520,7 @@ function MembersSection({
                 </span>
               ) : (
                 <select
+                  aria-label={`Roll för ${m.displayName ?? "medlemmen"}`}
                   className="min-h-11 rounded-[12px] border border-border bg-surface px-3 text-sm"
                   value={m.role}
                   disabled={updateRoleMutation.isPending}
@@ -545,6 +539,7 @@ function MembersSection({
                 </select>
               )}
               <select
+                aria-label={`Insyn i personliga uppgifter för ${m.displayName ?? "medlemmen"}`}
                 className="min-h-11 rounded-[12px] border border-border bg-surface px-3 text-sm"
                 value={m.personalDataPolicy}
                 disabled={updatePolicyMutation.isPending}
@@ -618,11 +613,14 @@ function MembersSection({
             type="email"
             required
             value={inviteEmail}
+            aria-label="E-post till den du bjuder in"
+            autoComplete="off"
             onChange={(e) => setInviteEmail(e.target.value)}
             placeholder="namn@example.com"
             className="min-h-11 rounded-[12px] border border-border bg-surface px-3 text-sm"
           />
           <select
+            aria-label="Roll för inbjudan"
             value={inviteRole}
             onChange={(e) => setInviteRole(e.target.value as (typeof INVITE_ROLES)[number])}
             className="min-h-11 rounded-[12px] border border-border bg-surface px-3 text-sm"
@@ -646,63 +644,34 @@ function MembersSection({
   );
 }
 
-function CurrencySection({
-  data,
-  onSaved,
-  onError,
-}: {
-  data: SettingsResponse;
-  onSaved: () => Promise<void>;
-  onError: (msg: string | null) => void;
-}) {
-  const [currency, setCurrency] = useState(data.financialPolicies.currency);
+function CurrencySection({ data }: { data: SettingsResponse }) {
+  const currency = data.financialPolicies.currency;
 
-  useEffect(() => {
-    setCurrency(data.financialPolicies.currency);
-  }, [data.financialPolicies.currency]);
-
-  const saveMutation = useMutation({
-    mutationFn: async () => {
-      const id = await ensureHouseholdSession();
-      return api.updateSettings({
-        householdId: id,
-        financialPolicies: { currency: currency as (typeof CURRENCIES)[number] },
-      });
-    },
-    onSuccess: async () => {
-      onError(null);
-      await onSaved();
-    },
-    onError: (err: unknown) => {
-      onError(err instanceof Error ? err.message : "Kunde inte spara valutan");
-    },
-  });
-
+  /*
+   * The household's currency is stated, not chosen.
+   *
+   * This was a selector offering EUR, USD, NOK and DKK, labelled "Hushållets
+   * basvaluta" — while a household's base currency is immutable and the engine
+   * can only aggregate SEK. Choosing another wrote a *different* field
+   * (`financialPolicies.currency`), so the control both misnamed itself and
+   * could not do what it appeared to offer. Same reasoning as the account form.
+   */
   return (
     <section className="space-y-3 rounded-[16px] bg-surface-elevated p-5">
       <h2 className="text-sm text-text-secondary">Valuta</h2>
-      <label className="block text-sm">
+      <div className="block text-sm">
         <span className="text-text-muted">Hushållets basvaluta</span>
-        <select
-          className="mt-1 min-h-11 w-full max-w-xs rounded-[12px] border border-border bg-surface px-3"
-          value={currency}
-          onChange={(e) => setCurrency(e.target.value)}
+        <div
+          data-testid="settings-base-currency"
+          className="mt-1 flex min-h-11 w-full max-w-xs items-center rounded-[12px] border border-border bg-surface-muted px-3 text-text"
         >
-          {CURRENCIES.map((c) => (
-            <option key={c} value={c}>
-              {c}
-            </option>
-          ))}
-        </select>
-      </label>
-      <button
-        type="button"
-        disabled={saveMutation.isPending}
-        className="min-h-11 rounded-[12px] bg-accent px-4 text-sm text-white disabled:opacity-60"
-        onClick={() => void saveMutation.mutate()}
-      >
-        {saveMutation.isPending ? "Sparar…" : "Spara"}
-      </button>
+          {currency}
+        </div>
+        <p className="mt-1 text-xs text-text-muted">
+          Alla summor räknas i {currency}. Valutan kan inte ändras för ett
+          hushåll som redan innehåller bokföring. Fler valutor kommer senare.
+        </p>
+      </div>
     </section>
   );
 }
@@ -794,7 +763,7 @@ function PoliciesSection({
       await onSaved();
     },
     onError: (err: unknown) => {
-      onError(err instanceof Error ? err.message : "Kunde inte spara policyerna");
+      onError(describeError(err, "Kunde inte spara policyerna"));
     },
   });
 
@@ -1052,10 +1021,12 @@ function CategoriesSection({
           required
           value={name}
           onChange={(e) => setName(e.target.value)}
+          aria-label="Namn på ny kategori"
           placeholder="Ny kategori"
           className="min-h-11 rounded-[12px] border border-border bg-surface px-3 text-sm"
         />
         <select
+          aria-label="Typ av kategori"
           value={kind}
           onChange={(e) =>
             setKind(e.target.value as "expense" | "income" | "transfer" | "other")
@@ -1097,7 +1068,7 @@ function SecuritySection({ router }: { router: ReturnType<typeof useRouter> }) {
               .revokeAll()
               .then(() => setMsg("Alla sessioner återkallade. Loggar ut…"))
               .catch((err: unknown) =>
-                setMsg(err instanceof Error ? err.message : "Kunde inte återkalla sessioner"),
+                setMsg(describeError(err, "Kunde inte återkalla sessioner")),
               )
               .finally(async () => {
                 setBusy(null);
@@ -1151,7 +1122,7 @@ function PrivacySection({ householdId }: { householdId: string }) {
       URL.revokeObjectURL(url);
       setMsg("Personlig data exporterad.");
     } catch (err) {
-      setMsg(err instanceof Error ? err.message : "Export misslyckades");
+      setMsg(describeError(err, "Export misslyckades"));
     } finally {
       setBusy(false);
     }
@@ -1169,7 +1140,7 @@ function PrivacySection({ householdId }: { householdId: string }) {
       setMsg(`Raderingsbegäran registrerad (${req.status}).`);
       await requestsQuery.refetch();
     } catch (err) {
-      setMsg(err instanceof Error ? err.message : "Begäran misslyckades");
+      setMsg(describeError(err, "Begäran misslyckades"));
     } finally {
       setBusy(false);
     }
@@ -1252,7 +1223,7 @@ function HouseholdCurrencyRemediation({ householdId }: { householdId: string }) 
       setMessage("Hushållet räknar nu i SEK. Du kan lägga till konton igen.");
       await queryClient.invalidateQueries({ queryKey: ["households", "list"] });
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Bytet misslyckades");
+      setError(describeError(err, "Bytet misslyckades"));
     } finally {
       setBusy(false);
     }
@@ -1347,7 +1318,7 @@ function HouseholdErasure({
       setConfirmation("");
       onChanged();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Raderingen misslyckades");
+      setError(describeError(err, "Raderingen misslyckades"));
     } finally {
       setBusy(false);
     }
@@ -1453,7 +1424,7 @@ function AppearanceSection({
       await onSaved();
     },
     onError: (err: unknown) => {
-      onError(err instanceof Error ? err.message : "Kunde inte spara utseendet");
+      onError(describeError(err, "Kunde inte spara utseendet"));
     },
   });
 
@@ -1464,6 +1435,7 @@ function AppearanceSection({
         Tillämpas direkt på ytor och text via design tokens (system följer OS).
       </p>
       <select
+        aria-label="Utseende"
         className="min-h-11 w-full max-w-xs rounded-[12px] border border-border bg-surface px-3 text-sm"
         value={appearance}
         onChange={(e) => setAppearance(e.target.value as "system" | "light" | "dark")}
@@ -1506,7 +1478,7 @@ function DemoSection({
       router.replace("/");
       router.refresh();
     } catch (err) {
-      onError(err instanceof Error ? err.message : "Demo-laddning misslyckades");
+      onError(describeError(err, "Demo-laddning misslyckades"));
     } finally {
       setDemoBusy(false);
     }

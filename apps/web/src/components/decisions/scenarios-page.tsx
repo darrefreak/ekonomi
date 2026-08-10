@@ -12,6 +12,7 @@ import { MoneyValue } from "../financial/money-value";
 import { EmptyState } from "../feedback/empty-state";
 import { ErrorState } from "../feedback/error-state";
 import { LoadingState } from "../feedback/loading-state";
+import { describeError } from "@/lib/error-message";
 
 export function ScenariosPage() {
   const [householdId, setHouseholdId] = useState<string | null>(null);
@@ -37,7 +38,7 @@ export function ScenariosPage() {
       setHouseholdId(id);
       setData(await api.getScenarios(id));
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Något gick fel");
+      setError(describeError(err, "Något gick fel"));
       setData(null);
     } finally {
       setLoading(false);
@@ -74,7 +75,7 @@ export function ScenariosPage() {
       setName("");
       setDescription("");
     } catch (err) {
-      setActionError(err instanceof Error ? err.message : "Kunde inte skapa");
+      setActionError(describeError(err, "Kunde inte skapa"));
     } finally {
       setBusyKey(null);
     }
@@ -89,7 +90,7 @@ export function ScenariosPage() {
       setSimulation(result);
       setData(await api.getScenarios(householdId));
     } catch (err) {
-      setActionError(err instanceof Error ? err.message : "Simulering misslyckades");
+      setActionError(describeError(err, "Simulering misslyckades"));
     } finally {
       setBusyKey(null);
     }
@@ -141,12 +142,14 @@ export function ScenariosPage() {
         <input
           value={name}
           onChange={(e) => setName(e.target.value)}
+          aria-label="Namn på scenario"
           placeholder="Namn (t.ex. Inkomstbortfall)"
           className="min-h-11 w-full rounded-[12px] border border-border bg-surface px-3 text-sm"
         />
         <input
           value={description}
           onChange={(e) => setDescription(e.target.value)}
+          aria-label="Beskrivning av scenario"
           placeholder="Beskrivning"
           className="min-h-11 w-full rounded-[12px] border border-border bg-surface px-3 text-sm"
         />

@@ -124,8 +124,12 @@ services:
     build:
       context: .
       dockerfile: infrastructure/docker/Dockerfile.web
+      args:
+        # Development keeps the demo sign-in shortcut; the pilot does not.
+        NEXT_PUBLIC_FFOS_SHOW_DEMO: "true"
     environment:
       NEXT_PUBLIC_API_URL: http://localhost:3001
+      NEXT_PUBLIC_FFOS_SHOW_DEMO: "true"
     ports:
       - "3000:3000"
     depends_on:

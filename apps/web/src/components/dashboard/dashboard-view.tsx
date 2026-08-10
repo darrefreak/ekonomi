@@ -22,7 +22,7 @@ export function DashboardView({ data }: { data: DashboardResponse }) {
           {data.householdName}
         </h1>
         <p className="mt-2 text-sm text-text-secondary">
-          Finansiell position · {data.freshnessLabel} · as of {data.asOf}
+          Finansiell position · {data.freshnessLabel} · per {data.asOf}
         </p>
       </div>
 

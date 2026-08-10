@@ -6,6 +6,7 @@ import { api } from "@/lib/api";
 import { useSubmissionKey } from "@/lib/idempotency";
 import { kronorToMinorString } from "@/lib/money-input";
 import { ensureHouseholdSession } from "@/lib/session";
+import { describeError } from "@/lib/error-message";
 
 const CASH_LIKE = new Set(["CHECKING", "SAVINGS", "CASH"]);
 
@@ -137,7 +138,7 @@ export function AddVehicleForm({
       submissionKey.renew();
       onCreated(vehicle.id);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Kunde inte spara fordonet.");
+      setError(describeError(err, "Kunde inte spara fordonet."));
     } finally {
       setPending(false);
     }

@@ -12,6 +12,7 @@ import { MoneyValue } from "../financial/money-value";
 import { EmptyState } from "../feedback/empty-state";
 import { ErrorState } from "../feedback/error-state";
 import { LoadingState } from "../feedback/loading-state";
+import { describeError } from "@/lib/error-message";
 
 const GOAL_TYPES = [
   "EMERGENCY_FUND",
@@ -86,7 +87,7 @@ export function GoalsPage() {
       await invalidate();
     },
     onError: (err: unknown) => {
-      setActionError(err instanceof Error ? err.message : "Kunde inte bidra");
+      setActionError(describeError(err, "Kunde inte bidra"));
     },
   });
 
@@ -105,7 +106,7 @@ export function GoalsPage() {
       await invalidate();
     },
     onError: (err: unknown) => {
-      setActionError(err instanceof Error ? err.message : "Kunde inte bidra");
+      setActionError(describeError(err, "Kunde inte bidra"));
     },
   });
 
@@ -138,7 +139,7 @@ export function GoalsPage() {
       await invalidate();
     },
     onError: (err: unknown) => {
-      setActionError(err instanceof Error ? err.message : "Kunde inte skapa mål");
+      setActionError(describeError(err, "Kunde inte skapa mål"));
     },
   });
 
@@ -165,7 +166,7 @@ export function GoalsPage() {
       await invalidate();
     },
     onError: (err: unknown) => {
-      setActionError(err instanceof Error ? err.message : "Kunde inte skapa fond");
+      setActionError(describeError(err, "Kunde inte skapa fond"));
     },
   });
 
@@ -214,12 +215,14 @@ export function GoalsPage() {
           <input
             value={newGoalName}
             onChange={(e) => setNewGoalName(e.target.value)}
+            aria-label="Namn på nytt mål"
             placeholder="Namn"
             className="min-h-11 rounded-[12px] border border-border bg-surface px-3 text-sm"
           />
           <select
             value={newGoalType}
             onChange={(e) => setNewGoalType(e.target.value as (typeof GOAL_TYPES)[number])}
+            aria-label="Typ av mål"
             className="min-h-11 rounded-[12px] border border-border bg-surface px-3 text-sm"
           >
             {GOAL_TYPES.map((t) => (
@@ -385,6 +388,7 @@ export function GoalsPage() {
           <input
             value={newFundName}
             onChange={(e) => setNewFundName(e.target.value)}
+            aria-label="Namn på ny buffertpost"
             placeholder="Namn"
             className="min-h-11 rounded-[12px] border border-border bg-surface px-3 text-sm"
           />
@@ -392,6 +396,7 @@ export function GoalsPage() {
             inputMode="decimal"
             value={newFundTarget}
             onChange={(e) => setNewFundTarget(e.target.value)}
+            aria-label="Målbelopp för buffertposten"
             placeholder="Mål"
             className="min-h-11 rounded-[12px] border border-border bg-surface px-3 text-sm tabular-nums"
           />
@@ -399,6 +404,7 @@ export function GoalsPage() {
             inputMode="decimal"
             value={newFundMonthly}
             onChange={(e) => setNewFundMonthly(e.target.value)}
+            aria-label="Månadsbelopp för buffertposten"
             placeholder="/ mån"
             className="min-h-11 rounded-[12px] border border-border bg-surface px-3 text-sm tabular-nums"
           />
@@ -543,7 +549,7 @@ function GoalEditForm({
       onClose();
     },
     onError: (err: unknown) => {
-      onError(err instanceof Error ? err.message : "Kunde inte spara målet");
+      onError(describeError(err, "Kunde inte spara målet"));
     },
   });
 
@@ -678,7 +684,7 @@ function SinkingFundEditForm({
       onClose();
     },
     onError: (err: unknown) => {
-      onError(err instanceof Error ? err.message : "Kunde inte spara sinking funden");
+      onError(describeError(err, "Kunde inte spara sinking funden"));
     },
   });
 

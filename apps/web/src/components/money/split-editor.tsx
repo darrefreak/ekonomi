@@ -6,6 +6,7 @@ import type { CategoriesResponse } from "@ffos/schemas";
 import { api } from "@/lib/api";
 import { kronorToMinorString, minorToKronorInput } from "@/lib/money-input";
 import { queryKeys } from "@/lib/query-keys";
+import { describeError } from "@/lib/error-message";
 
 type SplitRow = {
   key: string;
@@ -113,7 +114,7 @@ export function SplitEditor({
     },
     onError: (err: unknown) => {
       setSavedMsg(null);
-      setFormError(err instanceof Error ? err.message : "Kunde inte spara delningen.");
+      setFormError(describeError(err, "Kunde inte spara delningen."));
     },
   });
 

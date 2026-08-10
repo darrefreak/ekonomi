@@ -10,6 +10,7 @@ import {
   setHouseholdAfterCreate,
 } from "@/lib/session";
 import { kronorToMinorString } from "@/lib/money-input";
+import { describeError } from "@/lib/error-message";
 
 type Step = 0 | 1 | 2 | 3;
 
@@ -60,7 +61,7 @@ export function OnboardingPage() {
       });
       setStep(3);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Kunde inte skapa hushåll");
+      setError(describeError(err, "Kunde inte skapa hushåll"));
     } finally {
       setBusy(false);
     }
@@ -86,7 +87,7 @@ export function OnboardingPage() {
       router.replace("/");
       router.refresh();
     } catch (err) {
-      const message = err instanceof Error ? err.message : "";
+      const message = describeError(err, "");
       setError(
         /forbidden|disabled|403/i.test(message)
           ? "Demodata är avstängt i den här installationen, som innehåller riktiga uppgifter. Välj “Börja tomt”."

@@ -12,6 +12,7 @@ import { ErrorState } from "../feedback/error-state";
 import { LoadingState } from "../feedback/loading-state";
 import { MerchantPicker } from "./merchant-picker";
 import { SplitEditor } from "./split-editor";
+import { describeError } from "@/lib/error-message";
 
 export function TransactionDetailPage({ transactionId }: { transactionId: string }) {
   const householdId = useHouseholdId();
@@ -96,7 +97,7 @@ export function TransactionDetailPage({ transactionId }: { transactionId: string
       await invalidateAfterMutation();
     },
     onError: (err: unknown) => {
-      setActionError(err instanceof Error ? err.message : "Kunde inte spara");
+      setActionError(describeError(err, "Kunde inte spara"));
     },
   });
 
@@ -123,7 +124,7 @@ export function TransactionDetailPage({ transactionId }: { transactionId: string
       await invalidateAfterMutation();
     },
     onError: (err: unknown) => {
-      setActionError(err instanceof Error ? err.message : "Kunde inte skapa återbetalning");
+      setActionError(describeError(err, "Kunde inte skapa återbetalning"));
     },
   });
 
@@ -157,7 +158,7 @@ export function TransactionDetailPage({ transactionId }: { transactionId: string
     },
     onError: (err: unknown) => {
       setActionError(
-        err instanceof Error ? err.message : "Kunde inte omklassificera transaktionen",
+        describeError(err, "Kunde inte omklassificera transaktionen"),
       );
     },
   });

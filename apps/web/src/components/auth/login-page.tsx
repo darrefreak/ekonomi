@@ -8,17 +8,52 @@ import {
   loginWithDemo,
   registerWithCredentials,
 } from "@/lib/session";
+import { describeError } from "@/lib/error-message";
+
+/**
+ * Whether this build offers the shared demo account.
+ *
+ * The form used to arrive with `demo@ffos.local` and its password already typed
+ * in, and printed both under the form. In a deployment holding a real
+ * household's finances that is somebody else's credentials on the sign-in
+ * screen, and a pre-filled password field also stops a password manager from
+ * doing its job. Demo affordances are now opt-in per build, and off unless a
+ * deployment asks for them.
+ */
+const SHOW_DEMO = process.env.NEXT_PUBLIC_FFOS_SHOW_DEMO === "true";
+
+/**
+ * Sign-in failures in the participant's language.
+ *
+ * The API answers a bad password with `Invalid credentials`, and that English
+ * string was rendered verbatim inside an otherwise Swedish product. A person
+ * mistyping a password should not be told anything about the backend.
+ */
+function signInMessage(error: unknown): string {
+  const raw = error instanceof Error ? error.message : "";
+  // Registering with a taken address deserves more precise wording than the
+  // shared mapping's generic "there is already a record with those details".
+  if (/already exists|conflict|409/i.test(raw)) {
+    return "Det finns redan ett konto med den e-postadressen.";
+  }
+  if (/invalid credentials|unauthorized|401/i.test(raw)) {
+    return "Fel e-post eller lösenord. Försök igen.";
+  }
+  return describeError(error, "Inloggningen misslyckades. Försök igen.");
+}
 
 export function LoginPage() {
   const router = useRouter();
   const [mode, setMode] = useState<"login" | "register">("login");
-  const [email, setEmail] = useState<string>(DEMO_CREDENTIALS.email);
-  const [password, setPassword] = useState<string>(DEMO_CREDENTIALS.password);
-  const [displayName, setDisplayName] = useState("Ny användare");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [displayName, setDisplayName] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
   async function submit(action: () => Promise<string | "onboarding">) {
+    if (loading) return;
     setLoading(true);
     setError(null);
     try {
@@ -30,7 +65,9 @@ export function LoginPage() {
       }
       router.refresh();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Inloggningen misslyckades");
+      // The email stays; only the password is cleared, so a retry is one field.
+      setPassword("");
+      setError(signInMessage(err));
     } finally {
       setLoading(false);
     }
@@ -69,7 +106,10 @@ export function LoginPage() {
             <span className="text-text-secondary">Namn</span>
             <input
               type="text"
+              name="name"
+              autoComplete="name"
               required
+              placeholder="Ditt namn"
               value={displayName}
               onChange={(e) => setDisplayName(e.target.value)}
               className="min-h-11 w-full rounded-[12px] border border-border bg-surface px-3 text-text-primary"
@@ -83,7 +123,12 @@ export function LoginPage() {
             type="email"
             name="email"
             autoComplete="username"
+            inputMode="email"
+            autoCapitalize="none"
+            spellCheck={false}
             required
+            autoFocus
+            placeholder="namn@exempel.se"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             className="min-h-11 w-full rounded-[12px] border border-border bg-surface px-3 text-text-primary"
@@ -92,17 +137,27 @@ export function LoginPage() {
 
         <label className="block space-y-1.5 text-sm">
           <span className="text-text-secondary">Lösenord</span>
-          <input
-            type="password"
-            name="password"
-            autoComplete={
-              mode === "register" ? "new-password" : "current-password"
-            }
-            required
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className="min-h-11 w-full rounded-[12px] border border-border bg-surface px-3 text-text-primary"
-          />
+          <div className="relative">
+            <input
+              type={showPassword ? "text" : "password"}
+              name="password"
+              autoComplete={
+                mode === "register" ? "new-password" : "current-password"
+              }
+              required
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="min-h-11 w-full rounded-[12px] border border-border bg-surface pl-3 pr-24 text-text-primary"
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword((shown) => !shown)}
+              aria-pressed={showPassword}
+              className="absolute right-1 top-1/2 min-h-11 -translate-y-1/2 rounded-[10px] px-3 text-sm text-accent"
+            >
+              {showPassword ? "Dölj" : "Visa"}
+            </button>
+          </div>
         </label>
 
         {error ? (
@@ -123,7 +178,7 @@ export function LoginPage() {
               : "Skapa konto"}
         </button>
 
-        {mode === "login" ? (
+        {mode === "login" && SHOW_DEMO ? (
           <button
             type="button"
             disabled={loading}
@@ -147,9 +202,11 @@ export function LoginPage() {
         </button>
       </form>
 
-      <p className="mt-4 text-xs text-text-muted">
-        Demo: {DEMO_CREDENTIALS.email} / {DEMO_CREDENTIALS.password}
-      </p>
+      {SHOW_DEMO ? (
+        <p className="mt-4 text-xs text-text-muted">
+          Demo: {DEMO_CREDENTIALS.email} / {DEMO_CREDENTIALS.password}
+        </p>
+      ) : null}
     </div>
   );
 }

@@ -7,6 +7,7 @@ import { api } from "@/lib/api";
 import { ensureHouseholdSession } from "@/lib/session";
 import { kronorToMinorString, minorToKronorInput } from "@/lib/money-input";
 import { queryKeys } from "@/lib/query-keys";
+import { describeError } from "@/lib/error-message";
 
 const CASH_LIKE = new Set(["CHECKING", "SAVINGS", "CASH"]);
 const LOAN_LIKE = new Set(["LOAN", "MORTGAGE"]);
@@ -105,7 +106,7 @@ export function VehiclePurchaseForm({
     },
     onError: (err: unknown) => {
       setOkMsg(null);
-      setFormError(err instanceof Error ? err.message : "Kunde inte spara köp");
+      setFormError(describeError(err, "Kunde inte spara köp"));
     },
   });
 
