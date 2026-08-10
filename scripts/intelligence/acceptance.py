@@ -199,8 +199,67 @@ check(
     f"{batch['newRecords']} transactions, status {batch['status']}",
 )
 
-# Categorise deterministically by merchant text, the way a rule engine would.
-# Done in SQL because classification wiring is not part of this slice.
+# What the product classifies on its own, before anything is helped along.
+#
+# The previous run assigned categories with SQL and then reported 100 %, which
+# described this script rather than the product. The pipeline is asked first, and
+# the figure below is whatever it actually achieves.
+status, clustering = call("POST", "/intelligence/analyse", token, query={"householdId": household})
+if status >= 400:
+    raise SystemExit(f"analyse failed: {status} {json.dumps(clustering)[:400]}")
+
+FACTS["uniqueSignatures"] = clustering["uniqueSignatures"]
+FACTS["merchantClusters"] = clustering["clusters"]
+FACTS["opaqueClusters"] = clustering["opaqueClusters"]
+FACTS["clusteringDurationMs"] = clustering["durationMs"]
+coverage = clustering["coverage"]
+FACTS["meaningfullyClassified"] = coverage["meaningfullyClassified"]
+FACTS["meaningfullyClassifiedPercent"] = coverage["meaningfullyClassifiedPercent"]
+FACTS["deterministicMatch"] = coverage["deterministicMatch"]
+FACTS["learnedRule"] = coverage["learnedRule"]
+FACTS["aiMatch"] = coverage["aiMatch"]
+FACTS["defaulted"] = coverage["defaulted"]
+FACTS["unknown"] = coverage["unknown"]
+
+check(
+    "FI-020", "transactions are grouped into signatures and clusters by the product",
+    clustering["uniqueSignatures"] > 0 and clustering["clusters"] > 0,
+    f"{clustering['uniqueSignatures']} signatures, {clustering['clusters']} clusters "
+    f"({clustering['opaqueClusters']} opaque) in {clustering['durationMs']} ms",
+)
+
+check(
+    "FI-021", "classification coverage is reported by how it was reached, not as one number",
+    coverage["total"] == clustering["transactionsConsidered"]
+    and coverage["meaningfullyClassified"] + coverage["defaulted"] + coverage["unknown"] == coverage["total"],
+    f"{coverage['meaningfullyClassified']} understood, {coverage['defaulted']} defaulted, "
+    f"{coverage['unknown']} unknown of {coverage['total']} "
+    f"({coverage['meaningfullyClassifiedPercent']} % meaningful)",
+)
+
+status, again = call("POST", "/intelligence/analyse", token, query={"householdId": household})
+check(
+    "FI-022", "re-running the analysis produces the same clusters, not a second set",
+    status < 400 and again["clusters"] == clustering["clusters"],
+    f"{clustering['clusters']} clusters before, {again['clusters']} after a re-run",
+)
+
+opaque_distinct = int(sql(
+    f"select count(distinct signature) from merchant_clusters "
+    f"where household_id = '{household}' and opaque = true"
+))
+opaque_rows = int(sql(
+    f"select coalesce(sum(transaction_count), 0) from merchant_clusters "
+    f"where household_id = '{household}' and opaque = true"
+))
+check(
+    "FI-023", "opaque reference numbers do not collapse into one cluster",
+    opaque_distinct == 0 or opaque_distinct > 1 or opaque_rows <= 1,
+    f"{opaque_distinct} distinct opaque signatures covering {opaque_rows} transactions",
+)
+
+# Only now categorise, so the liquidity checks below have necessity to work with.
+# This is test setup, and it is no longer reported as product classification.
 seeded = sql(f"select count(*) from categories where household_id = '{household}'")
 if seeded == "0":
     for key, name, kind, necessity in [
@@ -230,12 +289,12 @@ categorised = int(sql(
     f"select count(*) from financial_events where household_id = '{household}' and category_id is not null"
 ))
 total_events = int(sql(f"select count(*) from financial_events where household_id = '{household}'"))
-FACTS["deterministicallyClassified"] = categorised
-FACTS["classifiedPercent"] = round(categorised / max(1, total_events) * 100, 1)
+FACTS["testSetupCategorised"] = categorised
 check(
-    "FI-002", "spending is classified deterministically, without AI",
+    "FI-002", "the liquidity checks below have category necessity to work with",
     categorised > 0,
-    f"{categorised} of {total_events} events ({FACTS['classifiedPercent']} %)",
+    f"{categorised} of {total_events} events categorised BY THIS SCRIPT as test setup — "
+    f"this is not product classification and is not counted as such",
 )
 
 # Balances before the pipeline, for DEL 7.

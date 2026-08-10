@@ -4,6 +4,7 @@ import { HouseholdsModule } from "../households/households.module";
 import { MetricsModule } from "../metrics/metrics.module";
 import { FinancialIntelligenceInputService } from "./financial-intelligence-input.service";
 import { FinancialIntelligenceService } from "./financial-intelligence.service";
+import { TransactionClusteringService } from "./transaction-clustering.service";
 import { IntelligenceController } from "./intelligence.controller";
 
 /**
@@ -12,7 +13,15 @@ import { IntelligenceController } from "./intelligence.controller";
 @Module({
   imports: [AuthModule, HouseholdsModule, MetricsModule],
   controllers: [IntelligenceController],
-  providers: [FinancialIntelligenceInputService, FinancialIntelligenceService],
-  exports: [FinancialIntelligenceInputService, FinancialIntelligenceService],
+  providers: [
+    FinancialIntelligenceInputService,
+    FinancialIntelligenceService,
+    TransactionClusteringService,
+  ],
+  exports: [
+    FinancialIntelligenceInputService,
+    FinancialIntelligenceService,
+    TransactionClusteringService,
+  ],
 })
 export class IntelligenceModule {}

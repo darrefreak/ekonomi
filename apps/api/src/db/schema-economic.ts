@@ -208,6 +208,23 @@ export const rawImportRecords = pgTable(
  * how avoidable the cost is. The liquidity engine sizes a buffer on essentials,
  * so conflating the two would size it on everything.
  */
+/**
+ * How a transaction came to have the classification it has.
+ *
+ * The distinction the first acceptance run lacked: a transaction that fell back to
+ * a default category is not "automatically classified", and counting it as such
+ * produced a 100 % figure that described the test's own SQL rather than the
+ * product.
+ */
+export const classificationSourceEnum = pgEnum("classification_source", [
+  "USER_VERIFIED",
+  "DETERMINISTIC_MATCH",
+  "LEARNED_RULE",
+  "AI_MATCH",
+  "DEFAULTED",
+  "UNKNOWN",
+]);
+
 export const categoryNecessityEnum = pgEnum("category_necessity", [
   "ESSENTIAL",
   "SEMI_DISCRETIONARY",
@@ -370,6 +387,12 @@ export const sourceTransactions = pgTable(
      * an import ambiguity has to live on the row itself.
      */
     reviewReason: varchar("review_reason", { length: 40 }),
+    /** Deterministic grouping key, and the algorithm version that produced it. */
+    signature: varchar("signature", { length: 200 }),
+    signatureVersion: varchar("signature_version", { length: 20 }),
+    classificationSource: classificationSourceEnum("classification_source")
+      .notNull()
+      .default("UNKNOWN"),
     bookingDate: date("booking_date").notNull(),
     valueDate: date("value_date"),
     amountMinor: bigint("amount_minor", { mode: "bigint" }).notNull(),
@@ -415,6 +438,60 @@ export const sourceTransactions = pgTable(
       t.bookingDate,
       t.amountMinor,
     ),
+  ],
+);
+
+/**
+ * Transactions that probably share an economic meaning.
+ *
+ * One row per signature per household per algorithm version, so re-running the
+ * analysis updates a cluster rather than creating a second one.
+ */
+export const merchantClusters = pgTable(
+  "merchant_clusters",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    householdId: uuid("household_id")
+      .notNull()
+      .references(() => households.id, { onDelete: "cascade" }),
+    signature: varchar("signature", { length: 200 }).notNull(),
+    signatureVersion: varchar("signature_version", { length: 20 }).notNull(),
+    representativeDescriptions: jsonb("representative_descriptions")
+      .$type<string[]>()
+      .notNull()
+      .default([]),
+    transactionCount: integer("transaction_count").notNull().default(0),
+    firstSeen: date("first_seen"),
+    lastSeen: date("last_seen"),
+    medianAmountMinor: bigint("median_amount_minor", { mode: "bigint" }),
+    minAmountMinor: bigint("min_amount_minor", { mode: "bigint" }),
+    maxAmountMinor: bigint("max_amount_minor", { mode: "bigint" }),
+    direction: varchar("direction", { length: 16 }).notNull().default("OUTFLOW"),
+    medianIntervalDays: integer("median_interval_days"),
+    intervalSpreadDays: integer("interval_spread_days"),
+    merchantId: uuid("merchant_id").references(() => merchants.id, {
+      onDelete: "set null",
+    }),
+    merchantCandidate: varchar("merchant_candidate", { length: 200 }),
+    merchantConfidence: numeric("merchant_confidence", { precision: 5, scale: 4 }),
+    categoryId: uuid("category_id").references(() => categories.id, {
+      onDelete: "set null",
+    }),
+    classificationSource: classificationSourceEnum("classification_source")
+      .notNull()
+      .default("UNKNOWN"),
+    /** A bare reference number with nothing identifying in it. */
+    opaque: boolean("opaque").notNull().default(false),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (t) => [
+    uniqueIndex("merchant_clusters_identity").on(
+      t.householdId,
+      t.signature,
+      t.signatureVersion,
+    ),
+    index("merchant_clusters_household_count_idx").on(t.householdId, t.transactionCount),
   ],
 );
 
