@@ -144,6 +144,68 @@ describe("liquidity requirement", () => {
   });
 });
 
+describe("the household's own policy", () => {
+  it("uses the configured safety margin instead of the model's 5 %", () => {
+    const derived = calculateLiquidityRequirement(stableHousehold());
+    const marginOf = (r: ReturnType<typeof calculateLiquidityRequirement>) =>
+      r.components.find((c) => c.key === "SAFETY_MARGIN")!;
+
+    const configured = calculateLiquidityRequirement(
+      stableHousehold({ policy: { safetyMarginMinor: 2_000_000n } }),
+    );
+    assert.equal(marginOf(configured).amountMinor, 2_000_000n);
+    assert.match(marginOf(configured).reason, /inställda säkerhetsmarginal/);
+    assert.notEqual(
+      marginOf(derived).amountMinor,
+      2_000_000n,
+      "the fallback and the configured value differ, so this test means something",
+    );
+    assert.match(marginOf(derived).reason, /5 %/);
+  });
+
+  it("treats a configured minimum cash balance as a floor, never a ceiling", () => {
+    const operatingOf = (r: ReturnType<typeof calculateLiquidityRequirement>) =>
+      r.components.find((c) => c.key === "OPERATING_CASH")!.amountMinor;
+
+    // A floor above a normal month raises operating cash.
+    const high = calculateLiquidityRequirement(
+      stableHousehold({ policy: { minimumCashBalanceMinor: 9_000_000n } }),
+    );
+    assert.equal(operatingOf(high), 9_000_000n);
+
+    // A floor below a normal month must not lower it.
+    const low = calculateLiquidityRequirement(
+      stableHousehold({ policy: { minimumCashBalanceMinor: 100_000n } }),
+    );
+    const none = calculateLiquidityRequirement(stableHousehold());
+    assert.equal(operatingOf(low), operatingOf(none));
+  });
+
+  it("reports the configured emergency target beside the derived one, overriding neither", () => {
+    const result = calculateLiquidityRequirement(
+      stableHousehold({ policy: { emergencyFundTargetMinor: 12_000_000n } }),
+    );
+    const derivedReserve = result.components.find(
+      (c) => c.key === "EMERGENCY_RESERVE",
+    )!.amountMinor;
+    assert.ok(result.policyComparison, "the comparison is present when a target is set");
+    assert.equal(result.policyComparison!.configuredEmergencyFundMinor, 12_000_000n);
+    assert.equal(result.policyComparison!.derivedEmergencyReserveMinor, derivedReserve);
+    assert.equal(
+      result.policyComparison!.differenceMinor,
+      derivedReserve - 12_000_000n,
+      "the difference is stated so a household can see its target is low",
+    );
+    // The derived reserve is what the requirement uses; the target does not replace it.
+    assert.notEqual(derivedReserve, 12_000_000n);
+  });
+
+  it("says nothing about policy when the household has expressed none", () => {
+    const result = calculateLiquidityRequirement(stableHousehold());
+    assert.equal(result.policyComparison, null);
+  });
+});
+
 describe("liquidity properties that must always hold (§64)", () => {
   it("a larger upcoming obligation never lowers the requirement", () => {
     const base = calculateLiquidityRequirement(stableHousehold());

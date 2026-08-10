@@ -65,6 +65,23 @@ export type LiquidityInput = {
   coveragePercent: number;
   /** Days since the newest transaction. Scales confidence for "today" figures. */
   dataAgeDays: number;
+  /**
+   * The household's own financial policy, from `household_settings`.
+   *
+   * These are explicit choices, not model output, so they are respected rather
+   * than recomputed. The safety margin in particular was previously a hardcoded
+   * 5% here, which quietly overrode a number the household had set.
+   *
+   * The configured emergency fund target is deliberately *not* used as the
+   * reserve: deriving that from actual essential costs is the whole point of §30.
+   * It is reported alongside the derived figure so a disagreement is visible
+   * instead of one silently winning.
+   */
+  policy?: {
+    minimumCashBalanceMinor?: bigint;
+    emergencyFundTargetMinor?: bigint;
+    safetyMarginMinor?: bigint;
+  };
 };
 
 export type LiquidityComponent = {
@@ -97,6 +114,18 @@ export type LiquidityRequirement = {
   confidence: LiquidityConfidence;
   /** What limited the confidence, if anything. */
   confidenceReasons: string[];
+  /**
+   * The household's configured emergency fund target against the derived reserve.
+   *
+   * Present only when a target is configured. Neither number overrides the other;
+   * showing both is what lets a household see that its own target is well under
+   * what two years of its own costs suggest.
+   */
+  policyComparison: {
+    configuredEmergencyFundMinor: bigint;
+    derivedEmergencyReserveMinor: bigint;
+    differenceMinor: bigint;
+  } | null;
   /** Inputs the recommendation rests on, for explainability. */
   basis: {
     monthsOfHistory: number;
@@ -161,14 +190,23 @@ export function calculateLiquidityRequirement(
    * essentials alone would mean the household dips into its emergency reserve for
    * ordinary discretionary spending, which is how a reserve quietly disappears.
    */
-  const operating = totalMedian ?? 0n;
+  const derivedOperating = totalMedian ?? 0n;
+  const configuredMinimum = input.policy?.minimumCashBalanceMinor ?? 0n;
+  // A configured minimum is a floor the household has chosen; the model may ask
+  // for more than it, never less.
+  const operating =
+    configuredMinimum > derivedOperating ? configuredMinimum : derivedOperating;
   components.push({
     key: "OPERATING_CASH",
     amountMinor: operating,
     reason:
       totalMedian === null
-        ? "Ingen historik — löpande behov kan inte beräknas."
-        : `En normal månads utgifter (median av ${monthsOfHistory} månader).`,
+        ? configuredMinimum > 0n
+          ? "Ingen historik — din inställda lägsta kassa används."
+          : "Ingen historik — löpande behov kan inte beräknas."
+        : operating > derivedOperating
+          ? `Din inställda lägsta kassa, som ligger över en normal månads utgifter (median av ${monthsOfHistory} månader).`
+          : `En normal månads utgifter (median av ${monthsOfHistory} månader).`,
   });
 
   /*
@@ -300,12 +338,25 @@ export function calculateLiquidityRequirement(
     0n,
   );
 
-  // Safety margin: a small, stated share rather than a hidden fudge factor.
-  const safetyMargin = (beforeMargin * 5n) / 100n;
+  /*
+   * Safety margin: the household's own figure when it has set one.
+   *
+   * This was a hardcoded 5%, which overrode `household_settings.safety_margin_minor`
+   * — a number the household had explicitly chosen. The derived 5% remains only as
+   * the fallback for a household that has not expressed a preference.
+   */
+  const configuredMargin = input.policy?.safetyMarginMinor;
+  const safetyMargin =
+    configuredMargin !== undefined && configuredMargin > 0n
+      ? configuredMargin
+      : (beforeMargin * 5n) / 100n;
   components.push({
     key: "SAFETY_MARGIN",
     amountMinor: safetyMargin,
-    reason: "5 % marginal för att modellen inte kan känna till allt.",
+    reason:
+      configuredMargin !== undefined && configuredMargin > 0n
+        ? "Din inställda säkerhetsmarginal."
+        : "5 % marginal för att modellen inte kan känna till allt.",
   });
 
   const requiredMinor = beforeMargin + safetyMargin;
@@ -361,6 +412,14 @@ export function calculateLiquidityRequirement(
     shortfallMinor: surplus < 0n ? -surplus : 0n,
     confidence,
     confidenceReasons,
+    policyComparison:
+      input.policy?.emergencyFundTargetMinor === undefined
+        ? null
+        : {
+            configuredEmergencyFundMinor: input.policy.emergencyFundTargetMinor,
+            derivedEmergencyReserveMinor: emergency,
+            differenceMinor: emergency - input.policy.emergencyFundTargetMinor,
+          },
     basis: {
       monthsOfHistory,
       essentialMedianMinor: essentialMedian,
