@@ -2,7 +2,7 @@
   "cookies": [],
   "origins": [
     {
-      "origin": "http://localhost:3000",
+      "origin": "http://localhost:3020",
       "localStorage": [
         {
           "name": "ffos.householdId",
@@ -10,11 +10,11 @@
         },
         {
           "name": "ffos.accessToken",
-          "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJiMGUyOWI4MC01N2JiLTQyODEtOGE2OS1jN2Y3YTIwZWIwYzAiLCJlbWFpbCI6ImRlbW9AZmZvcy5sb2NhbCIsInR5cCI6ImFjY2VzcyIsImlhdCI6MTc4NjM2NjExMiwiZXhwIjoxNzg2MzY3MDEyfQ.ufIRkLUAmXBW_Df9eYddXFApjS7R7ITOqhQD5K_dBo4"
+          "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJiMGUyOWI4MC01N2JiLTQyODEtOGE2OS1jN2Y3YTIwZWIwYzAiLCJlbWFpbCI6ImRlbW9AZmZvcy5sb2NhbCIsInR5cCI6ImFjY2VzcyIsImlhdCI6MTc4NjM2NjQ5MywiZXhwIjoxNzg2MzY3MzkzfQ.ZPSXFulIAUHUxJej1y_P8iW4JV6env1NgmioZi8sBRo"
         },
         {
           "name": "ffos.refreshToken",
-          "value": "FRkhpb-c-fJj7Ca7VTLgEZ0SSIaWNf8QnCzNFnVGAVK3vuZgFRRX0CR5UkZM_FMj"
+          "value": "XtgLEY6n716baJaQm2EkejXVHvcBoVVVBUQOcxNzA0XXLRMOo_M9Xl1wkjUJEFDi"
         }
       ]
     }
