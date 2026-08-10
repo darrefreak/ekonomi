@@ -1,0 +1,3878 @@
+[
+  {
+    "kind": "small-tap-target",
+    "route": "/",
+    "viewport": "desktop",
+    "detail": "a.skip-link 143×37 \"Hoppa till innehåll\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/",
+    "viewport": "desktop",
+    "detail": "a.hover:text-accent 100×20 \"1 180 000 kr\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/",
+    "viewport": "desktop",
+    "detail": "a.hover:text-accent 125×20 \"4 148 997,32 kr\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/",
+    "viewport": "desktop",
+    "detail": "a.text-sm.text-accent 44×20 \"Budget\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/",
+    "viewport": "desktop",
+    "detail": "a.text-sm.text-accent 55×20 \"Visa mer\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/",
+    "viewport": "desktop",
+    "detail": "a.text-sm.text-accent 23×20 \"Alla\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/",
+    "viewport": "desktop",
+    "detail": "a.text-sm.text-accent 55×20 \"Visa mer\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/",
+    "viewport": "desktop",
+    "detail": "a.text-sm.text-accent 83×20 \"Abonnemang\""
+  },
+  {
+    "kind": "input-font-under-16px",
+    "route": "/accounts",
+    "viewport": "desktop",
+    "detail": "input.mt-1.min-h-11 14px"
+  },
+  {
+    "kind": "input-font-under-16px",
+    "route": "/accounts",
+    "viewport": "desktop",
+    "detail": "select.mt-1.min-h-11 14px"
+  },
+  {
+    "kind": "input-font-under-16px",
+    "route": "/accounts",
+    "viewport": "desktop",
+    "detail": "input.mt-1.min-h-11 14px"
+  },
+  {
+    "kind": "input-font-under-16px",
+    "route": "/accounts",
+    "viewport": "desktop",
+    "detail": "input.mt-1.min-h-11 14px"
+  },
+  {
+    "kind": "input-font-under-16px",
+    "route": "/accounts",
+    "viewport": "desktop",
+    "detail": "input 14px"
+  },
+  {
+    "kind": "input-font-under-16px",
+    "route": "/accounts",
+    "viewport": "desktop",
+    "detail": "input 14px"
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/accounts",
+    "viewport": "desktop",
+    "detail": "a.skip-link 143×37 \"Hoppa till innehåll\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/accounts",
+    "viewport": "desktop",
+    "detail": "input 13×13 \"\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/accounts",
+    "viewport": "desktop",
+    "detail": "input 13×13 \"\""
+  },
+  {
+    "kind": "money-format-variant",
+    "route": "/accounts",
+    "viewport": "desktop",
+    "detail": "SEK-prefix: SEK"
+  },
+  {
+    "kind": "network",
+    "route": "/accounts",
+    "viewport": "desktop",
+    "detail": "failed: GET http://localhost:3000/accounts/8d0f86fc-c955-41e7-b86a-bd2db471ec4f?_rsc=uyjKVIJNWOFcmpSj (net::ERR_ABORTED)"
+  },
+  {
+    "kind": "network",
+    "route": "/accounts",
+    "viewport": "desktop",
+    "detail": "failed: GET http://localhost:3000/accounts/aebf23c9-7caa-41d9-926c-2bbe2bea1f85?_rsc=uyjKVIJNWOFcmpSj (net::ERR_ABORTED)"
+  },
+  {
+    "kind": "network",
+    "route": "/accounts",
+    "viewport": "desktop",
+    "detail": "failed: GET http://localhost:3000/accounts/52b7df60-7f53-457d-b1c5-b444dc25023e?_rsc=uyjKVIJNWOFcmpSj (net::ERR_ABORTED)"
+  },
+  {
+    "kind": "network",
+    "route": "/accounts",
+    "viewport": "desktop",
+    "detail": "failed: GET http://localhost:3000/accounts/4ae788fa-373f-4eb6-9cdf-ff72cfdf76f5?_rsc=uyjKVIJNWOFcmpSj (net::ERR_ABORTED)"
+  },
+  {
+    "kind": "network",
+    "route": "/accounts",
+    "viewport": "desktop",
+    "detail": "failed: GET http://localhost:3000/accounts/4c45a433-9d9a-4a1d-93d5-17e9a14d55f3?_rsc=uyjKVIJNWOFcmpSj (net::ERR_ABORTED)"
+  },
+  {
+    "kind": "network",
+    "route": "/accounts",
+    "viewport": "desktop",
+    "detail": "failed: GET http://localhost:3000/accounts/6eef0563-e9da-486b-ae25-1f42a936fa7a?_rsc=uyjKVIJNWOFcmpSj (net::ERR_ABORTED)"
+  },
+  {
+    "kind": "network",
+    "route": "/accounts",
+    "viewport": "desktop",
+    "detail": "failed: GET http://localhost:3000/accounts/297d6f4b-e87c-42eb-9e51-07c8cdb98ec0?_rsc=uyjKVIJNWOFcmpSj (net::ERR_ABORTED)"
+  },
+  {
+    "kind": "input-without-label",
+    "route": "/transactions",
+    "viewport": "desktop",
+    "detail": "input.min-h-11.rounded-[12px]"
+  },
+  {
+    "kind": "input-font-under-16px",
+    "route": "/transactions",
+    "viewport": "desktop",
+    "detail": "input.min-h-11.rounded-[12px] 14px"
+  },
+  {
+    "kind": "input-without-label",
+    "route": "/transactions",
+    "viewport": "desktop",
+    "detail": "select.min-h-11.rounded-[12px]"
+  },
+  {
+    "kind": "input-font-under-16px",
+    "route": "/transactions",
+    "viewport": "desktop",
+    "detail": "select.min-h-11.rounded-[12px] 14px"
+  },
+  {
+    "kind": "input-font-under-16px",
+    "route": "/transactions",
+    "viewport": "desktop",
+    "detail": "input.min-h-11.rounded-[12px] 14px"
+  },
+  {
+    "kind": "input-font-under-16px",
+    "route": "/transactions",
+    "viewport": "desktop",
+    "detail": "input.min-h-11.rounded-[12px] 14px"
+  },
+  {
+    "kind": "input-font-under-16px",
+    "route": "/transactions",
+    "viewport": "desktop",
+    "detail": "input 14px"
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/transactions",
+    "viewport": "desktop",
+    "detail": "a.skip-link 143×37 \"Hoppa till innehåll\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/transactions",
+    "viewport": "desktop",
+    "detail": "input 13×13 \"\""
+  },
+  {
+    "kind": "network",
+    "route": "/transactions",
+    "viewport": "desktop",
+    "detail": "failed: GET http://localhost:3000/transactions/5d02d21c-a76c-4181-bfd8-a36b7782776c?_rsc=aOtGA8jXCX25qOVE (net::ERR_ABORTED)"
+  },
+  {
+    "kind": "network",
+    "route": "/transactions",
+    "viewport": "desktop",
+    "detail": "failed: GET http://localhost:3000/transactions/99b3aaa1-dc41-42ae-986c-0f66118b70aa?_rsc=aOtGA8jXCX25qOVE (net::ERR_ABORTED)"
+  },
+  {
+    "kind": "network",
+    "route": "/transactions",
+    "viewport": "desktop",
+    "detail": "failed: GET http://localhost:3000/transactions/6c4f622f-7a97-470a-bf1a-08e17fec9d95?_rsc=aOtGA8jXCX25qOVE (net::ERR_ABORTED)"
+  },
+  {
+    "kind": "network",
+    "route": "/transactions",
+    "viewport": "desktop",
+    "detail": "failed: GET http://localhost:3000/transactions/a4b34d6b-ebe3-4831-82cd-ae1742b2412c?_rsc=aOtGA8jXCX25qOVE (net::ERR_ABORTED)"
+  },
+  {
+    "kind": "network",
+    "route": "/transactions",
+    "viewport": "desktop",
+    "detail": "failed: GET http://localhost:3000/transactions/1b2f6cfd-c5e9-48cf-8bb0-88bc888584e5?_rsc=aOtGA8jXCX25qOVE (net::ERR_ABORTED)"
+  },
+  {
+    "kind": "network",
+    "route": "/transactions",
+    "viewport": "desktop",
+    "detail": "failed: GET http://localhost:3000/transactions/ad21bb54-f107-4482-80a6-5610515089a4?_rsc=aOtGA8jXCX25qOVE (net::ERR_ABORTED)"
+  },
+  {
+    "kind": "network",
+    "route": "/transactions",
+    "viewport": "desktop",
+    "detail": "failed: GET http://localhost:3000/transactions/829470bf-b34b-466f-9d32-3084490d2d95?_rsc=aOtGA8jXCX25qOVE (net::ERR_ABORTED)"
+  },
+  {
+    "kind": "network",
+    "route": "/transactions",
+    "viewport": "desktop",
+    "detail": "failed: GET http://localhost:3000/transactions/00729510-7dee-4e67-ac43-85ae66931ca8?_rsc=aOtGA8jXCX25qOVE (net::ERR_ABORTED)"
+  },
+  {
+    "kind": "network",
+    "route": "/transactions",
+    "viewport": "desktop",
+    "detail": "failed: GET http://localhost:3000/transactions/c742ae24-d41f-4bbb-9d1b-80073279cd90?_rsc=aOtGA8jXCX25qOVE (net::ERR_ABORTED)"
+  },
+  {
+    "kind": "network",
+    "route": "/transactions",
+    "viewport": "desktop",
+    "detail": "failed: GET http://localhost:3000/transactions/99751370-30b2-4202-aa82-28175d7e4a5f?_rsc=aOtGA8jXCX25qOVE (net::ERR_ABORTED)"
+  },
+  {
+    "kind": "network",
+    "route": "/transactions",
+    "viewport": "desktop",
+    "detail": "failed: GET http://localhost:3000/transactions/f6fba605-5db5-4412-ab31-30ad673a048e?_rsc=aOtGA8jXCX25qOVE (net::ERR_ABORTED)"
+  },
+  {
+    "kind": "network",
+    "route": "/transactions",
+    "viewport": "desktop",
+    "detail": "failed: GET http://localhost:3000/transactions/052b747a-2567-46cb-9a06-389ffc0da645?_rsc=aOtGA8jXCX25qOVE (net::ERR_ABORTED)"
+  },
+  {
+    "kind": "network",
+    "route": "/transactions",
+    "viewport": "desktop",
+    "detail": "failed: GET http://localhost:3000/transactions/fbec1090-c29c-4b71-a7cb-6c4807372b0c?_rsc=aOtGA8jXCX25qOVE (net::ERR_ABORTED)"
+  },
+  {
+    "kind": "input-font-under-16px",
+    "route": "/budget",
+    "viewport": "desktop",
+    "detail": "input.mt-1.min-h-11 14px"
+  },
+  {
+    "kind": "input-font-under-16px",
+    "route": "/budget",
+    "viewport": "desktop",
+    "detail": "input.mt-1.min-h-11 14px"
+  },
+  {
+    "kind": "input-font-under-16px",
+    "route": "/budget",
+    "viewport": "desktop",
+    "detail": "input.mt-1.min-h-11 14px"
+  },
+  {
+    "kind": "input-font-under-16px",
+    "route": "/budget",
+    "viewport": "desktop",
+    "detail": "input.mt-1.min-h-11 14px"
+  },
+  {
+    "kind": "input-font-under-16px",
+    "route": "/budget",
+    "viewport": "desktop",
+    "detail": "input.mt-1.min-h-11 14px"
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/budget",
+    "viewport": "desktop",
+    "detail": "a.skip-link 143×37 \"Hoppa till innehåll\""
+  },
+  {
+    "kind": "input-without-label",
+    "route": "/goals",
+    "viewport": "desktop",
+    "detail": "input.min-h-11.rounded-[12px]"
+  },
+  {
+    "kind": "input-font-under-16px",
+    "route": "/goals",
+    "viewport": "desktop",
+    "detail": "input.min-h-11.rounded-[12px] 14px"
+  },
+  {
+    "kind": "input-without-label",
+    "route": "/goals",
+    "viewport": "desktop",
+    "detail": "select.min-h-11.rounded-[12px]"
+  },
+  {
+    "kind": "input-font-under-16px",
+    "route": "/goals",
+    "viewport": "desktop",
+    "detail": "select.min-h-11.rounded-[12px] 14px"
+  },
+  {
+    "kind": "input-font-under-16px",
+    "route": "/goals",
+    "viewport": "desktop",
+    "detail": "input.mt-1.min-h-11 14px"
+  },
+  {
+    "kind": "input-font-under-16px",
+    "route": "/goals",
+    "viewport": "desktop",
+    "detail": "input.mt-1.min-h-11 14px"
+  },
+  {
+    "kind": "input-font-under-16px",
+    "route": "/goals",
+    "viewport": "desktop",
+    "detail": "input.mt-1.min-h-11 14px"
+  },
+  {
+    "kind": "input-font-under-16px",
+    "route": "/goals",
+    "viewport": "desktop",
+    "detail": "input.mt-1.min-h-11 14px"
+  },
+  {
+    "kind": "input-font-under-16px",
+    "route": "/goals",
+    "viewport": "desktop",
+    "detail": "input.mt-1.min-h-11 14px"
+  },
+  {
+    "kind": "input-font-under-16px",
+    "route": "/goals",
+    "viewport": "desktop",
+    "detail": "input.mt-1.min-h-11 14px"
+  },
+  {
+    "kind": "input-font-under-16px",
+    "route": "/goals",
+    "viewport": "desktop",
+    "detail": "input.mt-1.min-h-11 14px"
+  },
+  {
+    "kind": "input-font-under-16px",
+    "route": "/goals",
+    "viewport": "desktop",
+    "detail": "input.mt-1.min-h-11 14px"
+  },
+  {
+    "kind": "input-without-label",
+    "route": "/goals",
+    "viewport": "desktop",
+    "detail": "input.min-h-11.rounded-[12px]"
+  },
+  {
+    "kind": "input-font-under-16px",
+    "route": "/goals",
+    "viewport": "desktop",
+    "detail": "input.min-h-11.rounded-[12px] 14px"
+  },
+  {
+    "kind": "input-without-label",
+    "route": "/goals",
+    "viewport": "desktop",
+    "detail": "input.min-h-11.rounded-[12px]"
+  },
+  {
+    "kind": "input-font-under-16px",
+    "route": "/goals",
+    "viewport": "desktop",
+    "detail": "input.min-h-11.rounded-[12px] 14px"
+  },
+  {
+    "kind": "input-without-label",
+    "route": "/goals",
+    "viewport": "desktop",
+    "detail": "input.min-h-11.rounded-[12px]"
+  },
+  {
+    "kind": "input-font-under-16px",
+    "route": "/goals",
+    "viewport": "desktop",
+    "detail": "input.min-h-11.rounded-[12px] 14px"
+  },
+  {
+    "kind": "input-font-under-16px",
+    "route": "/goals",
+    "viewport": "desktop",
+    "detail": "input.mt-1.min-h-11 14px"
+  },
+  {
+    "kind": "input-font-under-16px",
+    "route": "/goals",
+    "viewport": "desktop",
+    "detail": "input.mt-1.min-h-11 14px"
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/goals",
+    "viewport": "desktop",
+    "detail": "a.skip-link 143×37 \"Hoppa till innehåll\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/net-worth",
+    "viewport": "desktop",
+    "detail": "a.skip-link 143×37 \"Hoppa till innehåll\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/net-worth",
+    "viewport": "desktop",
+    "detail": "a.text-accent.hover:underline 99×20 \"Investeringar →\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/net-worth",
+    "viewport": "desktop",
+    "detail": "a.text-accent.hover:underline 79×20 \"Tillgångar →\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/net-worth",
+    "viewport": "desktop",
+    "detail": "a.text-accent.hover:underline 65×20 \"Skulder →\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/net-worth",
+    "viewport": "desktop",
+    "detail": "a.hover:text-accent 100×20 \"1 180 000 kr\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/net-worth",
+    "viewport": "desktop",
+    "detail": "a.hover:text-accent 100×20 \"7 700 000 kr\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/net-worth",
+    "viewport": "desktop",
+    "detail": "a.hover:text-accent 125×20 \"4 148 997,32 kr\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/forecast",
+    "viewport": "desktop",
+    "detail": "a.skip-link 143×37 \"Hoppa till innehåll\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/cashflow",
+    "viewport": "desktop",
+    "detail": "a.skip-link 143×37 \"Hoppa till innehåll\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/insights",
+    "viewport": "desktop",
+    "detail": "a.skip-link 143×37 \"Hoppa till innehåll\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/opportunities",
+    "viewport": "desktop",
+    "detail": "a.skip-link 143×37 \"Hoppa till innehåll\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/opportunities",
+    "viewport": "desktop",
+    "detail": "a.text-accent.hover:underline 192×16 \"Recommendation outcomes →\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/opportunities",
+    "viewport": "desktop",
+    "detail": "a.text-accent.hover:underline 42×20 \"Livsstil\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/opportunities",
+    "viewport": "desktop",
+    "detail": "a.text-accent.hover:underline 75×16 \"Kassaflöde →\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/opportunities",
+    "viewport": "desktop",
+    "detail": "a.text-accent.hover:underline 51×16 \"Livsstil →\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/opportunities",
+    "viewport": "desktop",
+    "detail": "a.text-accent.hover:underline 66×16 \"Familjebil →\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/opportunities",
+    "viewport": "desktop",
+    "detail": "a.text-accent.hover:underline 66×16 \"Familjebil →\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/opportunities",
+    "viewport": "desktop",
+    "detail": "a.text-accent.hover:underline 62×16 \"Marknad →\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/opportunities",
+    "viewport": "desktop",
+    "detail": "a.text-accent.hover:underline 59×16 \"Översikt →\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/opportunities",
+    "viewport": "desktop",
+    "detail": "a.text-accent.hover:underline 82×16 \"Mål / sinking →\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/opportunities",
+    "viewport": "desktop",
+    "detail": "a.text-accent.hover:underline 46×16 \"Bolån →\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/opportunities",
+    "viewport": "desktop",
+    "detail": "a.text-accent.hover:underline 56×16 \"Skulder →\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/opportunities",
+    "viewport": "desktop",
+    "detail": "a.text-accent.hover:underline 49×16 \"Netflix →\""
+  },
+  {
+    "kind": "network",
+    "route": "/opportunities",
+    "viewport": "desktop",
+    "detail": "failed: GET http://localhost:3000/vehicles/62d96e5e-4527-4388-a343-c79207ae2c62?_rsc=6AHJxv3ezb6iWzdM (net::ERR_ABORTED)"
+  },
+  {
+    "kind": "network",
+    "route": "/opportunities",
+    "viewport": "desktop",
+    "detail": "failed: GET http://localhost:3000/vehicles/62d96e5e-4527-4388-a343-c79207ae2c62/replacement?_rsc=6AHJxv3ezb6iWzdM (net::ERR_ABORTED)"
+  },
+  {
+    "kind": "input-without-label",
+    "route": "/review",
+    "viewport": "desktop",
+    "detail": "select.min-h-11.rounded-[12px]"
+  },
+  {
+    "kind": "input-font-under-16px",
+    "route": "/review",
+    "viewport": "desktop",
+    "detail": "select.min-h-11.rounded-[12px] 14px"
+  },
+  {
+    "kind": "input-without-label",
+    "route": "/review",
+    "viewport": "desktop",
+    "detail": "select.min-h-11.rounded-[12px]"
+  },
+  {
+    "kind": "input-font-under-16px",
+    "route": "/review",
+    "viewport": "desktop",
+    "detail": "select.min-h-11.rounded-[12px] 14px"
+  },
+  {
+    "kind": "input-without-label",
+    "route": "/review",
+    "viewport": "desktop",
+    "detail": "select.min-h-11.rounded-[12px]"
+  },
+  {
+    "kind": "input-font-under-16px",
+    "route": "/review",
+    "viewport": "desktop",
+    "detail": "select.min-h-11.rounded-[12px] 14px"
+  },
+  {
+    "kind": "input-without-label",
+    "route": "/review",
+    "viewport": "desktop",
+    "detail": "select.min-h-11.rounded-[12px]"
+  },
+  {
+    "kind": "input-font-under-16px",
+    "route": "/review",
+    "viewport": "desktop",
+    "detail": "select.min-h-11.rounded-[12px] 14px"
+  },
+  {
+    "kind": "input-without-label",
+    "route": "/review",
+    "viewport": "desktop",
+    "detail": "select.min-h-11.rounded-[12px]"
+  },
+  {
+    "kind": "input-font-under-16px",
+    "route": "/review",
+    "viewport": "desktop",
+    "detail": "select.min-h-11.rounded-[12px] 14px"
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/review",
+    "viewport": "desktop",
+    "detail": "a.skip-link 143×37 \"Hoppa till innehåll\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/vehicles",
+    "viewport": "desktop",
+    "detail": "a.skip-link 143×37 \"Hoppa till innehåll\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/vehicles",
+    "viewport": "desktop",
+    "detail": "a.font-medium.text-accent 51×20 \"Översikt\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/vehicles",
+    "viewport": "desktop",
+    "detail": "a.text-text-secondary.hover:text-accent 54×20 \"Marknad\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/vehicles",
+    "viewport": "desktop",
+    "detail": "a.text-text-secondary.hover:text-accent 68×20 \"Kandidater\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/vehicles",
+    "viewport": "desktop",
+    "detail": "a.text-text-secondary.hover:text-accent 43×20 \"Jämför\""
+  },
+  {
+    "kind": "network",
+    "route": "/vehicles",
+    "viewport": "desktop",
+    "detail": "failed: GET http://localhost:3000/vehicles/compare?_rsc=QGY64TN9M4S5nW4L (net::ERR_ABORTED)"
+  },
+  {
+    "kind": "network",
+    "route": "/vehicles",
+    "viewport": "desktop",
+    "detail": "failed: GET http://localhost:3000/vehicles/8dce43d6-3926-43be-9722-e947776e750e?_rsc=QGY64TN9M4S5nW4L (net::ERR_ABORTED)"
+  },
+  {
+    "kind": "network",
+    "route": "/vehicles",
+    "viewport": "desktop",
+    "detail": "failed: GET http://localhost:3000/vehicles/932cdeb9-2810-44fe-9974-5280c9770d65?_rsc=QGY64TN9M4S5nW4L (net::ERR_ABORTED)"
+  },
+  {
+    "kind": "network",
+    "route": "/vehicles",
+    "viewport": "desktop",
+    "detail": "failed: GET http://localhost:3000/vehicles/c22ca151-6689-40a2-8ce6-89cd621db6de?_rsc=QGY64TN9M4S5nW4L (net::ERR_ABORTED)"
+  },
+  {
+    "kind": "network",
+    "route": "/vehicles",
+    "viewport": "desktop",
+    "detail": "failed: GET http://localhost:3000/vehicles/58a8181f-8671-4705-b514-40af3d682371?_rsc=QGY64TN9M4S5nW4L (net::ERR_ABORTED)"
+  },
+  {
+    "kind": "network",
+    "route": "/vehicles",
+    "viewport": "desktop",
+    "detail": "failed: GET http://localhost:3000/vehicles/9ffbbd63-43fb-4ea2-92b2-991344f0bea1?_rsc=QGY64TN9M4S5nW4L (net::ERR_ABORTED)"
+  },
+  {
+    "kind": "network",
+    "route": "/vehicles",
+    "viewport": "desktop",
+    "detail": "failed: GET http://localhost:3000/vehicles/62d96e5e-4527-4388-a343-c79207ae2c62?_rsc=QGY64TN9M4S5nW4L (net::ERR_ABORTED)"
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/debt",
+    "viewport": "desktop",
+    "detail": "a.skip-link 143×37 \"Hoppa till innehåll\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/investments",
+    "viewport": "desktop",
+    "detail": "a.skip-link 143×37 \"Hoppa till innehåll\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/investments",
+    "viewport": "desktop",
+    "detail": "a.text-accent.hover:underline 130×16 \"Nettoförmögenhet →\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/assets",
+    "viewport": "desktop",
+    "detail": "a.skip-link 143×37 \"Hoppa till innehåll\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/assets",
+    "viewport": "desktop",
+    "detail": "a.text-accent.hover:underline 130×20 \"Nettoförmögenhet →\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/assets",
+    "viewport": "desktop",
+    "detail": "a.text-accent.hover:underline 62×20 \"Fordon →\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/assets",
+    "viewport": "desktop",
+    "detail": "a.text-accent.hover:underline 33×14 \"öppna\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/assets",
+    "viewport": "desktop",
+    "detail": "a.text-accent.hover:underline 33×14 \"öppna\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/assets",
+    "viewport": "desktop",
+    "detail": "a.text-accent.hover:underline 33×14 \"öppna\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/assets",
+    "viewport": "desktop",
+    "detail": "a.text-accent.hover:underline 33×14 \"öppna\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/assets",
+    "viewport": "desktop",
+    "detail": "a.text-accent.hover:underline 33×14 \"öppna\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/assets",
+    "viewport": "desktop",
+    "detail": "a.text-accent.hover:underline 33×14 \"öppna\""
+  },
+  {
+    "kind": "network",
+    "route": "/assets",
+    "viewport": "desktop",
+    "detail": "failed: GET http://localhost:3000/vehicles/932cdeb9-2810-44fe-9974-5280c9770d65?_rsc=Q6RPR02XOXFEVgc_ (net::ERR_ABORTED)"
+  },
+  {
+    "kind": "network",
+    "route": "/assets",
+    "viewport": "desktop",
+    "detail": "failed: GET http://localhost:3000/vehicles/8dce43d6-3926-43be-9722-e947776e750e?_rsc=Q6RPR02XOXFEVgc_ (net::ERR_ABORTED)"
+  },
+  {
+    "kind": "network",
+    "route": "/assets",
+    "viewport": "desktop",
+    "detail": "failed: GET http://localhost:3000/vehicles/58a8181f-8671-4705-b514-40af3d682371?_rsc=Q6RPR02XOXFEVgc_ (net::ERR_ABORTED)"
+  },
+  {
+    "kind": "network",
+    "route": "/assets",
+    "viewport": "desktop",
+    "detail": "failed: GET http://localhost:3000/vehicles/9ffbbd63-43fb-4ea2-92b2-991344f0bea1?_rsc=Q6RPR02XOXFEVgc_ (net::ERR_ABORTED)"
+  },
+  {
+    "kind": "network",
+    "route": "/assets",
+    "viewport": "desktop",
+    "detail": "failed: GET http://localhost:3000/vehicles/c22ca151-6689-40a2-8ce6-89cd621db6de?_rsc=Q6RPR02XOXFEVgc_ (net::ERR_ABORTED)"
+  },
+  {
+    "kind": "network",
+    "route": "/assets",
+    "viewport": "desktop",
+    "detail": "failed: GET http://localhost:3000/vehicles/62d96e5e-4527-4388-a343-c79207ae2c62?_rsc=Q6RPR02XOXFEVgc_ (net::ERR_ABORTED)"
+  },
+  {
+    "kind": "input-font-under-16px",
+    "route": "/documents",
+    "viewport": "desktop",
+    "detail": "input.mt-1.w-full 14px"
+  },
+  {
+    "kind": "input-font-under-16px",
+    "route": "/documents",
+    "viewport": "desktop",
+    "detail": "select.mt-1.w-full 14px"
+  },
+  {
+    "kind": "input-font-under-16px",
+    "route": "/documents",
+    "viewport": "desktop",
+    "detail": "select.mt-1.w-full 14px"
+  },
+  {
+    "kind": "input-font-under-16px",
+    "route": "/documents",
+    "viewport": "desktop",
+    "detail": "select.mt-1.w-full 14px"
+  },
+  {
+    "kind": "input-without-label",
+    "route": "/documents",
+    "viewport": "desktop",
+    "detail": "input.block.w-full"
+  },
+  {
+    "kind": "input-font-under-16px",
+    "route": "/documents",
+    "viewport": "desktop",
+    "detail": "input.block.w-full 14px"
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/documents",
+    "viewport": "desktop",
+    "detail": "a.skip-link 143×37 \"Hoppa till innehåll\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/imports",
+    "viewport": "desktop",
+    "detail": "a.skip-link 143×37 \"Hoppa till innehåll\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/imports",
+    "viewport": "desktop",
+    "detail": "a.text-accent 118×16 \"Hantera kopplingar\""
+  },
+  {
+    "kind": "input-font-under-16px",
+    "route": "/integrations",
+    "viewport": "desktop",
+    "detail": "select.mt-1.block 14px"
+  },
+  {
+    "kind": "input-font-under-16px",
+    "route": "/integrations",
+    "viewport": "desktop",
+    "detail": "input.mt-1.block 14px"
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/integrations",
+    "viewport": "desktop",
+    "detail": "a.skip-link 143×37 \"Hoppa till innehåll\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/integrations",
+    "viewport": "desktop",
+    "detail": "button.rounded-[12px].bg-accent 177×36 \"Fake sync (första källa)\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/integrations",
+    "viewport": "desktop",
+    "detail": "button.self-end.rounded-[12px] 106×38 \"Skapa källa\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/integrations",
+    "viewport": "desktop",
+    "detail": "button.rounded-[12px].bg-accent 91×38 \"Reconnect\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/integrations",
+    "viewport": "desktop",
+    "detail": "button.rounded-[12px].border 98×38 \"Koppla från\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/integrations",
+    "viewport": "desktop",
+    "detail": "button.rounded-[12px].border 57×38 \"Sync\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/integrations",
+    "viewport": "desktop",
+    "detail": "button.rounded-[12px].border 98×38 \"Koppla från\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/integrations",
+    "viewport": "desktop",
+    "detail": "button.rounded-[12px].bg-accent 91×38 \"Reconnect\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/integrations",
+    "viewport": "desktop",
+    "detail": "button.rounded-[12px].border 98×38 \"Koppla från\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/integrations",
+    "viewport": "desktop",
+    "detail": "button.rounded-[12px].border 57×38 \"Sync\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/integrations",
+    "viewport": "desktop",
+    "detail": "button.rounded-[12px].border 98×38 \"Koppla från\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/contracts",
+    "viewport": "desktop",
+    "detail": "a.skip-link 143×37 \"Hoppa till innehåll\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/subscriptions",
+    "viewport": "desktop",
+    "detail": "a.skip-link 143×37 \"Hoppa till innehåll\""
+  },
+  {
+    "kind": "input-font-under-16px",
+    "route": "/reports",
+    "viewport": "desktop",
+    "detail": "input.mt-1.block 14px"
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/reports",
+    "viewport": "desktop",
+    "detail": "a.skip-link 143×37 \"Hoppa till innehåll\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/risk",
+    "viewport": "desktop",
+    "detail": "a.skip-link 143×37 \"Hoppa till innehåll\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/risk",
+    "viewport": "desktop",
+    "detail": "a.text-accent.hover:underline 75×16 \"Kassaflöde →\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/risk",
+    "viewport": "desktop",
+    "detail": "a.text-accent.hover:underline 53×16 \"Konton →\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/risk",
+    "viewport": "desktop",
+    "detail": "a.text-accent.hover:underline 56×16 \"Skulder →\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/risk",
+    "viewport": "desktop",
+    "detail": "a.text-accent.hover:underline 46×16 \"Bolån →\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/risk",
+    "viewport": "desktop",
+    "detail": "a.text-accent.hover:underline 87×16 \"Abonnemang →\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/risk",
+    "viewport": "desktop",
+    "detail": "a.text-accent.hover:underline 42×16 \"Avtal →\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/risk",
+    "viewport": "desktop",
+    "detail": "a.text-accent.hover:underline 83×16 \"Integrationer →\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/risk",
+    "viewport": "desktop",
+    "detail": "a.text-accent.hover:underline 77×16 \"Granskning →\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/risk",
+    "viewport": "desktop",
+    "detail": "a.text-accent.hover:underline 53×16 \"Fordon →\""
+  },
+  {
+    "kind": "network",
+    "route": "/risk",
+    "viewport": "desktop",
+    "detail": "failed: GET http://localhost:3000/accounts/e8870b73-6ddc-450b-a920-77ec17a42f73?_rsc=18vY_PYvzr_IekoJ (net::ERR_ABORTED)"
+  },
+  {
+    "kind": "input-without-label",
+    "route": "/scenarios",
+    "viewport": "desktop",
+    "detail": "input.min-h-11.w-full"
+  },
+  {
+    "kind": "input-font-under-16px",
+    "route": "/scenarios",
+    "viewport": "desktop",
+    "detail": "input.min-h-11.w-full 14px"
+  },
+  {
+    "kind": "input-without-label",
+    "route": "/scenarios",
+    "viewport": "desktop",
+    "detail": "input.min-h-11.w-full"
+  },
+  {
+    "kind": "input-font-under-16px",
+    "route": "/scenarios",
+    "viewport": "desktop",
+    "detail": "input.min-h-11.w-full 14px"
+  },
+  {
+    "kind": "input-font-under-16px",
+    "route": "/scenarios",
+    "viewport": "desktop",
+    "detail": "input.mt-1.min-h-11 14px"
+  },
+  {
+    "kind": "input-font-under-16px",
+    "route": "/scenarios",
+    "viewport": "desktop",
+    "detail": "input.mt-1.min-h-11 14px"
+  },
+  {
+    "kind": "input-font-under-16px",
+    "route": "/scenarios",
+    "viewport": "desktop",
+    "detail": "input.mt-1.min-h-11 14px"
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/scenarios",
+    "viewport": "desktop",
+    "detail": "a.skip-link 143×37 \"Hoppa till innehåll\""
+  },
+  {
+    "kind": "input-without-label",
+    "route": "/advisor",
+    "viewport": "desktop",
+    "detail": "input.min-h-11.min-w-[16rem]"
+  },
+  {
+    "kind": "input-font-under-16px",
+    "route": "/advisor",
+    "viewport": "desktop",
+    "detail": "input.min-h-11.min-w-[16rem] 14px"
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/advisor",
+    "viewport": "desktop",
+    "detail": "a.skip-link 143×37 \"Hoppa till innehåll\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/advisor",
+    "viewport": "desktop",
+    "detail": "a.text-accent.hover:underline 101×16 \"Opportunities →\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/advisor",
+    "viewport": "desktop",
+    "detail": "a.text-accent.hover:underline 45×16 \"Risk →\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/advisor",
+    "viewport": "desktop",
+    "detail": "a.text-accent.hover:underline 161×14 \"Kvarvarande budget 30 346 kr\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/advisor",
+    "viewport": "desktop",
+    "detail": "a.text-accent.hover:underline 95×14 \"Utgiftstrend uppåt\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/advisor",
+    "viewport": "desktop",
+    "detail": "a.text-accent.hover:underline 59×14 \"Kassaflöde\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/advisor",
+    "viewport": "desktop",
+    "detail": "a.text-accent.hover:underline 36×14 \"Livsstil\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/advisor",
+    "viewport": "desktop",
+    "detail": "a.text-accent.hover:underline 61×14 \"Skuldbörda\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/advisor",
+    "viewport": "desktop",
+    "detail": "a.text-accent.hover:underline 41×14 \"Skulder\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/advisor",
+    "viewport": "desktop",
+    "detail": "a.text-accent.hover:underline 31×14 \"Bolån\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/advisor",
+    "viewport": "desktop",
+    "detail": "a.text-accent.hover:underline 87×14 \"Equity 95 000 kr\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/advisor",
+    "viewport": "desktop",
+    "detail": "a.text-accent.hover:underline 107×14 \"NW 5 919 347,68 kr\""
+  },
+  {
+    "kind": "network",
+    "route": "/advisor",
+    "viewport": "desktop",
+    "detail": "failed: GET http://localhost:3000/accounts/e8870b73-6ddc-450b-a920-77ec17a42f73?_rsc=86oGJDHsVsD75O45 (net::ERR_ABORTED)"
+  },
+  {
+    "kind": "network",
+    "route": "/advisor",
+    "viewport": "desktop",
+    "detail": "failed: GET http://localhost:3000/vehicles/8dce43d6-3926-43be-9722-e947776e750e?_rsc=86oGJDHsVsD75O45 (net::ERR_ABORTED)"
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/notifications",
+    "viewport": "desktop",
+    "detail": "a.skip-link 143×37 \"Hoppa till innehåll\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/notifications",
+    "viewport": "desktop",
+    "detail": "button.rounded-[12px].border 145×38 \"Markera alla lästa\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/notifications",
+    "viewport": "desktop",
+    "detail": "a.mt-2.inline-block 60×20 \"Öppna →\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/notifications",
+    "viewport": "desktop",
+    "detail": "button.text-sm.text-accent 77×20 \"Markera läst\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/notifications",
+    "viewport": "desktop",
+    "detail": "a.mt-2.inline-block 60×20 \"Öppna →\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/notifications",
+    "viewport": "desktop",
+    "detail": "button.text-sm.text-accent 77×20 \"Markera läst\""
+  },
+  {
+    "kind": "input-font-under-16px",
+    "route": "/settings",
+    "viewport": "desktop",
+    "detail": "input.mt-1.min-h-11 14px"
+  },
+  {
+    "kind": "input-font-under-16px",
+    "route": "/settings",
+    "viewport": "desktop",
+    "detail": "select.mt-1.min-h-11 14px"
+  },
+  {
+    "kind": "input-without-label",
+    "route": "/settings",
+    "viewport": "desktop",
+    "detail": "select.min-h-11.rounded-[12px]"
+  },
+  {
+    "kind": "input-font-under-16px",
+    "route": "/settings",
+    "viewport": "desktop",
+    "detail": "select.min-h-11.rounded-[12px] 14px"
+  },
+  {
+    "kind": "input-without-label",
+    "route": "/settings",
+    "viewport": "desktop",
+    "detail": "input.min-h-11.rounded-[12px]"
+  },
+  {
+    "kind": "input-font-under-16px",
+    "route": "/settings",
+    "viewport": "desktop",
+    "detail": "input.min-h-11.rounded-[12px] 14px"
+  },
+  {
+    "kind": "input-without-label",
+    "route": "/settings",
+    "viewport": "desktop",
+    "detail": "select.min-h-11.rounded-[12px]"
+  },
+  {
+    "kind": "input-font-under-16px",
+    "route": "/settings",
+    "viewport": "desktop",
+    "detail": "select.min-h-11.rounded-[12px] 14px"
+  },
+  {
+    "kind": "input-font-under-16px",
+    "route": "/settings",
+    "viewport": "desktop",
+    "detail": "select.mt-1.min-h-11 14px"
+  },
+  {
+    "kind": "input-font-under-16px",
+    "route": "/settings",
+    "viewport": "desktop",
+    "detail": "input.mt-1.min-h-11 14px"
+  },
+  {
+    "kind": "input-font-under-16px",
+    "route": "/settings",
+    "viewport": "desktop",
+    "detail": "input.mt-1.min-h-11 14px"
+  },
+  {
+    "kind": "input-font-under-16px",
+    "route": "/settings",
+    "viewport": "desktop",
+    "detail": "input.mt-1.min-h-11 14px"
+  },
+  {
+    "kind": "input-font-under-16px",
+    "route": "/settings",
+    "viewport": "desktop",
+    "detail": "input.mt-1.min-h-11 14px"
+  },
+  {
+    "kind": "input-font-under-16px",
+    "route": "/settings",
+    "viewport": "desktop",
+    "detail": "input.mt-1.min-h-11 14px"
+  },
+  {
+    "kind": "input-font-under-16px",
+    "route": "/settings",
+    "viewport": "desktop",
+    "detail": "input.mt-1.min-h-11 14px"
+  },
+  {
+    "kind": "input-font-under-16px",
+    "route": "/settings",
+    "viewport": "desktop",
+    "detail": "input 12px"
+  },
+  {
+    "kind": "input-without-label",
+    "route": "/settings",
+    "viewport": "desktop",
+    "detail": "input.min-h-11.rounded-[12px]"
+  },
+  {
+    "kind": "input-font-under-16px",
+    "route": "/settings",
+    "viewport": "desktop",
+    "detail": "input.min-h-11.rounded-[12px] 14px"
+  },
+  {
+    "kind": "input-without-label",
+    "route": "/settings",
+    "viewport": "desktop",
+    "detail": "select.min-h-11.rounded-[12px]"
+  },
+  {
+    "kind": "input-font-under-16px",
+    "route": "/settings",
+    "viewport": "desktop",
+    "detail": "select.min-h-11.rounded-[12px] 14px"
+  },
+  {
+    "kind": "input-without-label",
+    "route": "/settings",
+    "viewport": "desktop",
+    "detail": "select.min-h-11.w-full"
+  },
+  {
+    "kind": "input-font-under-16px",
+    "route": "/settings",
+    "viewport": "desktop",
+    "detail": "select.min-h-11.w-full 14px"
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/settings",
+    "viewport": "desktop",
+    "detail": "a.skip-link 143×37 \"Hoppa till innehåll\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/settings",
+    "viewport": "desktop",
+    "detail": "input 13×13 \"\""
+  },
+  {
+    "kind": "money-format-variant",
+    "route": "/settings",
+    "viewport": "desktop",
+    "detail": "SEK-prefix: SEK"
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/more",
+    "viewport": "desktop",
+    "detail": "a.skip-link 143×37 \"Hoppa till innehåll\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/",
+    "viewport": "mobile",
+    "detail": "a.skip-link 140×37 \"Hoppa till innehåll\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/",
+    "viewport": "mobile",
+    "detail": "a.hover:text-accent 90×25 \"1 180 000 kr\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/",
+    "viewport": "mobile",
+    "detail": "a.hover:text-accent 113×25 \"4 148 997,32 kr\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/",
+    "viewport": "mobile",
+    "detail": "a.text-sm.text-accent 42×20 \"Budget\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/",
+    "viewport": "mobile",
+    "detail": "a.text-sm.text-accent 50×20 \"Visa mer\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/",
+    "viewport": "mobile",
+    "detail": "a.text-sm.text-accent 22×20 \"Alla\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/",
+    "viewport": "mobile",
+    "detail": "a.text-sm.text-accent 50×20 \"Visa mer\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/",
+    "viewport": "mobile",
+    "detail": "a.text-sm.text-accent 79×20 \"Abonnemang\""
+  },
+  {
+    "kind": "input-font-under-16px",
+    "route": "/accounts",
+    "viewport": "mobile",
+    "detail": "input.mt-1.min-h-11 14px"
+  },
+  {
+    "kind": "input-font-under-16px",
+    "route": "/accounts",
+    "viewport": "mobile",
+    "detail": "select.mt-1.min-h-11 14px"
+  },
+  {
+    "kind": "input-font-under-16px",
+    "route": "/accounts",
+    "viewport": "mobile",
+    "detail": "input.mt-1.min-h-11 14px"
+  },
+  {
+    "kind": "input-font-under-16px",
+    "route": "/accounts",
+    "viewport": "mobile",
+    "detail": "input.mt-1.min-h-11 14px"
+  },
+  {
+    "kind": "input-font-under-16px",
+    "route": "/accounts",
+    "viewport": "mobile",
+    "detail": "input 14px"
+  },
+  {
+    "kind": "input-font-under-16px",
+    "route": "/accounts",
+    "viewport": "mobile",
+    "detail": "input 14px"
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/accounts",
+    "viewport": "mobile",
+    "detail": "a.skip-link 140×37 \"Hoppa till innehåll\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/accounts",
+    "viewport": "mobile",
+    "detail": "input 12×12 \"\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/accounts",
+    "viewport": "mobile",
+    "detail": "input 12×12 \"\""
+  },
+  {
+    "kind": "money-format-variant",
+    "route": "/accounts",
+    "viewport": "mobile",
+    "detail": "SEK-prefix: SEK"
+  },
+  {
+    "kind": "input-without-label",
+    "route": "/transactions",
+    "viewport": "mobile",
+    "detail": "input.min-h-11.rounded-[12px]"
+  },
+  {
+    "kind": "input-font-under-16px",
+    "route": "/transactions",
+    "viewport": "mobile",
+    "detail": "input.min-h-11.rounded-[12px] 14px"
+  },
+  {
+    "kind": "input-without-label",
+    "route": "/transactions",
+    "viewport": "mobile",
+    "detail": "select.min-h-11.rounded-[12px]"
+  },
+  {
+    "kind": "input-font-under-16px",
+    "route": "/transactions",
+    "viewport": "mobile",
+    "detail": "select.min-h-11.rounded-[12px] 14px"
+  },
+  {
+    "kind": "input-font-under-16px",
+    "route": "/transactions",
+    "viewport": "mobile",
+    "detail": "input.min-h-11.rounded-[12px] 14px"
+  },
+  {
+    "kind": "input-font-under-16px",
+    "route": "/transactions",
+    "viewport": "mobile",
+    "detail": "input.min-h-11.rounded-[12px] 14px"
+  },
+  {
+    "kind": "input-font-under-16px",
+    "route": "/transactions",
+    "viewport": "mobile",
+    "detail": "input 14px"
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/transactions",
+    "viewport": "mobile",
+    "detail": "a.skip-link 140×37 \"Hoppa till innehåll\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/transactions",
+    "viewport": "mobile",
+    "detail": "input 12×12 \"\""
+  },
+  {
+    "kind": "input-font-under-16px",
+    "route": "/budget",
+    "viewport": "mobile",
+    "detail": "input.mt-1.min-h-11 14px"
+  },
+  {
+    "kind": "input-font-under-16px",
+    "route": "/budget",
+    "viewport": "mobile",
+    "detail": "input.mt-1.min-h-11 14px"
+  },
+  {
+    "kind": "input-font-under-16px",
+    "route": "/budget",
+    "viewport": "mobile",
+    "detail": "input.mt-1.min-h-11 14px"
+  },
+  {
+    "kind": "input-font-under-16px",
+    "route": "/budget",
+    "viewport": "mobile",
+    "detail": "input.mt-1.min-h-11 14px"
+  },
+  {
+    "kind": "input-font-under-16px",
+    "route": "/budget",
+    "viewport": "mobile",
+    "detail": "input.mt-1.min-h-11 14px"
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/budget",
+    "viewport": "mobile",
+    "detail": "a.skip-link 140×37 \"Hoppa till innehåll\""
+  },
+  {
+    "kind": "input-without-label",
+    "route": "/goals",
+    "viewport": "mobile",
+    "detail": "input.min-h-11.rounded-[12px]"
+  },
+  {
+    "kind": "input-font-under-16px",
+    "route": "/goals",
+    "viewport": "mobile",
+    "detail": "input.min-h-11.rounded-[12px] 14px"
+  },
+  {
+    "kind": "input-without-label",
+    "route": "/goals",
+    "viewport": "mobile",
+    "detail": "select.min-h-11.rounded-[12px]"
+  },
+  {
+    "kind": "input-font-under-16px",
+    "route": "/goals",
+    "viewport": "mobile",
+    "detail": "select.min-h-11.rounded-[12px] 14px"
+  },
+  {
+    "kind": "input-font-under-16px",
+    "route": "/goals",
+    "viewport": "mobile",
+    "detail": "input.mt-1.min-h-11 14px"
+  },
+  {
+    "kind": "input-font-under-16px",
+    "route": "/goals",
+    "viewport": "mobile",
+    "detail": "input.mt-1.min-h-11 14px"
+  },
+  {
+    "kind": "input-font-under-16px",
+    "route": "/goals",
+    "viewport": "mobile",
+    "detail": "input.mt-1.min-h-11 14px"
+  },
+  {
+    "kind": "input-font-under-16px",
+    "route": "/goals",
+    "viewport": "mobile",
+    "detail": "input.mt-1.min-h-11 14px"
+  },
+  {
+    "kind": "input-font-under-16px",
+    "route": "/goals",
+    "viewport": "mobile",
+    "detail": "input.mt-1.min-h-11 14px"
+  },
+  {
+    "kind": "input-font-under-16px",
+    "route": "/goals",
+    "viewport": "mobile",
+    "detail": "input.mt-1.min-h-11 14px"
+  },
+  {
+    "kind": "input-font-under-16px",
+    "route": "/goals",
+    "viewport": "mobile",
+    "detail": "input.mt-1.min-h-11 14px"
+  },
+  {
+    "kind": "input-font-under-16px",
+    "route": "/goals",
+    "viewport": "mobile",
+    "detail": "input.mt-1.min-h-11 14px"
+  },
+  {
+    "kind": "input-without-label",
+    "route": "/goals",
+    "viewport": "mobile",
+    "detail": "input.min-h-11.rounded-[12px]"
+  },
+  {
+    "kind": "input-font-under-16px",
+    "route": "/goals",
+    "viewport": "mobile",
+    "detail": "input.min-h-11.rounded-[12px] 14px"
+  },
+  {
+    "kind": "input-without-label",
+    "route": "/goals",
+    "viewport": "mobile",
+    "detail": "input.min-h-11.rounded-[12px]"
+  },
+  {
+    "kind": "input-font-under-16px",
+    "route": "/goals",
+    "viewport": "mobile",
+    "detail": "input.min-h-11.rounded-[12px] 14px"
+  },
+  {
+    "kind": "input-without-label",
+    "route": "/goals",
+    "viewport": "mobile",
+    "detail": "input.min-h-11.rounded-[12px]"
+  },
+  {
+    "kind": "input-font-under-16px",
+    "route": "/goals",
+    "viewport": "mobile",
+    "detail": "input.min-h-11.rounded-[12px] 14px"
+  },
+  {
+    "kind": "input-font-under-16px",
+    "route": "/goals",
+    "viewport": "mobile",
+    "detail": "input.mt-1.min-h-11 14px"
+  },
+  {
+    "kind": "input-font-under-16px",
+    "route": "/goals",
+    "viewport": "mobile",
+    "detail": "input.mt-1.min-h-11 14px"
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/goals",
+    "viewport": "mobile",
+    "detail": "a.skip-link 140×37 \"Hoppa till innehåll\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/net-worth",
+    "viewport": "mobile",
+    "detail": "a.skip-link 140×37 \"Hoppa till innehåll\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/net-worth",
+    "viewport": "mobile",
+    "detail": "a.text-accent.hover:underline 93×20 \"Investeringar →\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/net-worth",
+    "viewport": "mobile",
+    "detail": "a.text-accent.hover:underline 75×20 \"Tillgångar →\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/net-worth",
+    "viewport": "mobile",
+    "detail": "a.text-accent.hover:underline 62×20 \"Skulder →\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/net-worth",
+    "viewport": "mobile",
+    "detail": "a.hover:text-accent 90×25 \"1 180 000 kr\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/net-worth",
+    "viewport": "mobile",
+    "detail": "a.hover:text-accent 90×25 \"7 700 000 kr\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/net-worth",
+    "viewport": "mobile",
+    "detail": "a.hover:text-accent 113×25 \"4 148 997,32 kr\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/forecast",
+    "viewport": "mobile",
+    "detail": "a.skip-link 140×37 \"Hoppa till innehåll\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/cashflow",
+    "viewport": "mobile",
+    "detail": "a.skip-link 140×37 \"Hoppa till innehåll\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/insights",
+    "viewport": "mobile",
+    "detail": "a.skip-link 140×37 \"Hoppa till innehåll\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/opportunities",
+    "viewport": "mobile",
+    "detail": "a.skip-link 140×37 \"Hoppa till innehåll\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/opportunities",
+    "viewport": "mobile",
+    "detail": "a.text-accent.hover:underline 182×20 \"Recommendation outcomes →\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/opportunities",
+    "viewport": "mobile",
+    "detail": "a.text-accent.hover:underline 40×20 \"Livsstil\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/opportunities",
+    "viewport": "mobile",
+    "detail": "a.text-accent.hover:underline 69×16 \"Kassaflöde →\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/opportunities",
+    "viewport": "mobile",
+    "detail": "a.text-accent.hover:underline 49×16 \"Livsstil →\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/opportunities",
+    "viewport": "mobile",
+    "detail": "a.text-accent.hover:underline 64×16 \"Familjebil →\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/opportunities",
+    "viewport": "mobile",
+    "detail": "a.text-accent.hover:underline 64×16 \"Familjebil →\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/opportunities",
+    "viewport": "mobile",
+    "detail": "a.text-accent.hover:underline 59×16 \"Marknad →\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/opportunities",
+    "viewport": "mobile",
+    "detail": "a.text-accent.hover:underline 56×16 \"Översikt →\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/opportunities",
+    "viewport": "mobile",
+    "detail": "a.text-accent.hover:underline 77×16 \"Mål / sinking →\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/opportunities",
+    "viewport": "mobile",
+    "detail": "a.text-accent.hover:underline 44×16 \"Bolån →\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/opportunities",
+    "viewport": "mobile",
+    "detail": "a.text-accent.hover:underline 53×16 \"Skulder →\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/opportunities",
+    "viewport": "mobile",
+    "detail": "a.text-accent.hover:underline 47×16 \"Netflix →\""
+  },
+  {
+    "kind": "input-without-label",
+    "route": "/review",
+    "viewport": "mobile",
+    "detail": "select.min-h-11.rounded-[12px]"
+  },
+  {
+    "kind": "input-font-under-16px",
+    "route": "/review",
+    "viewport": "mobile",
+    "detail": "select.min-h-11.rounded-[12px] 14px"
+  },
+  {
+    "kind": "input-without-label",
+    "route": "/review",
+    "viewport": "mobile",
+    "detail": "select.min-h-11.rounded-[12px]"
+  },
+  {
+    "kind": "input-font-under-16px",
+    "route": "/review",
+    "viewport": "mobile",
+    "detail": "select.min-h-11.rounded-[12px] 14px"
+  },
+  {
+    "kind": "input-without-label",
+    "route": "/review",
+    "viewport": "mobile",
+    "detail": "select.min-h-11.rounded-[12px]"
+  },
+  {
+    "kind": "input-font-under-16px",
+    "route": "/review",
+    "viewport": "mobile",
+    "detail": "select.min-h-11.rounded-[12px] 14px"
+  },
+  {
+    "kind": "input-without-label",
+    "route": "/review",
+    "viewport": "mobile",
+    "detail": "select.min-h-11.rounded-[12px]"
+  },
+  {
+    "kind": "input-font-under-16px",
+    "route": "/review",
+    "viewport": "mobile",
+    "detail": "select.min-h-11.rounded-[12px] 14px"
+  },
+  {
+    "kind": "input-without-label",
+    "route": "/review",
+    "viewport": "mobile",
+    "detail": "select.min-h-11.rounded-[12px]"
+  },
+  {
+    "kind": "input-font-under-16px",
+    "route": "/review",
+    "viewport": "mobile",
+    "detail": "select.min-h-11.rounded-[12px] 14px"
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/review",
+    "viewport": "mobile",
+    "detail": "a.skip-link 140×37 \"Hoppa till innehåll\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/vehicles",
+    "viewport": "mobile",
+    "detail": "a.skip-link 140×37 \"Hoppa till innehåll\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/vehicles",
+    "viewport": "mobile",
+    "detail": "a.font-medium.text-accent 49×20 \"Översikt\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/vehicles",
+    "viewport": "mobile",
+    "detail": "a.text-text-secondary.hover:text-accent 52×20 \"Marknad\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/vehicles",
+    "viewport": "mobile",
+    "detail": "a.text-text-secondary.hover:text-accent 65×20 \"Kandidater\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/vehicles",
+    "viewport": "mobile",
+    "detail": "a.text-text-secondary.hover:text-accent 42×20 \"Jämför\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/debt",
+    "viewport": "mobile",
+    "detail": "a.skip-link 140×37 \"Hoppa till innehåll\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/investments",
+    "viewport": "mobile",
+    "detail": "a.skip-link 140×37 \"Hoppa till innehåll\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/investments",
+    "viewport": "mobile",
+    "detail": "a.text-accent.hover:underline 125×20 \"Nettoförmögenhet →\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/assets",
+    "viewport": "mobile",
+    "detail": "a.skip-link 140×37 \"Hoppa till innehåll\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/assets",
+    "viewport": "mobile",
+    "detail": "a.text-accent.hover:underline 125×20 \"Nettoförmögenhet →\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/assets",
+    "viewport": "mobile",
+    "detail": "a.text-accent.hover:underline 59×20 \"Fordon →\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/assets",
+    "viewport": "mobile",
+    "detail": "a.text-accent.hover:underline 32×17 \"öppna\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/assets",
+    "viewport": "mobile",
+    "detail": "a.text-accent.hover:underline 32×17 \"öppna\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/assets",
+    "viewport": "mobile",
+    "detail": "a.text-accent.hover:underline 32×17 \"öppna\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/assets",
+    "viewport": "mobile",
+    "detail": "a.text-accent.hover:underline 32×17 \"öppna\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/assets",
+    "viewport": "mobile",
+    "detail": "a.text-accent.hover:underline 32×17 \"öppna\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/assets",
+    "viewport": "mobile",
+    "detail": "a.text-accent.hover:underline 32×17 \"öppna\""
+  },
+  {
+    "kind": "input-font-under-16px",
+    "route": "/documents",
+    "viewport": "mobile",
+    "detail": "input.mt-1.w-full 14px"
+  },
+  {
+    "kind": "input-font-under-16px",
+    "route": "/documents",
+    "viewport": "mobile",
+    "detail": "select.mt-1.w-full 14px"
+  },
+  {
+    "kind": "input-font-under-16px",
+    "route": "/documents",
+    "viewport": "mobile",
+    "detail": "select.mt-1.w-full 14px"
+  },
+  {
+    "kind": "input-font-under-16px",
+    "route": "/documents",
+    "viewport": "mobile",
+    "detail": "select.mt-1.w-full 14px"
+  },
+  {
+    "kind": "input-without-label",
+    "route": "/documents",
+    "viewport": "mobile",
+    "detail": "input.block.w-full"
+  },
+  {
+    "kind": "input-font-under-16px",
+    "route": "/documents",
+    "viewport": "mobile",
+    "detail": "input.block.w-full 14px"
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/documents",
+    "viewport": "mobile",
+    "detail": "a.skip-link 140×37 \"Hoppa till innehåll\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/imports",
+    "viewport": "mobile",
+    "detail": "a.skip-link 140×37 \"Hoppa till innehåll\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/imports",
+    "viewport": "mobile",
+    "detail": "a.text-accent 113×20 \"Hantera kopplingar\""
+  },
+  {
+    "kind": "input-font-under-16px",
+    "route": "/integrations",
+    "viewport": "mobile",
+    "detail": "select.mt-1.block 14px"
+  },
+  {
+    "kind": "input-font-under-16px",
+    "route": "/integrations",
+    "viewport": "mobile",
+    "detail": "input.mt-1.block 14px"
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/integrations",
+    "viewport": "mobile",
+    "detail": "a.skip-link 140×37 \"Hoppa till innehåll\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/integrations",
+    "viewport": "mobile",
+    "detail": "button.rounded-[12px].bg-accent 164×36 \"Fake sync (första källa)\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/integrations",
+    "viewport": "mobile",
+    "detail": "button.self-end.rounded-[12px] 101×38 \"Skapa källa\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/integrations",
+    "viewport": "mobile",
+    "detail": "button.rounded-[12px].bg-accent 86×38 \"Reconnect\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/integrations",
+    "viewport": "mobile",
+    "detail": "button.rounded-[12px].border 94×38 \"Koppla från\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/integrations",
+    "viewport": "mobile",
+    "detail": "button.rounded-[12px].border 54×38 \"Sync\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/integrations",
+    "viewport": "mobile",
+    "detail": "button.rounded-[12px].border 94×38 \"Koppla från\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/integrations",
+    "viewport": "mobile",
+    "detail": "button.rounded-[12px].bg-accent 86×38 \"Reconnect\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/integrations",
+    "viewport": "mobile",
+    "detail": "button.rounded-[12px].border 94×38 \"Koppla från\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/integrations",
+    "viewport": "mobile",
+    "detail": "button.rounded-[12px].border 54×38 \"Sync\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/integrations",
+    "viewport": "mobile",
+    "detail": "button.rounded-[12px].border 94×38 \"Koppla från\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/contracts",
+    "viewport": "mobile",
+    "detail": "a.skip-link 140×37 \"Hoppa till innehåll\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/subscriptions",
+    "viewport": "mobile",
+    "detail": "a.skip-link 140×37 \"Hoppa till innehåll\""
+  },
+  {
+    "kind": "input-font-under-16px",
+    "route": "/reports",
+    "viewport": "mobile",
+    "detail": "input.mt-1.block 14px"
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/reports",
+    "viewport": "mobile",
+    "detail": "a.skip-link 140×37 \"Hoppa till innehåll\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/risk",
+    "viewport": "mobile",
+    "detail": "a.skip-link 140×37 \"Hoppa till innehåll\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/risk",
+    "viewport": "mobile",
+    "detail": "a.text-accent.hover:underline 69×16 \"Kassaflöde →\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/risk",
+    "viewport": "mobile",
+    "detail": "a.text-accent.hover:underline 51×16 \"Konton →\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/risk",
+    "viewport": "mobile",
+    "detail": "a.text-accent.hover:underline 53×16 \"Skulder →\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/risk",
+    "viewport": "mobile",
+    "detail": "a.text-accent.hover:underline 44×16 \"Bolån →\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/risk",
+    "viewport": "mobile",
+    "detail": "a.text-accent.hover:underline 82×16 \"Abonnemang →\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/risk",
+    "viewport": "mobile",
+    "detail": "a.text-accent.hover:underline 39×16 \"Avtal →\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/risk",
+    "viewport": "mobile",
+    "detail": "a.text-accent.hover:underline 80×16 \"Integrationer →\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/risk",
+    "viewport": "mobile",
+    "detail": "a.text-accent.hover:underline 71×16 \"Granskning →\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/risk",
+    "viewport": "mobile",
+    "detail": "a.text-accent.hover:underline 50×16 \"Fordon →\""
+  },
+  {
+    "kind": "input-without-label",
+    "route": "/scenarios",
+    "viewport": "mobile",
+    "detail": "input.min-h-11.w-full"
+  },
+  {
+    "kind": "input-font-under-16px",
+    "route": "/scenarios",
+    "viewport": "mobile",
+    "detail": "input.min-h-11.w-full 14px"
+  },
+  {
+    "kind": "input-without-label",
+    "route": "/scenarios",
+    "viewport": "mobile",
+    "detail": "input.min-h-11.w-full"
+  },
+  {
+    "kind": "input-font-under-16px",
+    "route": "/scenarios",
+    "viewport": "mobile",
+    "detail": "input.min-h-11.w-full 14px"
+  },
+  {
+    "kind": "input-font-under-16px",
+    "route": "/scenarios",
+    "viewport": "mobile",
+    "detail": "input.mt-1.min-h-11 14px"
+  },
+  {
+    "kind": "input-font-under-16px",
+    "route": "/scenarios",
+    "viewport": "mobile",
+    "detail": "input.mt-1.min-h-11 14px"
+  },
+  {
+    "kind": "input-font-under-16px",
+    "route": "/scenarios",
+    "viewport": "mobile",
+    "detail": "input.mt-1.min-h-11 14px"
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/scenarios",
+    "viewport": "mobile",
+    "detail": "a.skip-link 140×37 \"Hoppa till innehåll\""
+  },
+  {
+    "kind": "input-without-label",
+    "route": "/advisor",
+    "viewport": "mobile",
+    "detail": "input.min-h-11.min-w-[16rem]"
+  },
+  {
+    "kind": "input-font-under-16px",
+    "route": "/advisor",
+    "viewport": "mobile",
+    "detail": "input.min-h-11.min-w-[16rem] 14px"
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/advisor",
+    "viewport": "mobile",
+    "detail": "a.skip-link 140×37 \"Hoppa till innehåll\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/advisor",
+    "viewport": "mobile",
+    "detail": "a.text-accent.hover:underline 99×20 \"Opportunities →\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/advisor",
+    "viewport": "mobile",
+    "detail": "a.text-accent.hover:underline 41×20 \"Risk →\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/advisor",
+    "viewport": "mobile",
+    "detail": "button.rounded-[12px].bg-accent 70×36 \"Skicka\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/advisor",
+    "viewport": "mobile",
+    "detail": "a.text-accent.hover:underline 148×17 \"Kvarvarande budget 30 346 kr\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/advisor",
+    "viewport": "mobile",
+    "detail": "a.text-accent.hover:underline 92×17 \"Utgiftstrend uppåt\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/advisor",
+    "viewport": "mobile",
+    "detail": "a.text-accent.hover:underline 55×17 \"Kassaflöde\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/advisor",
+    "viewport": "mobile",
+    "detail": "a.text-accent.hover:underline 34×17 \"Livsstil\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/advisor",
+    "viewport": "mobile",
+    "detail": "a.text-accent.hover:underline 58×17 \"Skuldbörda\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/advisor",
+    "viewport": "mobile",
+    "detail": "a.text-accent.hover:underline 39×17 \"Skulder\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/advisor",
+    "viewport": "mobile",
+    "detail": "a.text-accent.hover:underline 29×17 \"Bolån\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/advisor",
+    "viewport": "mobile",
+    "detail": "a.text-accent.hover:underline 79×17 \"Equity 95 000 kr\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/advisor",
+    "viewport": "mobile",
+    "detail": "a.text-accent.hover:underline 94×17 \"NW 5 919 347,68 kr\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/notifications",
+    "viewport": "mobile",
+    "detail": "a.skip-link 140×37 \"Hoppa till innehåll\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/notifications",
+    "viewport": "mobile",
+    "detail": "button.rounded-[12px].border 136×38 \"Markera alla lästa\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/notifications",
+    "viewport": "mobile",
+    "detail": "a.mt-2.inline-block 56×20 \"Öppna →\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/notifications",
+    "viewport": "mobile",
+    "detail": "button.text-sm.text-accent 71×20 \"Markera läst\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/notifications",
+    "viewport": "mobile",
+    "detail": "a.mt-2.inline-block 56×20 \"Öppna →\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/notifications",
+    "viewport": "mobile",
+    "detail": "button.text-sm.text-accent 71×20 \"Markera läst\""
+  },
+  {
+    "kind": "input-font-under-16px",
+    "route": "/settings",
+    "viewport": "mobile",
+    "detail": "input.mt-1.min-h-11 14px"
+  },
+  {
+    "kind": "input-font-under-16px",
+    "route": "/settings",
+    "viewport": "mobile",
+    "detail": "select.mt-1.min-h-11 14px"
+  },
+  {
+    "kind": "input-without-label",
+    "route": "/settings",
+    "viewport": "mobile",
+    "detail": "select.min-h-11.rounded-[12px]"
+  },
+  {
+    "kind": "input-font-under-16px",
+    "route": "/settings",
+    "viewport": "mobile",
+    "detail": "select.min-h-11.rounded-[12px] 14px"
+  },
+  {
+    "kind": "input-without-label",
+    "route": "/settings",
+    "viewport": "mobile",
+    "detail": "input.min-h-11.rounded-[12px]"
+  },
+  {
+    "kind": "input-font-under-16px",
+    "route": "/settings",
+    "viewport": "mobile",
+    "detail": "input.min-h-11.rounded-[12px] 14px"
+  },
+  {
+    "kind": "input-without-label",
+    "route": "/settings",
+    "viewport": "mobile",
+    "detail": "select.min-h-11.rounded-[12px]"
+  },
+  {
+    "kind": "input-font-under-16px",
+    "route": "/settings",
+    "viewport": "mobile",
+    "detail": "select.min-h-11.rounded-[12px] 14px"
+  },
+  {
+    "kind": "input-font-under-16px",
+    "route": "/settings",
+    "viewport": "mobile",
+    "detail": "select.mt-1.min-h-11 14px"
+  },
+  {
+    "kind": "input-font-under-16px",
+    "route": "/settings",
+    "viewport": "mobile",
+    "detail": "input.mt-1.min-h-11 14px"
+  },
+  {
+    "kind": "input-font-under-16px",
+    "route": "/settings",
+    "viewport": "mobile",
+    "detail": "input.mt-1.min-h-11 14px"
+  },
+  {
+    "kind": "input-font-under-16px",
+    "route": "/settings",
+    "viewport": "mobile",
+    "detail": "input.mt-1.min-h-11 14px"
+  },
+  {
+    "kind": "input-font-under-16px",
+    "route": "/settings",
+    "viewport": "mobile",
+    "detail": "input.mt-1.min-h-11 14px"
+  },
+  {
+    "kind": "input-font-under-16px",
+    "route": "/settings",
+    "viewport": "mobile",
+    "detail": "input.mt-1.min-h-11 14px"
+  },
+  {
+    "kind": "input-font-under-16px",
+    "route": "/settings",
+    "viewport": "mobile",
+    "detail": "input.mt-1.min-h-11 14px"
+  },
+  {
+    "kind": "input-font-under-16px",
+    "route": "/settings",
+    "viewport": "mobile",
+    "detail": "input 12px"
+  },
+  {
+    "kind": "input-without-label",
+    "route": "/settings",
+    "viewport": "mobile",
+    "detail": "input.min-h-11.rounded-[12px]"
+  },
+  {
+    "kind": "input-font-under-16px",
+    "route": "/settings",
+    "viewport": "mobile",
+    "detail": "input.min-h-11.rounded-[12px] 14px"
+  },
+  {
+    "kind": "input-without-label",
+    "route": "/settings",
+    "viewport": "mobile",
+    "detail": "select.min-h-11.rounded-[12px]"
+  },
+  {
+    "kind": "input-font-under-16px",
+    "route": "/settings",
+    "viewport": "mobile",
+    "detail": "select.min-h-11.rounded-[12px] 14px"
+  },
+  {
+    "kind": "input-without-label",
+    "route": "/settings",
+    "viewport": "mobile",
+    "detail": "select.min-h-11.w-full"
+  },
+  {
+    "kind": "input-font-under-16px",
+    "route": "/settings",
+    "viewport": "mobile",
+    "detail": "select.min-h-11.w-full 14px"
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/settings",
+    "viewport": "mobile",
+    "detail": "a.skip-link 140×37 \"Hoppa till innehåll\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/settings",
+    "viewport": "mobile",
+    "detail": "input 12×12 \"\""
+  },
+  {
+    "kind": "money-format-variant",
+    "route": "/settings",
+    "viewport": "mobile",
+    "detail": "SEK-prefix: SEK"
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/more",
+    "viewport": "mobile",
+    "detail": "a.skip-link 140×37 \"Hoppa till innehåll\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/",
+    "viewport": "narrow",
+    "detail": "a.skip-link 143×37 \"Hoppa till innehåll\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/",
+    "viewport": "narrow",
+    "detail": "a.hover:text-accent 100×20 \"1 180 000 kr\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/",
+    "viewport": "narrow",
+    "detail": "a.hover:text-accent 125×20 \"4 148 997,32 kr\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/",
+    "viewport": "narrow",
+    "detail": "a.text-sm.text-accent 44×20 \"Budget\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/",
+    "viewport": "narrow",
+    "detail": "a.text-sm.text-accent 55×20 \"Visa mer\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/",
+    "viewport": "narrow",
+    "detail": "a.text-sm.text-accent 23×20 \"Alla\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/",
+    "viewport": "narrow",
+    "detail": "a.text-sm.text-accent 55×20 \"Visa mer\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/",
+    "viewport": "narrow",
+    "detail": "a.text-sm.text-accent 83×20 \"Abonnemang\""
+  },
+  {
+    "kind": "input-font-under-16px",
+    "route": "/accounts",
+    "viewport": "narrow",
+    "detail": "input.mt-1.min-h-11 14px"
+  },
+  {
+    "kind": "input-font-under-16px",
+    "route": "/accounts",
+    "viewport": "narrow",
+    "detail": "select.mt-1.min-h-11 14px"
+  },
+  {
+    "kind": "input-font-under-16px",
+    "route": "/accounts",
+    "viewport": "narrow",
+    "detail": "input.mt-1.min-h-11 14px"
+  },
+  {
+    "kind": "input-font-under-16px",
+    "route": "/accounts",
+    "viewport": "narrow",
+    "detail": "input.mt-1.min-h-11 14px"
+  },
+  {
+    "kind": "input-font-under-16px",
+    "route": "/accounts",
+    "viewport": "narrow",
+    "detail": "input 14px"
+  },
+  {
+    "kind": "input-font-under-16px",
+    "route": "/accounts",
+    "viewport": "narrow",
+    "detail": "input 14px"
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/accounts",
+    "viewport": "narrow",
+    "detail": "a.skip-link 143×37 \"Hoppa till innehåll\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/accounts",
+    "viewport": "narrow",
+    "detail": "input 13×13 \"\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/accounts",
+    "viewport": "narrow",
+    "detail": "input 13×13 \"\""
+  },
+  {
+    "kind": "money-format-variant",
+    "route": "/accounts",
+    "viewport": "narrow",
+    "detail": "SEK-prefix: SEK"
+  },
+  {
+    "kind": "network",
+    "route": "/accounts",
+    "viewport": "narrow",
+    "detail": "failed: GET http://localhost:3000/accounts/aebf23c9-7caa-41d9-926c-2bbe2bea1f85?_rsc=uyjKVIJNWOFcmpSj (net::ERR_ABORTED)"
+  },
+  {
+    "kind": "network",
+    "route": "/accounts",
+    "viewport": "narrow",
+    "detail": "failed: GET http://localhost:3000/accounts/8d0f86fc-c955-41e7-b86a-bd2db471ec4f?_rsc=uyjKVIJNWOFcmpSj (net::ERR_ABORTED)"
+  },
+  {
+    "kind": "network",
+    "route": "/accounts",
+    "viewport": "narrow",
+    "detail": "failed: GET http://localhost:3000/accounts/52b7df60-7f53-457d-b1c5-b444dc25023e?_rsc=uyjKVIJNWOFcmpSj (net::ERR_ABORTED)"
+  },
+  {
+    "kind": "input-without-label",
+    "route": "/transactions",
+    "viewport": "narrow",
+    "detail": "input.min-h-11.rounded-[12px]"
+  },
+  {
+    "kind": "input-font-under-16px",
+    "route": "/transactions",
+    "viewport": "narrow",
+    "detail": "input.min-h-11.rounded-[12px] 14px"
+  },
+  {
+    "kind": "input-without-label",
+    "route": "/transactions",
+    "viewport": "narrow",
+    "detail": "select.min-h-11.rounded-[12px]"
+  },
+  {
+    "kind": "input-font-under-16px",
+    "route": "/transactions",
+    "viewport": "narrow",
+    "detail": "select.min-h-11.rounded-[12px] 14px"
+  },
+  {
+    "kind": "input-font-under-16px",
+    "route": "/transactions",
+    "viewport": "narrow",
+    "detail": "input.min-h-11.rounded-[12px] 14px"
+  },
+  {
+    "kind": "input-font-under-16px",
+    "route": "/transactions",
+    "viewport": "narrow",
+    "detail": "input.min-h-11.rounded-[12px] 14px"
+  },
+  {
+    "kind": "input-font-under-16px",
+    "route": "/transactions",
+    "viewport": "narrow",
+    "detail": "input 14px"
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/transactions",
+    "viewport": "narrow",
+    "detail": "a.skip-link 143×37 \"Hoppa till innehåll\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/transactions",
+    "viewport": "narrow",
+    "detail": "input 13×13 \"\""
+  },
+  {
+    "kind": "network",
+    "route": "/transactions",
+    "viewport": "narrow",
+    "detail": "failed: GET http://localhost:3000/transactions/99b3aaa1-dc41-42ae-986c-0f66118b70aa?_rsc=aOtGA8jXCX25qOVE (net::ERR_ABORTED)"
+  },
+  {
+    "kind": "network",
+    "route": "/transactions",
+    "viewport": "narrow",
+    "detail": "failed: GET http://localhost:3000/transactions/6c4f622f-7a97-470a-bf1a-08e17fec9d95?_rsc=aOtGA8jXCX25qOVE (net::ERR_ABORTED)"
+  },
+  {
+    "kind": "network",
+    "route": "/transactions",
+    "viewport": "narrow",
+    "detail": "failed: GET http://localhost:3000/transactions/a4b34d6b-ebe3-4831-82cd-ae1742b2412c?_rsc=aOtGA8jXCX25qOVE (net::ERR_ABORTED)"
+  },
+  {
+    "kind": "network",
+    "route": "/transactions",
+    "viewport": "narrow",
+    "detail": "failed: GET http://localhost:3000/transactions/1b2f6cfd-c5e9-48cf-8bb0-88bc888584e5?_rsc=aOtGA8jXCX25qOVE (net::ERR_ABORTED)"
+  },
+  {
+    "kind": "network",
+    "route": "/transactions",
+    "viewport": "narrow",
+    "detail": "failed: GET http://localhost:3000/transactions/5d02d21c-a76c-4181-bfd8-a36b7782776c?_rsc=aOtGA8jXCX25qOVE (net::ERR_ABORTED)"
+  },
+  {
+    "kind": "network",
+    "route": "/transactions",
+    "viewport": "narrow",
+    "detail": "failed: GET http://localhost:3000/transactions/ad21bb54-f107-4482-80a6-5610515089a4?_rsc=aOtGA8jXCX25qOVE (net::ERR_ABORTED)"
+  },
+  {
+    "kind": "network",
+    "route": "/transactions",
+    "viewport": "narrow",
+    "detail": "failed: GET http://localhost:3000/transactions/829470bf-b34b-466f-9d32-3084490d2d95?_rsc=aOtGA8jXCX25qOVE (net::ERR_ABORTED)"
+  },
+  {
+    "kind": "input-font-under-16px",
+    "route": "/budget",
+    "viewport": "narrow",
+    "detail": "input.mt-1.min-h-11 14px"
+  },
+  {
+    "kind": "input-font-under-16px",
+    "route": "/budget",
+    "viewport": "narrow",
+    "detail": "input.mt-1.min-h-11 14px"
+  },
+  {
+    "kind": "input-font-under-16px",
+    "route": "/budget",
+    "viewport": "narrow",
+    "detail": "input.mt-1.min-h-11 14px"
+  },
+  {
+    "kind": "input-font-under-16px",
+    "route": "/budget",
+    "viewport": "narrow",
+    "detail": "input.mt-1.min-h-11 14px"
+  },
+  {
+    "kind": "input-font-under-16px",
+    "route": "/budget",
+    "viewport": "narrow",
+    "detail": "input.mt-1.min-h-11 14px"
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/budget",
+    "viewport": "narrow",
+    "detail": "a.skip-link 143×37 \"Hoppa till innehåll\""
+  },
+  {
+    "kind": "input-without-label",
+    "route": "/goals",
+    "viewport": "narrow",
+    "detail": "input.min-h-11.rounded-[12px]"
+  },
+  {
+    "kind": "input-font-under-16px",
+    "route": "/goals",
+    "viewport": "narrow",
+    "detail": "input.min-h-11.rounded-[12px] 14px"
+  },
+  {
+    "kind": "input-without-label",
+    "route": "/goals",
+    "viewport": "narrow",
+    "detail": "select.min-h-11.rounded-[12px]"
+  },
+  {
+    "kind": "input-font-under-16px",
+    "route": "/goals",
+    "viewport": "narrow",
+    "detail": "select.min-h-11.rounded-[12px] 14px"
+  },
+  {
+    "kind": "input-font-under-16px",
+    "route": "/goals",
+    "viewport": "narrow",
+    "detail": "input.mt-1.min-h-11 14px"
+  },
+  {
+    "kind": "input-font-under-16px",
+    "route": "/goals",
+    "viewport": "narrow",
+    "detail": "input.mt-1.min-h-11 14px"
+  },
+  {
+    "kind": "input-font-under-16px",
+    "route": "/goals",
+    "viewport": "narrow",
+    "detail": "input.mt-1.min-h-11 14px"
+  },
+  {
+    "kind": "input-font-under-16px",
+    "route": "/goals",
+    "viewport": "narrow",
+    "detail": "input.mt-1.min-h-11 14px"
+  },
+  {
+    "kind": "input-font-under-16px",
+    "route": "/goals",
+    "viewport": "narrow",
+    "detail": "input.mt-1.min-h-11 14px"
+  },
+  {
+    "kind": "input-font-under-16px",
+    "route": "/goals",
+    "viewport": "narrow",
+    "detail": "input.mt-1.min-h-11 14px"
+  },
+  {
+    "kind": "input-font-under-16px",
+    "route": "/goals",
+    "viewport": "narrow",
+    "detail": "input.mt-1.min-h-11 14px"
+  },
+  {
+    "kind": "input-font-under-16px",
+    "route": "/goals",
+    "viewport": "narrow",
+    "detail": "input.mt-1.min-h-11 14px"
+  },
+  {
+    "kind": "input-without-label",
+    "route": "/goals",
+    "viewport": "narrow",
+    "detail": "input.min-h-11.rounded-[12px]"
+  },
+  {
+    "kind": "input-font-under-16px",
+    "route": "/goals",
+    "viewport": "narrow",
+    "detail": "input.min-h-11.rounded-[12px] 14px"
+  },
+  {
+    "kind": "input-without-label",
+    "route": "/goals",
+    "viewport": "narrow",
+    "detail": "input.min-h-11.rounded-[12px]"
+  },
+  {
+    "kind": "input-font-under-16px",
+    "route": "/goals",
+    "viewport": "narrow",
+    "detail": "input.min-h-11.rounded-[12px] 14px"
+  },
+  {
+    "kind": "input-without-label",
+    "route": "/goals",
+    "viewport": "narrow",
+    "detail": "input.min-h-11.rounded-[12px]"
+  },
+  {
+    "kind": "input-font-under-16px",
+    "route": "/goals",
+    "viewport": "narrow",
+    "detail": "input.min-h-11.rounded-[12px] 14px"
+  },
+  {
+    "kind": "input-font-under-16px",
+    "route": "/goals",
+    "viewport": "narrow",
+    "detail": "input.mt-1.min-h-11 14px"
+  },
+  {
+    "kind": "input-font-under-16px",
+    "route": "/goals",
+    "viewport": "narrow",
+    "detail": "input.mt-1.min-h-11 14px"
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/goals",
+    "viewport": "narrow",
+    "detail": "a.skip-link 143×37 \"Hoppa till innehåll\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/net-worth",
+    "viewport": "narrow",
+    "detail": "a.skip-link 143×37 \"Hoppa till innehåll\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/net-worth",
+    "viewport": "narrow",
+    "detail": "a.text-accent.hover:underline 99×20 \"Investeringar →\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/net-worth",
+    "viewport": "narrow",
+    "detail": "a.text-accent.hover:underline 79×20 \"Tillgångar →\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/net-worth",
+    "viewport": "narrow",
+    "detail": "a.text-accent.hover:underline 65×20 \"Skulder →\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/net-worth",
+    "viewport": "narrow",
+    "detail": "a.hover:text-accent 100×20 \"1 180 000 kr\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/net-worth",
+    "viewport": "narrow",
+    "detail": "a.hover:text-accent 100×20 \"7 700 000 kr\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/net-worth",
+    "viewport": "narrow",
+    "detail": "a.hover:text-accent 125×20 \"4 148 997,32 kr\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/forecast",
+    "viewport": "narrow",
+    "detail": "a.skip-link 143×37 \"Hoppa till innehåll\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/cashflow",
+    "viewport": "narrow",
+    "detail": "a.skip-link 143×37 \"Hoppa till innehåll\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/insights",
+    "viewport": "narrow",
+    "detail": "a.skip-link 143×37 \"Hoppa till innehåll\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/opportunities",
+    "viewport": "narrow",
+    "detail": "a.skip-link 143×37 \"Hoppa till innehåll\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/opportunities",
+    "viewport": "narrow",
+    "detail": "a.text-accent.hover:underline 192×16 \"Recommendation outcomes →\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/opportunities",
+    "viewport": "narrow",
+    "detail": "a.text-accent.hover:underline 42×20 \"Livsstil\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/opportunities",
+    "viewport": "narrow",
+    "detail": "a.text-accent.hover:underline 75×16 \"Kassaflöde →\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/opportunities",
+    "viewport": "narrow",
+    "detail": "a.text-accent.hover:underline 51×16 \"Livsstil →\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/opportunities",
+    "viewport": "narrow",
+    "detail": "a.text-accent.hover:underline 66×16 \"Familjebil →\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/opportunities",
+    "viewport": "narrow",
+    "detail": "a.text-accent.hover:underline 66×16 \"Familjebil →\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/opportunities",
+    "viewport": "narrow",
+    "detail": "a.text-accent.hover:underline 62×16 \"Marknad →\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/opportunities",
+    "viewport": "narrow",
+    "detail": "a.text-accent.hover:underline 59×16 \"Översikt →\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/opportunities",
+    "viewport": "narrow",
+    "detail": "a.text-accent.hover:underline 82×16 \"Mål / sinking →\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/opportunities",
+    "viewport": "narrow",
+    "detail": "a.text-accent.hover:underline 46×16 \"Bolån →\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/opportunities",
+    "viewport": "narrow",
+    "detail": "a.text-accent.hover:underline 56×16 \"Skulder →\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/opportunities",
+    "viewport": "narrow",
+    "detail": "a.text-accent.hover:underline 49×16 \"Netflix →\""
+  },
+  {
+    "kind": "input-without-label",
+    "route": "/review",
+    "viewport": "narrow",
+    "detail": "select.min-h-11.rounded-[12px]"
+  },
+  {
+    "kind": "input-font-under-16px",
+    "route": "/review",
+    "viewport": "narrow",
+    "detail": "select.min-h-11.rounded-[12px] 14px"
+  },
+  {
+    "kind": "input-without-label",
+    "route": "/review",
+    "viewport": "narrow",
+    "detail": "select.min-h-11.rounded-[12px]"
+  },
+  {
+    "kind": "input-font-under-16px",
+    "route": "/review",
+    "viewport": "narrow",
+    "detail": "select.min-h-11.rounded-[12px] 14px"
+  },
+  {
+    "kind": "input-without-label",
+    "route": "/review",
+    "viewport": "narrow",
+    "detail": "select.min-h-11.rounded-[12px]"
+  },
+  {
+    "kind": "input-font-under-16px",
+    "route": "/review",
+    "viewport": "narrow",
+    "detail": "select.min-h-11.rounded-[12px] 14px"
+  },
+  {
+    "kind": "input-without-label",
+    "route": "/review",
+    "viewport": "narrow",
+    "detail": "select.min-h-11.rounded-[12px]"
+  },
+  {
+    "kind": "input-font-under-16px",
+    "route": "/review",
+    "viewport": "narrow",
+    "detail": "select.min-h-11.rounded-[12px] 14px"
+  },
+  {
+    "kind": "input-without-label",
+    "route": "/review",
+    "viewport": "narrow",
+    "detail": "select.min-h-11.rounded-[12px]"
+  },
+  {
+    "kind": "input-font-under-16px",
+    "route": "/review",
+    "viewport": "narrow",
+    "detail": "select.min-h-11.rounded-[12px] 14px"
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/review",
+    "viewport": "narrow",
+    "detail": "a.skip-link 143×37 \"Hoppa till innehåll\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/vehicles",
+    "viewport": "narrow",
+    "detail": "a.skip-link 143×37 \"Hoppa till innehåll\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/vehicles",
+    "viewport": "narrow",
+    "detail": "a.font-medium.text-accent 51×20 \"Översikt\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/vehicles",
+    "viewport": "narrow",
+    "detail": "a.text-text-secondary.hover:text-accent 54×20 \"Marknad\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/vehicles",
+    "viewport": "narrow",
+    "detail": "a.text-text-secondary.hover:text-accent 68×20 \"Kandidater\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/vehicles",
+    "viewport": "narrow",
+    "detail": "a.text-text-secondary.hover:text-accent 43×20 \"Jämför\""
+  },
+  {
+    "kind": "network",
+    "route": "/vehicles",
+    "viewport": "narrow",
+    "detail": "failed: GET http://localhost:3000/vehicles/compare?_rsc=QGY64TN9M4S5nW4L (net::ERR_ABORTED)"
+  },
+  {
+    "kind": "network",
+    "route": "/vehicles",
+    "viewport": "narrow",
+    "detail": "failed: GET http://localhost:3000/vehicles/8dce43d6-3926-43be-9722-e947776e750e?_rsc=QGY64TN9M4S5nW4L (net::ERR_ABORTED)"
+  },
+  {
+    "kind": "network",
+    "route": "/vehicles",
+    "viewport": "narrow",
+    "detail": "failed: GET http://localhost:3000/vehicles/932cdeb9-2810-44fe-9974-5280c9770d65?_rsc=QGY64TN9M4S5nW4L (net::ERR_ABORTED)"
+  },
+  {
+    "kind": "network",
+    "route": "/vehicles",
+    "viewport": "narrow",
+    "detail": "failed: GET http://localhost:3000/vehicles/c22ca151-6689-40a2-8ce6-89cd621db6de?_rsc=QGY64TN9M4S5nW4L (net::ERR_ABORTED)"
+  },
+  {
+    "kind": "network",
+    "route": "/vehicles",
+    "viewport": "narrow",
+    "detail": "failed: GET http://localhost:3000/vehicles/58a8181f-8671-4705-b514-40af3d682371?_rsc=QGY64TN9M4S5nW4L (net::ERR_ABORTED)"
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/debt",
+    "viewport": "narrow",
+    "detail": "a.skip-link 143×37 \"Hoppa till innehåll\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/investments",
+    "viewport": "narrow",
+    "detail": "a.skip-link 143×37 \"Hoppa till innehåll\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/investments",
+    "viewport": "narrow",
+    "detail": "a.text-accent.hover:underline 130×16 \"Nettoförmögenhet →\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/assets",
+    "viewport": "narrow",
+    "detail": "a.skip-link 143×37 \"Hoppa till innehåll\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/assets",
+    "viewport": "narrow",
+    "detail": "a.text-accent.hover:underline 130×20 \"Nettoförmögenhet →\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/assets",
+    "viewport": "narrow",
+    "detail": "a.text-accent.hover:underline 62×20 \"Fordon →\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/assets",
+    "viewport": "narrow",
+    "detail": "a.text-accent.hover:underline 33×14 \"öppna\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/assets",
+    "viewport": "narrow",
+    "detail": "a.text-accent.hover:underline 33×14 \"öppna\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/assets",
+    "viewport": "narrow",
+    "detail": "a.text-accent.hover:underline 33×14 \"öppna\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/assets",
+    "viewport": "narrow",
+    "detail": "a.text-accent.hover:underline 33×14 \"öppna\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/assets",
+    "viewport": "narrow",
+    "detail": "a.text-accent.hover:underline 33×14 \"öppna\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/assets",
+    "viewport": "narrow",
+    "detail": "a.text-accent.hover:underline 33×14 \"öppna\""
+  },
+  {
+    "kind": "network",
+    "route": "/assets",
+    "viewport": "narrow",
+    "detail": "failed: GET http://localhost:3000/vehicles/932cdeb9-2810-44fe-9974-5280c9770d65?_rsc=Q6RPR02XOXFEVgc_ (net::ERR_ABORTED)"
+  },
+  {
+    "kind": "network",
+    "route": "/assets",
+    "viewport": "narrow",
+    "detail": "failed: GET http://localhost:3000/vehicles/8dce43d6-3926-43be-9722-e947776e750e?_rsc=Q6RPR02XOXFEVgc_ (net::ERR_ABORTED)"
+  },
+  {
+    "kind": "network",
+    "route": "/assets",
+    "viewport": "narrow",
+    "detail": "failed: GET http://localhost:3000/vehicles/c22ca151-6689-40a2-8ce6-89cd621db6de?_rsc=Q6RPR02XOXFEVgc_ (net::ERR_ABORTED)"
+  },
+  {
+    "kind": "network",
+    "route": "/assets",
+    "viewport": "narrow",
+    "detail": "failed: GET http://localhost:3000/vehicles/58a8181f-8671-4705-b514-40af3d682371?_rsc=Q6RPR02XOXFEVgc_ (net::ERR_ABORTED)"
+  },
+  {
+    "kind": "network",
+    "route": "/assets",
+    "viewport": "narrow",
+    "detail": "failed: GET http://localhost:3000/vehicles/9ffbbd63-43fb-4ea2-92b2-991344f0bea1?_rsc=Q6RPR02XOXFEVgc_ (net::ERR_ABORTED)"
+  },
+  {
+    "kind": "input-font-under-16px",
+    "route": "/documents",
+    "viewport": "narrow",
+    "detail": "input.mt-1.w-full 14px"
+  },
+  {
+    "kind": "input-font-under-16px",
+    "route": "/documents",
+    "viewport": "narrow",
+    "detail": "select.mt-1.w-full 14px"
+  },
+  {
+    "kind": "input-font-under-16px",
+    "route": "/documents",
+    "viewport": "narrow",
+    "detail": "select.mt-1.w-full 14px"
+  },
+  {
+    "kind": "input-font-under-16px",
+    "route": "/documents",
+    "viewport": "narrow",
+    "detail": "select.mt-1.w-full 14px"
+  },
+  {
+    "kind": "input-without-label",
+    "route": "/documents",
+    "viewport": "narrow",
+    "detail": "input.block.w-full"
+  },
+  {
+    "kind": "input-font-under-16px",
+    "route": "/documents",
+    "viewport": "narrow",
+    "detail": "input.block.w-full 14px"
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/documents",
+    "viewport": "narrow",
+    "detail": "a.skip-link 143×37 \"Hoppa till innehåll\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/imports",
+    "viewport": "narrow",
+    "detail": "a.skip-link 143×37 \"Hoppa till innehåll\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/imports",
+    "viewport": "narrow",
+    "detail": "a.text-accent 294×36 \"Hantera kopplingar\""
+  },
+  {
+    "kind": "input-font-under-16px",
+    "route": "/integrations",
+    "viewport": "narrow",
+    "detail": "select.mt-1.block 14px"
+  },
+  {
+    "kind": "input-font-under-16px",
+    "route": "/integrations",
+    "viewport": "narrow",
+    "detail": "input.mt-1.block 14px"
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/integrations",
+    "viewport": "narrow",
+    "detail": "a.skip-link 143×37 \"Hoppa till innehåll\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/integrations",
+    "viewport": "narrow",
+    "detail": "button.rounded-[12px].bg-accent 177×36 \"Fake sync (första källa)\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/integrations",
+    "viewport": "narrow",
+    "detail": "button.self-end.rounded-[12px] 106×38 \"Skapa källa\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/integrations",
+    "viewport": "narrow",
+    "detail": "button.rounded-[12px].bg-accent 91×38 \"Reconnect\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/integrations",
+    "viewport": "narrow",
+    "detail": "button.rounded-[12px].border 98×38 \"Koppla från\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/integrations",
+    "viewport": "narrow",
+    "detail": "button.rounded-[12px].border 57×38 \"Sync\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/integrations",
+    "viewport": "narrow",
+    "detail": "button.rounded-[12px].border 98×38 \"Koppla från\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/integrations",
+    "viewport": "narrow",
+    "detail": "button.rounded-[12px].bg-accent 91×38 \"Reconnect\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/integrations",
+    "viewport": "narrow",
+    "detail": "button.rounded-[12px].border 98×38 \"Koppla från\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/integrations",
+    "viewport": "narrow",
+    "detail": "button.rounded-[12px].border 57×38 \"Sync\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/integrations",
+    "viewport": "narrow",
+    "detail": "button.rounded-[12px].border 98×38 \"Koppla från\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/contracts",
+    "viewport": "narrow",
+    "detail": "a.skip-link 143×37 \"Hoppa till innehåll\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/subscriptions",
+    "viewport": "narrow",
+    "detail": "a.skip-link 143×37 \"Hoppa till innehåll\""
+  },
+  {
+    "kind": "input-font-under-16px",
+    "route": "/reports",
+    "viewport": "narrow",
+    "detail": "input.mt-1.block 14px"
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/reports",
+    "viewport": "narrow",
+    "detail": "a.skip-link 143×37 \"Hoppa till innehåll\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/risk",
+    "viewport": "narrow",
+    "detail": "a.skip-link 143×37 \"Hoppa till innehåll\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/risk",
+    "viewport": "narrow",
+    "detail": "a.text-accent.hover:underline 75×16 \"Kassaflöde →\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/risk",
+    "viewport": "narrow",
+    "detail": "a.text-accent.hover:underline 53×16 \"Konton →\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/risk",
+    "viewport": "narrow",
+    "detail": "a.text-accent.hover:underline 56×16 \"Skulder →\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/risk",
+    "viewport": "narrow",
+    "detail": "a.text-accent.hover:underline 46×16 \"Bolån →\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/risk",
+    "viewport": "narrow",
+    "detail": "a.text-accent.hover:underline 87×16 \"Abonnemang →\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/risk",
+    "viewport": "narrow",
+    "detail": "a.text-accent.hover:underline 42×16 \"Avtal →\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/risk",
+    "viewport": "narrow",
+    "detail": "a.text-accent.hover:underline 83×16 \"Integrationer →\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/risk",
+    "viewport": "narrow",
+    "detail": "a.text-accent.hover:underline 77×16 \"Granskning →\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/risk",
+    "viewport": "narrow",
+    "detail": "a.text-accent.hover:underline 53×16 \"Fordon →\""
+  },
+  {
+    "kind": "network",
+    "route": "/risk",
+    "viewport": "narrow",
+    "detail": "failed: GET http://localhost:3000/accounts/e8870b73-6ddc-450b-a920-77ec17a42f73?_rsc=18vY_PYvzr_IekoJ (net::ERR_ABORTED)"
+  },
+  {
+    "kind": "input-without-label",
+    "route": "/scenarios",
+    "viewport": "narrow",
+    "detail": "input.min-h-11.w-full"
+  },
+  {
+    "kind": "input-font-under-16px",
+    "route": "/scenarios",
+    "viewport": "narrow",
+    "detail": "input.min-h-11.w-full 14px"
+  },
+  {
+    "kind": "input-without-label",
+    "route": "/scenarios",
+    "viewport": "narrow",
+    "detail": "input.min-h-11.w-full"
+  },
+  {
+    "kind": "input-font-under-16px",
+    "route": "/scenarios",
+    "viewport": "narrow",
+    "detail": "input.min-h-11.w-full 14px"
+  },
+  {
+    "kind": "input-font-under-16px",
+    "route": "/scenarios",
+    "viewport": "narrow",
+    "detail": "input.mt-1.min-h-11 14px"
+  },
+  {
+    "kind": "input-font-under-16px",
+    "route": "/scenarios",
+    "viewport": "narrow",
+    "detail": "input.mt-1.min-h-11 14px"
+  },
+  {
+    "kind": "input-font-under-16px",
+    "route": "/scenarios",
+    "viewport": "narrow",
+    "detail": "input.mt-1.min-h-11 14px"
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/scenarios",
+    "viewport": "narrow",
+    "detail": "a.skip-link 143×37 \"Hoppa till innehåll\""
+  },
+  {
+    "kind": "input-without-label",
+    "route": "/advisor",
+    "viewport": "narrow",
+    "detail": "input.min-h-11.min-w-[16rem]"
+  },
+  {
+    "kind": "input-font-under-16px",
+    "route": "/advisor",
+    "viewport": "narrow",
+    "detail": "input.min-h-11.min-w-[16rem] 14px"
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/advisor",
+    "viewport": "narrow",
+    "detail": "a.skip-link 143×37 \"Hoppa till innehåll\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/advisor",
+    "viewport": "narrow",
+    "detail": "a.text-accent.hover:underline 101×16 \"Opportunities →\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/advisor",
+    "viewport": "narrow",
+    "detail": "a.text-accent.hover:underline 45×16 \"Risk →\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/advisor",
+    "viewport": "narrow",
+    "detail": "button.rounded-[12px].bg-accent 73×36 \"Skicka\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/advisor",
+    "viewport": "narrow",
+    "detail": "a.text-accent.hover:underline 161×14 \"Kvarvarande budget 30 346 kr\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/advisor",
+    "viewport": "narrow",
+    "detail": "a.text-accent.hover:underline 95×14 \"Utgiftstrend uppåt\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/advisor",
+    "viewport": "narrow",
+    "detail": "a.text-accent.hover:underline 59×14 \"Kassaflöde\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/advisor",
+    "viewport": "narrow",
+    "detail": "a.text-accent.hover:underline 36×14 \"Livsstil\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/advisor",
+    "viewport": "narrow",
+    "detail": "a.text-accent.hover:underline 61×14 \"Skuldbörda\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/advisor",
+    "viewport": "narrow",
+    "detail": "a.text-accent.hover:underline 41×14 \"Skulder\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/advisor",
+    "viewport": "narrow",
+    "detail": "a.text-accent.hover:underline 31×14 \"Bolån\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/advisor",
+    "viewport": "narrow",
+    "detail": "a.text-accent.hover:underline 87×14 \"Equity 95 000 kr\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/advisor",
+    "viewport": "narrow",
+    "detail": "a.text-accent.hover:underline 107×14 \"NW 5 919 347,68 kr\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/notifications",
+    "viewport": "narrow",
+    "detail": "a.skip-link 143×37 \"Hoppa till innehåll\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/notifications",
+    "viewport": "narrow",
+    "detail": "button.rounded-[12px].border 145×38 \"Markera alla lästa\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/notifications",
+    "viewport": "narrow",
+    "detail": "a.mt-2.inline-block 60×20 \"Öppna →\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/notifications",
+    "viewport": "narrow",
+    "detail": "button.text-sm.text-accent 77×20 \"Markera läst\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/notifications",
+    "viewport": "narrow",
+    "detail": "a.mt-2.inline-block 60×20 \"Öppna →\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/notifications",
+    "viewport": "narrow",
+    "detail": "button.text-sm.text-accent 77×20 \"Markera läst\""
+  },
+  {
+    "kind": "input-font-under-16px",
+    "route": "/settings",
+    "viewport": "narrow",
+    "detail": "input.mt-1.min-h-11 14px"
+  },
+  {
+    "kind": "input-font-under-16px",
+    "route": "/settings",
+    "viewport": "narrow",
+    "detail": "select.mt-1.min-h-11 14px"
+  },
+  {
+    "kind": "input-without-label",
+    "route": "/settings",
+    "viewport": "narrow",
+    "detail": "select.min-h-11.rounded-[12px]"
+  },
+  {
+    "kind": "input-font-under-16px",
+    "route": "/settings",
+    "viewport": "narrow",
+    "detail": "select.min-h-11.rounded-[12px] 14px"
+  },
+  {
+    "kind": "input-without-label",
+    "route": "/settings",
+    "viewport": "narrow",
+    "detail": "input.min-h-11.rounded-[12px]"
+  },
+  {
+    "kind": "input-font-under-16px",
+    "route": "/settings",
+    "viewport": "narrow",
+    "detail": "input.min-h-11.rounded-[12px] 14px"
+  },
+  {
+    "kind": "input-without-label",
+    "route": "/settings",
+    "viewport": "narrow",
+    "detail": "select.min-h-11.rounded-[12px]"
+  },
+  {
+    "kind": "input-font-under-16px",
+    "route": "/settings",
+    "viewport": "narrow",
+    "detail": "select.min-h-11.rounded-[12px] 14px"
+  },
+  {
+    "kind": "input-font-under-16px",
+    "route": "/settings",
+    "viewport": "narrow",
+    "detail": "select.mt-1.min-h-11 14px"
+  },
+  {
+    "kind": "input-font-under-16px",
+    "route": "/settings",
+    "viewport": "narrow",
+    "detail": "input.mt-1.min-h-11 14px"
+  },
+  {
+    "kind": "input-font-under-16px",
+    "route": "/settings",
+    "viewport": "narrow",
+    "detail": "input.mt-1.min-h-11 14px"
+  },
+  {
+    "kind": "input-font-under-16px",
+    "route": "/settings",
+    "viewport": "narrow",
+    "detail": "input.mt-1.min-h-11 14px"
+  },
+  {
+    "kind": "input-font-under-16px",
+    "route": "/settings",
+    "viewport": "narrow",
+    "detail": "input.mt-1.min-h-11 14px"
+  },
+  {
+    "kind": "input-font-under-16px",
+    "route": "/settings",
+    "viewport": "narrow",
+    "detail": "input.mt-1.min-h-11 14px"
+  },
+  {
+    "kind": "input-font-under-16px",
+    "route": "/settings",
+    "viewport": "narrow",
+    "detail": "input.mt-1.min-h-11 14px"
+  },
+  {
+    "kind": "input-font-under-16px",
+    "route": "/settings",
+    "viewport": "narrow",
+    "detail": "input 12px"
+  },
+  {
+    "kind": "input-without-label",
+    "route": "/settings",
+    "viewport": "narrow",
+    "detail": "input.min-h-11.rounded-[12px]"
+  },
+  {
+    "kind": "input-font-under-16px",
+    "route": "/settings",
+    "viewport": "narrow",
+    "detail": "input.min-h-11.rounded-[12px] 14px"
+  },
+  {
+    "kind": "input-without-label",
+    "route": "/settings",
+    "viewport": "narrow",
+    "detail": "select.min-h-11.rounded-[12px]"
+  },
+  {
+    "kind": "input-font-under-16px",
+    "route": "/settings",
+    "viewport": "narrow",
+    "detail": "select.min-h-11.rounded-[12px] 14px"
+  },
+  {
+    "kind": "input-without-label",
+    "route": "/settings",
+    "viewport": "narrow",
+    "detail": "select.min-h-11.w-full"
+  },
+  {
+    "kind": "input-font-under-16px",
+    "route": "/settings",
+    "viewport": "narrow",
+    "detail": "select.min-h-11.w-full 14px"
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/settings",
+    "viewport": "narrow",
+    "detail": "a.skip-link 143×37 \"Hoppa till innehåll\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/settings",
+    "viewport": "narrow",
+    "detail": "input 13×13 \"\""
+  },
+  {
+    "kind": "money-format-variant",
+    "route": "/settings",
+    "viewport": "narrow",
+    "detail": "SEK-prefix: SEK"
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/more",
+    "viewport": "narrow",
+    "detail": "a.skip-link 143×37 \"Hoppa till innehåll\""
+  }
+]

@@ -1,0 +1,37 @@
+{
+  "name": "@ffos/web",
+  "version": "0.0.1",
+  "private": true,
+  "scripts": {
+    "dev": "next dev --port 3000",
+    "build": "NODE_ENV=production next build",
+    "start": "next start --port 3000",
+    "lint": "eslint .",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "tsx --test $(find src -name '*.test.ts' | sort)",
+    "clean": "rm -rf .next"
+  },
+  "dependencies": {
+    "@ffos/api-client": "workspace:*",
+    "@ffos/design-tokens": "workspace:*",
+    "@ffos/domain": "workspace:*",
+    "@ffos/schemas": "workspace:*",
+    "@ffos/utils": "workspace:*",
+    "@tanstack/react-query": "^5",
+    "next": "^15.3.3",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0"
+  },
+  "devDependencies": {
+    "@ffos/eslint-config": "workspace:*",
+    "@tailwindcss/postcss": "^4.1.8",
+    "@types/node": "^22.15.30",
+    "@types/react": "^19.1.6",
+    "@types/react-dom": "^19.1.5",
+    "eslint": "^9.39.5",
+    "eslint-config-next": "^15",
+    "tailwindcss": "^4.1.8",
+    "tsx": "^4.19.4",
+    "typescript": "^5.8.3"
+  }
+}

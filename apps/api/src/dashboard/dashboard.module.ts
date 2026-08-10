@@ -1,0 +1,25 @@
+import { Module } from "@nestjs/common";
+import { AuthModule } from "../auth/auth.module";
+import { DecisionsModule } from "../decisions/decisions.module";
+import { HouseholdsModule } from "../households/households.module";
+import { MetricsModule } from "../metrics/metrics.module";
+import { PlanningModule } from "../planning/planning.module";
+import { ReviewModule } from "../review/review.module";
+import { SettingsModule } from "../settings/settings.module";
+import { DashboardController } from "./dashboard.controller";
+import { DashboardService } from "./dashboard.service";
+
+@Module({
+  imports: [
+    AuthModule,
+    HouseholdsModule,
+    MetricsModule,
+    ReviewModule,
+    PlanningModule,
+    DecisionsModule,
+    SettingsModule,
+  ],
+  controllers: [DashboardController],
+  providers: [DashboardService],
+})
+export class DashboardModule {}

@@ -1,0 +1,66 @@
+:root {
+  color-scheme: light;
+
+  --ffos-surface: #f7f6f3;
+  --ffos-surface-muted: #efeee9;
+  --ffos-surface-elevated: #ffffff;
+  --ffos-border: #e4e2db;
+  --ffos-border-strong: #cfcabe;
+  --ffos-text-primary: #1c1b19;
+  --ffos-text-secondary: #5c5954;
+  /* WCAG AA ≥4.5:1 on elevated white (#ffffff) */
+  --ffos-text-muted: #6b675f;
+  --ffos-positive: #1f6b4a;
+  --ffos-negative: #9b3b2e;
+  --ffos-warning: #9a6b16;
+  --ffos-info: #2f5d8c;
+  --ffos-accent: #1f4d3a;
+  /*
+   * Text and icons drawn on top of the accent.
+   *
+   * The accent inverts between schemes — a dark green in light mode, a light
+   * sage in dark mode — so a fixed white foreground only works in one of them.
+   * On the dark scheme's accent, white measured 2.06:1, which made the label on
+   * every primary button in the product nearly unreadable. This token flips with
+   * the accent so both schemes clear WCAG AA.
+   */
+  --ffos-on-accent: #ffffff;
+
+  --ffos-radius-sm: 8px;
+  --ffos-radius-md: 12px;
+  --ffos-radius-lg: 18px;
+  --ffos-space-1: 4px;
+  --ffos-space-2: 8px;
+  --ffos-space-3: 12px;
+  --ffos-space-4: 16px;
+  --ffos-space-5: 24px;
+  --ffos-space-6: 32px;
+  --ffos-font-sans: "Source Sans 3", "Segoe UI", sans-serif;
+  --ffos-font-display: "Fraunces", "Georgia", serif;
+  --ffos-shadow-soft: 0 1px 2px rgb(28 27 25 / 4%), 0 8px 24px rgb(28 27 25 / 4%);
+}
+
+.dark {
+  color-scheme: dark;
+
+  --ffos-surface: #121311;
+  --ffos-surface-muted: #1a1b18;
+  --ffos-surface-elevated: #22231f;
+  --ffos-border: #2e2f2a;
+  --ffos-border-strong: #45463f;
+  --ffos-text-primary: #f3f1ea;
+  --ffos-text-secondary: #b7b4ab;
+  /*
+   * Nudged from #8a877d, which measured 4.40:1 on the elevated surface and so
+   * missed AA for normal text on every route. This clears it on both the base
+   * and elevated surfaces while staying visibly quieter than secondary text.
+   */
+  --ffos-text-muted: #918e84;
+  --ffos-positive: #5dba8f;
+  --ffos-negative: #e08a7a;
+  --ffos-warning: #e0b35c;
+  --ffos-info: #7aa7d4;
+  --ffos-accent: #8fbfa8;
+  --ffos-on-accent: #10231a;
+  --ffos-shadow-soft: 0 1px 2px rgb(0 0 0 / 30%), 0 10px 28px rgb(0 0 0 / 25%);
+}

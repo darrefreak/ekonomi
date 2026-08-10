@@ -1,0 +1,50 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Build
+dist/
+build/
+.next/
+.turbo/
+out/
+# Test coverage output (not Nest modules named *coverage*)
+/coverage/
+**/coverage/lcov-report/
+**/coverage/coverage-final.json
+
+# Env / secrets
+.env
+.env.*
+!.env.example
+
+# IDE / OS
+.DS_Store
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+
+# Test / cache
+.cache/
+tmp/
+*.tsbuildinfo
+
+# Docker volumes (local)
+infrastructure/docker/data/
+
+# Generated
+packages/api-client/src/generated/
+
+# Playwright
+e2e/.auth/
+test-results/
+playwright-report/
+
+# Operational state: backups and the erasure ledger never belong in git.
+var/

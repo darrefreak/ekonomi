@@ -1,0 +1,31 @@
+{
+  "name": "@ffos/financial-engine",
+  "version": "0.0.1",
+  "private": true,
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "require": "./dist/index.js",
+      "default": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "lint": "eslint .",
+    "test": "tsx --test $(find src -name '*.test.ts' | sort)",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "@ffos/domain": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^22.15.30",
+    "tsx": "^4.19.4",
+    "typescript": "^5.8.3",
+    "@ffos/eslint-config": "workspace:*",
+    "eslint": "^9.39.5"
+  }
+}

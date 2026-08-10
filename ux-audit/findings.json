@@ -1,0 +1,3398 @@
+[
+  {
+    "kind": "small-tap-target",
+    "route": "/",
+    "viewport": "desktop",
+    "detail": "a.hover:text-accent 100×20 \"1 180 000 kr\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/",
+    "viewport": "desktop",
+    "detail": "a.hover:text-accent 125×20 \"4 448 997,32 kr\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/",
+    "viewport": "desktop",
+    "detail": "a.text-sm.text-accent 55×20 \"Visa mer\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/",
+    "viewport": "desktop",
+    "detail": "a.text-sm.text-accent 83×20 \"Abonnemang\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/accounts",
+    "viewport": "desktop",
+    "detail": "input 13×13 \"\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/accounts",
+    "viewport": "desktop",
+    "detail": "input 13×13 \"\""
+  },
+  {
+    "kind": "money-format-variant",
+    "route": "/accounts",
+    "viewport": "desktop",
+    "detail": "SEK-prefix: SEK"
+  },
+  {
+    "kind": "network",
+    "route": "/accounts",
+    "viewport": "desktop",
+    "detail": "failed: GET http://localhost:3000/accounts/aebf23c9-7caa-41d9-926c-2bbe2bea1f85?_rsc=uyjKVIJNWOFcmpSj (net::ERR_ABORTED)"
+  },
+  {
+    "kind": "network",
+    "route": "/accounts",
+    "viewport": "desktop",
+    "detail": "failed: GET http://localhost:3000/accounts/8d0f86fc-c955-41e7-b86a-bd2db471ec4f?_rsc=uyjKVIJNWOFcmpSj (net::ERR_ABORTED)"
+  },
+  {
+    "kind": "network",
+    "route": "/accounts",
+    "viewport": "desktop",
+    "detail": "failed: GET http://localhost:3000/accounts/52b7df60-7f53-457d-b1c5-b444dc25023e?_rsc=uyjKVIJNWOFcmpSj (net::ERR_ABORTED)"
+  },
+  {
+    "kind": "network",
+    "route": "/accounts",
+    "viewport": "desktop",
+    "detail": "failed: GET http://localhost:3000/accounts/4c45a433-9d9a-4a1d-93d5-17e9a14d55f3?_rsc=uyjKVIJNWOFcmpSj (net::ERR_ABORTED)"
+  },
+  {
+    "kind": "network",
+    "route": "/accounts",
+    "viewport": "desktop",
+    "detail": "failed: GET http://localhost:3000/accounts/4ae788fa-373f-4eb6-9cdf-ff72cfdf76f5?_rsc=uyjKVIJNWOFcmpSj (net::ERR_ABORTED)"
+  },
+  {
+    "kind": "network",
+    "route": "/accounts",
+    "viewport": "desktop",
+    "detail": "failed: GET http://localhost:3000/accounts/1f31feab-71d6-49eb-93e2-e0f741541d27?_rsc=uyjKVIJNWOFcmpSj (net::ERR_ABORTED)"
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/transactions",
+    "viewport": "desktop",
+    "detail": "input 13×13 \"\""
+  },
+  {
+    "kind": "network",
+    "route": "/transactions",
+    "viewport": "desktop",
+    "detail": "failed: GET http://localhost:3000/transactions/ae24792a-5205-40c0-add7-364e51f1d499?_rsc=aOtGA8jXCX25qOVE (net::ERR_ABORTED)"
+  },
+  {
+    "kind": "network",
+    "route": "/transactions",
+    "viewport": "desktop",
+    "detail": "failed: GET http://localhost:3000/transactions/9f98b8bf-65b1-4666-ae6a-a062617ed2ae?_rsc=aOtGA8jXCX25qOVE (net::ERR_ABORTED)"
+  },
+  {
+    "kind": "network",
+    "route": "/transactions",
+    "viewport": "desktop",
+    "detail": "failed: GET http://localhost:3000/transactions/96d67543-a3d5-41bd-957c-f74a1bb1790a?_rsc=aOtGA8jXCX25qOVE (net::ERR_ABORTED)"
+  },
+  {
+    "kind": "network",
+    "route": "/transactions",
+    "viewport": "desktop",
+    "detail": "failed: GET http://localhost:3000/transactions/0ddf9315-569e-459a-8e55-966c4ba70c8a?_rsc=aOtGA8jXCX25qOVE (net::ERR_ABORTED)"
+  },
+  {
+    "kind": "network",
+    "route": "/transactions",
+    "viewport": "desktop",
+    "detail": "failed: GET http://localhost:3000/transactions/5d02d21c-a76c-4181-bfd8-a36b7782776c?_rsc=aOtGA8jXCX25qOVE (net::ERR_ABORTED)"
+  },
+  {
+    "kind": "network",
+    "route": "/transactions",
+    "viewport": "desktop",
+    "detail": "failed: GET http://localhost:3000/transactions/99b3aaa1-dc41-42ae-986c-0f66118b70aa?_rsc=aOtGA8jXCX25qOVE (net::ERR_ABORTED)"
+  },
+  {
+    "kind": "network",
+    "route": "/transactions",
+    "viewport": "desktop",
+    "detail": "failed: GET http://localhost:3000/transactions/6c4f622f-7a97-470a-bf1a-08e17fec9d95?_rsc=aOtGA8jXCX25qOVE (net::ERR_ABORTED)"
+  },
+  {
+    "kind": "network",
+    "route": "/transactions",
+    "viewport": "desktop",
+    "detail": "failed: GET http://localhost:3000/transactions/a4b34d6b-ebe3-4831-82cd-ae1742b2412c?_rsc=aOtGA8jXCX25qOVE (net::ERR_ABORTED)"
+  },
+  {
+    "kind": "network",
+    "route": "/transactions",
+    "viewport": "desktop",
+    "detail": "failed: GET http://localhost:3000/transactions/1b2f6cfd-c5e9-48cf-8bb0-88bc888584e5?_rsc=aOtGA8jXCX25qOVE (net::ERR_ABORTED)"
+  },
+  {
+    "kind": "network",
+    "route": "/transactions",
+    "viewport": "desktop",
+    "detail": "failed: GET http://localhost:3000/transactions/ad21bb54-f107-4482-80a6-5610515089a4?_rsc=aOtGA8jXCX25qOVE (net::ERR_ABORTED)"
+  },
+  {
+    "kind": "network",
+    "route": "/transactions",
+    "viewport": "desktop",
+    "detail": "failed: GET http://localhost:3000/transactions/829470bf-b34b-466f-9d32-3084490d2d95?_rsc=aOtGA8jXCX25qOVE (net::ERR_ABORTED)"
+  },
+  {
+    "kind": "network",
+    "route": "/transactions",
+    "viewport": "desktop",
+    "detail": "failed: GET http://localhost:3000/transactions/c742ae24-d41f-4bbb-9d1b-80073279cd90?_rsc=aOtGA8jXCX25qOVE (net::ERR_ABORTED)"
+  },
+  {
+    "kind": "network",
+    "route": "/transactions",
+    "viewport": "desktop",
+    "detail": "failed: GET http://localhost:3000/transactions/00729510-7dee-4e67-ac43-85ae66931ca8?_rsc=aOtGA8jXCX25qOVE (net::ERR_ABORTED)"
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/net-worth",
+    "viewport": "desktop",
+    "detail": "a.hover:text-accent 100×20 \"1 180 000 kr\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/net-worth",
+    "viewport": "desktop",
+    "detail": "a.hover:text-accent 100×20 \"8 320 000 kr\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/net-worth",
+    "viewport": "desktop",
+    "detail": "a.hover:text-accent 125×20 \"4 448 997,32 kr\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/opportunities",
+    "viewport": "desktop",
+    "detail": "a.text-accent.hover:underline 192×16 \"Recommendation outcomes →\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/opportunities",
+    "viewport": "desktop",
+    "detail": "a.text-accent.hover:underline 75×16 \"Kassaflöde →\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/opportunities",
+    "viewport": "desktop",
+    "detail": "a.text-accent.hover:underline 66×16 \"Familjebil →\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/opportunities",
+    "viewport": "desktop",
+    "detail": "a.text-accent.hover:underline 66×16 \"Familjebil →\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/opportunities",
+    "viewport": "desktop",
+    "detail": "a.text-accent.hover:underline 82×16 \"Mål / sinking →\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/opportunities",
+    "viewport": "desktop",
+    "detail": "a.text-accent.hover:underline 46×16 \"Bolån →\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/opportunities",
+    "viewport": "desktop",
+    "detail": "a.text-accent.hover:underline 56×16 \"Skulder →\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/opportunities",
+    "viewport": "desktop",
+    "detail": "a.text-accent.hover:underline 49×16 \"Netflix →\""
+  },
+  {
+    "kind": "network",
+    "route": "/opportunities",
+    "viewport": "desktop",
+    "detail": "failed: GET http://localhost:3000/vehicles/62d96e5e-4527-4388-a343-c79207ae2c62?_rsc=6AHJxv3ezb6iWzdM (net::ERR_ABORTED)"
+  },
+  {
+    "kind": "network",
+    "route": "/opportunities",
+    "viewport": "desktop",
+    "detail": "failed: GET http://localhost:3000/vehicles/62d96e5e-4527-4388-a343-c79207ae2c62/replacement?_rsc=6AHJxv3ezb6iWzdM (net::ERR_ABORTED)"
+  },
+  {
+    "kind": "network",
+    "route": "/vehicles",
+    "viewport": "desktop",
+    "detail": "failed: GET http://localhost:3000/vehicles/compare?_rsc=QGY64TN9M4S5nW4L (net::ERR_ABORTED)"
+  },
+  {
+    "kind": "network",
+    "route": "/vehicles",
+    "viewport": "desktop",
+    "detail": "failed: GET http://localhost:3000/vehicles/8dce43d6-3926-43be-9722-e947776e750e?_rsc=QGY64TN9M4S5nW4L (net::ERR_ABORTED)"
+  },
+  {
+    "kind": "network",
+    "route": "/vehicles",
+    "viewport": "desktop",
+    "detail": "failed: GET http://localhost:3000/vehicles/932cdeb9-2810-44fe-9974-5280c9770d65?_rsc=QGY64TN9M4S5nW4L (net::ERR_ABORTED)"
+  },
+  {
+    "kind": "network",
+    "route": "/vehicles",
+    "viewport": "desktop",
+    "detail": "failed: GET http://localhost:3000/vehicles/9807f8bd-f62c-4538-b58c-8265c1f0d1c6?_rsc=QGY64TN9M4S5nW4L (net::ERR_ABORTED)"
+  },
+  {
+    "kind": "network",
+    "route": "/vehicles",
+    "viewport": "desktop",
+    "detail": "failed: GET http://localhost:3000/vehicles/9cb388b2-3c1c-4e61-bd09-9cef9be27f0d?_rsc=QGY64TN9M4S5nW4L (net::ERR_ABORTED)"
+  },
+  {
+    "kind": "network",
+    "route": "/vehicles",
+    "viewport": "desktop",
+    "detail": "failed: GET http://localhost:3000/vehicles/c22ca151-6689-40a2-8ce6-89cd621db6de?_rsc=QGY64TN9M4S5nW4L (net::ERR_ABORTED)"
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/investments",
+    "viewport": "desktop",
+    "detail": "a.text-accent.hover:underline 130×16 \"Nettoförmögenhet →\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/assets",
+    "viewport": "desktop",
+    "detail": "a.text-accent.hover:underline 130×20 \"Nettoförmögenhet →\""
+  },
+  {
+    "kind": "network",
+    "route": "/assets",
+    "viewport": "desktop",
+    "detail": "failed: GET http://localhost:3000/vehicles/8dce43d6-3926-43be-9722-e947776e750e?_rsc=Q6RPR02XOXFEVgc_ (net::ERR_ABORTED)"
+  },
+  {
+    "kind": "network",
+    "route": "/assets",
+    "viewport": "desktop",
+    "detail": "failed: GET http://localhost:3000/vehicles/932cdeb9-2810-44fe-9974-5280c9770d65?_rsc=Q6RPR02XOXFEVgc_ (net::ERR_ABORTED)"
+  },
+  {
+    "kind": "network",
+    "route": "/assets",
+    "viewport": "desktop",
+    "detail": "failed: GET http://localhost:3000/vehicles/c22ca151-6689-40a2-8ce6-89cd621db6de?_rsc=Q6RPR02XOXFEVgc_ (net::ERR_ABORTED)"
+  },
+  {
+    "kind": "network",
+    "route": "/assets",
+    "viewport": "desktop",
+    "detail": "failed: GET http://localhost:3000/vehicles/58a8181f-8671-4705-b514-40af3d682371?_rsc=Q6RPR02XOXFEVgc_ (net::ERR_ABORTED)"
+  },
+  {
+    "kind": "network",
+    "route": "/assets",
+    "viewport": "desktop",
+    "detail": "failed: GET http://localhost:3000/vehicles/9ffbbd63-43fb-4ea2-92b2-991344f0bea1?_rsc=Q6RPR02XOXFEVgc_ (net::ERR_ABORTED)"
+  },
+  {
+    "kind": "network",
+    "route": "/assets",
+    "viewport": "desktop",
+    "detail": "failed: GET http://localhost:3000/vehicles/9807f8bd-f62c-4538-b58c-8265c1f0d1c6?_rsc=Q6RPR02XOXFEVgc_ (net::ERR_ABORTED)"
+  },
+  {
+    "kind": "network",
+    "route": "/assets",
+    "viewport": "desktop",
+    "detail": "failed: GET http://localhost:3000/vehicles/9cb388b2-3c1c-4e61-bd09-9cef9be27f0d?_rsc=Q6RPR02XOXFEVgc_ (net::ERR_ABORTED)"
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/integrations",
+    "viewport": "desktop",
+    "detail": "button.rounded-[12px].bg-accent 177×36 \"Fake sync (första källa)\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/integrations",
+    "viewport": "desktop",
+    "detail": "button.self-end.rounded-[12px] 106×38 \"Skapa källa\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/integrations",
+    "viewport": "desktop",
+    "detail": "button.rounded-[12px].border 57×38 \"Sync\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/integrations",
+    "viewport": "desktop",
+    "detail": "button.rounded-[12px].border 98×38 \"Koppla från\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/risk",
+    "viewport": "desktop",
+    "detail": "a.text-accent.hover:underline 75×16 \"Kassaflöde →\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/risk",
+    "viewport": "desktop",
+    "detail": "a.text-accent.hover:underline 56×16 \"Skulder →\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/risk",
+    "viewport": "desktop",
+    "detail": "a.text-accent.hover:underline 46×16 \"Bolån →\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/risk",
+    "viewport": "desktop",
+    "detail": "a.text-accent.hover:underline 87×16 \"Abonnemang →\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/risk",
+    "viewport": "desktop",
+    "detail": "a.text-accent.hover:underline 53×16 \"Fordon →\""
+  },
+  {
+    "kind": "network",
+    "route": "/risk",
+    "viewport": "desktop",
+    "detail": "failed: GET http://localhost:3000/accounts/e8870b73-6ddc-450b-a920-77ec17a42f73?_rsc=18vY_PYvzr_IekoJ (net::ERR_ABORTED)"
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/advisor",
+    "viewport": "desktop",
+    "detail": "a.text-accent.hover:underline 101×16 \"Opportunities →\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/advisor",
+    "viewport": "desktop",
+    "detail": "a.text-accent.hover:underline 161×14 \"Kvarvarande budget 30 346 kr\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/advisor",
+    "viewport": "desktop",
+    "detail": "a.text-accent.hover:underline 95×14 \"Utgiftstrend uppåt\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/advisor",
+    "viewport": "desktop",
+    "detail": "a.text-accent.hover:underline 59×14 \"Kassaflöde\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/advisor",
+    "viewport": "desktop",
+    "detail": "a.text-accent.hover:underline 36×14 \"Livsstil\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/advisor",
+    "viewport": "desktop",
+    "detail": "a.text-accent.hover:underline 61×14 \"Skuldbörda\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/advisor",
+    "viewport": "desktop",
+    "detail": "a.text-accent.hover:underline 41×14 \"Skulder\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/advisor",
+    "viewport": "desktop",
+    "detail": "a.text-accent.hover:underline 31×14 \"Bolån\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/advisor",
+    "viewport": "desktop",
+    "detail": "a.text-accent.hover:underline 87×14 \"Equity 95 000 kr\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/advisor",
+    "viewport": "desktop",
+    "detail": "a.text-accent.hover:underline 107×14 \"NW 6 354 053,36 kr\""
+  },
+  {
+    "kind": "network",
+    "route": "/advisor",
+    "viewport": "desktop",
+    "detail": "failed: GET http://localhost:3000/accounts/e8870b73-6ddc-450b-a920-77ec17a42f73?_rsc=86oGJDHsVsD75O45 (net::ERR_ABORTED)"
+  },
+  {
+    "kind": "network",
+    "route": "/advisor",
+    "viewport": "desktop",
+    "detail": "failed: GET http://localhost:3000/vehicles/8dce43d6-3926-43be-9722-e947776e750e?_rsc=86oGJDHsVsD75O45 (net::ERR_ABORTED)"
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/notifications",
+    "viewport": "desktop",
+    "detail": "button.rounded-[12px].border 145×38 \"Markera alla lästa\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/notifications",
+    "viewport": "desktop",
+    "detail": "button.text-sm.text-accent 77×20 \"Markera läst\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/notifications",
+    "viewport": "desktop",
+    "detail": "button.text-sm.text-accent 77×20 \"Markera läst\""
+  },
+  {
+    "kind": "small-tap-target",
+    "route": "/settings",
+    "viewport": "desktop",
+    "detail": "input 13×13 \"\""
+  },
+  {
+    "kind": "money-format-variant",
+    "route": "/settings",
+    "viewport": "desktop",
+    "detail": "SEK-prefix: SEK"
+  },
+  {
+    "kind": "console",
+    "route": "/",
+    "viewport": "mobile",
+    "detail": "error: Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  },
+  {
+    "kind": "console",
+    "route": "/",
+    "viewport": "mobile",
+    "detail": "error: Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  },
+  {
+    "kind": "console",
+    "route": "/",
+    "viewport": "mobile",
+    "detail": "error: Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  },
+  {
+    "kind": "console",
+    "route": "/",
+    "viewport": "mobile",
+    "detail": "error: Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  },
+  {
+    "kind": "network",
+    "route": "/",
+    "viewport": "mobile",
+    "detail": "401: GET http://localhost:3001/api/v1/settings?householdId=8ae2abf5-d252-44c6-8731-798441dc0a16"
+  },
+  {
+    "kind": "network",
+    "route": "/",
+    "viewport": "mobile",
+    "detail": "401: POST http://localhost:3001/api/v1/auth/refresh"
+  },
+  {
+    "kind": "network",
+    "route": "/",
+    "viewport": "mobile",
+    "detail": "401: GET http://localhost:3001/api/v1/dashboard?householdId=8ae2abf5-d252-44c6-8731-798441dc0a16"
+  },
+  {
+    "kind": "network",
+    "route": "/",
+    "viewport": "mobile",
+    "detail": "401: GET http://localhost:3001/api/v1/settings?householdId=8ae2abf5-d252-44c6-8731-798441dc0a16"
+  },
+  {
+    "kind": "console",
+    "route": "/accounts",
+    "viewport": "mobile",
+    "detail": "error: Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  },
+  {
+    "kind": "console",
+    "route": "/accounts",
+    "viewport": "mobile",
+    "detail": "error: Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  },
+  {
+    "kind": "console",
+    "route": "/accounts",
+    "viewport": "mobile",
+    "detail": "error: Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  },
+  {
+    "kind": "console",
+    "route": "/accounts",
+    "viewport": "mobile",
+    "detail": "error: Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  },
+  {
+    "kind": "console",
+    "route": "/accounts",
+    "viewport": "mobile",
+    "detail": "error: Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  },
+  {
+    "kind": "console",
+    "route": "/accounts",
+    "viewport": "mobile",
+    "detail": "error: Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  },
+  {
+    "kind": "console",
+    "route": "/accounts",
+    "viewport": "mobile",
+    "detail": "error: Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  },
+  {
+    "kind": "network",
+    "route": "/accounts",
+    "viewport": "mobile",
+    "detail": "401: GET http://localhost:3001/api/v1/settings?householdId=8ae2abf5-d252-44c6-8731-798441dc0a16"
+  },
+  {
+    "kind": "network",
+    "route": "/accounts",
+    "viewport": "mobile",
+    "detail": "401: POST http://localhost:3001/api/v1/auth/refresh"
+  },
+  {
+    "kind": "network",
+    "route": "/accounts",
+    "viewport": "mobile",
+    "detail": "401: GET http://localhost:3001/api/v1/accounts?householdId=8ae2abf5-d252-44c6-8731-798441dc0a16"
+  },
+  {
+    "kind": "network",
+    "route": "/accounts",
+    "viewport": "mobile",
+    "detail": "401: GET http://localhost:3001/api/v1/households"
+  },
+  {
+    "kind": "network",
+    "route": "/accounts",
+    "viewport": "mobile",
+    "detail": "401: GET http://localhost:3001/api/v1/settings?householdId=8ae2abf5-d252-44c6-8731-798441dc0a16"
+  },
+  {
+    "kind": "network",
+    "route": "/accounts",
+    "viewport": "mobile",
+    "detail": "401: GET http://localhost:3001/api/v1/accounts?householdId=8ae2abf5-d252-44c6-8731-798441dc0a16"
+  },
+  {
+    "kind": "network",
+    "route": "/accounts",
+    "viewport": "mobile",
+    "detail": "401: GET http://localhost:3001/api/v1/households"
+  },
+  {
+    "kind": "console",
+    "route": "/transactions",
+    "viewport": "mobile",
+    "detail": "error: Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  },
+  {
+    "kind": "console",
+    "route": "/transactions",
+    "viewport": "mobile",
+    "detail": "error: Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  },
+  {
+    "kind": "console",
+    "route": "/transactions",
+    "viewport": "mobile",
+    "detail": "error: Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  },
+  {
+    "kind": "console",
+    "route": "/transactions",
+    "viewport": "mobile",
+    "detail": "error: Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  },
+  {
+    "kind": "console",
+    "route": "/transactions",
+    "viewport": "mobile",
+    "detail": "error: Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  },
+  {
+    "kind": "console",
+    "route": "/transactions",
+    "viewport": "mobile",
+    "detail": "error: Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  },
+  {
+    "kind": "console",
+    "route": "/transactions",
+    "viewport": "mobile",
+    "detail": "error: Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  },
+  {
+    "kind": "console",
+    "route": "/transactions",
+    "viewport": "mobile",
+    "detail": "error: Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  },
+  {
+    "kind": "console",
+    "route": "/transactions",
+    "viewport": "mobile",
+    "detail": "error: Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  },
+  {
+    "kind": "network",
+    "route": "/transactions",
+    "viewport": "mobile",
+    "detail": "401: GET http://localhost:3001/api/v1/settings?householdId=8ae2abf5-d252-44c6-8731-798441dc0a16"
+  },
+  {
+    "kind": "network",
+    "route": "/transactions",
+    "viewport": "mobile",
+    "detail": "401: GET http://localhost:3001/api/v1/transactions?householdId=8ae2abf5-d252-44c6-8731-798441dc0a16&limit=80"
+  },
+  {
+    "kind": "network",
+    "route": "/transactions",
+    "viewport": "mobile",
+    "detail": "401: POST http://localhost:3001/api/v1/auth/refresh"
+  },
+  {
+    "kind": "network",
+    "route": "/transactions",
+    "viewport": "mobile",
+    "detail": "401: GET http://localhost:3001/api/v1/accounts?householdId=8ae2abf5-d252-44c6-8731-798441dc0a16"
+  },
+  {
+    "kind": "network",
+    "route": "/transactions",
+    "viewport": "mobile",
+    "detail": "401: GET http://localhost:3001/api/v1/categories?householdId=8ae2abf5-d252-44c6-8731-798441dc0a16"
+  },
+  {
+    "kind": "network",
+    "route": "/transactions",
+    "viewport": "mobile",
+    "detail": "401: GET http://localhost:3001/api/v1/settings?householdId=8ae2abf5-d252-44c6-8731-798441dc0a16"
+  },
+  {
+    "kind": "network",
+    "route": "/transactions",
+    "viewport": "mobile",
+    "detail": "401: GET http://localhost:3001/api/v1/transactions?householdId=8ae2abf5-d252-44c6-8731-798441dc0a16&limit=80"
+  },
+  {
+    "kind": "network",
+    "route": "/transactions",
+    "viewport": "mobile",
+    "detail": "401: GET http://localhost:3001/api/v1/accounts?householdId=8ae2abf5-d252-44c6-8731-798441dc0a16"
+  },
+  {
+    "kind": "network",
+    "route": "/transactions",
+    "viewport": "mobile",
+    "detail": "401: GET http://localhost:3001/api/v1/categories?householdId=8ae2abf5-d252-44c6-8731-798441dc0a16"
+  },
+  {
+    "kind": "console",
+    "route": "/budget",
+    "viewport": "mobile",
+    "detail": "error: Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  },
+  {
+    "kind": "console",
+    "route": "/budget",
+    "viewport": "mobile",
+    "detail": "error: Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  },
+  {
+    "kind": "console",
+    "route": "/budget",
+    "viewport": "mobile",
+    "detail": "error: Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  },
+  {
+    "kind": "console",
+    "route": "/budget",
+    "viewport": "mobile",
+    "detail": "error: Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  },
+  {
+    "kind": "network",
+    "route": "/budget",
+    "viewport": "mobile",
+    "detail": "401: GET http://localhost:3001/api/v1/settings?householdId=8ae2abf5-d252-44c6-8731-798441dc0a16"
+  },
+  {
+    "kind": "network",
+    "route": "/budget",
+    "viewport": "mobile",
+    "detail": "401: GET http://localhost:3001/api/v1/budget?householdId=8ae2abf5-d252-44c6-8731-798441dc0a16"
+  },
+  {
+    "kind": "network",
+    "route": "/budget",
+    "viewport": "mobile",
+    "detail": "401: POST http://localhost:3001/api/v1/auth/refresh"
+  },
+  {
+    "kind": "network",
+    "route": "/budget",
+    "viewport": "mobile",
+    "detail": "401: GET http://localhost:3001/api/v1/settings?householdId=8ae2abf5-d252-44c6-8731-798441dc0a16"
+  },
+  {
+    "kind": "console",
+    "route": "/goals",
+    "viewport": "mobile",
+    "detail": "error: Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  },
+  {
+    "kind": "console",
+    "route": "/goals",
+    "viewport": "mobile",
+    "detail": "error: Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  },
+  {
+    "kind": "console",
+    "route": "/goals",
+    "viewport": "mobile",
+    "detail": "error: Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  },
+  {
+    "kind": "console",
+    "route": "/goals",
+    "viewport": "mobile",
+    "detail": "error: Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  },
+  {
+    "kind": "console",
+    "route": "/goals",
+    "viewport": "mobile",
+    "detail": "error: Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  },
+  {
+    "kind": "network",
+    "route": "/goals",
+    "viewport": "mobile",
+    "detail": "401: GET http://localhost:3001/api/v1/settings?householdId=8ae2abf5-d252-44c6-8731-798441dc0a16"
+  },
+  {
+    "kind": "network",
+    "route": "/goals",
+    "viewport": "mobile",
+    "detail": "401: POST http://localhost:3001/api/v1/auth/refresh"
+  },
+  {
+    "kind": "network",
+    "route": "/goals",
+    "viewport": "mobile",
+    "detail": "401: GET http://localhost:3001/api/v1/goals?householdId=8ae2abf5-d252-44c6-8731-798441dc0a16"
+  },
+  {
+    "kind": "network",
+    "route": "/goals",
+    "viewport": "mobile",
+    "detail": "401: GET http://localhost:3001/api/v1/settings?householdId=8ae2abf5-d252-44c6-8731-798441dc0a16"
+  },
+  {
+    "kind": "network",
+    "route": "/goals",
+    "viewport": "mobile",
+    "detail": "401: GET http://localhost:3001/api/v1/goals?householdId=8ae2abf5-d252-44c6-8731-798441dc0a16"
+  },
+  {
+    "kind": "console",
+    "route": "/net-worth",
+    "viewport": "mobile",
+    "detail": "error: Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  },
+  {
+    "kind": "console",
+    "route": "/net-worth",
+    "viewport": "mobile",
+    "detail": "error: Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  },
+  {
+    "kind": "console",
+    "route": "/net-worth",
+    "viewport": "mobile",
+    "detail": "error: Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  },
+  {
+    "kind": "console",
+    "route": "/net-worth",
+    "viewport": "mobile",
+    "detail": "error: Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  },
+  {
+    "kind": "network",
+    "route": "/net-worth",
+    "viewport": "mobile",
+    "detail": "401: GET http://localhost:3001/api/v1/settings?householdId=8ae2abf5-d252-44c6-8731-798441dc0a16"
+  },
+  {
+    "kind": "network",
+    "route": "/net-worth",
+    "viewport": "mobile",
+    "detail": "401: POST http://localhost:3001/api/v1/auth/refresh"
+  },
+  {
+    "kind": "network",
+    "route": "/net-worth",
+    "viewport": "mobile",
+    "detail": "401: GET http://localhost:3001/api/v1/net-worth?householdId=8ae2abf5-d252-44c6-8731-798441dc0a16"
+  },
+  {
+    "kind": "network",
+    "route": "/net-worth",
+    "viewport": "mobile",
+    "detail": "401: GET http://localhost:3001/api/v1/settings?householdId=8ae2abf5-d252-44c6-8731-798441dc0a16"
+  },
+  {
+    "kind": "console",
+    "route": "/forecast",
+    "viewport": "mobile",
+    "detail": "error: Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  },
+  {
+    "kind": "console",
+    "route": "/forecast",
+    "viewport": "mobile",
+    "detail": "error: Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  },
+  {
+    "kind": "console",
+    "route": "/forecast",
+    "viewport": "mobile",
+    "detail": "error: Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  },
+  {
+    "kind": "console",
+    "route": "/forecast",
+    "viewport": "mobile",
+    "detail": "error: Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  },
+  {
+    "kind": "network",
+    "route": "/forecast",
+    "viewport": "mobile",
+    "detail": "401: GET http://localhost:3001/api/v1/settings?householdId=8ae2abf5-d252-44c6-8731-798441dc0a16"
+  },
+  {
+    "kind": "network",
+    "route": "/forecast",
+    "viewport": "mobile",
+    "detail": "401: GET http://localhost:3001/api/v1/forecast?householdId=8ae2abf5-d252-44c6-8731-798441dc0a16"
+  },
+  {
+    "kind": "network",
+    "route": "/forecast",
+    "viewport": "mobile",
+    "detail": "401: POST http://localhost:3001/api/v1/auth/refresh"
+  },
+  {
+    "kind": "network",
+    "route": "/forecast",
+    "viewport": "mobile",
+    "detail": "401: GET http://localhost:3001/api/v1/settings?householdId=8ae2abf5-d252-44c6-8731-798441dc0a16"
+  },
+  {
+    "kind": "console",
+    "route": "/cashflow",
+    "viewport": "mobile",
+    "detail": "error: Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  },
+  {
+    "kind": "console",
+    "route": "/cashflow",
+    "viewport": "mobile",
+    "detail": "error: Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  },
+  {
+    "kind": "console",
+    "route": "/cashflow",
+    "viewport": "mobile",
+    "detail": "error: Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  },
+  {
+    "kind": "console",
+    "route": "/cashflow",
+    "viewport": "mobile",
+    "detail": "error: Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  },
+  {
+    "kind": "network",
+    "route": "/cashflow",
+    "viewport": "mobile",
+    "detail": "401: GET http://localhost:3001/api/v1/settings?householdId=8ae2abf5-d252-44c6-8731-798441dc0a16"
+  },
+  {
+    "kind": "network",
+    "route": "/cashflow",
+    "viewport": "mobile",
+    "detail": "401: GET http://localhost:3001/api/v1/cashflow?householdId=8ae2abf5-d252-44c6-8731-798441dc0a16"
+  },
+  {
+    "kind": "network",
+    "route": "/cashflow",
+    "viewport": "mobile",
+    "detail": "401: POST http://localhost:3001/api/v1/auth/refresh"
+  },
+  {
+    "kind": "network",
+    "route": "/cashflow",
+    "viewport": "mobile",
+    "detail": "401: GET http://localhost:3001/api/v1/settings?householdId=8ae2abf5-d252-44c6-8731-798441dc0a16"
+  },
+  {
+    "kind": "console",
+    "route": "/insights",
+    "viewport": "mobile",
+    "detail": "error: Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  },
+  {
+    "kind": "console",
+    "route": "/insights",
+    "viewport": "mobile",
+    "detail": "error: Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  },
+  {
+    "kind": "console",
+    "route": "/insights",
+    "viewport": "mobile",
+    "detail": "error: Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  },
+  {
+    "kind": "console",
+    "route": "/insights",
+    "viewport": "mobile",
+    "detail": "error: Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  },
+  {
+    "kind": "console",
+    "route": "/insights",
+    "viewport": "mobile",
+    "detail": "error: Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  },
+  {
+    "kind": "network",
+    "route": "/insights",
+    "viewport": "mobile",
+    "detail": "401: GET http://localhost:3001/api/v1/settings?householdId=8ae2abf5-d252-44c6-8731-798441dc0a16"
+  },
+  {
+    "kind": "network",
+    "route": "/insights",
+    "viewport": "mobile",
+    "detail": "401: GET http://localhost:3001/api/v1/insights?householdId=8ae2abf5-d252-44c6-8731-798441dc0a16"
+  },
+  {
+    "kind": "network",
+    "route": "/insights",
+    "viewport": "mobile",
+    "detail": "401: GET http://localhost:3001/api/v1/anomalies?householdId=8ae2abf5-d252-44c6-8731-798441dc0a16"
+  },
+  {
+    "kind": "network",
+    "route": "/insights",
+    "viewport": "mobile",
+    "detail": "401: POST http://localhost:3001/api/v1/auth/refresh"
+  },
+  {
+    "kind": "network",
+    "route": "/insights",
+    "viewport": "mobile",
+    "detail": "401: GET http://localhost:3001/api/v1/settings?householdId=8ae2abf5-d252-44c6-8731-798441dc0a16"
+  },
+  {
+    "kind": "console",
+    "route": "/opportunities",
+    "viewport": "mobile",
+    "detail": "error: Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  },
+  {
+    "kind": "console",
+    "route": "/opportunities",
+    "viewport": "mobile",
+    "detail": "error: Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  },
+  {
+    "kind": "console",
+    "route": "/opportunities",
+    "viewport": "mobile",
+    "detail": "error: Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  },
+  {
+    "kind": "console",
+    "route": "/opportunities",
+    "viewport": "mobile",
+    "detail": "error: Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  },
+  {
+    "kind": "network",
+    "route": "/opportunities",
+    "viewport": "mobile",
+    "detail": "401: GET http://localhost:3001/api/v1/settings?householdId=8ae2abf5-d252-44c6-8731-798441dc0a16"
+  },
+  {
+    "kind": "network",
+    "route": "/opportunities",
+    "viewport": "mobile",
+    "detail": "401: GET http://localhost:3001/api/v1/opportunities?householdId=8ae2abf5-d252-44c6-8731-798441dc0a16"
+  },
+  {
+    "kind": "network",
+    "route": "/opportunities",
+    "viewport": "mobile",
+    "detail": "401: POST http://localhost:3001/api/v1/auth/refresh"
+  },
+  {
+    "kind": "network",
+    "route": "/opportunities",
+    "viewport": "mobile",
+    "detail": "401: GET http://localhost:3001/api/v1/settings?householdId=8ae2abf5-d252-44c6-8731-798441dc0a16"
+  },
+  {
+    "kind": "console",
+    "route": "/review",
+    "viewport": "mobile",
+    "detail": "error: Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  },
+  {
+    "kind": "console",
+    "route": "/review",
+    "viewport": "mobile",
+    "detail": "error: Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  },
+  {
+    "kind": "console",
+    "route": "/review",
+    "viewport": "mobile",
+    "detail": "error: Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  },
+  {
+    "kind": "console",
+    "route": "/review",
+    "viewport": "mobile",
+    "detail": "error: Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  },
+  {
+    "kind": "console",
+    "route": "/review",
+    "viewport": "mobile",
+    "detail": "error: Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  },
+  {
+    "kind": "console",
+    "route": "/review",
+    "viewport": "mobile",
+    "detail": "error: Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  },
+  {
+    "kind": "network",
+    "route": "/review",
+    "viewport": "mobile",
+    "detail": "401: GET http://localhost:3001/api/v1/settings?householdId=8ae2abf5-d252-44c6-8731-798441dc0a16"
+  },
+  {
+    "kind": "network",
+    "route": "/review",
+    "viewport": "mobile",
+    "detail": "401: POST http://localhost:3001/api/v1/auth/refresh"
+  },
+  {
+    "kind": "network",
+    "route": "/review",
+    "viewport": "mobile",
+    "detail": "401: GET http://localhost:3001/api/v1/review?householdId=8ae2abf5-d252-44c6-8731-798441dc0a16"
+  },
+  {
+    "kind": "network",
+    "route": "/review",
+    "viewport": "mobile",
+    "detail": "401: GET http://localhost:3001/api/v1/categories?householdId=8ae2abf5-d252-44c6-8731-798441dc0a16"
+  },
+  {
+    "kind": "network",
+    "route": "/review",
+    "viewport": "mobile",
+    "detail": "401: GET http://localhost:3001/api/v1/anomalies?householdId=8ae2abf5-d252-44c6-8731-798441dc0a16"
+  },
+  {
+    "kind": "network",
+    "route": "/review",
+    "viewport": "mobile",
+    "detail": "401: GET http://localhost:3001/api/v1/settings?householdId=8ae2abf5-d252-44c6-8731-798441dc0a16"
+  },
+  {
+    "kind": "console",
+    "route": "/vehicles",
+    "viewport": "mobile",
+    "detail": "error: Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  },
+  {
+    "kind": "console",
+    "route": "/vehicles",
+    "viewport": "mobile",
+    "detail": "error: Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  },
+  {
+    "kind": "console",
+    "route": "/vehicles",
+    "viewport": "mobile",
+    "detail": "error: Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  },
+  {
+    "kind": "console",
+    "route": "/vehicles",
+    "viewport": "mobile",
+    "detail": "error: Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  },
+  {
+    "kind": "network",
+    "route": "/vehicles",
+    "viewport": "mobile",
+    "detail": "401: GET http://localhost:3001/api/v1/settings?householdId=8ae2abf5-d252-44c6-8731-798441dc0a16"
+  },
+  {
+    "kind": "network",
+    "route": "/vehicles",
+    "viewport": "mobile",
+    "detail": "401: POST http://localhost:3001/api/v1/auth/refresh"
+  },
+  {
+    "kind": "network",
+    "route": "/vehicles",
+    "viewport": "mobile",
+    "detail": "401: GET http://localhost:3001/api/v1/vehicles?householdId=8ae2abf5-d252-44c6-8731-798441dc0a16"
+  },
+  {
+    "kind": "network",
+    "route": "/vehicles",
+    "viewport": "mobile",
+    "detail": "401: GET http://localhost:3001/api/v1/settings?householdId=8ae2abf5-d252-44c6-8731-798441dc0a16"
+  },
+  {
+    "kind": "console",
+    "route": "/debt",
+    "viewport": "mobile",
+    "detail": "error: Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  },
+  {
+    "kind": "console",
+    "route": "/debt",
+    "viewport": "mobile",
+    "detail": "error: Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  },
+  {
+    "kind": "console",
+    "route": "/debt",
+    "viewport": "mobile",
+    "detail": "error: Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  },
+  {
+    "kind": "console",
+    "route": "/debt",
+    "viewport": "mobile",
+    "detail": "error: Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  },
+  {
+    "kind": "network",
+    "route": "/debt",
+    "viewport": "mobile",
+    "detail": "401: GET http://localhost:3001/api/v1/settings?householdId=8ae2abf5-d252-44c6-8731-798441dc0a16"
+  },
+  {
+    "kind": "network",
+    "route": "/debt",
+    "viewport": "mobile",
+    "detail": "401: POST http://localhost:3001/api/v1/auth/refresh"
+  },
+  {
+    "kind": "network",
+    "route": "/debt",
+    "viewport": "mobile",
+    "detail": "401: GET http://localhost:3001/api/v1/debt?householdId=8ae2abf5-d252-44c6-8731-798441dc0a16"
+  },
+  {
+    "kind": "network",
+    "route": "/debt",
+    "viewport": "mobile",
+    "detail": "401: GET http://localhost:3001/api/v1/settings?householdId=8ae2abf5-d252-44c6-8731-798441dc0a16"
+  },
+  {
+    "kind": "console",
+    "route": "/investments",
+    "viewport": "mobile",
+    "detail": "error: Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  },
+  {
+    "kind": "console",
+    "route": "/investments",
+    "viewport": "mobile",
+    "detail": "error: Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  },
+  {
+    "kind": "console",
+    "route": "/investments",
+    "viewport": "mobile",
+    "detail": "error: Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  },
+  {
+    "kind": "console",
+    "route": "/investments",
+    "viewport": "mobile",
+    "detail": "error: Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  },
+  {
+    "kind": "network",
+    "route": "/investments",
+    "viewport": "mobile",
+    "detail": "401: GET http://localhost:3001/api/v1/settings?householdId=8ae2abf5-d252-44c6-8731-798441dc0a16"
+  },
+  {
+    "kind": "network",
+    "route": "/investments",
+    "viewport": "mobile",
+    "detail": "401: GET http://localhost:3001/api/v1/investments?householdId=8ae2abf5-d252-44c6-8731-798441dc0a16"
+  },
+  {
+    "kind": "network",
+    "route": "/investments",
+    "viewport": "mobile",
+    "detail": "401: POST http://localhost:3001/api/v1/auth/refresh"
+  },
+  {
+    "kind": "network",
+    "route": "/investments",
+    "viewport": "mobile",
+    "detail": "401: GET http://localhost:3001/api/v1/settings?householdId=8ae2abf5-d252-44c6-8731-798441dc0a16"
+  },
+  {
+    "kind": "console",
+    "route": "/assets",
+    "viewport": "mobile",
+    "detail": "error: Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  },
+  {
+    "kind": "console",
+    "route": "/assets",
+    "viewport": "mobile",
+    "detail": "error: Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  },
+  {
+    "kind": "console",
+    "route": "/assets",
+    "viewport": "mobile",
+    "detail": "error: Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  },
+  {
+    "kind": "console",
+    "route": "/assets",
+    "viewport": "mobile",
+    "detail": "error: Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  },
+  {
+    "kind": "network",
+    "route": "/assets",
+    "viewport": "mobile",
+    "detail": "401: GET http://localhost:3001/api/v1/settings?householdId=8ae2abf5-d252-44c6-8731-798441dc0a16"
+  },
+  {
+    "kind": "network",
+    "route": "/assets",
+    "viewport": "mobile",
+    "detail": "401: POST http://localhost:3001/api/v1/auth/refresh"
+  },
+  {
+    "kind": "network",
+    "route": "/assets",
+    "viewport": "mobile",
+    "detail": "401: GET http://localhost:3001/api/v1/assets?householdId=8ae2abf5-d252-44c6-8731-798441dc0a16"
+  },
+  {
+    "kind": "network",
+    "route": "/assets",
+    "viewport": "mobile",
+    "detail": "401: GET http://localhost:3001/api/v1/settings?householdId=8ae2abf5-d252-44c6-8731-798441dc0a16"
+  },
+  {
+    "kind": "console",
+    "route": "/documents",
+    "viewport": "mobile",
+    "detail": "error: Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  },
+  {
+    "kind": "console",
+    "route": "/documents",
+    "viewport": "mobile",
+    "detail": "error: Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  },
+  {
+    "kind": "console",
+    "route": "/documents",
+    "viewport": "mobile",
+    "detail": "error: Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  },
+  {
+    "kind": "console",
+    "route": "/documents",
+    "viewport": "mobile",
+    "detail": "error: Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  },
+  {
+    "kind": "console",
+    "route": "/documents",
+    "viewport": "mobile",
+    "detail": "error: Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  },
+  {
+    "kind": "console",
+    "route": "/documents",
+    "viewport": "mobile",
+    "detail": "error: Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  },
+  {
+    "kind": "network",
+    "route": "/documents",
+    "viewport": "mobile",
+    "detail": "401: GET http://localhost:3001/api/v1/settings?householdId=8ae2abf5-d252-44c6-8731-798441dc0a16"
+  },
+  {
+    "kind": "network",
+    "route": "/documents",
+    "viewport": "mobile",
+    "detail": "401: POST http://localhost:3001/api/v1/auth/refresh"
+  },
+  {
+    "kind": "network",
+    "route": "/documents",
+    "viewport": "mobile",
+    "detail": "401: GET http://localhost:3001/api/v1/documents?householdId=8ae2abf5-d252-44c6-8731-798441dc0a16"
+  },
+  {
+    "kind": "network",
+    "route": "/documents",
+    "viewport": "mobile",
+    "detail": "401: GET http://localhost:3001/api/v1/accounts?householdId=8ae2abf5-d252-44c6-8731-798441dc0a16"
+  },
+  {
+    "kind": "network",
+    "route": "/documents",
+    "viewport": "mobile",
+    "detail": "401: GET http://localhost:3001/api/v1/vehicles?householdId=8ae2abf5-d252-44c6-8731-798441dc0a16"
+  },
+  {
+    "kind": "network",
+    "route": "/documents",
+    "viewport": "mobile",
+    "detail": "401: GET http://localhost:3001/api/v1/settings?householdId=8ae2abf5-d252-44c6-8731-798441dc0a16"
+  },
+  {
+    "kind": "console",
+    "route": "/imports",
+    "viewport": "mobile",
+    "detail": "error: Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  },
+  {
+    "kind": "console",
+    "route": "/imports",
+    "viewport": "mobile",
+    "detail": "error: Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  },
+  {
+    "kind": "console",
+    "route": "/imports",
+    "viewport": "mobile",
+    "detail": "error: Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  },
+  {
+    "kind": "console",
+    "route": "/imports",
+    "viewport": "mobile",
+    "detail": "error: Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  },
+  {
+    "kind": "network",
+    "route": "/imports",
+    "viewport": "mobile",
+    "detail": "401: GET http://localhost:3001/api/v1/settings?householdId=8ae2abf5-d252-44c6-8731-798441dc0a16"
+  },
+  {
+    "kind": "network",
+    "route": "/imports",
+    "viewport": "mobile",
+    "detail": "401: GET http://localhost:3001/api/v1/imports?householdId=8ae2abf5-d252-44c6-8731-798441dc0a16"
+  },
+  {
+    "kind": "network",
+    "route": "/imports",
+    "viewport": "mobile",
+    "detail": "401: POST http://localhost:3001/api/v1/auth/refresh"
+  },
+  {
+    "kind": "network",
+    "route": "/imports",
+    "viewport": "mobile",
+    "detail": "401: GET http://localhost:3001/api/v1/settings?householdId=8ae2abf5-d252-44c6-8731-798441dc0a16"
+  },
+  {
+    "kind": "console",
+    "route": "/integrations",
+    "viewport": "mobile",
+    "detail": "error: Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  },
+  {
+    "kind": "console",
+    "route": "/integrations",
+    "viewport": "mobile",
+    "detail": "error: Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  },
+  {
+    "kind": "console",
+    "route": "/integrations",
+    "viewport": "mobile",
+    "detail": "error: Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  },
+  {
+    "kind": "console",
+    "route": "/integrations",
+    "viewport": "mobile",
+    "detail": "error: Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  },
+  {
+    "kind": "network",
+    "route": "/integrations",
+    "viewport": "mobile",
+    "detail": "401: GET http://localhost:3001/api/v1/settings?householdId=8ae2abf5-d252-44c6-8731-798441dc0a16"
+  },
+  {
+    "kind": "network",
+    "route": "/integrations",
+    "viewport": "mobile",
+    "detail": "401: POST http://localhost:3001/api/v1/auth/refresh"
+  },
+  {
+    "kind": "network",
+    "route": "/integrations",
+    "viewport": "mobile",
+    "detail": "401: GET http://localhost:3001/api/v1/integrations?householdId=8ae2abf5-d252-44c6-8731-798441dc0a16"
+  },
+  {
+    "kind": "network",
+    "route": "/integrations",
+    "viewport": "mobile",
+    "detail": "401: GET http://localhost:3001/api/v1/settings?householdId=8ae2abf5-d252-44c6-8731-798441dc0a16"
+  },
+  {
+    "kind": "console",
+    "route": "/contracts",
+    "viewport": "mobile",
+    "detail": "error: Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  },
+  {
+    "kind": "console",
+    "route": "/contracts",
+    "viewport": "mobile",
+    "detail": "error: Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  },
+  {
+    "kind": "console",
+    "route": "/contracts",
+    "viewport": "mobile",
+    "detail": "error: Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  },
+  {
+    "kind": "console",
+    "route": "/contracts",
+    "viewport": "mobile",
+    "detail": "error: Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  },
+  {
+    "kind": "network",
+    "route": "/contracts",
+    "viewport": "mobile",
+    "detail": "401: GET http://localhost:3001/api/v1/settings?householdId=8ae2abf5-d252-44c6-8731-798441dc0a16"
+  },
+  {
+    "kind": "network",
+    "route": "/contracts",
+    "viewport": "mobile",
+    "detail": "401: POST http://localhost:3001/api/v1/auth/refresh"
+  },
+  {
+    "kind": "network",
+    "route": "/contracts",
+    "viewport": "mobile",
+    "detail": "401: GET http://localhost:3001/api/v1/contracts?householdId=8ae2abf5-d252-44c6-8731-798441dc0a16"
+  },
+  {
+    "kind": "network",
+    "route": "/contracts",
+    "viewport": "mobile",
+    "detail": "401: GET http://localhost:3001/api/v1/settings?householdId=8ae2abf5-d252-44c6-8731-798441dc0a16"
+  },
+  {
+    "kind": "console",
+    "route": "/subscriptions",
+    "viewport": "mobile",
+    "detail": "error: Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  },
+  {
+    "kind": "console",
+    "route": "/subscriptions",
+    "viewport": "mobile",
+    "detail": "error: Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  },
+  {
+    "kind": "console",
+    "route": "/subscriptions",
+    "viewport": "mobile",
+    "detail": "error: Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  },
+  {
+    "kind": "console",
+    "route": "/subscriptions",
+    "viewport": "mobile",
+    "detail": "error: Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  },
+  {
+    "kind": "network",
+    "route": "/subscriptions",
+    "viewport": "mobile",
+    "detail": "401: GET http://localhost:3001/api/v1/settings?householdId=8ae2abf5-d252-44c6-8731-798441dc0a16"
+  },
+  {
+    "kind": "network",
+    "route": "/subscriptions",
+    "viewport": "mobile",
+    "detail": "401: POST http://localhost:3001/api/v1/auth/refresh"
+  },
+  {
+    "kind": "network",
+    "route": "/subscriptions",
+    "viewport": "mobile",
+    "detail": "401: GET http://localhost:3001/api/v1/subscriptions?householdId=8ae2abf5-d252-44c6-8731-798441dc0a16"
+  },
+  {
+    "kind": "network",
+    "route": "/subscriptions",
+    "viewport": "mobile",
+    "detail": "401: GET http://localhost:3001/api/v1/settings?householdId=8ae2abf5-d252-44c6-8731-798441dc0a16"
+  },
+  {
+    "kind": "console",
+    "route": "/reports",
+    "viewport": "mobile",
+    "detail": "error: Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  },
+  {
+    "kind": "console",
+    "route": "/reports",
+    "viewport": "mobile",
+    "detail": "error: Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  },
+  {
+    "kind": "console",
+    "route": "/reports",
+    "viewport": "mobile",
+    "detail": "error: Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  },
+  {
+    "kind": "console",
+    "route": "/reports",
+    "viewport": "mobile",
+    "detail": "error: Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  },
+  {
+    "kind": "console",
+    "route": "/reports",
+    "viewport": "mobile",
+    "detail": "error: Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  },
+  {
+    "kind": "network",
+    "route": "/reports",
+    "viewport": "mobile",
+    "detail": "401: GET http://localhost:3001/api/v1/settings?householdId=8ae2abf5-d252-44c6-8731-798441dc0a16"
+  },
+  {
+    "kind": "network",
+    "route": "/reports",
+    "viewport": "mobile",
+    "detail": "401: POST http://localhost:3001/api/v1/auth/refresh"
+  },
+  {
+    "kind": "network",
+    "route": "/reports",
+    "viewport": "mobile",
+    "detail": "401: GET http://localhost:3001/api/v1/reports/monthly?householdId=8ae2abf5-d252-44c6-8731-798441dc0a16&period=2026-07"
+  },
+  {
+    "kind": "network",
+    "route": "/reports",
+    "viewport": "mobile",
+    "detail": "401: GET http://localhost:3001/api/v1/reports/yearly?householdId=8ae2abf5-d252-44c6-8731-798441dc0a16&year=2026"
+  },
+  {
+    "kind": "network",
+    "route": "/reports",
+    "viewport": "mobile",
+    "detail": "401: GET http://localhost:3001/api/v1/settings?householdId=8ae2abf5-d252-44c6-8731-798441dc0a16"
+  },
+  {
+    "kind": "console",
+    "route": "/risk",
+    "viewport": "mobile",
+    "detail": "error: Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  },
+  {
+    "kind": "console",
+    "route": "/risk",
+    "viewport": "mobile",
+    "detail": "error: Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  },
+  {
+    "kind": "console",
+    "route": "/risk",
+    "viewport": "mobile",
+    "detail": "error: Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  },
+  {
+    "kind": "console",
+    "route": "/risk",
+    "viewport": "mobile",
+    "detail": "error: Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  },
+  {
+    "kind": "network",
+    "route": "/risk",
+    "viewport": "mobile",
+    "detail": "401: GET http://localhost:3001/api/v1/settings?householdId=8ae2abf5-d252-44c6-8731-798441dc0a16"
+  },
+  {
+    "kind": "network",
+    "route": "/risk",
+    "viewport": "mobile",
+    "detail": "401: POST http://localhost:3001/api/v1/auth/refresh"
+  },
+  {
+    "kind": "network",
+    "route": "/risk",
+    "viewport": "mobile",
+    "detail": "401: GET http://localhost:3001/api/v1/risk?householdId=8ae2abf5-d252-44c6-8731-798441dc0a16"
+  },
+  {
+    "kind": "network",
+    "route": "/risk",
+    "viewport": "mobile",
+    "detail": "401: GET http://localhost:3001/api/v1/settings?householdId=8ae2abf5-d252-44c6-8731-798441dc0a16"
+  },
+  {
+    "kind": "console",
+    "route": "/scenarios",
+    "viewport": "mobile",
+    "detail": "error: Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  },
+  {
+    "kind": "console",
+    "route": "/scenarios",
+    "viewport": "mobile",
+    "detail": "error: Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  },
+  {
+    "kind": "console",
+    "route": "/scenarios",
+    "viewport": "mobile",
+    "detail": "error: Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  },
+  {
+    "kind": "console",
+    "route": "/scenarios",
+    "viewport": "mobile",
+    "detail": "error: Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  },
+  {
+    "kind": "network",
+    "route": "/scenarios",
+    "viewport": "mobile",
+    "detail": "401: GET http://localhost:3001/api/v1/settings?householdId=8ae2abf5-d252-44c6-8731-798441dc0a16"
+  },
+  {
+    "kind": "network",
+    "route": "/scenarios",
+    "viewport": "mobile",
+    "detail": "401: POST http://localhost:3001/api/v1/auth/refresh"
+  },
+  {
+    "kind": "network",
+    "route": "/scenarios",
+    "viewport": "mobile",
+    "detail": "401: GET http://localhost:3001/api/v1/scenarios?householdId=8ae2abf5-d252-44c6-8731-798441dc0a16"
+  },
+  {
+    "kind": "network",
+    "route": "/scenarios",
+    "viewport": "mobile",
+    "detail": "401: GET http://localhost:3001/api/v1/settings?householdId=8ae2abf5-d252-44c6-8731-798441dc0a16"
+  },
+  {
+    "kind": "console",
+    "route": "/advisor",
+    "viewport": "mobile",
+    "detail": "error: Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  },
+  {
+    "kind": "console",
+    "route": "/advisor",
+    "viewport": "mobile",
+    "detail": "error: Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  },
+  {
+    "kind": "console",
+    "route": "/advisor",
+    "viewport": "mobile",
+    "detail": "error: Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  },
+  {
+    "kind": "console",
+    "route": "/advisor",
+    "viewport": "mobile",
+    "detail": "error: Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  },
+  {
+    "kind": "network",
+    "route": "/advisor",
+    "viewport": "mobile",
+    "detail": "401: GET http://localhost:3001/api/v1/settings?householdId=8ae2abf5-d252-44c6-8731-798441dc0a16"
+  },
+  {
+    "kind": "network",
+    "route": "/advisor",
+    "viewport": "mobile",
+    "detail": "401: GET http://localhost:3001/api/v1/feature-flags"
+  },
+  {
+    "kind": "network",
+    "route": "/advisor",
+    "viewport": "mobile",
+    "detail": "401: POST http://localhost:3001/api/v1/auth/refresh"
+  },
+  {
+    "kind": "network",
+    "route": "/advisor",
+    "viewport": "mobile",
+    "detail": "401: GET http://localhost:3001/api/v1/settings?householdId=8ae2abf5-d252-44c6-8731-798441dc0a16"
+  },
+  {
+    "kind": "console",
+    "route": "/notifications",
+    "viewport": "mobile",
+    "detail": "error: Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  },
+  {
+    "kind": "console",
+    "route": "/notifications",
+    "viewport": "mobile",
+    "detail": "error: Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  },
+  {
+    "kind": "console",
+    "route": "/notifications",
+    "viewport": "mobile",
+    "detail": "error: Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  },
+  {
+    "kind": "console",
+    "route": "/notifications",
+    "viewport": "mobile",
+    "detail": "error: Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  },
+  {
+    "kind": "network",
+    "route": "/notifications",
+    "viewport": "mobile",
+    "detail": "401: GET http://localhost:3001/api/v1/settings?householdId=8ae2abf5-d252-44c6-8731-798441dc0a16"
+  },
+  {
+    "kind": "network",
+    "route": "/notifications",
+    "viewport": "mobile",
+    "detail": "401: POST http://localhost:3001/api/v1/auth/refresh"
+  },
+  {
+    "kind": "network",
+    "route": "/notifications",
+    "viewport": "mobile",
+    "detail": "401: GET http://localhost:3001/api/v1/notifications?householdId=8ae2abf5-d252-44c6-8731-798441dc0a16"
+  },
+  {
+    "kind": "network",
+    "route": "/notifications",
+    "viewport": "mobile",
+    "detail": "401: GET http://localhost:3001/api/v1/settings?householdId=8ae2abf5-d252-44c6-8731-798441dc0a16"
+  },
+  {
+    "kind": "console",
+    "route": "/settings",
+    "viewport": "mobile",
+    "detail": "error: Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  },
+  {
+    "kind": "console",
+    "route": "/settings",
+    "viewport": "mobile",
+    "detail": "error: Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  },
+  {
+    "kind": "console",
+    "route": "/settings",
+    "viewport": "mobile",
+    "detail": "error: Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  },
+  {
+    "kind": "network",
+    "route": "/settings",
+    "viewport": "mobile",
+    "detail": "401: GET http://localhost:3001/api/v1/settings?householdId=8ae2abf5-d252-44c6-8731-798441dc0a16"
+  },
+  {
+    "kind": "network",
+    "route": "/settings",
+    "viewport": "mobile",
+    "detail": "401: POST http://localhost:3001/api/v1/auth/refresh"
+  },
+  {
+    "kind": "network",
+    "route": "/settings",
+    "viewport": "mobile",
+    "detail": "401: GET http://localhost:3001/api/v1/settings?householdId=8ae2abf5-d252-44c6-8731-798441dc0a16"
+  },
+  {
+    "kind": "console",
+    "route": "/more",
+    "viewport": "mobile",
+    "detail": "error: Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  },
+  {
+    "kind": "console",
+    "route": "/more",
+    "viewport": "mobile",
+    "detail": "error: Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  },
+  {
+    "kind": "console",
+    "route": "/more",
+    "viewport": "mobile",
+    "detail": "error: Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  },
+  {
+    "kind": "network",
+    "route": "/more",
+    "viewport": "mobile",
+    "detail": "401: GET http://localhost:3001/api/v1/settings?householdId=8ae2abf5-d252-44c6-8731-798441dc0a16"
+  },
+  {
+    "kind": "network",
+    "route": "/more",
+    "viewport": "mobile",
+    "detail": "401: POST http://localhost:3001/api/v1/auth/refresh"
+  },
+  {
+    "kind": "network",
+    "route": "/more",
+    "viewport": "mobile",
+    "detail": "401: GET http://localhost:3001/api/v1/settings?householdId=8ae2abf5-d252-44c6-8731-798441dc0a16"
+  },
+  {
+    "kind": "console",
+    "route": "/",
+    "viewport": "narrow",
+    "detail": "error: Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  },
+  {
+    "kind": "console",
+    "route": "/",
+    "viewport": "narrow",
+    "detail": "error: Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  },
+  {
+    "kind": "console",
+    "route": "/",
+    "viewport": "narrow",
+    "detail": "error: Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  },
+  {
+    "kind": "console",
+    "route": "/",
+    "viewport": "narrow",
+    "detail": "error: Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  },
+  {
+    "kind": "network",
+    "route": "/",
+    "viewport": "narrow",
+    "detail": "401: GET http://localhost:3001/api/v1/settings?householdId=8ae2abf5-d252-44c6-8731-798441dc0a16"
+  },
+  {
+    "kind": "network",
+    "route": "/",
+    "viewport": "narrow",
+    "detail": "401: GET http://localhost:3001/api/v1/dashboard?householdId=8ae2abf5-d252-44c6-8731-798441dc0a16"
+  },
+  {
+    "kind": "network",
+    "route": "/",
+    "viewport": "narrow",
+    "detail": "401: POST http://localhost:3001/api/v1/auth/refresh"
+  },
+  {
+    "kind": "network",
+    "route": "/",
+    "viewport": "narrow",
+    "detail": "401: GET http://localhost:3001/api/v1/settings?householdId=8ae2abf5-d252-44c6-8731-798441dc0a16"
+  },
+  {
+    "kind": "console",
+    "route": "/accounts",
+    "viewport": "narrow",
+    "detail": "error: Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  },
+  {
+    "kind": "console",
+    "route": "/accounts",
+    "viewport": "narrow",
+    "detail": "error: Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  },
+  {
+    "kind": "console",
+    "route": "/accounts",
+    "viewport": "narrow",
+    "detail": "error: Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  },
+  {
+    "kind": "console",
+    "route": "/accounts",
+    "viewport": "narrow",
+    "detail": "error: Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  },
+  {
+    "kind": "console",
+    "route": "/accounts",
+    "viewport": "narrow",
+    "detail": "error: Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  },
+  {
+    "kind": "console",
+    "route": "/accounts",
+    "viewport": "narrow",
+    "detail": "error: Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  },
+  {
+    "kind": "console",
+    "route": "/accounts",
+    "viewport": "narrow",
+    "detail": "error: Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  },
+  {
+    "kind": "network",
+    "route": "/accounts",
+    "viewport": "narrow",
+    "detail": "401: GET http://localhost:3001/api/v1/settings?householdId=8ae2abf5-d252-44c6-8731-798441dc0a16"
+  },
+  {
+    "kind": "network",
+    "route": "/accounts",
+    "viewport": "narrow",
+    "detail": "401: POST http://localhost:3001/api/v1/auth/refresh"
+  },
+  {
+    "kind": "network",
+    "route": "/accounts",
+    "viewport": "narrow",
+    "detail": "401: GET http://localhost:3001/api/v1/accounts?householdId=8ae2abf5-d252-44c6-8731-798441dc0a16"
+  },
+  {
+    "kind": "network",
+    "route": "/accounts",
+    "viewport": "narrow",
+    "detail": "401: GET http://localhost:3001/api/v1/households"
+  },
+  {
+    "kind": "network",
+    "route": "/accounts",
+    "viewport": "narrow",
+    "detail": "401: GET http://localhost:3001/api/v1/settings?householdId=8ae2abf5-d252-44c6-8731-798441dc0a16"
+  },
+  {
+    "kind": "network",
+    "route": "/accounts",
+    "viewport": "narrow",
+    "detail": "401: GET http://localhost:3001/api/v1/accounts?householdId=8ae2abf5-d252-44c6-8731-798441dc0a16"
+  },
+  {
+    "kind": "network",
+    "route": "/accounts",
+    "viewport": "narrow",
+    "detail": "401: GET http://localhost:3001/api/v1/households"
+  },
+  {
+    "kind": "console",
+    "route": "/transactions",
+    "viewport": "narrow",
+    "detail": "error: Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  },
+  {
+    "kind": "console",
+    "route": "/transactions",
+    "viewport": "narrow",
+    "detail": "error: Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  },
+  {
+    "kind": "console",
+    "route": "/transactions",
+    "viewport": "narrow",
+    "detail": "error: Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  },
+  {
+    "kind": "console",
+    "route": "/transactions",
+    "viewport": "narrow",
+    "detail": "error: Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  },
+  {
+    "kind": "console",
+    "route": "/transactions",
+    "viewport": "narrow",
+    "detail": "error: Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  },
+  {
+    "kind": "console",
+    "route": "/transactions",
+    "viewport": "narrow",
+    "detail": "error: Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  },
+  {
+    "kind": "console",
+    "route": "/transactions",
+    "viewport": "narrow",
+    "detail": "error: Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  },
+  {
+    "kind": "console",
+    "route": "/transactions",
+    "viewport": "narrow",
+    "detail": "error: Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  },
+  {
+    "kind": "console",
+    "route": "/transactions",
+    "viewport": "narrow",
+    "detail": "error: Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  },
+  {
+    "kind": "network",
+    "route": "/transactions",
+    "viewport": "narrow",
+    "detail": "401: GET http://localhost:3001/api/v1/settings?householdId=8ae2abf5-d252-44c6-8731-798441dc0a16"
+  },
+  {
+    "kind": "network",
+    "route": "/transactions",
+    "viewport": "narrow",
+    "detail": "401: POST http://localhost:3001/api/v1/auth/refresh"
+  },
+  {
+    "kind": "network",
+    "route": "/transactions",
+    "viewport": "narrow",
+    "detail": "401: GET http://localhost:3001/api/v1/transactions?householdId=8ae2abf5-d252-44c6-8731-798441dc0a16&limit=80"
+  },
+  {
+    "kind": "network",
+    "route": "/transactions",
+    "viewport": "narrow",
+    "detail": "401: GET http://localhost:3001/api/v1/accounts?householdId=8ae2abf5-d252-44c6-8731-798441dc0a16"
+  },
+  {
+    "kind": "network",
+    "route": "/transactions",
+    "viewport": "narrow",
+    "detail": "401: GET http://localhost:3001/api/v1/categories?householdId=8ae2abf5-d252-44c6-8731-798441dc0a16"
+  },
+  {
+    "kind": "network",
+    "route": "/transactions",
+    "viewport": "narrow",
+    "detail": "401: GET http://localhost:3001/api/v1/settings?householdId=8ae2abf5-d252-44c6-8731-798441dc0a16"
+  },
+  {
+    "kind": "network",
+    "route": "/transactions",
+    "viewport": "narrow",
+    "detail": "401: GET http://localhost:3001/api/v1/transactions?householdId=8ae2abf5-d252-44c6-8731-798441dc0a16&limit=80"
+  },
+  {
+    "kind": "network",
+    "route": "/transactions",
+    "viewport": "narrow",
+    "detail": "401: GET http://localhost:3001/api/v1/accounts?householdId=8ae2abf5-d252-44c6-8731-798441dc0a16"
+  },
+  {
+    "kind": "network",
+    "route": "/transactions",
+    "viewport": "narrow",
+    "detail": "401: GET http://localhost:3001/api/v1/categories?householdId=8ae2abf5-d252-44c6-8731-798441dc0a16"
+  },
+  {
+    "kind": "console",
+    "route": "/budget",
+    "viewport": "narrow",
+    "detail": "error: Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  },
+  {
+    "kind": "console",
+    "route": "/budget",
+    "viewport": "narrow",
+    "detail": "error: Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  },
+  {
+    "kind": "console",
+    "route": "/budget",
+    "viewport": "narrow",
+    "detail": "error: Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  },
+  {
+    "kind": "console",
+    "route": "/budget",
+    "viewport": "narrow",
+    "detail": "error: Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  },
+  {
+    "kind": "network",
+    "route": "/budget",
+    "viewport": "narrow",
+    "detail": "401: GET http://localhost:3001/api/v1/settings?householdId=8ae2abf5-d252-44c6-8731-798441dc0a16"
+  },
+  {
+    "kind": "network",
+    "route": "/budget",
+    "viewport": "narrow",
+    "detail": "401: GET http://localhost:3001/api/v1/budget?householdId=8ae2abf5-d252-44c6-8731-798441dc0a16"
+  },
+  {
+    "kind": "network",
+    "route": "/budget",
+    "viewport": "narrow",
+    "detail": "401: POST http://localhost:3001/api/v1/auth/refresh"
+  },
+  {
+    "kind": "network",
+    "route": "/budget",
+    "viewport": "narrow",
+    "detail": "401: GET http://localhost:3001/api/v1/settings?householdId=8ae2abf5-d252-44c6-8731-798441dc0a16"
+  },
+  {
+    "kind": "console",
+    "route": "/goals",
+    "viewport": "narrow",
+    "detail": "error: Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  },
+  {
+    "kind": "console",
+    "route": "/goals",
+    "viewport": "narrow",
+    "detail": "error: Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  },
+  {
+    "kind": "console",
+    "route": "/goals",
+    "viewport": "narrow",
+    "detail": "error: Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  },
+  {
+    "kind": "console",
+    "route": "/goals",
+    "viewport": "narrow",
+    "detail": "error: Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  },
+  {
+    "kind": "console",
+    "route": "/goals",
+    "viewport": "narrow",
+    "detail": "error: Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  },
+  {
+    "kind": "network",
+    "route": "/goals",
+    "viewport": "narrow",
+    "detail": "401: GET http://localhost:3001/api/v1/settings?householdId=8ae2abf5-d252-44c6-8731-798441dc0a16"
+  },
+  {
+    "kind": "network",
+    "route": "/goals",
+    "viewport": "narrow",
+    "detail": "401: POST http://localhost:3001/api/v1/auth/refresh"
+  },
+  {
+    "kind": "network",
+    "route": "/goals",
+    "viewport": "narrow",
+    "detail": "401: GET http://localhost:3001/api/v1/goals?householdId=8ae2abf5-d252-44c6-8731-798441dc0a16"
+  },
+  {
+    "kind": "network",
+    "route": "/goals",
+    "viewport": "narrow",
+    "detail": "401: GET http://localhost:3001/api/v1/settings?householdId=8ae2abf5-d252-44c6-8731-798441dc0a16"
+  },
+  {
+    "kind": "network",
+    "route": "/goals",
+    "viewport": "narrow",
+    "detail": "401: GET http://localhost:3001/api/v1/goals?householdId=8ae2abf5-d252-44c6-8731-798441dc0a16"
+  },
+  {
+    "kind": "console",
+    "route": "/net-worth",
+    "viewport": "narrow",
+    "detail": "error: Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  },
+  {
+    "kind": "console",
+    "route": "/net-worth",
+    "viewport": "narrow",
+    "detail": "error: Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  },
+  {
+    "kind": "console",
+    "route": "/net-worth",
+    "viewport": "narrow",
+    "detail": "error: Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  },
+  {
+    "kind": "console",
+    "route": "/net-worth",
+    "viewport": "narrow",
+    "detail": "error: Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  },
+  {
+    "kind": "network",
+    "route": "/net-worth",
+    "viewport": "narrow",
+    "detail": "401: GET http://localhost:3001/api/v1/settings?householdId=8ae2abf5-d252-44c6-8731-798441dc0a16"
+  },
+  {
+    "kind": "network",
+    "route": "/net-worth",
+    "viewport": "narrow",
+    "detail": "401: POST http://localhost:3001/api/v1/auth/refresh"
+  },
+  {
+    "kind": "network",
+    "route": "/net-worth",
+    "viewport": "narrow",
+    "detail": "401: GET http://localhost:3001/api/v1/net-worth?householdId=8ae2abf5-d252-44c6-8731-798441dc0a16"
+  },
+  {
+    "kind": "network",
+    "route": "/net-worth",
+    "viewport": "narrow",
+    "detail": "401: GET http://localhost:3001/api/v1/settings?householdId=8ae2abf5-d252-44c6-8731-798441dc0a16"
+  },
+  {
+    "kind": "console",
+    "route": "/forecast",
+    "viewport": "narrow",
+    "detail": "error: Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  },
+  {
+    "kind": "console",
+    "route": "/forecast",
+    "viewport": "narrow",
+    "detail": "error: Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  },
+  {
+    "kind": "console",
+    "route": "/forecast",
+    "viewport": "narrow",
+    "detail": "error: Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  },
+  {
+    "kind": "console",
+    "route": "/forecast",
+    "viewport": "narrow",
+    "detail": "error: Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  },
+  {
+    "kind": "network",
+    "route": "/forecast",
+    "viewport": "narrow",
+    "detail": "401: GET http://localhost:3001/api/v1/settings?householdId=8ae2abf5-d252-44c6-8731-798441dc0a16"
+  },
+  {
+    "kind": "network",
+    "route": "/forecast",
+    "viewport": "narrow",
+    "detail": "401: POST http://localhost:3001/api/v1/auth/refresh"
+  },
+  {
+    "kind": "network",
+    "route": "/forecast",
+    "viewport": "narrow",
+    "detail": "401: GET http://localhost:3001/api/v1/forecast?householdId=8ae2abf5-d252-44c6-8731-798441dc0a16"
+  },
+  {
+    "kind": "network",
+    "route": "/forecast",
+    "viewport": "narrow",
+    "detail": "401: GET http://localhost:3001/api/v1/settings?householdId=8ae2abf5-d252-44c6-8731-798441dc0a16"
+  },
+  {
+    "kind": "console",
+    "route": "/cashflow",
+    "viewport": "narrow",
+    "detail": "error: Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  },
+  {
+    "kind": "console",
+    "route": "/cashflow",
+    "viewport": "narrow",
+    "detail": "error: Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  },
+  {
+    "kind": "console",
+    "route": "/cashflow",
+    "viewport": "narrow",
+    "detail": "error: Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  },
+  {
+    "kind": "console",
+    "route": "/cashflow",
+    "viewport": "narrow",
+    "detail": "error: Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  },
+  {
+    "kind": "network",
+    "route": "/cashflow",
+    "viewport": "narrow",
+    "detail": "401: GET http://localhost:3001/api/v1/settings?householdId=8ae2abf5-d252-44c6-8731-798441dc0a16"
+  },
+  {
+    "kind": "network",
+    "route": "/cashflow",
+    "viewport": "narrow",
+    "detail": "401: POST http://localhost:3001/api/v1/auth/refresh"
+  },
+  {
+    "kind": "network",
+    "route": "/cashflow",
+    "viewport": "narrow",
+    "detail": "401: GET http://localhost:3001/api/v1/cashflow?householdId=8ae2abf5-d252-44c6-8731-798441dc0a16"
+  },
+  {
+    "kind": "network",
+    "route": "/cashflow",
+    "viewport": "narrow",
+    "detail": "401: GET http://localhost:3001/api/v1/settings?householdId=8ae2abf5-d252-44c6-8731-798441dc0a16"
+  },
+  {
+    "kind": "console",
+    "route": "/insights",
+    "viewport": "narrow",
+    "detail": "error: Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  },
+  {
+    "kind": "console",
+    "route": "/insights",
+    "viewport": "narrow",
+    "detail": "error: Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  },
+  {
+    "kind": "console",
+    "route": "/insights",
+    "viewport": "narrow",
+    "detail": "error: Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  },
+  {
+    "kind": "console",
+    "route": "/insights",
+    "viewport": "narrow",
+    "detail": "error: Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  },
+  {
+    "kind": "console",
+    "route": "/insights",
+    "viewport": "narrow",
+    "detail": "error: Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  },
+  {
+    "kind": "network",
+    "route": "/insights",
+    "viewport": "narrow",
+    "detail": "401: GET http://localhost:3001/api/v1/settings?householdId=8ae2abf5-d252-44c6-8731-798441dc0a16"
+  },
+  {
+    "kind": "network",
+    "route": "/insights",
+    "viewport": "narrow",
+    "detail": "401: POST http://localhost:3001/api/v1/auth/refresh"
+  },
+  {
+    "kind": "network",
+    "route": "/insights",
+    "viewport": "narrow",
+    "detail": "401: GET http://localhost:3001/api/v1/anomalies?householdId=8ae2abf5-d252-44c6-8731-798441dc0a16"
+  },
+  {
+    "kind": "network",
+    "route": "/insights",
+    "viewport": "narrow",
+    "detail": "401: GET http://localhost:3001/api/v1/insights?householdId=8ae2abf5-d252-44c6-8731-798441dc0a16"
+  },
+  {
+    "kind": "network",
+    "route": "/insights",
+    "viewport": "narrow",
+    "detail": "401: GET http://localhost:3001/api/v1/settings?householdId=8ae2abf5-d252-44c6-8731-798441dc0a16"
+  },
+  {
+    "kind": "console",
+    "route": "/opportunities",
+    "viewport": "narrow",
+    "detail": "error: Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  },
+  {
+    "kind": "console",
+    "route": "/opportunities",
+    "viewport": "narrow",
+    "detail": "error: Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  },
+  {
+    "kind": "console",
+    "route": "/opportunities",
+    "viewport": "narrow",
+    "detail": "error: Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  },
+  {
+    "kind": "console",
+    "route": "/opportunities",
+    "viewport": "narrow",
+    "detail": "error: Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  },
+  {
+    "kind": "network",
+    "route": "/opportunities",
+    "viewport": "narrow",
+    "detail": "401: GET http://localhost:3001/api/v1/settings?householdId=8ae2abf5-d252-44c6-8731-798441dc0a16"
+  },
+  {
+    "kind": "network",
+    "route": "/opportunities",
+    "viewport": "narrow",
+    "detail": "401: POST http://localhost:3001/api/v1/auth/refresh"
+  },
+  {
+    "kind": "network",
+    "route": "/opportunities",
+    "viewport": "narrow",
+    "detail": "401: GET http://localhost:3001/api/v1/opportunities?householdId=8ae2abf5-d252-44c6-8731-798441dc0a16"
+  },
+  {
+    "kind": "network",
+    "route": "/opportunities",
+    "viewport": "narrow",
+    "detail": "401: GET http://localhost:3001/api/v1/settings?householdId=8ae2abf5-d252-44c6-8731-798441dc0a16"
+  },
+  {
+    "kind": "console",
+    "route": "/review",
+    "viewport": "narrow",
+    "detail": "error: Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  },
+  {
+    "kind": "console",
+    "route": "/review",
+    "viewport": "narrow",
+    "detail": "error: Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  },
+  {
+    "kind": "console",
+    "route": "/review",
+    "viewport": "narrow",
+    "detail": "error: Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  },
+  {
+    "kind": "console",
+    "route": "/review",
+    "viewport": "narrow",
+    "detail": "error: Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  },
+  {
+    "kind": "console",
+    "route": "/review",
+    "viewport": "narrow",
+    "detail": "error: Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  },
+  {
+    "kind": "console",
+    "route": "/review",
+    "viewport": "narrow",
+    "detail": "error: Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  },
+  {
+    "kind": "network",
+    "route": "/review",
+    "viewport": "narrow",
+    "detail": "401: GET http://localhost:3001/api/v1/settings?householdId=8ae2abf5-d252-44c6-8731-798441dc0a16"
+  },
+  {
+    "kind": "network",
+    "route": "/review",
+    "viewport": "narrow",
+    "detail": "401: POST http://localhost:3001/api/v1/auth/refresh"
+  },
+  {
+    "kind": "network",
+    "route": "/review",
+    "viewport": "narrow",
+    "detail": "401: GET http://localhost:3001/api/v1/review?householdId=8ae2abf5-d252-44c6-8731-798441dc0a16"
+  },
+  {
+    "kind": "network",
+    "route": "/review",
+    "viewport": "narrow",
+    "detail": "401: GET http://localhost:3001/api/v1/categories?householdId=8ae2abf5-d252-44c6-8731-798441dc0a16"
+  },
+  {
+    "kind": "network",
+    "route": "/review",
+    "viewport": "narrow",
+    "detail": "401: GET http://localhost:3001/api/v1/anomalies?householdId=8ae2abf5-d252-44c6-8731-798441dc0a16"
+  },
+  {
+    "kind": "network",
+    "route": "/review",
+    "viewport": "narrow",
+    "detail": "401: GET http://localhost:3001/api/v1/settings?householdId=8ae2abf5-d252-44c6-8731-798441dc0a16"
+  },
+  {
+    "kind": "console",
+    "route": "/vehicles",
+    "viewport": "narrow",
+    "detail": "error: Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  },
+  {
+    "kind": "console",
+    "route": "/vehicles",
+    "viewport": "narrow",
+    "detail": "error: Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  },
+  {
+    "kind": "console",
+    "route": "/vehicles",
+    "viewport": "narrow",
+    "detail": "error: Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  },
+  {
+    "kind": "console",
+    "route": "/vehicles",
+    "viewport": "narrow",
+    "detail": "error: Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  },
+  {
+    "kind": "network",
+    "route": "/vehicles",
+    "viewport": "narrow",
+    "detail": "401: GET http://localhost:3001/api/v1/settings?householdId=8ae2abf5-d252-44c6-8731-798441dc0a16"
+  },
+  {
+    "kind": "network",
+    "route": "/vehicles",
+    "viewport": "narrow",
+    "detail": "401: POST http://localhost:3001/api/v1/auth/refresh"
+  },
+  {
+    "kind": "network",
+    "route": "/vehicles",
+    "viewport": "narrow",
+    "detail": "401: GET http://localhost:3001/api/v1/vehicles?householdId=8ae2abf5-d252-44c6-8731-798441dc0a16"
+  },
+  {
+    "kind": "network",
+    "route": "/vehicles",
+    "viewport": "narrow",
+    "detail": "401: GET http://localhost:3001/api/v1/settings?householdId=8ae2abf5-d252-44c6-8731-798441dc0a16"
+  },
+  {
+    "kind": "console",
+    "route": "/debt",
+    "viewport": "narrow",
+    "detail": "error: Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  },
+  {
+    "kind": "console",
+    "route": "/debt",
+    "viewport": "narrow",
+    "detail": "error: Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  },
+  {
+    "kind": "console",
+    "route": "/debt",
+    "viewport": "narrow",
+    "detail": "error: Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  },
+  {
+    "kind": "console",
+    "route": "/debt",
+    "viewport": "narrow",
+    "detail": "error: Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  },
+  {
+    "kind": "network",
+    "route": "/debt",
+    "viewport": "narrow",
+    "detail": "401: GET http://localhost:3001/api/v1/settings?householdId=8ae2abf5-d252-44c6-8731-798441dc0a16"
+  },
+  {
+    "kind": "network",
+    "route": "/debt",
+    "viewport": "narrow",
+    "detail": "401: POST http://localhost:3001/api/v1/auth/refresh"
+  },
+  {
+    "kind": "network",
+    "route": "/debt",
+    "viewport": "narrow",
+    "detail": "401: GET http://localhost:3001/api/v1/debt?householdId=8ae2abf5-d252-44c6-8731-798441dc0a16"
+  },
+  {
+    "kind": "network",
+    "route": "/debt",
+    "viewport": "narrow",
+    "detail": "401: GET http://localhost:3001/api/v1/settings?householdId=8ae2abf5-d252-44c6-8731-798441dc0a16"
+  },
+  {
+    "kind": "console",
+    "route": "/investments",
+    "viewport": "narrow",
+    "detail": "error: Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  },
+  {
+    "kind": "console",
+    "route": "/investments",
+    "viewport": "narrow",
+    "detail": "error: Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  },
+  {
+    "kind": "console",
+    "route": "/investments",
+    "viewport": "narrow",
+    "detail": "error: Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  },
+  {
+    "kind": "console",
+    "route": "/investments",
+    "viewport": "narrow",
+    "detail": "error: Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  },
+  {
+    "kind": "network",
+    "route": "/investments",
+    "viewport": "narrow",
+    "detail": "401: GET http://localhost:3001/api/v1/settings?householdId=8ae2abf5-d252-44c6-8731-798441dc0a16"
+  },
+  {
+    "kind": "network",
+    "route": "/investments",
+    "viewport": "narrow",
+    "detail": "401: POST http://localhost:3001/api/v1/auth/refresh"
+  },
+  {
+    "kind": "network",
+    "route": "/investments",
+    "viewport": "narrow",
+    "detail": "401: GET http://localhost:3001/api/v1/investments?householdId=8ae2abf5-d252-44c6-8731-798441dc0a16"
+  },
+  {
+    "kind": "network",
+    "route": "/investments",
+    "viewport": "narrow",
+    "detail": "401: GET http://localhost:3001/api/v1/settings?householdId=8ae2abf5-d252-44c6-8731-798441dc0a16"
+  },
+  {
+    "kind": "console",
+    "route": "/assets",
+    "viewport": "narrow",
+    "detail": "error: Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  },
+  {
+    "kind": "console",
+    "route": "/assets",
+    "viewport": "narrow",
+    "detail": "error: Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  },
+  {
+    "kind": "console",
+    "route": "/assets",
+    "viewport": "narrow",
+    "detail": "error: Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  },
+  {
+    "kind": "console",
+    "route": "/assets",
+    "viewport": "narrow",
+    "detail": "error: Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  },
+  {
+    "kind": "network",
+    "route": "/assets",
+    "viewport": "narrow",
+    "detail": "401: GET http://localhost:3001/api/v1/settings?householdId=8ae2abf5-d252-44c6-8731-798441dc0a16"
+  },
+  {
+    "kind": "network",
+    "route": "/assets",
+    "viewport": "narrow",
+    "detail": "401: POST http://localhost:3001/api/v1/auth/refresh"
+  },
+  {
+    "kind": "network",
+    "route": "/assets",
+    "viewport": "narrow",
+    "detail": "401: GET http://localhost:3001/api/v1/assets?householdId=8ae2abf5-d252-44c6-8731-798441dc0a16"
+  },
+  {
+    "kind": "network",
+    "route": "/assets",
+    "viewport": "narrow",
+    "detail": "401: GET http://localhost:3001/api/v1/settings?householdId=8ae2abf5-d252-44c6-8731-798441dc0a16"
+  },
+  {
+    "kind": "console",
+    "route": "/documents",
+    "viewport": "narrow",
+    "detail": "error: Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  },
+  {
+    "kind": "console",
+    "route": "/documents",
+    "viewport": "narrow",
+    "detail": "error: Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  },
+  {
+    "kind": "console",
+    "route": "/documents",
+    "viewport": "narrow",
+    "detail": "error: Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  },
+  {
+    "kind": "console",
+    "route": "/documents",
+    "viewport": "narrow",
+    "detail": "error: Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  },
+  {
+    "kind": "console",
+    "route": "/documents",
+    "viewport": "narrow",
+    "detail": "error: Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  },
+  {
+    "kind": "console",
+    "route": "/documents",
+    "viewport": "narrow",
+    "detail": "error: Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  },
+  {
+    "kind": "network",
+    "route": "/documents",
+    "viewport": "narrow",
+    "detail": "401: GET http://localhost:3001/api/v1/settings?householdId=8ae2abf5-d252-44c6-8731-798441dc0a16"
+  },
+  {
+    "kind": "network",
+    "route": "/documents",
+    "viewport": "narrow",
+    "detail": "401: POST http://localhost:3001/api/v1/auth/refresh"
+  },
+  {
+    "kind": "network",
+    "route": "/documents",
+    "viewport": "narrow",
+    "detail": "401: GET http://localhost:3001/api/v1/documents?householdId=8ae2abf5-d252-44c6-8731-798441dc0a16"
+  },
+  {
+    "kind": "network",
+    "route": "/documents",
+    "viewport": "narrow",
+    "detail": "401: GET http://localhost:3001/api/v1/accounts?householdId=8ae2abf5-d252-44c6-8731-798441dc0a16"
+  },
+  {
+    "kind": "network",
+    "route": "/documents",
+    "viewport": "narrow",
+    "detail": "401: GET http://localhost:3001/api/v1/vehicles?householdId=8ae2abf5-d252-44c6-8731-798441dc0a16"
+  },
+  {
+    "kind": "network",
+    "route": "/documents",
+    "viewport": "narrow",
+    "detail": "401: GET http://localhost:3001/api/v1/settings?householdId=8ae2abf5-d252-44c6-8731-798441dc0a16"
+  },
+  {
+    "kind": "console",
+    "route": "/imports",
+    "viewport": "narrow",
+    "detail": "error: Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  },
+  {
+    "kind": "console",
+    "route": "/imports",
+    "viewport": "narrow",
+    "detail": "error: Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  },
+  {
+    "kind": "console",
+    "route": "/imports",
+    "viewport": "narrow",
+    "detail": "error: Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  },
+  {
+    "kind": "console",
+    "route": "/imports",
+    "viewport": "narrow",
+    "detail": "error: Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  },
+  {
+    "kind": "network",
+    "route": "/imports",
+    "viewport": "narrow",
+    "detail": "401: GET http://localhost:3001/api/v1/settings?householdId=8ae2abf5-d252-44c6-8731-798441dc0a16"
+  },
+  {
+    "kind": "network",
+    "route": "/imports",
+    "viewport": "narrow",
+    "detail": "401: POST http://localhost:3001/api/v1/auth/refresh"
+  },
+  {
+    "kind": "network",
+    "route": "/imports",
+    "viewport": "narrow",
+    "detail": "401: GET http://localhost:3001/api/v1/imports?householdId=8ae2abf5-d252-44c6-8731-798441dc0a16"
+  },
+  {
+    "kind": "network",
+    "route": "/imports",
+    "viewport": "narrow",
+    "detail": "401: GET http://localhost:3001/api/v1/settings?householdId=8ae2abf5-d252-44c6-8731-798441dc0a16"
+  },
+  {
+    "kind": "console",
+    "route": "/integrations",
+    "viewport": "narrow",
+    "detail": "error: Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  },
+  {
+    "kind": "console",
+    "route": "/integrations",
+    "viewport": "narrow",
+    "detail": "error: Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  },
+  {
+    "kind": "console",
+    "route": "/integrations",
+    "viewport": "narrow",
+    "detail": "error: Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  },
+  {
+    "kind": "console",
+    "route": "/integrations",
+    "viewport": "narrow",
+    "detail": "error: Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  },
+  {
+    "kind": "network",
+    "route": "/integrations",
+    "viewport": "narrow",
+    "detail": "401: GET http://localhost:3001/api/v1/settings?householdId=8ae2abf5-d252-44c6-8731-798441dc0a16"
+  },
+  {
+    "kind": "network",
+    "route": "/integrations",
+    "viewport": "narrow",
+    "detail": "401: POST http://localhost:3001/api/v1/auth/refresh"
+  },
+  {
+    "kind": "network",
+    "route": "/integrations",
+    "viewport": "narrow",
+    "detail": "401: GET http://localhost:3001/api/v1/integrations?householdId=8ae2abf5-d252-44c6-8731-798441dc0a16"
+  },
+  {
+    "kind": "network",
+    "route": "/integrations",
+    "viewport": "narrow",
+    "detail": "401: GET http://localhost:3001/api/v1/settings?householdId=8ae2abf5-d252-44c6-8731-798441dc0a16"
+  },
+  {
+    "kind": "console",
+    "route": "/contracts",
+    "viewport": "narrow",
+    "detail": "error: Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  },
+  {
+    "kind": "console",
+    "route": "/contracts",
+    "viewport": "narrow",
+    "detail": "error: Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  },
+  {
+    "kind": "console",
+    "route": "/contracts",
+    "viewport": "narrow",
+    "detail": "error: Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  },
+  {
+    "kind": "console",
+    "route": "/contracts",
+    "viewport": "narrow",
+    "detail": "error: Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  },
+  {
+    "kind": "network",
+    "route": "/contracts",
+    "viewport": "narrow",
+    "detail": "401: GET http://localhost:3001/api/v1/settings?householdId=8ae2abf5-d252-44c6-8731-798441dc0a16"
+  },
+  {
+    "kind": "network",
+    "route": "/contracts",
+    "viewport": "narrow",
+    "detail": "401: GET http://localhost:3001/api/v1/contracts?householdId=8ae2abf5-d252-44c6-8731-798441dc0a16"
+  },
+  {
+    "kind": "network",
+    "route": "/contracts",
+    "viewport": "narrow",
+    "detail": "401: POST http://localhost:3001/api/v1/auth/refresh"
+  },
+  {
+    "kind": "network",
+    "route": "/contracts",
+    "viewport": "narrow",
+    "detail": "401: GET http://localhost:3001/api/v1/settings?householdId=8ae2abf5-d252-44c6-8731-798441dc0a16"
+  },
+  {
+    "kind": "console",
+    "route": "/subscriptions",
+    "viewport": "narrow",
+    "detail": "error: Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  },
+  {
+    "kind": "console",
+    "route": "/subscriptions",
+    "viewport": "narrow",
+    "detail": "error: Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  },
+  {
+    "kind": "console",
+    "route": "/subscriptions",
+    "viewport": "narrow",
+    "detail": "error: Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  },
+  {
+    "kind": "console",
+    "route": "/subscriptions",
+    "viewport": "narrow",
+    "detail": "error: Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  },
+  {
+    "kind": "network",
+    "route": "/subscriptions",
+    "viewport": "narrow",
+    "detail": "401: GET http://localhost:3001/api/v1/settings?householdId=8ae2abf5-d252-44c6-8731-798441dc0a16"
+  },
+  {
+    "kind": "network",
+    "route": "/subscriptions",
+    "viewport": "narrow",
+    "detail": "401: POST http://localhost:3001/api/v1/auth/refresh"
+  },
+  {
+    "kind": "network",
+    "route": "/subscriptions",
+    "viewport": "narrow",
+    "detail": "401: GET http://localhost:3001/api/v1/subscriptions?householdId=8ae2abf5-d252-44c6-8731-798441dc0a16"
+  },
+  {
+    "kind": "network",
+    "route": "/subscriptions",
+    "viewport": "narrow",
+    "detail": "401: GET http://localhost:3001/api/v1/settings?householdId=8ae2abf5-d252-44c6-8731-798441dc0a16"
+  },
+  {
+    "kind": "console",
+    "route": "/reports",
+    "viewport": "narrow",
+    "detail": "error: Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  },
+  {
+    "kind": "console",
+    "route": "/reports",
+    "viewport": "narrow",
+    "detail": "error: Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  },
+  {
+    "kind": "console",
+    "route": "/reports",
+    "viewport": "narrow",
+    "detail": "error: Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  },
+  {
+    "kind": "console",
+    "route": "/reports",
+    "viewport": "narrow",
+    "detail": "error: Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  },
+  {
+    "kind": "console",
+    "route": "/reports",
+    "viewport": "narrow",
+    "detail": "error: Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  },
+  {
+    "kind": "network",
+    "route": "/reports",
+    "viewport": "narrow",
+    "detail": "401: GET http://localhost:3001/api/v1/settings?householdId=8ae2abf5-d252-44c6-8731-798441dc0a16"
+  },
+  {
+    "kind": "network",
+    "route": "/reports",
+    "viewport": "narrow",
+    "detail": "401: POST http://localhost:3001/api/v1/auth/refresh"
+  },
+  {
+    "kind": "network",
+    "route": "/reports",
+    "viewport": "narrow",
+    "detail": "401: GET http://localhost:3001/api/v1/reports/monthly?householdId=8ae2abf5-d252-44c6-8731-798441dc0a16&period=2026-07"
+  },
+  {
+    "kind": "network",
+    "route": "/reports",
+    "viewport": "narrow",
+    "detail": "401: GET http://localhost:3001/api/v1/reports/yearly?householdId=8ae2abf5-d252-44c6-8731-798441dc0a16&year=2026"
+  },
+  {
+    "kind": "network",
+    "route": "/reports",
+    "viewport": "narrow",
+    "detail": "401: GET http://localhost:3001/api/v1/settings?householdId=8ae2abf5-d252-44c6-8731-798441dc0a16"
+  },
+  {
+    "kind": "console",
+    "route": "/risk",
+    "viewport": "narrow",
+    "detail": "error: Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  },
+  {
+    "kind": "console",
+    "route": "/risk",
+    "viewport": "narrow",
+    "detail": "error: Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  },
+  {
+    "kind": "console",
+    "route": "/risk",
+    "viewport": "narrow",
+    "detail": "error: Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  },
+  {
+    "kind": "console",
+    "route": "/risk",
+    "viewport": "narrow",
+    "detail": "error: Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  },
+  {
+    "kind": "network",
+    "route": "/risk",
+    "viewport": "narrow",
+    "detail": "401: GET http://localhost:3001/api/v1/settings?householdId=8ae2abf5-d252-44c6-8731-798441dc0a16"
+  },
+  {
+    "kind": "network",
+    "route": "/risk",
+    "viewport": "narrow",
+    "detail": "401: POST http://localhost:3001/api/v1/auth/refresh"
+  },
+  {
+    "kind": "network",
+    "route": "/risk",
+    "viewport": "narrow",
+    "detail": "401: GET http://localhost:3001/api/v1/risk?householdId=8ae2abf5-d252-44c6-8731-798441dc0a16"
+  },
+  {
+    "kind": "network",
+    "route": "/risk",
+    "viewport": "narrow",
+    "detail": "401: GET http://localhost:3001/api/v1/settings?householdId=8ae2abf5-d252-44c6-8731-798441dc0a16"
+  },
+  {
+    "kind": "console",
+    "route": "/scenarios",
+    "viewport": "narrow",
+    "detail": "error: Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  },
+  {
+    "kind": "console",
+    "route": "/scenarios",
+    "viewport": "narrow",
+    "detail": "error: Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  },
+  {
+    "kind": "console",
+    "route": "/scenarios",
+    "viewport": "narrow",
+    "detail": "error: Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  },
+  {
+    "kind": "console",
+    "route": "/scenarios",
+    "viewport": "narrow",
+    "detail": "error: Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  },
+  {
+    "kind": "network",
+    "route": "/scenarios",
+    "viewport": "narrow",
+    "detail": "401: GET http://localhost:3001/api/v1/settings?householdId=8ae2abf5-d252-44c6-8731-798441dc0a16"
+  },
+  {
+    "kind": "network",
+    "route": "/scenarios",
+    "viewport": "narrow",
+    "detail": "401: POST http://localhost:3001/api/v1/auth/refresh"
+  },
+  {
+    "kind": "network",
+    "route": "/scenarios",
+    "viewport": "narrow",
+    "detail": "401: GET http://localhost:3001/api/v1/scenarios?householdId=8ae2abf5-d252-44c6-8731-798441dc0a16"
+  },
+  {
+    "kind": "network",
+    "route": "/scenarios",
+    "viewport": "narrow",
+    "detail": "401: GET http://localhost:3001/api/v1/settings?householdId=8ae2abf5-d252-44c6-8731-798441dc0a16"
+  },
+  {
+    "kind": "console",
+    "route": "/advisor",
+    "viewport": "narrow",
+    "detail": "error: Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  },
+  {
+    "kind": "console",
+    "route": "/advisor",
+    "viewport": "narrow",
+    "detail": "error: Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  },
+  {
+    "kind": "console",
+    "route": "/advisor",
+    "viewport": "narrow",
+    "detail": "error: Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  },
+  {
+    "kind": "console",
+    "route": "/advisor",
+    "viewport": "narrow",
+    "detail": "error: Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  },
+  {
+    "kind": "network",
+    "route": "/advisor",
+    "viewport": "narrow",
+    "detail": "401: GET http://localhost:3001/api/v1/settings?householdId=8ae2abf5-d252-44c6-8731-798441dc0a16"
+  },
+  {
+    "kind": "network",
+    "route": "/advisor",
+    "viewport": "narrow",
+    "detail": "401: POST http://localhost:3001/api/v1/auth/refresh"
+  },
+  {
+    "kind": "network",
+    "route": "/advisor",
+    "viewport": "narrow",
+    "detail": "401: GET http://localhost:3001/api/v1/feature-flags"
+  },
+  {
+    "kind": "network",
+    "route": "/advisor",
+    "viewport": "narrow",
+    "detail": "401: GET http://localhost:3001/api/v1/settings?householdId=8ae2abf5-d252-44c6-8731-798441dc0a16"
+  },
+  {
+    "kind": "console",
+    "route": "/notifications",
+    "viewport": "narrow",
+    "detail": "error: Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  },
+  {
+    "kind": "console",
+    "route": "/notifications",
+    "viewport": "narrow",
+    "detail": "error: Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  },
+  {
+    "kind": "console",
+    "route": "/notifications",
+    "viewport": "narrow",
+    "detail": "error: Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  },
+  {
+    "kind": "console",
+    "route": "/notifications",
+    "viewport": "narrow",
+    "detail": "error: Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  },
+  {
+    "kind": "network",
+    "route": "/notifications",
+    "viewport": "narrow",
+    "detail": "401: GET http://localhost:3001/api/v1/settings?householdId=8ae2abf5-d252-44c6-8731-798441dc0a16"
+  },
+  {
+    "kind": "network",
+    "route": "/notifications",
+    "viewport": "narrow",
+    "detail": "401: GET http://localhost:3001/api/v1/notifications?householdId=8ae2abf5-d252-44c6-8731-798441dc0a16"
+  },
+  {
+    "kind": "network",
+    "route": "/notifications",
+    "viewport": "narrow",
+    "detail": "401: POST http://localhost:3001/api/v1/auth/refresh"
+  },
+  {
+    "kind": "network",
+    "route": "/notifications",
+    "viewport": "narrow",
+    "detail": "401: GET http://localhost:3001/api/v1/settings?householdId=8ae2abf5-d252-44c6-8731-798441dc0a16"
+  },
+  {
+    "kind": "console",
+    "route": "/settings",
+    "viewport": "narrow",
+    "detail": "error: Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  },
+  {
+    "kind": "console",
+    "route": "/settings",
+    "viewport": "narrow",
+    "detail": "error: Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  },
+  {
+    "kind": "console",
+    "route": "/settings",
+    "viewport": "narrow",
+    "detail": "error: Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  },
+  {
+    "kind": "network",
+    "route": "/settings",
+    "viewport": "narrow",
+    "detail": "401: GET http://localhost:3001/api/v1/settings?householdId=8ae2abf5-d252-44c6-8731-798441dc0a16"
+  },
+  {
+    "kind": "network",
+    "route": "/settings",
+    "viewport": "narrow",
+    "detail": "401: POST http://localhost:3001/api/v1/auth/refresh"
+  },
+  {
+    "kind": "network",
+    "route": "/settings",
+    "viewport": "narrow",
+    "detail": "401: GET http://localhost:3001/api/v1/settings?householdId=8ae2abf5-d252-44c6-8731-798441dc0a16"
+  },
+  {
+    "kind": "console",
+    "route": "/more",
+    "viewport": "narrow",
+    "detail": "error: Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  },
+  {
+    "kind": "console",
+    "route": "/more",
+    "viewport": "narrow",
+    "detail": "error: Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  },
+  {
+    "kind": "console",
+    "route": "/more",
+    "viewport": "narrow",
+    "detail": "error: Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+  },
+  {
+    "kind": "network",
+    "route": "/more",
+    "viewport": "narrow",
+    "detail": "401: GET http://localhost:3001/api/v1/settings?householdId=8ae2abf5-d252-44c6-8731-798441dc0a16"
+  },
+  {
+    "kind": "network",
+    "route": "/more",
+    "viewport": "narrow",
+    "detail": "401: POST http://localhost:3001/api/v1/auth/refresh"
+  },
+  {
+    "kind": "network",
+    "route": "/more",
+    "viewport": "narrow",
+    "detail": "401: GET http://localhost:3001/api/v1/settings?householdId=8ae2abf5-d252-44c6-8731-798441dc0a16"
+  }
+]

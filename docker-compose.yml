@@ -1,0 +1,141 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: ffos
+      POSTGRES_PASSWORD: ffos
+      POSTGRES_DB: ffos_dev
+    ports:
+      - "5436:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./infrastructure/docker/postgres-init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ffos -d ffos_dev"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  minio:
+    image: minio/minio:latest
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ffos
+      MINIO_ROOT_PASSWORD: ffossecret
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - minio_data:/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
+  mailpit:
+    image: axllent/mailpit:latest
+    ports:
+      - "1025:1025"
+      - "8025:8025"
+
+  api:
+    build:
+      context: .
+      dockerfile: infrastructure/docker/Dockerfile.api
+    environment:
+      NODE_ENV: development
+      # Which deployment this is, separately from NODE_ENV: a pilot runs with
+      # production semantics but is not the production deployment, and treating
+      # them as the same value is how a pilot ends up on a development database.
+      APP_ENV: ${APP_ENV:-development}
+      API_PORT: 3001
+      DATABASE_URL: postgresql://ffos:ffos@postgres:5432/ffos_dev
+      REDIS_URL: redis://redis:6379
+      # Where the erasure ledger lives. It is deliberately outside the database,
+      # so restoring a backup cannot roll back the record of what was erased.
+      FFOS_ERASURE_LEDGER_DIR: /var/ffos/erasure-ledger
+      JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET:?run "pnpm secrets:dev" once to generate local signing secrets}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:?run "pnpm secrets:dev" once to generate local signing secrets}
+      JWT_ACCESS_TTL: 15m
+      JWT_REFRESH_TTL: 30d
+      CORS_ORIGIN: http://localhost:3000
+      WEB_URL: http://localhost:3000
+      S3_ENDPOINT: http://minio:9000
+      S3_ACCESS_KEY: ffos
+      S3_SECRET_KEY: ffossecret
+      S3_BUCKET: ffos
+      S3_REGION: us-east-1
+      DEMO_AS_OF_DATE: "2026-08-01"
+      DEMO_RANDOM_SEED: family-financial-os-demo-v1
+      # An end-to-end run drives the whole application from one address; the
+      # product default of 120/minute is what production uses.
+      FFOS_RATE_LIMIT: "2000"
+    ports:
+      - "3001:3001"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      # Host-mounted so the ledger survives the container, and so a database
+      # restore cannot roll back the record of what was erased.
+      - ./var/erasure-ledger:/var/ffos/erasure-ledger
+    command: ["node", "apps/api/dist/main.js"]
+
+  worker:
+    build:
+      context: .
+      dockerfile: infrastructure/docker/Dockerfile.api
+    environment:
+      NODE_ENV: development
+      APP_ENV: ${APP_ENV:-development}
+      DATABASE_URL: postgresql://ffos:ffos@postgres:5432/ffos_dev
+      REDIS_URL: redis://redis:6379
+      JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET:?run "pnpm secrets:dev" once to generate local signing secrets}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:?run "pnpm secrets:dev" once to generate local signing secrets}
+      FFOS_ERASURE_LEDGER_DIR: /var/ffos/erasure-ledger
+      DEMO_AS_OF_DATE: "2026-08-01"
+      DEMO_RANDOM_SEED: family-financial-os-demo-v1
+    volumes:
+      - ./var/erasure-ledger:/var/ffos/erasure-ledger
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    command: ["node", "apps/api/dist/worker.js"]
+
+  web:
+    build:
+      context: .
+      dockerfile: infrastructure/docker/Dockerfile.web
+      args:
+        # Development keeps the demo sign-in shortcut; the pilot does not.
+        NEXT_PUBLIC_FFOS_SHOW_DEMO: "true"
+    environment:
+      NEXT_PUBLIC_API_URL: http://localhost:3001
+      NEXT_PUBLIC_FFOS_SHOW_DEMO: "true"
+    ports:
+      - "3000:3000"
+    depends_on:
+      - api
+
+volumes:
+  postgres_data:
+  redis_data:
+  minio_data:
