@@ -66,15 +66,20 @@ describe("SEB CSV detection", () => {
 });
 
 describe("SEB exact money", () => {
+  /** Assert an exact conversion, failing loudly if the value was refused. */
+  function minorOf(raw: string): bigint {
+    const parsed = parseSebAmountToMinor(raw);
+    assert.equal(parsed.ok, true, `${raw} should parse`);
+    if (!parsed.ok) throw new Error("unreachable");
+    return parsed.minor;
+  }
+
   it("converts the observed three-decimal values exactly", () => {
-    assert.equal(parseSebAmountToMinor("100.000").ok && parseSebAmountToMinor("100.000").minor, 10000n);
-    assert.equal(parseSebAmountToMinor("-130.930").ok && parseSebAmountToMinor("-130.930").minor, -13093n);
-    assert.equal(
-      parseSebAmountToMinor("596242.280").ok && parseSebAmountToMinor("596242.280").minor,
-      59624228n,
-    );
-    assert.equal(parseSebAmountToMinor("0.010").ok && parseSebAmountToMinor("0.010").minor, 1n);
-    assert.equal(parseSebAmountToMinor("-306.000").ok && parseSebAmountToMinor("-306.000").minor, -30600n);
+    assert.equal(minorOf("100.000"), 10000n);
+    assert.equal(minorOf("-130.930"), -13093n);
+    assert.equal(minorOf("596242.280"), 59624228n);
+    assert.equal(minorOf("0.010"), 1n);
+    assert.equal(minorOf("-306.000"), -30600n);
   });
 
   it("refuses a third decimal that is not zero, rather than rounding", () => {
@@ -86,9 +91,9 @@ describe("SEB exact money", () => {
   });
 
   it("accepts fewer decimals and refuses more", () => {
-    assert.equal(parseSebAmountToMinor("5").ok && parseSebAmountToMinor("5").minor, 500n);
-    assert.equal(parseSebAmountToMinor("5.4").ok && parseSebAmountToMinor("5.4").minor, 540n);
-    assert.equal(parseSebAmountToMinor("5.45").ok && parseSebAmountToMinor("5.45").minor, 545n);
+    assert.equal(minorOf("5"), 500n);
+    assert.equal(minorOf("5.4"), 540n);
+    assert.equal(minorOf("5.45"), 545n);
     assert.equal(parseSebAmountToMinor("5.4500").ok, false);
   });
 
@@ -100,20 +105,21 @@ describe("SEB exact money", () => {
 
   it("is exact at magnitudes a float would corrupt", () => {
     // 0.1 + 0.2 territory, and beyond Number.MAX_SAFE_INTEGER in öre.
-    assert.equal(parseSebAmountToMinor("0.100").ok && parseSebAmountToMinor("0.100").minor, 10n);
-    assert.equal(parseSebAmountToMinor("0.200").ok && parseSebAmountToMinor("0.200").minor, 20n);
-    const huge = parseSebAmountToMinor("999999999999999.990");
-    assert.equal(huge.ok && huge.minor, 99999999999999999n);
+    assert.equal(minorOf("0.100"), 10n);
+    assert.equal(minorOf("0.200"), 20n);
+    assert.equal(minorOf("999999999999999.990"), 99999999999999999n);
     // The same value through a float loses the last digit entirely. Compared as
-    // strings, because the corrupted number cannot even be written as a literal.
+    // strings, because the corrupted number cannot be written as a literal.
     assert.equal(String(Math.round(999999999999999.99 * 100)), "100000000000000000");
-    assert.equal((huge.ok && huge.minor)?.toString(), "99999999999999999");
+    assert.equal(minorOf("999999999999999.990").toString(), "99999999999999999");
   });
 });
 
 describe("SEB dates", () => {
   it("accepts an exact ISO date", () => {
-    assert.equal(parseSebDate("2026-08-10").ok && parseSebDate("2026-08-10").date, "2026-08-10");
+    const parsed = parseSebDate("2026-08-10");
+    assert.equal(parsed.ok, true);
+    assert.equal(parsed.ok && parsed.date, "2026-08-10");
     assert.equal(parseSebDate("2024-02-29").ok, true, "2024 is a leap year");
   });
 
