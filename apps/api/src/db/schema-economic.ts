@@ -201,6 +201,20 @@ export const rawImportRecords = pgTable(
   ],
 );
 
+/**
+ * Whether the household would still be paying this if income fell.
+ *
+ * A separate dimension from `kind`: that says expense/income/transfer, this says
+ * how avoidable the cost is. The liquidity engine sizes a buffer on essentials,
+ * so conflating the two would size it on everything.
+ */
+export const categoryNecessityEnum = pgEnum("category_necessity", [
+  "ESSENTIAL",
+  "SEMI_DISCRETIONARY",
+  "DISCRETIONARY",
+  "UNKNOWN",
+]);
+
 export const categories = pgTable("categories", {
   id: uuid("id").defaultRandom().primaryKey(),
   householdId: uuid("household_id").references(() => households.id, {
@@ -210,6 +224,9 @@ export const categories = pgTable("categories", {
   key: varchar("key", { length: 80 }).notNull(),
   name: varchar("name", { length: 120 }).notNull(),
   kind: varchar("kind", { length: 40 }).notNull().default("expense"),
+  necessity: categoryNecessityEnum("necessity").notNull().default("UNKNOWN"),
+  /** The household said so, which outranks the system default. */
+  necessityUserSet: boolean("necessity_user_set").notNull().default(false),
   isSystem: boolean("is_system").notNull().default(true),
   archivedAt: timestamp("archived_at", { withTimezone: true }),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),

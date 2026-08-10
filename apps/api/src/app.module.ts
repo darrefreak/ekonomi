@@ -16,6 +16,7 @@ import { HealthModule } from "./health/health.module";
 import { HouseholdsModule } from "./households/households.module";
 import { ImportsModule } from "./imports/imports.module";
 import { IntakeModule } from "./intake/intake.module";
+import { IntelligenceModule } from "./intelligence/intelligence.module";
 import { StorageModule } from "./storage/storage.module";
 import { LedgerModule } from "./ledger/ledger.module";
 import { MetricsModule } from "./metrics/metrics.module";
@@ -68,6 +69,7 @@ import { WealthModule } from "./wealth/wealth.module";
     StorageModule,
     ImportsModule,
     IntakeModule,
+    IntelligenceModule,
     AiModule,
     DashboardModule,
     FeatureFlagsModule,
