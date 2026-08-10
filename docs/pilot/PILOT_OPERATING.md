@@ -30,6 +30,13 @@ a different database and a different bucket. Do not confuse them: the pilot is
    ```
    It must print `Preflight passed`. If it does not, stop and read what it named.
 
+   Run it from a shell that has not exported another environment's variables. A
+   real process variable beats the value in `.env.pilot`, so a terminal that
+   previously sourced `.env.test` makes preflight inspect the test database and
+   fail on names it should never have seen. The check that says *the running API
+   is serving the database this preflight checked* is what catches it. If you see
+   that, open a fresh terminal rather than working around it.
+
 2. **The household creates their account** at http://192.168.0.30:3020, then
    creates one household in onboarding. The currency step states SEK; there is
    nothing to choose.

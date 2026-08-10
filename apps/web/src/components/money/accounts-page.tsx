@@ -165,6 +165,16 @@ export function AccountsPage() {
       ) : null}
 
       <form
+        noValidate
+        /*
+         * The product validates this form itself.
+         *
+         * With native `required` left in charge, the browser blocked submission
+         * and showed its own bubble — "Please fill out this field." in an
+         * English-configured browser, inside a Swedish product — and the
+         * Swedish message this form already carries could never run. The
+         * attributes stay for assistive technology; the wording is ours.
+         */
         onSubmit={(e: FormEvent) => {
           e.preventDefault();
           void createMutation.mutate();

@@ -437,9 +437,7 @@ function MembersSection({
     },
     onError: (err: unknown) => {
       onError(
-        err instanceof Error
-          ? `${err.message} (kräver backend-stöd, se P1-U1-rapport)`
-          : "Kunde inte uppdatera rollen",
+        describeError(err, "Kunde inte uppdatera rollen"),
       );
     },
   });
@@ -454,9 +452,7 @@ function MembersSection({
     },
     onError: (err: unknown) => {
       onError(
-        err instanceof Error
-          ? `${err.message} (kräver backend-stöd, se P1-U1-rapport)`
-          : "Kunde inte ta bort medlemmen",
+        describeError(err, "Kunde inte ta bort medlemmen"),
       );
     },
   });
@@ -473,9 +469,7 @@ function MembersSection({
     },
     onError: (err: unknown) => {
       onError(
-        err instanceof Error
-          ? `${err.message} (kräver backend-stöd, se P1-U1-rapport)`
-          : "Kunde inte skicka inbjudan",
+        describeError(err, "Kunde inte skicka inbjudan"),
       );
     },
   });
@@ -490,9 +484,7 @@ function MembersSection({
     },
     onError: (err: unknown) => {
       onError(
-        err instanceof Error
-          ? `${err.message} (kräver backend-stöd, se P1-U1-rapport)`
-          : "Kunde inte avbryta inbjudan",
+        describeError(err, "Kunde inte avbryta inbjudan"),
       );
     },
   });
@@ -601,6 +593,12 @@ function MembersSection({
       ) : null}
 
       <form
+        noValidate
+        /*
+         * As on the account form: native `required` blocked submission and
+         * showed the browser's own English bubble, so the Swedish message this
+         * form already carries never ran.
+         */
         onSubmit={(e) => {
           e.preventDefault();
           inviteMutation.mutate();
@@ -870,9 +868,7 @@ function CategoriesSection({
     },
     onError: (err: unknown) => {
       onError(
-        err instanceof Error
-          ? `${err.message} (kräver backend-stöd, se P1-U1-rapport)`
-          : "Kunde inte skapa kategorin",
+        describeError(err, "Kunde inte skapa kategorin"),
       );
     },
   });
@@ -889,9 +885,7 @@ function CategoriesSection({
     },
     onError: (err: unknown) => {
       onError(
-        err instanceof Error
-          ? `${err.message} (kräver backend-stöd, se P1-U1-rapport)`
-          : "Kunde inte uppdatera kategorin",
+        describeError(err, "Kunde inte uppdatera kategorin"),
       );
     },
   });
@@ -904,9 +898,7 @@ function CategoriesSection({
     },
     onError: (err: unknown) => {
       onError(
-        err instanceof Error
-          ? `${err.message} (kräver backend-stöd, se P1-U1-rapport)`
-          : "Kunde inte arkivera kategorin",
+        describeError(err, "Kunde inte arkivera kategorin"),
       );
     },
   });

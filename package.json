@@ -8,8 +8,8 @@
   "scripts": {
     "dev": "turbo run dev --parallel",
     "secrets:dev": "node scripts/generate-dev-secrets.mjs",
-    "pilot:preflight": "node scripts/ops/pilot.mjs preflight",
-    "pilot:check": "node scripts/ops/pilot.mjs check",
+    "pilot:preflight": "APP_ENV=pilot node scripts/ops/pilot.mjs preflight",
+    "pilot:check": "APP_ENV=pilot node scripts/ops/pilot.mjs check",
     "backup:postgres": "node scripts/ops/backup.mjs postgres",
     "backup:objects": "node scripts/ops/backup.mjs objects",
     "backup:pilot": "node scripts/ops/backup.mjs pilot",
