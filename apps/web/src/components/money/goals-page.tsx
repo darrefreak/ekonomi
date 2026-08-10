@@ -149,7 +149,7 @@ export function GoalsPage() {
       const targetMinor = kronorToMinorString(newFundTarget);
       const monthlyContributionMinor = kronorToMinorString(newFundMonthly) ?? "0";
       if (!newFundName.trim() || targetMinor == null) {
-        throw new Error("Ange namn och målbelopp för fonden.");
+        throw new Error("Ange namn och målbelopp för buffertposten.");
       }
       return api.createSinkingFund({
         householdId: id,
@@ -296,7 +296,7 @@ export function GoalsPage() {
                       {" · "}
                       {STATUS_LABELS[goal.status] ?? goal.status}
                       {goal.targetDate ? ` · till ${goal.targetDate}` : ""}
-                      {goal.sinkingFundId ? " · länkad sinking fund" : ""}
+                      {goal.sinkingFundId ? " · länkad buffertpost" : ""}
                     </p>
                   </div>
                   <div className="flex items-center gap-2">
@@ -383,7 +383,7 @@ export function GoalsPage() {
         }}
         className="space-y-3 rounded-[16px] bg-surface-elevated p-5"
       >
-        <h2 className="text-sm font-medium text-text-secondary">Ny sinking fund</h2>
+        <h2 className="text-sm font-medium text-text-secondary">Ny buffertpost</h2>
         <div className="grid gap-3 md:grid-cols-[1fr_7rem_7rem_auto]">
           <input
             value={newFundName}
@@ -413,16 +413,16 @@ export function GoalsPage() {
             disabled={createFundMutation.isPending}
             className="min-h-11 rounded-[12px] bg-accent px-4 text-sm font-medium text-white disabled:opacity-60"
           >
-            {createFundMutation.isPending ? "Skapar…" : "Skapa"}
+            {createFundMutation.isPending ? "Skapar…" : "Skapa buffertpost"}
           </button>
         </div>
       </form>
 
       <section className="space-y-3">
-        <h2 className="text-sm text-text-secondary">Sinking funds</h2>
+        <h2 className="text-sm text-text-secondary">Buffertposter</h2>
         {data.sinkingFunds.length === 0 ? (
           <EmptyState
-            title="Inga sinking funds"
+            title="Inga buffertposter"
             description="Öronmärk pengar för bilunderhåll, semester eller andra framtida kostnader."
           />
         ) : (
@@ -684,13 +684,13 @@ function SinkingFundEditForm({
       onClose();
     },
     onError: (err: unknown) => {
-      onError(describeError(err, "Kunde inte spara sinking funden"));
+      onError(describeError(err, "Kunde inte spara buffertposten"));
     },
   });
 
   return (
     <article className="space-y-3 rounded-[16px] border border-accent/40 bg-surface-elevated p-5">
-      <h3 className="text-sm font-medium text-text-secondary">Redigera sinking fund</h3>
+      <h3 className="text-sm font-medium text-text-secondary">Redigera buffertpost</h3>
       <div className="grid gap-3 md:grid-cols-2">
         <label className="block text-sm">
           <span className="text-xs text-text-muted">Namn</span>

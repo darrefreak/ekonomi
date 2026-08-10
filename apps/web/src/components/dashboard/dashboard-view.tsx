@@ -160,7 +160,7 @@ export function DashboardView({ data }: { data: DashboardResponse }) {
                 </dd>
               </div>
               <div className="flex justify-between gap-3">
-                <dt>Reserverade sinking funds</dt>
+                <dt>Reserverade buffertposter</dt>
                 <dd>
                   <MoneyValue value={data.availableToInvest.deductions.reservedSinkingFunds} />
                 </dd>

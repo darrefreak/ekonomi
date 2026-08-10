@@ -41,7 +41,7 @@ test.describe("sign-in", () => {
     await page.locator('input[name="password"]').fill("this-is-not-the-password");
     await page.getByRole("button", { name: /^logga in$/i }).click();
 
-    const alert = page.locator('[role="alert"]');
+    const alert = page.locator('form [role="alert"]');
     await expect(alert).toBeVisible({ timeout: 15_000 });
     await expect(alert).toContainText(/fel e-post eller lösenord/i);
     await expect(alert, "the API's own wording must not reach the participant").not.toContainText(
@@ -80,7 +80,7 @@ test.describe("sign-in", () => {
     const password = page.locator('input[name="password"]');
     await password.fill("wrong-on-purpose");
     await password.press("Enter");
-    await expect(page.locator('[role="alert"]')).toBeVisible({ timeout: 15_000 });
+    await expect(page.locator('form [role="alert"]')).toBeVisible({ timeout: 15_000 });
   });
 
   test("UX-A06 signing in with the right password reaches the product", async ({ page }) => {
@@ -89,14 +89,11 @@ test.describe("sign-in", () => {
     await page.getByRole("button", { name: /^logga in$/i }).click();
 
     await page.waitForURL((url) => !url.pathname.startsWith("/login"), { timeout: 20_000 });
-    await expect(page.getByRole("heading", { name: /översikt/i }).first()).toBeVisible({
-      timeout: 20_000,
-    });
+    await expect(page.getByText(/finansiell position/i).first()).toBeVisible({ timeout: 20_000 });
 
     // And the session survives a reload rather than bouncing back to sign-in.
     await page.reload();
-    await expect(page.getByRole("heading", { name: /översikt/i }).first()).toBeVisible({
-      timeout: 20_000,
-    });
+    await expect(page.getByText(/finansiell position/i).first()).toBeVisible({ timeout: 20_000 });
+    await expect(page).not.toHaveURL(/\/login/);
   });
 });
