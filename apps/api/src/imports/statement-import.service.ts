@@ -184,7 +184,10 @@ export class StatementImportService {
         householdId,
         providerId: SEB_PROVIDER,
         name: "SEB (kontoutdrag)",
-        domain: "BANK",
+        // The project's own vocabulary for this domain is BANKING
+        // (`dataSourceDomainSchema`). Nothing validates the column, which is
+        // exactly why it is worth matching rather than inventing a second spelling.
+        domain: "BANKING",
         protocol: "FILE_IMPORT",
         authenticationMethod: "MANUAL_FILE",
         connectionStatus: "CONNECTED",
