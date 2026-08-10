@@ -125,7 +125,30 @@ tillkommer. Ett avsnittsnummer nedan syftar på uppdraget.
 - `intelligence/liquidity.ts` — likviditetsbehov med komponenter, nödreserv,
   stresscenarier, cash layers, sparmål och vattenfall (§30–§46).
 
-**Inte byggt i denna omgång** — och alltså inte att lita på som levererat:
+**186 motortester passerar**, inklusive property-testerna i §64, den
+look-ahead-fria backtesten i §65 och det oberoende sparoraklet i §66.
+
+Fem fel som motorns egna tester hittade, alla åtgärdade i motorn och inte i testet:
+
+1. Varje ogenomskinlig beskrivning fick nyckeln `sig:`, så tusentals orelaterade
+   referensnummer klumpades ihop till ett enda kluster — och en klassificering
+   hade sedan applicerats på alla.
+2. Överlappande toleransfönster lät listordningen avgöra perioden: ett vanligt
+   månadsabonnemang med 31 dagars intervall blev fyraveckors, eftersom 28±3
+   prövades först.
+3. Frekvens hävdades utifrån medianintervallet allena, så matinköp med 3, 13, 14,
+   2 och 17 dagars mellanrum blev "varannan vecka" med ett projicerat
+   förfallodatum. En fast frekvens kräver nu att schemat också är konsekvent.
+4. MAD är robust till blindhet för en form: en inkomst som är identisk två månader
+   av tre och kollapsar den tredje har MAD noll. Inkomstrisk mäter nu nedsidan,
+   vilket är gapet en buffert faktiskt ska överbrygga.
+5. `comparePeriods` fanns redan i `cashflow.ts`. Min version tillför
+   drivkraftsanalys men fick inte skugga den, och heter nu
+   `comparePeriodDrivers`.
+
+**Inte byggt i denna omgång** — och alltså inte att lita på som levererat.
+Motorlagret är klart och testat, men **ingenting av det är kopplat till databasen,
+API:t eller gränssnittet.** Ett hushåll ser ännu ingenting av detta i produkten:
 
 - AI-klassificering av kluster, dry-run och kostnadsloggning (§7, §70, §56).
 - Inlärda regler som persistent tabell (§5) — regelordningen är definierad och
@@ -135,6 +158,14 @@ tillkommer. Ett avsnittsnummer nedan syftar på uppdraget.
 - Säsongsanalys (§26) och småköpsanalys (§29).
 - Financial Brief V2 (§50).
 - Merchant-analyssida (§28).
+- **All koppling till produkten** (§57–§59): jobb, API-rutter och vyer. Motorerna
+  är rena funktioner utan databasåtkomst, vilket var avsiktligt för testbarhetens
+  skull, men det betyder också att de inte kan läsa ett riktigt hushåll ännu.
+- **Kategoriernas essential/discretionary-klassificering (§32).** Det här är det
+  som blockerar kopplingen: likviditetsmotorn behöver nödvändiga kostnader per
+  månad, och den uppdelningen finns inte i kategoritabellen. Den måste byggas
+  först, annars kan motorn inte matas med riktig data.
+- Acceptanskörning mot riktig SEB-historik (§69), som kräver kopplingen ovan.
 
 Läs `FINANCIAL_INTELLIGENCE_ACCEPTANCE.md` för mätta resultat mot riktig
 SEB-historik, och för vad acceptansen inte kan påstå.

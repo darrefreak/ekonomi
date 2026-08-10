@@ -27,4 +27,5 @@ export * from "./available-to-invest";
 export * from "./intelligence/statistics";
 export * from "./intelligence/signature";
 export * from "./intelligence/recurring";
+export * from "./intelligence/baseline";
 export * from "./intelligence/liquidity";
