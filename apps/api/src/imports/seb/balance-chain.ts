@@ -32,6 +32,15 @@ export type SebBalanceChainResult = {
   rowsReconciled: number;
   breakCount: number;
   breaks: BalanceChainBreak[];
+  /**
+   * What the account held before the statement's first transaction.
+   *
+   * Derived as `first row's Saldo - first row's Belopp`. It matters because an
+   * account whose opening balance does not match this will disagree with the bank
+   * by the difference, permanently and silently: the ledger is right about every
+   * transaction and still reports a different balance.
+   */
+  statementStartingBalanceMinor: string | null;
   openingReportedBalanceMinor: string | null;
   closingReportedBalanceMinor: string | null;
   closingBookingDate: string | null;
@@ -87,6 +96,10 @@ export function validateBalanceChain(
       rowsReconciled: 0,
       breakCount: 0,
       breaks: [],
+      statementStartingBalanceMinor:
+        withBalance[0] === undefined
+          ? null
+          : (withBalance[0].reportedBalanceAfterMinor! - withBalance[0].amountMinor).toString(),
       openingReportedBalanceMinor:
         withBalance[0]?.reportedBalanceAfterMinor?.toString() ?? null,
       closingReportedBalanceMinor:
@@ -140,6 +153,9 @@ export function validateBalanceChain(
     rowsReconciled: reconciled,
     breakCount,
     breaks,
+    statementStartingBalanceMinor: (
+      chronological[0]!.reportedBalanceAfterMinor! - chronological[0]!.amountMinor
+    ).toString(),
     openingReportedBalanceMinor:
       chronological[0]!.reportedBalanceAfterMinor!.toString(),
     closingReportedBalanceMinor:

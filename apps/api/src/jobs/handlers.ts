@@ -71,7 +71,7 @@ function buildServices() {
   const ledger = new LedgerTruthService(audit);
   const storage = new ObjectStorageService();
   const intake = new IntakeService(access, storage);
-  const statementImports = new StatementImportService(access, storage);
+  const statementImports = new StatementImportService(access, storage, ledger);
   return {
     access,
     metrics,

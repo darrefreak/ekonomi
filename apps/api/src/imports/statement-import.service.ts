@@ -20,6 +20,8 @@ import {
 import { persistBalancedEvent } from "../db/seed/persist-event";
 import { enqueueJob } from "../jobs/queue";
 import { HouseholdAccessService } from "../households/household-access.service";
+import { LedgerTruthService } from "../ledger/ledger-truth.service";
+import { resolveHouseholdAsOf } from "../common/as-of";
 import { ObjectStorageService } from "../storage/object-storage.service";
 import {
   assertSupportedHouseholdCurrency,
@@ -82,6 +84,7 @@ export class StatementImportService {
   constructor(
     @Inject(HouseholdAccessService) private readonly access: HouseholdAccessService,
     @Inject(ObjectStorageService) private readonly storage: ObjectStorageService,
+    @Inject(LedgerTruthService) private readonly ledger: LedgerTruthService,
   ) {}
 
   /* ------------------------------------------------------------- helpers */
@@ -529,6 +532,7 @@ export class StatementImportService {
       existingRows: input.parsed.length - newCount,
       invalidRows: input.invalid.length,
       closingBalanceMinor: input.balanceChain.closingReportedBalanceMinor,
+      statementStartingBalanceMinor: input.balanceChain.statementStartingBalanceMinor,
       balanceChain: {
         status: input.balanceChain.status,
         direction: input.balanceChain.direction,
@@ -854,6 +858,31 @@ export class StatementImportService {
     // What the whole file amounted to: rows recognised at preservation plus rows
     // this commit skipped.
     const existing = (batch.existingRecords ?? 0) + skipped;
+
+    /*
+     * The account's cached balance is derived from postings and has to be told
+     * that thousands of them arrived.
+     *
+     * Every ordinary write goes through EconomicEventsService, which refreshes
+     * this after each commit. A batch import calls persistBalancedEvent directly,
+     * so without this the cache kept the opening balance: 8 184 imported rows left
+     * accounts.current_balance_minor reading 50 000 kr while the postings said
+     * 391 681,61 kr, and the reported balance from the statement then looked like a
+     * reconciliation mismatch. Refreshed once, after the batch, and at the
+     * household's current date rather than the statement's last day — the cache
+     * means "now", and a statement can end in the past.
+     */
+    if (created > 0) {
+      try {
+        const asOf = await resolveHouseholdAsOf(input.householdId);
+        await this.ledger.refreshDerivedCaches(input.householdId, asOf);
+      } catch (err) {
+        logger.warn("statement_import_cache_refresh_failed", {
+          batchId: batch.id,
+          error: err instanceof Error ? err.message : String(err),
+        });
+      }
+    }
 
     const hasWarnings =
       failed > 0 ||

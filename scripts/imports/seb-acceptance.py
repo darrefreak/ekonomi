@@ -361,6 +361,29 @@ check(
     f"ledger {derived}, statement {closing}",
 )
 
+# SEB-012b the cached balance the product displays agrees too
+cached = sql(
+    f"select current_balance_minor from accounts where id = '{account_id}'"
+)
+reported = sql(
+    f"select reported_balance_minor from accounts where id = '{account_id}'"
+)
+check(
+    "SEB-012b",
+    "the derived balance cache the product displays agrees with the postings",
+    int(cached) == closing and int(reported) == closing,
+    f"cached {cached}, reported {reported}, statement {closing}",
+)
+FACTS["cachedBalanceMinor"] = int(cached)
+
+# SEB-012c the statement's own starting point is stated
+check(
+    "SEB-012c",
+    "the preview states what the account held before the first row",
+    preview.get("statementStartingBalanceMinor") == str(OPENING_MINOR),
+    f"statement starts at {preview.get('statementStartingBalanceMinor')}, account opened at {OPENING_MINOR}",
+)
+
 # SEB-013 duplicate provider references did not merge anything
 distinct_refs = int(
     sql(f"select count(distinct provider_reference) from source_transactions where household_id = '{household}'")

@@ -302,6 +302,36 @@ already preserved per row. Ledger truth continues to come only from postings, an
 
 ---
 
+## 10b. The account has to start where the statement starts
+
+`Saldo` is only reconcilable against a ledger that begins from the same place. An
+account created with an opening balance of 0 and then fed a statement that starts
+at 50 000 kr produces a ledger that is right about every single transaction and
+still reports a balance 50 000 kr below the bank — permanently, and with nothing
+obviously wrong to look at.
+
+The preview therefore states `statementStartingBalanceMinor`, derived as the first
+row's `Saldo` minus its `Belopp`: what the account held before the statement's
+first transaction. A household importing history should give the account that
+opening balance.
+
+This is stated rather than enforced. The importer does not adjust an account's
+opening balance, and it certainly does not invent a balancing entry — either would
+be the import writing a number nobody asked for into the ledger.
+
+## 10c. The derived balance cache
+
+`accounts.current_balance_minor` is a cache of the ledger-calculated balance, and
+every ordinary write refreshes it through `EconomicEventsService`. A batch import
+calls `persistBalancedEvent` directly, so it must refresh the cache itself — once,
+after the batch, never per row and never inside a financial transaction.
+
+Without that, an import of 8 184 rows left the cache holding the opening balance
+while the postings said something 341 681 kr different, and the statement's
+reported balance then looked like a reconciliation mismatch. The refresh uses the
+household's current date rather than the statement's last day: the cache means
+"now", and a statement can end in the past.
+
 ## 11. Import lifecycle
 
 ```

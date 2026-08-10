@@ -1,6 +1,7 @@
 import { Module } from "@nestjs/common";
 import { AuthModule } from "../auth/auth.module";
 import { HouseholdsModule } from "../households/households.module";
+import { LedgerModule } from "../ledger/ledger.module";
 import { StorageModule } from "../storage/storage.module";
 import { ImportsController } from "./imports.controller";
 import { StatementImportService } from "./statement-import.service";
@@ -12,7 +13,7 @@ import { StatementImportService } from "./statement-import.service";
  * syncs. A statement import writes to the ledger, so it keeps its own surface.
  */
 @Module({
-  imports: [AuthModule, HouseholdsModule, StorageModule],
+  imports: [AuthModule, HouseholdsModule, StorageModule, LedgerModule],
   controllers: [ImportsController],
   providers: [StatementImportService],
   exports: [StatementImportService],

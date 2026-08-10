@@ -28,7 +28,7 @@ stated plainly rather than glossed over.
 | Import history | **PASS** | SEB-022; browser test |
 | Needs Review integration | **PASS** | review reasons on `source_transactions`, which is what `ReviewService` reads |
 | Ledger integration | **PASS** | SEB-010, SEB-011; 8 184 events, every entry balances |
-| Account reconciliation | **PASS** | SEB-012, SEB-014; ledger equals the statement's closing balance |
+| Account reconciliation | **PASS** | SEB-012, SEB-012b, SEB-014; postings, the displayed cache and the statement all agree |
 | Independent financial oracle | **PASS** | `accounting-integrity.py` 12/12 |
 | Query refresh | **PASS** | `invalidateAfterFinancialImport`; browser test |
 | Mobile | **PASS** | 390×844; cards, no sideways scroll, 44px confirm |
@@ -53,7 +53,7 @@ registered user in a new household. It does not touch the pilot stack, the pilot
 database or the demo household.
 
 ```
-TOTAL 25  PASS 25  FAIL 0
+TOTAL 27  PASS 27  FAIL 0
 ```
 
 | Fact | Value |
@@ -117,6 +117,26 @@ Recorded because each was a real product defect that the tests, not review, foun
 4. **A genuine overlap reported no overlap.** Rows shared with an earlier import
    are deduplicated when raw rows are preserved and never reach the commit loop, so
    counting only what the loop skipped reported zero. The count now covers the file.
+
+5. **The displayed balance was stale by 341 681,61 kr after an import.**
+   `accounts.current_balance_minor` is a cache of the ledger balance, refreshed by
+   `EconomicEventsService` on every ordinary write. A batch import calls
+   `persistBalancedEvent` directly and so never refreshed it: after 8 184 rows the
+   accounts list, net worth and dashboard still showed the opening balance, and the
+   statement's reported balance looked like a reconciliation mismatch. Refreshed
+   once after the batch now.
+
+   Worth recording *why* it survived: acceptance check SEB-012 verified the ledger
+   by summing postings directly, which is the one way of asking that could not
+   notice. SEB-012b now checks what the product actually displays.
+
+6. **An account can silently disagree with the bank for ever.** Importing a
+   statement that starts at 50 000 kr into an account opened at 0 gives a ledger
+   that is correct about every transaction and still reports a balance 50 000 kr
+   below the bank. The preview now states the statement's own starting balance
+   (§10b of the design), so the difference is visible before confirming. It is
+   stated rather than enforced: adjusting the opening balance, or inventing a
+   balancing entry, would be the importer writing a number nobody asked for.
 
 ---
 

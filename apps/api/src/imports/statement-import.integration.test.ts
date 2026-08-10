@@ -17,6 +17,8 @@ import { requireTestDatabase } from "../testing/require-test-database";
 import { StatementImportService } from "./statement-import.service";
 import { HouseholdAccessService } from "../households/household-access.service";
 import { ObjectStorageService } from "../storage/object-storage.service";
+import { LedgerTruthService } from "../ledger/ledger-truth.service";
+import { AuditService } from "../audit/audit.service";
 import {
   buildSebCsv,
   generateSyntheticStatement,
@@ -40,7 +42,14 @@ requireTestDatabase();
 const suffix = () => `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
 
 /** A household with a member, a bank account, and the service wired to it. */
-async function fixture(options: { accountCurrency?: string; archived?: boolean } = {}) {
+async function fixture(
+  options: {
+    accountCurrency?: string;
+    archived?: boolean;
+    /** Match the statement's starting balance, or the two disagree by the gap. */
+    openingBalanceMinor?: bigint;
+  } = {},
+) {
   const db = getDb();
   const [household] = await db
     .insert(households)
@@ -66,8 +75,8 @@ async function fixture(options: { accountCurrency?: string; archived?: boolean }
       name: "SEB Lönekonto",
       accountType: "CHECKING",
       currency: options.accountCurrency ?? "SEK",
-      openingBalanceMinor: 0n,
-      currentBalanceMinor: 0n,
+      openingBalanceMinor: options.openingBalanceMinor ?? 0n,
+      currentBalanceMinor: options.openingBalanceMinor ?? 0n,
       archivedAt: options.archived ? new Date() : null,
     })
     .returning();
@@ -75,6 +84,7 @@ async function fixture(options: { accountCurrency?: string; archived?: boolean }
   const service = new StatementImportService(
     new HouseholdAccessService(),
     new ObjectStorageService(),
+    new LedgerTruthService(new AuditService()),
   );
   return { household, user, account, service };
 }
@@ -687,7 +697,11 @@ test("an interrupted batch resumes without duplicating what it already wrote", a
 });
 
 test("a multi-year statement at real scale imports once and balances", async () => {
-  const { household, user, account, service } = await fixture();
+  // The account starts where the statement starts. Anything else and the ledger
+  // disagrees with the bank by the gap, for ever.
+  const { household, user, account, service } = await fixture({
+    openingBalanceMinor: 5_000_000n,
+  });
   const db = getDb();
   const rows = generateSyntheticStatement({
     // The same order of magnitude as a five-year SEB export.
@@ -746,6 +760,32 @@ test("a multi-year statement at real scale imports once and balances", async () 
     BigInt(posted.delta ?? "0") + 5_000_000n,
     closing,
     "the ledger must agree with the statement's own closing balance",
+  );
+  assert.equal(
+    preview.statementStartingBalanceMinor,
+    "5000000",
+    "the preview states what the account held before the first row",
+  );
+
+  // The account's cached balance is what the accounts list, net worth and
+  // dashboard read. Asserting the postings alone is what let a stale cache
+  // through: it was still the opening balance after 8 184 imported rows.
+  const [cached] = await db
+    .select({
+      currentBalanceMinor: accounts.currentBalanceMinor,
+      reportedBalanceMinor: accounts.reportedBalanceMinor,
+    })
+    .from(accounts)
+    .where(eq(accounts.id, account.id));
+  assert.equal(
+    cached.currentBalanceMinor,
+    closing,
+    "the derived balance cache must agree with the postings after an import",
+  );
+  assert.equal(
+    cached.reportedBalanceMinor,
+    closing,
+    "and with the statement's own reported balance, so reconciliation sees no mismatch",
   );
 
   // And the same file again changes nothing.
