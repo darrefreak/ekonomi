@@ -394,8 +394,13 @@ export function classifyRecurringKind(input: {
   amountStable: boolean;
 }): { kind: RecurringKind; matched: boolean } {
   const haystack = input.signatureLabel.toUpperCase();
+  // Short keywords such as "IF" (the insurer) or "LON" only count as whole
+  // words — otherwise "SPOTIFY" contains "IF" and "SALONG" contains "LON".
+  const tokens = new Set(haystack.split(/[^A-ZÅÄÖ0-9]+/u).filter(Boolean));
+  const matches = (word: string) =>
+    word.length <= 3 ? tokens.has(word) : haystack.includes(word);
   for (const { kind, words } of KIND_KEYWORDS) {
-    if (!words.some((word) => haystack.includes(word))) continue;
+    if (!words.some(matches)) continue;
     // A keyword pointing at income cannot describe an outflow, and the reverse.
     const isIncomeKind = kind === "SALARY" || kind === "BENEFIT";
     if (isIncomeKind !== (input.direction === "INFLOW")) continue;

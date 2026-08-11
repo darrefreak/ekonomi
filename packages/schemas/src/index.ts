@@ -10,6 +10,7 @@ export * from "./net-worth";
 export * from "./coverage";
 export * from "./review";
 export * from "./classification";
+export * from "./recurring-intelligence";
 export * from "./planning";
 export * from "./vehicles";
 export * from "./decisions";

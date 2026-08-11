@@ -72,6 +72,10 @@ export const queryKeys = {
   intelligence: {
     review: (householdId: string) => ["intelligence", householdId, "review"] as const,
     rules: (householdId: string) => ["intelligence", householdId, "rules"] as const,
+    recurring: (householdId: string) =>
+      ["intelligence", householdId, "recurring"] as const,
+    expected: (householdId: string) =>
+      ["intelligence", householdId, "expected"] as const,
   },
 } as const;
 

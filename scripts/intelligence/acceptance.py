@@ -84,9 +84,22 @@ MERCHANTS = [
     ("HYRA BOSTAD", "housing"),
     ("ELNAT AB", "housing.electricity"),
     ("LANSFORSAKRING", "housing.insurance"),
+    ("BILFORSAKRING AB", "housing.insurance"),
     ("RESTAURANG STHLM", "food.restaurant"),
     ("NETFLIX", "lifestyle.subscriptions"),
     ("SPOTIFY AB", "lifestyle.subscriptions"),
+    ("SATS TRANING AB", "lifestyle.subscriptions"),
+    ("SL BILJETT", "transport"),
+    ("CIRCLE K", "transport.fuel"),
+]
+
+# The random discretionary pool. The recurring merchants are NOT in it: a
+# subscription polluted with random extra charges is no longer a subscription,
+# and the point of the statement is that each pattern is what it claims to be.
+DISCRETIONARY = [
+    ("ICA MAXI STORMARKNAD", "food.groceries"),
+    ("COOP FORUM", "food.groceries"),
+    ("RESTAURANG STHLM", "food.restaurant"),
     ("SL BILJETT", "transport"),
     ("CIRCLE K", "transport.fuel"),
 ]
@@ -101,14 +114,15 @@ def to_seb_decimal(minor: int) -> str:
 
 
 def build_statement(months: int, seed: int = 20260810):
-    """A statement with a stable salary, fixed housing and variable discretionary."""
+    """A statement with a stable salary, fixed housing, every cadence the engine
+    claims to support, and variable discretionary spending. Three years, because
+    an annual bill needs three occurrences before recurrence is evidence."""
     import datetime
     import random
 
     rng = random.Random(seed)
-    rows = []
-    balance = OPENING_MINOR
-    start = datetime.date(2024, 9, 1)
+    start = datetime.date(2023, 9, 1)
+    entries = []
 
     for month_index in range(months):
         year = start.year + (start.month - 1 + month_index) // 12
@@ -118,23 +132,38 @@ def build_statement(months: int, seed: int = 20260810):
             return datetime.date(year, month, min(d, 28)).isoformat()
 
         # Salary, stable.
-        entries = [(day(25), "LON ARBETSGIVARE AB", rng.randint(6_700_000, 6_900_000))]
+        entries.append((day(25), "LON ARBETSGIVARE AB", rng.randint(6_700_000, 6_900_000)))
         # Fixed essentials, same day each month.
         entries.append((day(27), "HYRA BOSTAD", -1_250_000))
         entries.append((day(4), "ELNAT AB", -rng.randint(90_000, 260_000)))
-        entries.append((day(4), "NETFLIX", -(17_900 if month_index < 8 else 21_900)))
+        # A subscription with one price rise inside the last twelve months.
+        entries.append((day(4), "NETFLIX", -(17_900 if month_index < 30 else 21_900)))
         entries.append((day(4), "SPOTIFY AB", -12_900))
         # Annual insurance, once a year.
         if month == 1:
             entries.append((day(15), "LANSFORSAKRING", -1_200_000))
-        # Variable spending.
+        # Vehicle insurance, twice a year — SEMIANNUAL, never ANNUAL.
+        if month in (2, 8):
+            entries.append((day(10), "BILFORSAKRING AB", -450_000))
+        # Variable spending from merchants with no schedule.
         for _ in range(rng.randint(8, 16)):
-            name, _category = MERCHANTS[rng.randrange(len(MERCHANTS))]
+            name, _category = DISCRETIONARY[rng.randrange(len(DISCRETIONARY))]
             entries.append((day(rng.randint(1, 28)), name, -rng.randint(4_000, 180_000)))
 
-        for date, text, amount in sorted(entries):
-            balance += amount
-            rows.append({"date": date, "text": text, "amount": amount, "balance": balance})
+    # A gym card charged every 28 days: 13 payments a year, not 12.
+    last_year = start.year + (start.month - 1 + months - 1) // 12
+    last_month = (start.month - 1 + months - 1) % 12 + 1
+    last_day = datetime.date(last_year, last_month, 28)
+    gym_day = start + datetime.timedelta(days=5)
+    while gym_day <= last_day:
+        entries.append((gym_day.isoformat(), "SATS TRANING AB", -39_900))
+        gym_day += datetime.timedelta(days=28)
+
+    rows = []
+    balance = OPENING_MINOR
+    for date, text, amount in sorted(entries):
+        balance += amount
+        rows.append({"date": date, "text": text, "amount": amount, "balance": balance})
     return rows, balance
 
 
@@ -165,7 +194,7 @@ def await_batch(token, household, batch_id, limit=900):
 
 # ------------------------------------------------------------------ the run
 
-MONTHS = 24
+MONTHS = 36
 rows, closing = build_statement(MONTHS)
 csv_bytes = to_csv(rows)
 print(f"Synthetic statement: {len(rows)} rows over {MONTHS} months, {len(csv_bytes):,} bytes\n")
@@ -389,6 +418,266 @@ check(
     "FI-038", "another household can neither read the queue, resolve a cluster, nor read the rules",
     status_a in {403, 404} and status_b in {403, 404} and status_c in {403, 404},
     f"review {status_a}, resolve {status_b}, rules {status_c}",
+)
+
+# --------------------------- Recurring + subscriptions + expected (Slice 2)
+#
+# Everything below reads what the recurring pipeline persisted from the same
+# imported history — no fixtures, no SQL writes. The §56 figures reported at
+# the end are whatever the product actually found.
+
+oracle_before = sql(
+    f"select string_agg(id::text || ':' || current_balance_minor::text, ',' order by id) "
+    f"from accounts where household_id = '{household}'"
+) + "|" + sql(f"select count(*) from ledger_postings where household_id = '{household}'")
+events_before_recurring = int(sql(
+    f"select count(*) from financial_events where household_id = '{household}'"
+))
+
+status, run1 = call("POST", "/intelligence/analyse", token, query={"householdId": household})
+if status >= 400:
+    raise SystemExit(f"recurring analyse failed: {status} {json.dumps(run1)[:400]}")
+recurring_counts = run1["recurring"]
+FACTS["recurringStreams"] = recurring_counts["recurringStreams"]
+FACTS["subscriptions"] = recurring_counts["subscriptions"]
+FACTS["recurringIncomeStreams"] = recurring_counts["recurringIncome"]
+FACTS["priceChangesDetected"] = recurring_counts["priceChangesDetected"]
+FACTS["recurringReviewItems"] = recurring_counts["reviewItems"]
+
+check(
+    "FI-040", "the recurring pipeline persists streams from the real imported history",
+    recurring_counts["recurringStreams"] > 0
+    and recurring_counts["recurringExpense"] > 0
+    and recurring_counts["recurringIncome"] > 0,
+    f"{recurring_counts['recurringStreams']} streams "
+    f"({recurring_counts['recurringExpense']} expense, {recurring_counts['recurringIncome']} income, "
+    f"{recurring_counts['subscriptions']} subscriptions) from {recurring_counts['clustersConsidered']} clusters",
+)
+
+status, overview = call("GET", "/intelligence/recurring", token, query={"householdId": household})
+if status >= 400:
+    raise SystemExit(f"recurring overview failed: {status} {json.dumps(overview)[:400]}")
+all_streams = [s for g in overview["groups"] for s in g["streams"]]
+
+
+def stream_named(fragment: str):
+    return next((s for s in all_streams if fragment in s["name"].upper()), None)
+
+
+FACTS["recurringBills"] = sum(
+    1 for s in all_streams if s["direction"] == "OUTFLOW" and not s["isSubscription"]
+)
+FACTS["every4WeekStreams"] = sum(1 for s in all_streams if s["cadence"] == "EVERY_4_WEEKS")
+FACTS["semiannualStreams"] = sum(1 for s in all_streams if s["cadence"] == "SEMIANNUAL")
+FACTS["annualBills"] = sum(
+    1 for s in all_streams
+    if s["cadence"] in {"ANNUAL", "YEARLY"} and s["direction"] == "OUTFLOW"
+)
+
+netflix = stream_named("NETFLIX")
+check(
+    "FI-041", "a stable monthly charge is a high-confidence MONTHLY subscription",
+    netflix is not None and netflix["cadence"] == "MONTHLY"
+    and netflix["recurringType"] == "SUBSCRIPTION" and netflix["isSubscription"]
+    and (netflix["confidence"] or 0) >= 0.75 and len(netflix["evidence"]) > 0,
+    f"NETFLIX {netflix['cadence']}, {netflix['recurringType']}, "
+    f"confidence {netflix['confidence']}, {netflix['occurrenceCount']} occurrences"
+    if netflix else "no NETFLIX stream",
+)
+
+check(
+    "FI-042", "the price rise is exact history: 179 → 219 kr, +480 kr/year",
+    netflix is not None and len(netflix["priceChanges"]) == 1
+    and netflix["priceChanges"][0]["fromMinor"] == "17900"
+    and netflix["priceChanges"][0]["toMinor"] == "21900"
+    and netflix["currentAmountMinor"] == "21900"
+    and netflix["annualPriceImpactMinor"] == "48000",
+    f"changes {netflix['priceChanges']}, annual impact {netflix['annualPriceImpactMinor']}"
+    if netflix else "no NETFLIX stream",
+)
+
+check(
+    "FI-043", "the price rise is a deterministic insight with the collected annual increase",
+    overview["priceInsights"]["increasedStreams"] >= 1
+    and int(overview["priceInsights"]["annualIncreaseMinor"]) >= 48000,
+    f"{overview['priceInsights']['increasedStreams']} increased, "
+    f"+{int(overview['priceInsights']['annualIncreaseMinor']) / 100:.0f} kr/year",
+)
+
+gym = stream_named("SATS")
+check(
+    "FI-044", "a 28-day pattern is EVERY_4_WEEKS with 13 payments a year, never MONTHLY",
+    gym is not None and gym["cadence"] == "EVERY_4_WEEKS"
+    and gym["annualMinor"] == str(39_900 * 13),
+    f"SATS {gym['cadence']}, annual {int(gym['annualMinor']) / 100:.0f} kr (13 × 399)"
+    if gym else "no SATS stream",
+)
+
+semi = stream_named("BILFORSAKRING")
+check(
+    "FI-045", "a twice-a-year bill is SEMIANNUAL annualised ×2, never ANNUAL",
+    semi is not None and semi["cadence"] == "SEMIANNUAL"
+    and semi["annualMinor"] == str(450_000 * 2) and not semi["isSubscription"],
+    f"BILFORSAKRING {semi['cadence']}, annual {int(semi['annualMinor']) / 100:.0f} kr"
+    if semi else "no BILFORSAKRING stream",
+)
+
+annual = stream_named("LANSFORSAKRING")
+check(
+    "FI-046", "a yearly insurance is an ANNUAL recurring bill, not a subscription",
+    annual is not None and annual["cadence"] in {"ANNUAL", "YEARLY"}
+    and not annual["isSubscription"],
+    f"LANSFORSAKRING {annual['cadence']}, type {annual['recurringType']}"
+    if annual else "no LANSFORSAKRING stream",
+)
+
+elnat = stream_named("ELNAT")
+check(
+    "FI-047", "a varying utility is recurring but produces no price-increase alerts",
+    elnat is not None and not elnat["isSubscription"]
+    and len(elnat["priceChanges"]) == 0
+    and elnat["recurringType"] in {"UTILITY_BILL", "VARIABLE_RECURRING"},
+    f"ELNAT {elnat['cadence']}, type {elnat['recurringType']}, "
+    f"{len(elnat['priceChanges'])} price alerts"
+    if elnat else "no ELNAT stream",
+)
+
+salary_stream = stream_named("LON ARBETSGIVARE")
+check(
+    "FI-048", "the salary is a recurring income stream via its income classification",
+    salary_stream is not None and salary_stream["direction"] == "INFLOW"
+    and salary_stream["recurringType"] == "SALARY",
+    f"salary {salary_stream['cadence']}, type {salary_stream['recurringType']}"
+    if salary_stream else "no salary stream",
+)
+
+rent = stream_named("HYRESV") or stream_named("HYRA")
+check(
+    "FI-049", "the named rent is recurring but never counted a subscription",
+    rent is not None and not rent["isSubscription"] and rent["group"] != "subscriptions",
+    f"rent group {rent['group']}, type {rent['recurringType']}" if rent else "no rent stream",
+)
+
+subscription_streams = [s for s in all_streams if s["isSubscription"]]
+check(
+    "FI-050", "the subscription total counts only subscriptions — no rent, utility or insurance",
+    len(subscription_streams) > 0
+    and all(
+        s["recurringType"] in {"SUBSCRIPTION", "MEMBERSHIP", "TELECOM"}
+        for s in subscription_streams
+    )
+    and int(overview["totals"]["subscriptionsMonthlyMinor"])
+    < int(overview["totals"]["recurringExpensesMonthlyMinor"]),
+    f"{len(subscription_streams)} subscriptions, "
+    f"{int(overview['totals']['subscriptionsMonthlyMinor']) / 100:.0f} kr/month of "
+    f"{int(overview['totals']['recurringExpensesMonthlyMinor']) / 100:.0f} kr/month recurring",
+)
+
+groceries = [
+    s for s in all_streams if "ICA" in s["name"].upper() or "COOP" in s["name"].upper()
+]
+check(
+    "FI-051", "frequent irregular groceries never get a fixed cadence, a subscription flag or a projection",
+    all(
+        s["cadence"] == "VARIABLE_RECURRING" and not s["isSubscription"]
+        and s["nextExpectedOn"] is None
+        for s in groceries
+    ),
+    f"{len(groceries)} grocery-like patterns, all variable"
+    if groceries else "no grocery stream persisted at all — also acceptable",
+)
+
+status, expected = call("GET", "/intelligence/expected", token, query={"householdId": household})
+if status >= 400:
+    raise SystemExit(f"expected failed: {status} {json.dumps(expected)[:400]}")
+FACTS["expectedUpcoming"] = len(expected["upcoming"])
+FACTS["missingExpected"] = len(expected["missing"])
+check(
+    "FI-052", "expected transactions are date windows and amount ranges, not false exactness",
+    len(expected["upcoming"]) > 0
+    and all(
+        u["expectedFrom"] <= u["expectedTo"]
+        and int(u["expectedLowMinor"]) <= int(u["expectedAmountMinor"]) <= int(u["expectedHighMinor"])
+        for u in expected["upcoming"]
+    ),
+    f"{len(expected['upcoming'])} upcoming windows, {len(expected['missing'])} missing, "
+    + (
+        f"first: {expected['upcoming'][0]['name']} {expected['upcoming'][0]['expectedFrom']}"
+        f"–{expected['upcoming'][0]['expectedTo']}"
+        if expected["upcoming"] else ""
+    ),
+)
+
+check(
+    "FI-053", "no expectation became a financial event or a ledger posting",
+    int(sql(f"select count(*) from financial_events where household_id = '{household}'"))
+    == events_before_recurring,
+    "financial_events unchanged by the recurring pipeline",
+)
+
+# §52: idempotency — rerun twice more, counts stable, no duplicates.
+stream_rows_1 = int(sql(f"select count(*) from recurring_items where household_id = '{household}'"))
+expected_rows_1 = int(sql(f"select count(*) from expected_transactions where household_id = '{household}'"))
+for _ in range(2):
+    call("POST", "/intelligence/analyse", token, query={"householdId": household})
+stream_rows_3 = int(sql(f"select count(*) from recurring_items where household_id = '{household}'"))
+expected_rows_3 = int(sql(f"select count(*) from expected_transactions where household_id = '{household}'"))
+check(
+    "FI-054", "three runs of the recurring pipeline duplicate nothing",
+    stream_rows_1 == stream_rows_3 and expected_rows_1 == expected_rows_3,
+    f"streams {stream_rows_1} → {stream_rows_3}, expectations {expected_rows_1} → {expected_rows_3}",
+)
+
+# §11/§36: the household's answer outranks the detector on later reruns.
+if gym is not None:
+    call(
+        "POST", f"/intelligence/recurring/{gym['id']}/verify", token,
+        {"householdId": household, "isSubscription": False},
+    )
+    call("POST", "/intelligence/analyse", token, query={"householdId": household})
+    _, overview_after = call("GET", "/intelligence/recurring", token, query={"householdId": household})
+    gym_after = next(
+        (s for g in overview_after["groups"] for s in g["streams"] if s["id"] == gym["id"]),
+        None,
+    )
+    check(
+        "FI-055", "\u201cnot a subscription\u201d sticks through a rerun of the detector",
+        gym_after is not None and gym_after["isSubscription"] is False
+        and gym_after["userMarkedSubscription"] is False,
+        f"after rerun: isSubscription={gym_after['isSubscription']}, "
+        f"userMarked={gym_after['userMarkedSubscription']}"
+        if gym_after else "stream vanished",
+    )
+    # Put the detector's answer back so the reported totals are the detector's.
+    call(
+        "POST", f"/intelligence/recurring/{gym['id']}/verify", token,
+        {"householdId": household, "isSubscription": True},
+    )
+else:
+    check("FI-055", "\u201cnot a subscription\u201d sticks through a rerun of the detector", False, "no SATS stream to verify")
+
+# §54: another household can neither read nor verify these streams.
+status_r, _ = call("GET", "/intelligence/recurring", iso_token, query={"householdId": household})
+status_e, _ = call("GET", "/intelligence/expected", iso_token, query={"householdId": household})
+status_v, _ = call(
+    "POST", f"/intelligence/recurring/{netflix['id'] if netflix else uuid.uuid4()}/verify",
+    iso_token, {"householdId": iso_household, "isSubscription": False},
+)
+check(
+    "FI-056", "another household can neither read the streams nor verify one",
+    status_r in {403, 404} and status_e in {403, 404} and status_v in {403, 404},
+    f"overview {status_r}, expected {status_e}, verify {status_v}",
+)
+
+# §53: the recurring pipeline is analysis, not bookkeeping.
+oracle_after = sql(
+    f"select string_agg(id::text || ':' || current_balance_minor::text, ',' order by id) "
+    f"from accounts where household_id = '{household}'"
+) + "|" + sql(f"select count(*) from ledger_postings where household_id = '{household}'")
+check(
+    "FI-057", "recurring processing altered no balance and created no posting",
+    oracle_before == oracle_after,
+    "identical" if oracle_before == oracle_after else "CHANGED",
 )
 
 # Only now categorise, so the liquidity checks below have necessity to work with.

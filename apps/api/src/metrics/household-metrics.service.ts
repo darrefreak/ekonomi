@@ -36,7 +36,12 @@ import {
   sourceTransactions,
 } from "../db/schema-economic";
 import { households } from "../db/schema";
-import { contracts, subscriptions } from "../db/schema-planning";
+import {
+  contracts,
+  expectedTransactions,
+  recurringItems,
+  subscriptions,
+} from "../db/schema-planning";
 import { snapshotAsOfDate } from "../common/snapshot-as-of";
 import {
   activeCurrencyWarnings,
@@ -902,9 +907,56 @@ export class HouseholdMetricsService {
       });
     }
 
-    // Deterministic salary estimate from latest month income event pattern
+    /*
+     * High-confidence expected transactions from detected recurring streams.
+     *
+     * Priority order (§26): a known scheduled obligation already listed above
+     * outranks a prediction, so an expectation whose name matches an existing
+     * item is skipped — one underlying obligation appears once. Expected
+     * income counts too, but only from streams the classification pipeline
+     * accepted as income; an arbitrary incoming transfer never becomes salary.
+     */
+    const expectations = await db
+      .select({
+        expectation: expectedTransactions,
+        name: recurringItems.name,
+        recurringType: recurringItems.recurringType,
+      })
+      .from(expectedTransactions)
+      .innerJoin(
+        recurringItems,
+        eq(expectedTransactions.recurringItemId, recurringItems.id),
+      )
+      .where(
+        and(
+          eq(expectedTransactions.householdId, householdId),
+          eq(expectedTransactions.status, "PENDING"),
+          gte(expectedTransactions.expectedTo, asOf),
+          lte(expectedTransactions.expectedFrom, horizonDate),
+          sql`${expectedTransactions.confidence} >= 0.6`,
+        ),
+      );
+    const knownTitles = new Set(items.map((item) => item.title.trim().toLowerCase()));
+    let expectedIncomeListed = false;
+    for (const { expectation, name, recurringType } of expectations) {
+      if (knownTitles.has(name.trim().toLowerCase())) continue;
+      const isIncome = expectation.direction === "INFLOW";
+      if (isIncome) expectedIncomeListed = true;
+      items.push({
+        id: `expected-${expectation.id}`,
+        title:
+          recurringType === "SALARY" && isIncome ? `${name} (lön, förväntad)` : name,
+        date: expectation.expectedFrom,
+        amount: moneyToJson(money(expectation.expectedAmountMinor, currency)),
+        kind: isIncome ? "income" : "bill",
+      });
+      knownTitles.add(name.trim().toLowerCase());
+    }
+
+    // Deterministic salary estimate from latest month income event pattern.
+    // Fallback only: a real detected income stream above replaces the guess.
     const salaryDate = nextDayOfMonth(asOf, 25);
-    if (salaryDate <= horizonDate) {
+    if (!expectedIncomeListed && salaryDate <= horizonDate) {
       const monthLabel = asOf.slice(0, 7);
       const totals = await this.periodEventTotals(
         householdId,

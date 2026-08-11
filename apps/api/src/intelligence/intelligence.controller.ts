@@ -16,6 +16,7 @@ import {
   householdIdQuerySchema,
   resolveClusterSchema,
   updateClassificationRuleSchema,
+  verifyRecurringStreamSchema,
 } from "@ffos/schemas";
 import { AuthGuard } from "../auth/auth.guard";
 import { CurrentUser } from "../auth/current-user.decorator";
@@ -23,6 +24,7 @@ import type { AuthenticatedUser } from "../auth/auth.types";
 import { ZodValidationPipe } from "../common/zod-validation.pipe";
 import { ClassificationReviewService } from "./classification-review.service";
 import { FinancialIntelligenceService } from "./financial-intelligence.service";
+import { RecurringIntelligenceService } from "./recurring-intelligence.service";
 import { TransactionClusteringService } from "./transaction-clustering.service";
 
 /**
@@ -43,21 +45,64 @@ export class IntelligenceController {
     private readonly clustering: TransactionClusteringService,
     @Inject(ClassificationReviewService)
     private readonly review: ClassificationReviewService,
+    @Inject(RecurringIntelligenceService)
+    private readonly recurring: RecurringIntelligenceService,
   ) {}
 
   /**
-   * Group the household's transactions and resolve what the evidence allows.
+   * Group the household's transactions, resolve what the evidence allows, and
+   * run the recurring pipeline on the resulting clusters (§37): signatures →
+   * clusters → rules → recurring detection/persistence → subscriptions →
+   * expected transactions → matching → missing.
    *
-   * A POST because it writes signatures and clusters, though it creates no
-   * economic effect: no financial event, no posting, no balance change.
+   * A POST because it writes signatures, clusters and streams, though it
+   * creates no economic effect: no financial event, no posting, no balance change.
    */
   @Post("analyse")
-  analyse(
+  async analyse(
     @CurrentUser() user: AuthenticatedUser,
     @Query(new ZodValidationPipe(householdIdQuerySchema))
     query: { householdId: string },
   ) {
-    return this.clustering.analyse(user.userId, query.householdId);
+    const clustering = await this.clustering.analyse(user.userId, query.householdId);
+    const recurring = await this.recurring.runPipeline(query.householdId);
+    return { ...clustering, recurring };
+  }
+
+  /** All recurring streams, grouped, with totals, price insights and review. */
+  @Get("recurring")
+  recurringOverview(
+    @CurrentUser() user: AuthenticatedUser,
+    @Query(new ZodValidationPipe(householdIdQuerySchema))
+    query: { householdId: string },
+  ) {
+    return this.recurring.overview(user.userId, query.householdId);
+  }
+
+  /** The household's answer: recurring or not, subscription or not (§11). */
+  @Post("recurring/:recurringId/verify")
+  verifyRecurring(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param("recurringId", new ParseUUIDPipe()) recurringId: string,
+    @Body(new ZodValidationPipe(verifyRecurringStreamSchema)) body: unknown,
+  ) {
+    const input = verifyRecurringStreamSchema.parse(body);
+    return this.recurring.verify(user.userId, {
+      householdId: input.householdId,
+      recurringId,
+      status: input.status,
+      isSubscription: input.isSubscription,
+    });
+  }
+
+  /** Upcoming expected windows and unresolved missing-expected notices. */
+  @Get("expected")
+  expected(
+    @CurrentUser() user: AuthenticatedUser,
+    @Query(new ZodValidationPipe(householdIdQuerySchema))
+    query: { householdId: string },
+  ) {
+    return this.recurring.expectedUpcoming(user.userId, query.householdId);
   }
 
   /** What the system actually understands, broken out by how it knows. */
