@@ -40,6 +40,15 @@ services:
       S3_BUCKET: ffos-pilot
       S3_REGION: us-east-1
       FFOS_ERASURE_LEDGER_DIR: /var/ffos/erasure-ledger
+      # External AI classification. Values live in .env.pilot (gitignored);
+      # the defaults keep every external gate closed, and each household must
+      # additionally opt in through settings before anything is sent.
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      OPENAI_CLASSIFICATION_MODEL: ${OPENAI_CLASSIFICATION_MODEL:-gpt-4o-mini}
+      AI_TRANSACTION_CLASSIFICATION_ENABLED: ${AI_TRANSACTION_CLASSIFICATION_ENABLED:-false}
+      AI_CLASSIFICATION_DRY_RUN: ${AI_CLASSIFICATION_DRY_RUN:-true}
+      AI_TRANSACTION_CLASSIFICATION_MAX_CLUSTERS: ${AI_TRANSACTION_CLASSIFICATION_MAX_CLUSTERS:-10}
+      AI_TRANSACTION_CLASSIFICATION_TIMEOUT_MS: ${AI_TRANSACTION_CLASSIFICATION_TIMEOUT_MS:-20000}
     volumes:
       - ./var/pilot-erasure-ledger:/var/ffos/erasure-ledger
     ports:
@@ -67,6 +76,13 @@ services:
       S3_BUCKET: ffos-pilot
       S3_REGION: us-east-1
       FFOS_ERASURE_LEDGER_DIR: /var/ffos/erasure-ledger
+      # The AI classification job runs here too, behind the same gates.
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      OPENAI_CLASSIFICATION_MODEL: ${OPENAI_CLASSIFICATION_MODEL:-gpt-4o-mini}
+      AI_TRANSACTION_CLASSIFICATION_ENABLED: ${AI_TRANSACTION_CLASSIFICATION_ENABLED:-false}
+      AI_CLASSIFICATION_DRY_RUN: ${AI_CLASSIFICATION_DRY_RUN:-true}
+      AI_TRANSACTION_CLASSIFICATION_MAX_CLUSTERS: ${AI_TRANSACTION_CLASSIFICATION_MAX_CLUSTERS:-10}
+      AI_TRANSACTION_CLASSIFICATION_TIMEOUT_MS: ${AI_TRANSACTION_CLASSIFICATION_TIMEOUT_MS:-20000}
     volumes:
       - ./var/pilot-erasure-ledger:/var/ffos/erasure-ledger
     restart: unless-stopped

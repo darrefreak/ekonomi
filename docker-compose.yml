@@ -84,6 +84,15 @@ services:
       # An end-to-end run drives the whole application from one address; the
       # product default of 120/minute is what production uses.
       FFOS_RATE_LIMIT: "2000"
+      # External AI classification (see .env.example). Values come from the
+      # local, gitignored .env — never from this file. Defaults keep every
+      # external gate closed.
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      OPENAI_CLASSIFICATION_MODEL: ${OPENAI_CLASSIFICATION_MODEL:-gpt-4o-mini}
+      AI_TRANSACTION_CLASSIFICATION_ENABLED: ${AI_TRANSACTION_CLASSIFICATION_ENABLED:-false}
+      AI_CLASSIFICATION_DRY_RUN: ${AI_CLASSIFICATION_DRY_RUN:-true}
+      AI_TRANSACTION_CLASSIFICATION_MAX_CLUSTERS: ${AI_TRANSACTION_CLASSIFICATION_MAX_CLUSTERS:-25}
+      AI_TRANSACTION_CLASSIFICATION_TIMEOUT_MS: ${AI_TRANSACTION_CLASSIFICATION_TIMEOUT_MS:-20000}
     ports:
       - "3001:3001"
     depends_on:
@@ -111,6 +120,13 @@ services:
       FFOS_ERASURE_LEDGER_DIR: /var/ffos/erasure-ledger
       DEMO_AS_OF_DATE: "2026-08-01"
       DEMO_RANDOM_SEED: family-financial-os-demo-v1
+      # The AI classification job runs here too, behind the same gates.
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      OPENAI_CLASSIFICATION_MODEL: ${OPENAI_CLASSIFICATION_MODEL:-gpt-4o-mini}
+      AI_TRANSACTION_CLASSIFICATION_ENABLED: ${AI_TRANSACTION_CLASSIFICATION_ENABLED:-false}
+      AI_CLASSIFICATION_DRY_RUN: ${AI_CLASSIFICATION_DRY_RUN:-true}
+      AI_TRANSACTION_CLASSIFICATION_MAX_CLUSTERS: ${AI_TRANSACTION_CLASSIFICATION_MAX_CLUSTERS:-25}
+      AI_TRANSACTION_CLASSIFICATION_TIMEOUT_MS: ${AI_TRANSACTION_CLASSIFICATION_TIMEOUT_MS:-20000}
     volumes:
       - ./var/erasure-ledger:/var/ffos/erasure-ledger
     depends_on:

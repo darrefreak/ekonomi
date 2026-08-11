@@ -804,14 +804,22 @@ export class AiClassificationService {
         clustersSent: sql<number>`count(*) filter (where ${aiClassificationResults.latencyMs} is not null)::int`,
         cacheHits: sql<number>`coalesce(sum(${aiClassificationResults.hitCount}), 0)::int`,
         failures: sql<number>`count(*) filter (where ${aiClassificationResults.status} = 'ERROR')::int`,
-        promptTokens: sql<number>`coalesce(sum((${aiClassificationResults.usage}->>'promptTokens')::int), 0)::int`,
-        completionTokens: sql<number>`coalesce(sum((${aiClassificationResults.usage}->>'completionTokens')::int), 0)::int`,
       })
       .from(aiClassificationResults)
       .where(eq(aiClassificationResults.householdId, householdId));
 
+    /*
+     * Requests and tokens come from the provider-call audit rows: one row per
+     * actual external call, carrying that call's usage once. Result rows
+     * repeat the batch usage per cluster, so summing them would overcount by
+     * the batch size (the first live pilot reported 7× the real tokens).
+     */
     const [requests] = await db
-      .select({ count: sql<number>`count(*)::int` })
+      .select({
+        count: sql<number>`count(*)::int`,
+        promptTokens: sql<number>`coalesce(sum((${auditLogs.after}->'usage'->>'promptTokens')::int), 0)::int`,
+        completionTokens: sql<number>`coalesce(sum((${auditLogs.after}->'usage'->>'completionTokens')::int), 0)::int`,
+      })
       .from(auditLogs)
       .where(
         and(
@@ -820,8 +828,8 @@ export class AiClassificationService {
         ),
       );
 
-    const promptTokens = metrics?.promptTokens ?? 0;
-    const completionTokens = metrics?.completionTokens ?? 0;
+    const promptTokens = requests?.promptTokens ?? 0;
+    const completionTokens = requests?.completionTokens ?? 0;
 
     return {
       householdId,
