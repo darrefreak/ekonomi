@@ -13,8 +13,11 @@ import type {
 import { getDb } from "../db/client";
 import { aiBriefs, recommendationOutcomes } from "../db/schema-ai";
 import { sourceTransactions } from "../db/schema-economic";
+import { AnomalyService } from "../decisions/anomaly.service";
 import { DecisionsService } from "../decisions/decisions.service";
 import { FeatureFlagsService } from "../feature-flags/feature-flags.service";
+import { FinancialIntelligenceService } from "../intelligence/financial-intelligence.service";
+import { RecurringIntelligenceService } from "../intelligence/recurring-intelligence.service";
 import { HouseholdAccessService } from "../households/household-access.service";
 import { HouseholdMetricsService } from "../metrics/household-metrics.service";
 import { PlanningMetricsService } from "../planning/planning-metrics.service";
@@ -42,6 +45,11 @@ export class AdvisorService {
     @Inject(VehicleIntelService) private readonly vehicleIntel: VehicleIntelService,
     @Inject(HouseholdMetricsService) private readonly metrics: HouseholdMetricsService,
     @Inject(FeatureFlagsService) private readonly flags: FeatureFlagsService,
+    @Inject(FinancialIntelligenceService)
+    private readonly intelligence: FinancialIntelligenceService,
+    @Inject(RecurringIntelligenceService)
+    private readonly recurringIntel: RecurringIntelligenceService,
+    @Inject(AnomalyService) private readonly anomalies: AnomalyService,
   ) {}
 
   private async requireAi() {
@@ -65,6 +73,9 @@ export class AdvisorService {
       vehicles: this.vehiclesSvc,
       vehicleIntel: this.vehicleIntel,
       metrics: this.metrics,
+      intelligence: this.intelligence,
+      recurring: this.recurringIntel,
+      anomalies: this.anomalies,
       household,
     };
   }

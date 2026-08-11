@@ -18,6 +18,8 @@ import { HouseholdMetricsService } from "../metrics/household-metrics.service";
 import { MetricRegistryService } from "../metrics/metric-registry.service";
 import { IntakeService } from "../intake/intake.service";
 import { StatementImportService } from "../imports/statement-import.service";
+import { FinancialIntelligenceInputService } from "../intelligence/financial-intelligence-input.service";
+import { FinancialIntelligenceService } from "../intelligence/financial-intelligence.service";
 import { RecurringIntelligenceService } from "../intelligence/recurring-intelligence.service";
 import { AuditService } from "../audit/audit.service";
 import { resolveHouseholdAsOf } from "../common/as-of";
@@ -60,6 +62,9 @@ function buildServices() {
   const analysisRuns = new AnalysisRunsService();
   const metricRegistry = new MetricRegistryService(metrics);
   const flags = new FeatureFlagsService();
+  const intelligenceInput = new FinancialIntelligenceInputService(access, metrics);
+  const intelligence = new FinancialIntelligenceService(intelligenceInput);
+  const recurringForAdvisor = new RecurringIntelligenceService(access);
   const advisor = new AdvisorService(
     access,
     planning,
@@ -68,6 +73,9 @@ function buildServices() {
     vehicleIntel,
     metrics,
     flags,
+    intelligence,
+    recurringForAdvisor,
+    anomaly,
   );
   const audit = new AuditService();
   const ledger = new LedgerTruthService(audit);

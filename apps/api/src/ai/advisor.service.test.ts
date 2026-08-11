@@ -18,6 +18,10 @@ import { HouseholdMetricsService } from "../metrics/household-metrics.service";
 import { PlanningMetricsService } from "../planning/planning-metrics.service";
 import type { VehiclesService } from "../vehicles/vehicles.service";
 import type { VehicleIntelService } from "../vehicle-intel/vehicle-intel.service";
+import { AnomalyService } from "../decisions/anomaly.service";
+import { FinancialIntelligenceInputService } from "../intelligence/financial-intelligence-input.service";
+import { FinancialIntelligenceService } from "../intelligence/financial-intelligence.service";
+import { RecurringIntelligenceService } from "../intelligence/recurring-intelligence.service";
 import { AdvisorService } from "./advisor.service";
 import { listAdvisorTools } from "./ai-tool-registry";
 
@@ -112,6 +116,12 @@ test("AI flag gate and tools-only chat/brief", async () => {
     market: async () => ({ candidates: [], comparisons: [] }),
   } as unknown as VehicleIntelService;
 
+  const intelligence = new FinancialIntelligenceService(
+    new FinancialIntelligenceInputService(access, metrics),
+  );
+  const recurring = new RecurringIntelligenceService(access);
+  const anomalies = new AnomalyService(access);
+
   const service = new AdvisorService(
     access,
     planning,
@@ -120,6 +130,9 @@ test("AI flag gate and tools-only chat/brief", async () => {
     vehicleIntel,
     metrics,
     flags,
+    intelligence,
+    recurring,
+    anomalies,
   );
 
   const prev = process.env.FFOS_FEATURE_AI;

@@ -1,5 +1,8 @@
 import type { CurrencyCode } from "@ffos/domain";
+import type { AnomalyService } from "../decisions/anomaly.service";
 import type { DecisionsService } from "../decisions/decisions.service";
+import type { FinancialIntelligenceService } from "../intelligence/financial-intelligence.service";
+import type { RecurringIntelligenceService } from "../intelligence/recurring-intelligence.service";
 import type { HouseholdMetricsService } from "../metrics/household-metrics.service";
 import type { PlanningMetricsService } from "../planning/planning-metrics.service";
 import type { VehicleIntelService } from "../vehicle-intel/vehicle-intel.service";
@@ -16,6 +19,9 @@ export type AdvisorToolContext = {
   vehicles: VehiclesService;
   vehicleIntel: VehicleIntelService;
   metrics: HouseholdMetricsService;
+  intelligence: FinancialIntelligenceService;
+  recurring: RecurringIntelligenceService;
+  anomalies: AnomalyService;
 };
 
 export type AdvisorToolDef = {
@@ -38,6 +44,22 @@ export const ADVISOR_TOOL_NAMES = [
   "compare_vehicle_candidates",
   "get_vehicle_replacement_analysis",
   "get_net_worth",
+  // Financial Intelligence tools (§46): deterministic engines, read-only.
+  "get_spending_baseline",
+  "get_category_trend",
+  "get_merchant_trend",
+  "get_recurring_summary",
+  "get_subscription_changes",
+  "get_expected_transactions",
+  "get_missing_expected",
+  "get_lifestyle_creep",
+  "get_anomalies",
+  "get_liquidity_requirement",
+  "get_savings_target",
+  "get_available_surplus",
+  "get_financial_resilience",
+  "get_period_change_drivers",
+  "get_financial_coverage",
 ] as const;
 
 export type AdvisorToolName = (typeof ADVISOR_TOOL_NAMES)[number];
@@ -303,6 +325,241 @@ const tools: AdvisorToolDef[] = [
           liabilitiesMinor: snap.position.liabilities.amountMinor.toString(),
           bundleVersion: snap.metricMeta.bundleVersion,
           inputHash: snap.metricMeta.inputHash,
+        },
+      };
+    },
+  },
+  /*
+   * Financial Intelligence tools (§46–§48). Every figure below is an engine
+   * result read through a deterministic service; the advisor may explain
+   * these numbers, never derive its own (§47).
+   */
+  {
+    name: "get_spending_baseline",
+    description: "Normal spending level per window (3m/6m/12m/24m), robust statistics",
+    readOnly: true,
+    async run(ctx) {
+      const baselines = await ctx.intelligence.baselines(ctx.userId, ctx.householdId);
+      return {
+        tool: "get_spending_baseline",
+        ok: true,
+        data: {
+          median12mMinor: baselines.windows["12m"].medianMinor,
+          p75_12mMinor: baselines.windows["12m"].p75Minor,
+          median3mMinor: baselines.windows["3m"].medianMinor,
+          monthsOfHistory: baselines.monthsOfHistory,
+          insufficient12m: baselines.windows["12m"].insufficient,
+        },
+      };
+    },
+  },
+  {
+    name: "get_category_trend",
+    description: "Category spending vs each category's own 12-month baseline",
+    readOnly: true,
+    async run(ctx) {
+      const trends = await ctx.intelligence.categoryTrends(ctx.userId, ctx.householdId);
+      return {
+        tool: "get_category_trend",
+        ok: true,
+        data: {
+          month: trends.month,
+          items: trends.items.slice(0, 6),
+        },
+      };
+    },
+  },
+  {
+    name: "get_merchant_trend",
+    description: "Merchant spending vs the merchant's own 12-month average",
+    readOnly: true,
+    async run(ctx) {
+      const trends = await ctx.intelligence.merchantTrends(ctx.userId, ctx.householdId);
+      return {
+        tool: "get_merchant_trend",
+        ok: true,
+        data: { month: trends.month, items: trends.items.slice(0, 6) },
+      };
+    },
+  },
+  {
+    name: "get_recurring_summary",
+    description: "Recurring expenses/income/subscriptions monthly and annual totals",
+    readOnly: true,
+    async run(ctx) {
+      const overview = await ctx.recurring.overview(ctx.userId, ctx.householdId);
+      return {
+        tool: "get_recurring_summary",
+        ok: true,
+        data: { totals: overview.totals, counts: overview.counts },
+      };
+    },
+  },
+  {
+    name: "get_subscription_changes",
+    description: "Subscription/recurring price increases with annual impact",
+    readOnly: true,
+    async run(ctx) {
+      const overview = await ctx.recurring.overview(ctx.userId, ctx.householdId);
+      return {
+        tool: "get_subscription_changes",
+        ok: true,
+        data: {
+          increasedStreams: overview.priceInsights.increasedStreams,
+          annualIncreaseMinor: overview.priceInsights.annualIncreaseMinor,
+          items: overview.priceInsights.items.slice(0, 6),
+        },
+      };
+    },
+  },
+  {
+    name: "get_expected_transactions",
+    description: "Upcoming expected transactions from detected recurring streams",
+    readOnly: true,
+    async run(ctx) {
+      const expected = await ctx.recurring.expectedUpcoming(ctx.userId, ctx.householdId);
+      return {
+        tool: "get_expected_transactions",
+        ok: true,
+        data: { upcoming: expected.upcoming.slice(0, 8) },
+      };
+    },
+  },
+  {
+    name: "get_missing_expected",
+    description: "Expected transactions that did not arrive inside their window",
+    readOnly: true,
+    async run(ctx) {
+      const expected = await ctx.recurring.expectedUpcoming(ctx.userId, ctx.householdId);
+      return {
+        tool: "get_missing_expected",
+        ok: true,
+        data: { missing: expected.missing.slice(0, 8) },
+      };
+    },
+  },
+  {
+    name: "get_lifestyle_creep",
+    description: "Lifestyle creep: is discretionary spending drifting upward",
+    readOnly: true,
+    async run(ctx) {
+      const opps = await ctx.decisions.opportunities(ctx.userId, ctx.householdId);
+      return {
+        tool: "get_lifestyle_creep",
+        ok: opps.lifestyleCreep != null,
+        data: opps.lifestyleCreep ?? {},
+      };
+    },
+  },
+  {
+    name: "get_anomalies",
+    description: "Open anomalies: unusual transactions, duplicates, missing income",
+    readOnly: true,
+    async run(ctx) {
+      const anomalies = await ctx.anomalies.listForUser(ctx.userId, ctx.householdId);
+      const items = (anomalies as { items?: unknown[] }).items ?? anomalies;
+      return {
+        tool: "get_anomalies",
+        ok: true,
+        data: { items: Array.isArray(items) ? items.slice(0, 6) : items },
+      };
+    },
+  },
+  {
+    name: "get_liquidity_requirement",
+    description: "Recommended liquidity level, surplus/shortfall, runway, confidence",
+    readOnly: true,
+    async run(ctx) {
+      const liquidity = await ctx.intelligence.liquidity(ctx.userId, ctx.householdId);
+      return {
+        tool: "get_liquidity_requirement",
+        ok: true,
+        data: {
+          recommendedMinor: liquidity.requirement.recommendedMinor,
+          minimumMinor: liquidity.requirement.minimumMinor,
+          surplusMinor: liquidity.requirement.surplusMinor,
+          shortfallMinor: liquidity.requirement.shortfallMinor,
+          liquidCashMinor: liquidity.liquidCashMinor,
+          confidence: liquidity.requirement.confidence,
+          runway: liquidity.runway,
+        },
+      };
+    },
+  },
+  {
+    name: "get_savings_target",
+    description: "Monthly savings recommendation from the waterfall engine",
+    readOnly: true,
+    async run(ctx) {
+      const target = await ctx.intelligence.savingsTarget(ctx.userId, ctx.householdId);
+      return {
+        tool: "get_savings_target",
+        ok: true,
+        data: {
+          normalMonthlySurplusMinor: target.normalMonthlySurplusMinor,
+          totalAllocatedMinor: target.totalAllocatedMinor,
+          cashflowNegative: target.cashflowNegative,
+          allocations: target.allocations,
+          notes: target.notes.slice(0, 4),
+        },
+      };
+    },
+  },
+  {
+    name: "get_available_surplus",
+    description: "Cash above the recommended liquidity level (the same model, not a new formula)",
+    readOnly: true,
+    async run(ctx) {
+      const target = await ctx.intelligence.savingsTarget(ctx.userId, ctx.householdId);
+      return {
+        tool: "get_available_surplus",
+        ok: true,
+        data: {
+          availableSurplusMinor: target.availableSurplusMinor,
+          shortfallMinor: target.shortfallMinor,
+          confidence: target.confidence,
+        },
+      };
+    },
+  },
+  {
+    name: "get_financial_resilience",
+    description: "Resilience assessment: runway, reserve adequacy, fixed-cost share",
+    readOnly: true,
+    async run(ctx) {
+      const liquidity = await ctx.intelligence.liquidity(ctx.userId, ctx.householdId);
+      return {
+        tool: "get_financial_resilience",
+        ok: true,
+        data: { resilience: liquidity.resilience, runway: liquidity.runway },
+      };
+    },
+  },
+  {
+    name: "get_period_change_drivers",
+    description: "Why the last month differed from the one before: category/merchant drivers",
+    readOnly: true,
+    async run(ctx) {
+      const drivers = await ctx.intelligence.periodChangeDrivers(
+        ctx.userId,
+        ctx.householdId,
+      );
+      return { tool: "get_period_change_drivers", ok: true, data: { ...drivers } };
+    },
+  },
+  {
+    name: "get_financial_coverage",
+    description: "Which parts of the household's finances have data, and how fresh it is",
+    readOnly: true,
+    async run(ctx) {
+      const coverage = await ctx.metrics.coverage(ctx.householdId, ctx.asOf);
+      return {
+        tool: "get_financial_coverage",
+        ok: true,
+        data: {
+          percent: coverage.percent,
+          areas: coverage.areas,
+          freshness: coverage.freshness,
         },
       };
     },
