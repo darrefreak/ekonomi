@@ -71,6 +71,11 @@ import {
   notificationsResponseSchema,
   resolveReviewSchema,
   reviewResponseSchema,
+  clusterReviewResponseSchema,
+  resolveClusterSchema,
+  resolveClusterResponseSchema,
+  classificationRulesResponseSchema,
+  updateClassificationRuleSchema,
   riskResponseSchema,
   searchResponseSchema,
   settingsResponseSchema,
@@ -167,6 +172,11 @@ import {
   type MonthlyReport,
   type NotificationsResponse,
   type ResolveReviewInput,
+  type ClusterReviewResponse,
+  type ResolveClusterInput,
+  type ResolveClusterResponse,
+  type ClassificationRulesResponse,
+  type UpdateClassificationRuleInput,
   type ReviewResponse,
   type RiskResponse,
   type SearchResponse,
@@ -953,6 +963,77 @@ export function createApiClient(options: ApiClientOptions) {
     },
 
     /* ------------------------------------------ financial intelligence */
+
+    /** Unresolved merchant clusters: one review item per cluster, not per row. */
+    getClusterReview: async (householdId: string) => {
+      const data = await request<unknown>(
+        `/api/v1/intelligence/review?householdId=${encodeURIComponent(householdId)}`,
+      );
+      return clusterReviewResponseSchema.parse(data) as ClusterReviewResponse;
+    },
+
+    /** Answer one cluster: accept the candidate, correct it, or skip. */
+    resolveCluster: async (input: ResolveClusterInput) => {
+      const body = resolveClusterSchema.parse(input);
+      const data = await request<unknown>("/api/v1/intelligence/clusters/resolve", {
+        method: "POST",
+        body: JSON.stringify(body),
+      });
+      return resolveClusterResponseSchema.parse(data) as ResolveClusterResponse;
+    },
+
+    /** The classification rules the household has taught the system. */
+    getClassificationRules: async (householdId: string) => {
+      const data = await request<unknown>(
+        `/api/v1/intelligence/rules?householdId=${encodeURIComponent(householdId)}`,
+      );
+      return classificationRulesResponseSchema.parse(data) as ClassificationRulesResponse;
+    },
+
+    updateClassificationRule: async (
+      ruleId: string,
+      input: UpdateClassificationRuleInput,
+    ) => {
+      const body = updateClassificationRuleSchema.parse(input);
+      const data = await request<unknown>(
+        `/api/v1/intelligence/rules/${encodeURIComponent(ruleId)}`,
+        { method: "PATCH", body: JSON.stringify(body) },
+      );
+      return classificationRulesResponseSchema.parse(data) as ClassificationRulesResponse;
+    },
+
+    deleteClassificationRule: async (ruleId: string, householdId: string) => {
+      const data = await request<unknown>(
+        `/api/v1/intelligence/rules/${encodeURIComponent(ruleId)}?householdId=${encodeURIComponent(householdId)}`,
+        { method: "DELETE" },
+      );
+      return classificationRulesResponseSchema.parse(data) as ClassificationRulesResponse;
+    },
+
+    /** Run the clustering/classification analysis for the household. */
+    runIntelligenceAnalysis: async (householdId: string) => {
+      return request<{
+        transactionsConsidered: number;
+        uniqueSignatures: number;
+        clusters: number;
+        merchantResolved: number;
+        learnedRulesApplied: number;
+        coverage: {
+          total: number;
+          userVerified: number;
+          deterministicMatch: number;
+          learnedRule: number;
+          aiMatch: number;
+          defaulted: number;
+          unknown: number;
+          meaningfullyClassified: number;
+          meaningfullyClassifiedPercent: number;
+        };
+      }>(
+        `/api/v1/intelligence/analyse?householdId=${encodeURIComponent(householdId)}`,
+        { method: "POST" },
+      );
+    },
 
     /** The household's liquidity requirement, derived from its own history. */
     getLiquidityRequirement: async (householdId: string) => {

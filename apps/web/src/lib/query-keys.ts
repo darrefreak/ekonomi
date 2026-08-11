@@ -69,6 +69,10 @@ export const queryKeys = {
   privacy: {
     requests: (householdId: string) => ["privacy", householdId, "requests"] as const,
   },
+  intelligence: {
+    review: (householdId: string) => ["intelligence", householdId, "review"] as const,
+    rules: (householdId: string) => ["intelligence", householdId, "rules"] as const,
+  },
 } as const;
 
 /**

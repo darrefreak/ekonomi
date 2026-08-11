@@ -14,7 +14,7 @@ import {
   uuid,
   varchar,
 } from "drizzle-orm/pg-core";
-import { households, householdMembers } from "./schema";
+import { households, householdMembers, users } from "./schema";
 
 export const accountTypeEnum = pgEnum("account_type", [
   "CHECKING",
@@ -482,6 +482,10 @@ export const merchantClusters = pgTable(
       .default("UNKNOWN"),
     /** A bare reference number with nothing identifying in it. */
     opaque: boolean("opaque").notNull().default(false),
+    /** User chose to skip this cluster's review; it stays out of the queue. */
+    dismissedAt: timestamp("dismissed_at", { withTimezone: true }),
+    /** When a user resolved this cluster's review. */
+    resolvedAt: timestamp("resolved_at", { withTimezone: true }),
     createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
   },
@@ -492,6 +496,55 @@ export const merchantClusters = pgTable(
       t.signatureVersion,
     ),
     index("merchant_clusters_household_count_idx").on(t.householdId, t.transactionCount),
+  ],
+);
+
+export const classificationRuleTypeEnum = pgEnum("classification_rule_type", [
+  "EXACT_SIGNATURE",
+  "MERCHANT",
+]);
+
+/**
+ * What the household taught the system.
+ *
+ * One rule per (household, type, match value): saving the same correction twice
+ * updates the rule rather than duplicating it.
+ */
+export const classificationRules = pgTable(
+  "classification_rules",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    householdId: uuid("household_id")
+      .notNull()
+      .references(() => households.id, { onDelete: "cascade" }),
+    ruleType: classificationRuleTypeEnum("rule_type").notNull(),
+    /** EXACT_SIGNATURE: the signature key. MERCHANT: the merchant id as text. */
+    matchValue: varchar("match_value", { length: 200 }).notNull(),
+    merchantId: uuid("merchant_id").references(() => merchants.id, {
+      onDelete: "cascade",
+    }),
+    categoryId: uuid("category_id").references(() => categories.id, {
+      onDelete: "set null",
+    }),
+    createdByUserId: uuid("created_by_user_id").references(() => users.id, {
+      onDelete: "set null",
+    }),
+    /** Created from an explicit correction, which ranks above a system rule. */
+    userVerified: boolean("user_verified").notNull().default(true),
+    enabled: boolean("enabled").notNull().default(true),
+    matchCount: integer("match_count").notNull().default(0),
+    lastMatchedAt: timestamp("last_matched_at", { withTimezone: true }),
+    version: integer("version").notNull().default(1),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (t) => [
+    uniqueIndex("classification_rules_identity").on(
+      t.householdId,
+      t.ruleType,
+      t.matchValue,
+    ),
+    index("classification_rules_household_enabled_idx").on(t.householdId, t.enabled),
   ],
 );
 

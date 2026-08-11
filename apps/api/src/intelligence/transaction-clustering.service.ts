@@ -1,5 +1,5 @@
 import { Inject, Injectable } from "@nestjs/common";
-import { and, eq, sql } from "drizzle-orm";
+import { and, eq, isNull, sql } from "drizzle-orm";
 import {
   detectRecurrence,
   inferMerchantCandidate,
@@ -14,6 +14,7 @@ import { getDb } from "../db/client";
 import { auditLogs } from "../db/schema";
 import {
   categories,
+  classificationRules,
   merchantClusters,
   merchants,
   sourceTransactions,
@@ -52,6 +53,8 @@ export type ClusteringResult = {
   clusters: number;
   opaqueClusters: number;
   merchantResolved: number;
+  /** Clusters resolved by a rule the household taught the system. */
+  learnedRulesApplied: number;
   coverage: ClassificationCoverage;
   durationMs: number;
 };
@@ -138,6 +141,37 @@ export class TransactionClusteringService {
       aliases: row.aliases ?? [],
       userVerified: row.userVerified,
     }));
+    const merchantNameById = new Map(
+      merchantRows.map((row) => [row.id, row.canonicalName]),
+    );
+
+    /*
+     * The rules this household has taught the system, loaded once.
+     *
+     * Precedence within a cluster: a user-verified exact-signature rule ranks
+     * above everything the system can infer — the household said so explicitly —
+     * while a rule the system learned on its own (none exist yet, but the slot
+     * is real) ranks below the system catalogue.
+     */
+    const ruleRows = await db
+      .select()
+      .from(classificationRules)
+      .where(
+        and(
+          eq(classificationRules.householdId, householdId),
+          eq(classificationRules.enabled, true),
+        ),
+      );
+    const signatureRules = new Map(
+      ruleRows
+        .filter((rule) => rule.ruleType === "EXACT_SIGNATURE")
+        .map((rule) => [rule.matchValue, rule]),
+    );
+    const merchantCategoryRules = new Map(
+      ruleRows
+        .filter((rule) => rule.ruleType === "MERCHANT" && rule.categoryId)
+        .map((rule) => [rule.matchValue, rule]),
+    );
 
     type Bucket = {
       signature: string;
@@ -207,8 +241,32 @@ export class TransactionClusteringService {
       });
     }
 
+    /*
+     * Clusters the household has already answered. A re-run refreshes their
+     * statistics but must never reopen the question or undo the answer: rule
+     * precedence starts with the household's own decision.
+     */
+    const existingClusterRows = await db
+      .select({
+        signature: merchantClusters.signature,
+        classificationSource: merchantClusters.classificationSource,
+      })
+      .from(merchantClusters)
+      .where(
+        and(
+          eq(merchantClusters.householdId, householdId),
+          eq(merchantClusters.signatureVersion, SIGNATURE_VERSION),
+        ),
+      );
+    const userVerifiedSignatures = new Set(
+      existingClusterRows
+        .filter((row) => row.classificationSource === "USER_VERIFIED")
+        .map((row) => row.signature),
+    );
+
     let merchantResolved = 0;
     let opaqueClusters = 0;
+    let learnedRulesApplied = 0;
 
     for (const bucket of buckets.values()) {
       if (bucket.opaque) opaqueClusters += 1;
@@ -221,56 +279,127 @@ export class TransactionClusteringService {
         })),
       );
 
-      /*
-       * Merchant resolution reuses the existing matcher, which refuses to fuzzy
-       * merge. An opaque cluster is never matched: a bare reference number carries
-       * no evidence, and matching one to a merchant would be inventing a
-       * relationship.
-       */
-      const example = bucket.descriptions[0] ?? "";
-      const match =
-        bucket.opaque || !example
-          ? null
-          : matchMerchant(example, merchantRecords).match;
+      const userAnswered = userVerifiedSignatures.has(bucket.signature);
+      const signatureRule = signatureRules.get(bucket.signature) ?? null;
+      const userRule = signatureRule?.userVerified ? signatureRule : null;
+      const autoLearnedRule =
+        signatureRule && !signatureRule.userVerified ? signatureRule : null;
 
-      /*
-       * When the household has no merchant to match against — which is every
-       * freshly imported statement — fall back to the system rule catalogue. This
-       * is the link whose absence made the last acceptance report 0 % classified:
-       * clustering worked, but there was nothing to compare a cluster to.
-       */
-      const tokens = transactionSignature(example).tokens;
-      const candidate: MerchantCandidate | null = match
-        ? {
-            merchant: match.canonicalName,
-            categoryKey: null,
-            confidence: match.confidence,
-            source: "USER_VERIFIED",
-            subscriptionLikely: false,
-            evidence: "Matchar en merchant hushållet redan har.",
-          }
-        : inferMerchantCandidate({
-            tokens,
-            opaque: bucket.opaque,
-            transactionCount: bucket.transactionIds.length,
-          });
+      let resolvedMerchantId: string | null = null;
+      let resolvedCategoryId: string | null = null;
+      let candidate: MerchantCandidate | null = null;
+      let clusterSource: "LEARNED_RULE" | "DETERMINISTIC_MATCH" | "UNKNOWN" =
+        "UNKNOWN";
 
-      /*
-       * A candidate becomes a stored merchant only when it is confident enough to
-       * apply without asking. Below that it stays a suggestion on the cluster and
-       * the household is asked, which is the difference between classifying and
-       * guessing.
-       */
-      let resolvedMerchantId: string | null = match?.merchantId ?? null;
-      if (!resolvedMerchantId && candidate && shouldAutoAccept(candidate)) {
-        resolvedMerchantId = await this.ensureMerchant(householdId, candidate.merchant);
-      }
-      if (resolvedMerchantId) merchantResolved += 1;
-
-      const candidateCategoryId =
-        candidate?.categoryKey && shouldAutoAccept(candidate)
-          ? (categoryIdByKey.get(candidate.categoryKey) ?? null)
+      if (userRule && (userRule.merchantId || userRule.categoryId)) {
+        /*
+         * USER_VERIFIED_EXACT: the household taught this exact signature. Ranks
+         * above every inference, and the applied rows say LEARNED_RULE — not
+         * USER_VERIFIED, which is reserved for rows a person actually touched.
+         */
+        resolvedMerchantId = userRule.merchantId;
+        resolvedCategoryId = userRule.categoryId;
+        clusterSource = "LEARNED_RULE";
+        candidate = resolvedMerchantId
+          ? {
+              merchant: merchantNameById.get(resolvedMerchantId) ?? "",
+              categoryKey: null,
+              confidence: 1,
+              source: "USER_VERIFIED",
+              subscriptionLikely: false,
+              evidence: "Hushållet har lärt systemet detta mönster.",
+            }
           : null;
+      } else if (!userAnswered) {
+        /*
+         * Merchant resolution reuses the existing matcher, which refuses to fuzzy
+         * merge. An opaque cluster is never matched: a bare reference number
+         * carries no evidence, and matching one to a merchant would be inventing
+         * a relationship.
+         */
+        const example = bucket.descriptions[0] ?? "";
+        const match =
+          bucket.opaque || !example
+            ? null
+            : matchMerchant(example, merchantRecords).match;
+
+        /*
+         * When the household has no merchant to match against — which is every
+         * freshly imported statement — fall back to the system rule catalogue.
+         * This is the link whose absence made an earlier acceptance report 0 %
+         * classified: clustering worked, but there was nothing to compare a
+         * cluster to.
+         */
+        const tokens = transactionSignature(example).tokens;
+        candidate = match
+          ? {
+              merchant: match.canonicalName,
+              categoryKey: null,
+              confidence: match.confidence,
+              source: "USER_VERIFIED",
+              subscriptionLikely: false,
+              evidence: "Matchar en merchant hushållet redan har.",
+            }
+          : inferMerchantCandidate({
+              tokens,
+              opaque: bucket.opaque,
+              transactionCount: bucket.transactionIds.length,
+            });
+
+        /*
+         * A candidate becomes a stored merchant only when it is confident enough
+         * to apply without asking. Below that it stays a suggestion on the
+         * cluster and the household is asked, which is the difference between
+         * classifying and guessing.
+         */
+        resolvedMerchantId = match?.merchantId ?? null;
+        if (!resolvedMerchantId && candidate && shouldAutoAccept(candidate)) {
+          resolvedMerchantId = await this.ensureMerchant(householdId, candidate.merchant);
+        }
+        resolvedCategoryId =
+          candidate?.categoryKey && shouldAutoAccept(candidate)
+            ? (categoryIdByKey.get(candidate.categoryKey) ?? null)
+            : null;
+        if (resolvedMerchantId) clusterSource = "DETERMINISTIC_MATCH";
+
+        // LEARNED_HOUSEHOLD_RULE: below the system catalogue, above nothing at all.
+        if (
+          clusterSource === "UNKNOWN" &&
+          autoLearnedRule &&
+          (autoLearnedRule.merchantId || autoLearnedRule.categoryId)
+        ) {
+          resolvedMerchantId = autoLearnedRule.merchantId;
+          resolvedCategoryId = autoLearnedRule.categoryId;
+          clusterSource = "LEARNED_RULE";
+        }
+
+        // A merchant-scoped rule fills in the category the catalogue could not.
+        if (resolvedMerchantId && !resolvedCategoryId) {
+          const merchantRule = merchantCategoryRules.get(resolvedMerchantId);
+          if (merchantRule?.categoryId) resolvedCategoryId = merchantRule.categoryId;
+        }
+      }
+
+      if (resolvedMerchantId) merchantResolved += 1;
+      if (clusterSource === "LEARNED_RULE") learnedRulesApplied += 1;
+
+      const clusterStats = {
+        representativeDescriptions: bucket.descriptions,
+        transactionCount: bucket.transactionIds.length,
+        firstSeen: sortedDates[0] ?? null,
+        lastSeen: sortedDates[sortedDates.length - 1] ?? null,
+        medianAmountMinor: medianMinor(bucket.amounts),
+        medianIntervalDays: recurrence.medianIntervalDays,
+        intervalSpreadDays: recurrence.intervalSpreadDays,
+        updatedAt: new Date(),
+      };
+      const clusterResolution = {
+        merchantId: resolvedMerchantId,
+        merchantCandidate: candidate?.merchant ?? null,
+        merchantConfidence: candidate ? String(candidate.confidence) : null,
+        categoryId: resolvedCategoryId,
+        classificationSource: clusterSource,
+      };
 
       await db
         .insert(merchantClusters)
@@ -278,62 +407,38 @@ export class TransactionClusteringService {
           householdId,
           signature: bucket.signature,
           signatureVersion: SIGNATURE_VERSION,
-          representativeDescriptions: bucket.descriptions,
-          transactionCount: bucket.transactionIds.length,
-          firstSeen: sortedDates[0] ?? null,
-          lastSeen: sortedDates[sortedDates.length - 1] ?? null,
-          medianAmountMinor: medianMinor(bucket.amounts),
           minAmountMinor: bucket.amounts.reduce((min, v) => (v < min ? v : min), bucket.amounts[0] ?? 0n),
           maxAmountMinor: bucket.amounts.reduce((max, v) => (v > max ? v : max), bucket.amounts[0] ?? 0n),
           direction: bucket.inflow > bucket.outflow ? "INFLOW" : "OUTFLOW",
-          medianIntervalDays: recurrence.medianIntervalDays,
-          intervalSpreadDays: recurrence.intervalSpreadDays,
-          merchantId: resolvedMerchantId,
-          merchantCandidate: candidate?.merchant ?? null,
-          merchantConfidence: candidate ? String(candidate.confidence) : null,
-          categoryId: candidateCategoryId,
-          classificationSource: resolvedMerchantId ? "DETERMINISTIC_MATCH" : "UNKNOWN",
           opaque: bucket.opaque,
-          updatedAt: new Date(),
+          ...clusterStats,
+          ...clusterResolution,
         })
         // Same signature and version means the same cluster, so a re-run updates.
+        // An answered cluster only refreshes statistics: the answer stands.
         .onConflictDoUpdate({
           target: [
             merchantClusters.householdId,
             merchantClusters.signature,
             merchantClusters.signatureVersion,
           ],
-          set: {
-            representativeDescriptions: bucket.descriptions,
-            transactionCount: bucket.transactionIds.length,
-            firstSeen: sortedDates[0] ?? null,
-            lastSeen: sortedDates[sortedDates.length - 1] ?? null,
-            medianAmountMinor: medianMinor(bucket.amounts),
-            medianIntervalDays: recurrence.medianIntervalDays,
-            intervalSpreadDays: recurrence.intervalSpreadDays,
-            merchantId: resolvedMerchantId,
-            merchantCandidate: candidate?.merchant ?? null,
-            merchantConfidence: candidate ? String(candidate.confidence) : null,
-            categoryId: candidateCategoryId,
-            classificationSource: resolvedMerchantId ? "DETERMINISTIC_MATCH" : "UNKNOWN",
-            updatedAt: new Date(),
-          },
+          set: userAnswered ? clusterStats : { ...clusterStats, ...clusterResolution },
         });
 
       /*
-       * Apply a resolved merchant to its transactions, but never over a
-       * user-verified classification. Rule precedence starts with the household's
-       * own decision, and a re-run must not quietly undo one.
+       * Apply a resolution to its transactions, but never over a user-verified
+       * classification: a re-run must not quietly undo the household's decision.
        */
-      if (resolvedMerchantId) {
+      if (clusterSource !== "UNKNOWN") {
+        let applied = 0;
         for (let start = 0; start < bucket.transactionIds.length; start += WRITE_BATCH) {
           const chunk = bucket.transactionIds.slice(start, start + WRITE_BATCH);
-          await db
+          const updated = await db
             .update(sourceTransactions)
             .set({
-              merchantId: resolvedMerchantId,
-              ...(candidateCategoryId ? { categoryId: candidateCategoryId } : {}),
-              classificationSource: "DETERMINISTIC_MATCH",
+              ...(resolvedMerchantId ? { merchantId: resolvedMerchantId } : {}),
+              ...(resolvedCategoryId ? { categoryId: resolvedCategoryId } : {}),
+              classificationSource: clusterSource,
             })
             .where(
               and(
@@ -344,7 +449,18 @@ export class TransactionClusteringService {
                 )}])`,
                 sql`${sourceTransactions.classificationSource} <> 'USER_VERIFIED'`,
               ),
-            );
+            )
+            .returning({ id: sourceTransactions.id });
+          applied += updated.length;
+        }
+        if (clusterSource === "LEARNED_RULE" && signatureRule && applied > 0) {
+          await db
+            .update(classificationRules)
+            .set({
+              matchCount: sql`${classificationRules.matchCount} + ${applied}`,
+              lastMatchedAt: new Date(),
+            })
+            .where(eq(classificationRules.id, signatureRule.id));
         }
       }
     }
@@ -363,6 +479,7 @@ export class TransactionClusteringService {
         transactions: transactions.length,
         clusters: buckets.size,
         merchantResolved,
+        learnedRulesApplied,
       },
       source: "api",
     });
@@ -373,6 +490,7 @@ export class TransactionClusteringService {
       clusters: buckets.size,
       opaqueClusters,
       merchantResolved,
+      learnedRulesApplied,
       coverage,
       durationMs: Date.now() - started,
     };
@@ -462,6 +580,7 @@ export class TransactionClusteringService {
         and(
           eq(merchantClusters.householdId, householdId),
           eq(merchantClusters.classificationSource, "UNKNOWN"),
+          isNull(merchantClusters.dismissedAt),
         ),
       )
       .orderBy(sql`${merchantClusters.transactionCount} desc`)
