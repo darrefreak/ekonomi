@@ -74,7 +74,12 @@ export const ROUTE_IDENTITY: Record<string, RouteIdentity> = {
   "/scenarios": { title: "Scenarier", heading: /^Scenarios$/ },
   "/insights": { title: "Insikter", heading: /^Insights$/ },
   "/opportunities": { title: "Möjligheter", heading: /^Opportunities$/ },
-  "/subscriptions": { title: "Abonnemang", heading: /^Abonnemang$/ },
+  "/subscriptions": {
+    title: "Abonnemang",
+    heading: /^Abonnemang & återkommande$/,
+    // Only the recurring surface shows the separated totals.
+    control: (page) => page.getByTestId("recurring-totals"),
+  },
   "/contracts": { title: "Avtal", heading: /^Avtal$/ },
   "/risk": { title: "Risk", heading: /^Risk & hälsa$/ },
   "/documents": { title: "Dokument", heading: /^Dokument \/ inbox$/ },

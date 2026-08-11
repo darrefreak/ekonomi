@@ -380,6 +380,28 @@ describe("recurring kinds", () => {
     );
   });
 
+  it("matches short keywords as whole words only", () => {
+    const outflow = { direction: "OUTFLOW" as const, frequency: "MONTHLY" as const, amountStable: true };
+    // "SPOTIFY" contains the substring "IF" (the insurer) — it must not
+    // become insurance; it is a subscription by its own keyword.
+    assert.equal(classifyRecurringKind({ signatureLabel: "SPOTIFY AB", ...outflow }).kind, "SUBSCRIPTION");
+    // The insurer "If" as its own word still counts.
+    assert.equal(
+      classifyRecurringKind({ signatureLabel: "IF SKADEFORSAKRING", ...outflow }).kind,
+      "INSURANCE",
+    );
+    // "SALONG" contains "LON" but a haircut is not a salary.
+    assert.notEqual(
+      classifyRecurringKind({
+        signatureLabel: "SALONG KLIPPET",
+        direction: "INFLOW",
+        frequency: "MONTHLY",
+        amountStable: true,
+      }).kind,
+      "SALARY",
+    );
+  });
+
   it("does not let an income keyword describe an outflow", () => {
     // A payment *to* something called "lön" is not a salary.
     const result = classifyRecurringKind({
