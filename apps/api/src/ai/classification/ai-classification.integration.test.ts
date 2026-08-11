@@ -292,6 +292,61 @@ void test("moderate confidence becomes a review suggestion, never an application
   assert.ok(item.aiSuggestion!.confidence > 0 && item.aiSuggestion!.confidence < 0.95);
 });
 
+/* --------------------------------------------- §29 the ambiguous Apple */
+
+void test("ambiguous Apple: a confident merchant with an uncertain category suggests, asserts no subscription", async () => {
+  const { db, household, user, account, provider, service, review } = await fixture();
+  // One descriptor, wildly different amounts: app purchase, subscription and
+  // hardware all bill through the same text. The merchant is obvious; what the
+  // money means is not.
+  await insertMonthlyPattern(db, household.id, account.id, "APPLE COM BILL", {
+    count: 4,
+    amountMinor: -12_900n,
+  });
+  await insertMonthlyPattern(db, household.id, account.id, "APPLE COM BILL", {
+    count: 2,
+    amountMinor: -1_499_500n,
+  });
+  await clustering.analyse(user.id, household.id);
+  const open = await unresolvedClusters(db, household.id);
+  assert.ok(open.length >= 1, "Apple is a question, not an assertion");
+
+  provider.respond = (request) =>
+    confidentAnswer(request, {
+      merchantCandidate: "Apple",
+      merchantConfidence: 0.98,
+      categoryId: null,
+      recurringTypeCandidate: null,
+      classificationConfidence: 0.55,
+      shortExplanation: "Apple billing descriptor; purpose of charges unclear.",
+    });
+  const run = await service.classify(user.id, household.id);
+
+  assert.ok("applied" in run);
+  assert.equal(run.applied, 0, "an uncertain category never auto-applies");
+  assert.ok(run.suggested >= 1);
+
+  const queue = await review.list(user.id, household.id);
+  const apple = queue.items.find(
+    (item) => item.aiSuggestion?.merchantCandidate === "Apple",
+  );
+  assert.ok(apple, "the Apple suggestion reaches the review card");
+  assert.equal(apple!.aiSuggestion!.categoryId, null, "no category was invented");
+  assert.ok(
+    apple!.aiSuggestion!.merchantConfidence! >= 0.9,
+    "the merchant itself may be confident",
+  );
+
+  const clusters = await db
+    .select()
+    .from(merchantClusters)
+    .where(eq(merchantClusters.householdId, household.id));
+  assert.ok(
+    clusters.every((cluster) => cluster.classificationSource === "UNKNOWN"),
+    "nothing was asserted behind the person's back",
+  );
+});
+
 /* --------------------------------------------------- §55 high-risk type */
 
 void test("a high-risk type proposal goes to review even at maximal confidence", async () => {
