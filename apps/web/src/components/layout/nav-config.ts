@@ -19,6 +19,7 @@ export const desktopNav: NavItem[] = [
   { href: "/scenarios", label: "Scenarier", section: "Planera" },
   { href: "/insights", label: "Insikter", section: "Insikter" },
   { href: "/what-changed", label: "Vad har förändrats?", section: "Insikter" },
+  { href: "/weekly", label: "Veckan", section: "Insikter" },
   { href: "/opportunities", label: "Möjligheter", section: "Insikter" },
   { href: "/reports", label: "Rapporter", section: "Insikter" },
   { href: "/liquidity", label: "Likviditet", section: "Insikter" },
@@ -67,6 +68,7 @@ export const planHub: NavItem[] = [
 /** The Insights hub: everything the intelligence has to say. */
 export const insightsHub: NavItem[] = [
   { href: "/what-changed", label: "Vad har förändrats?" },
+  { href: "/weekly", label: "Veckan" },
   { href: "/opportunities", label: "Möjligheter" },
   { href: "/reports", label: "Rapporter" },
   { href: "/liquidity", label: "Likviditet" },

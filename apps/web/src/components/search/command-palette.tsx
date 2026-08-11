@@ -12,6 +12,34 @@ export function openCommandPalette() {
   window.dispatchEvent(new Event(OPEN_EVENT));
 }
 
+/**
+ * Quick actions: navigation verbs, matched on plain words. Shown before
+ * search results, and on an empty query, so Cmd+K is a way to *do* things,
+ * not only to find them.
+ */
+const ACTIONS: Array<{ label: string; href: string; keywords: string }> = [
+  { label: "Öppna kalendern", href: "/calendar", keywords: "kalender kommande betalningar calendar" },
+  { label: "Vad har förändrats?", href: "/what-changed", keywords: "förändrats jämför ändrats changed" },
+  { label: "Öppna smart budget", href: "/budget", keywords: "budget smart planera" },
+  { label: "Lägg till transaktion", href: "/transactions", keywords: "ny transaktion lägg till add" },
+  { label: "Importera kontoutdrag", href: "/imports", keywords: "import kontoutdrag csv seb analys" },
+  { label: "Granska mönster", href: "/review", keywords: "granska review behöver hjälp" },
+  { label: "Skapa mål", href: "/goals", keywords: "mål sparmål goal skapa" },
+  { label: "Kör scenario", href: "/scenarios", keywords: "scenario simulera vad händer om" },
+  { label: "Öppna rapporter", href: "/reports", keywords: "rapport rapporter utforska report" },
+  { label: "Sparande & överskott", href: "/savings", keywords: "spara sparande överskott" },
+  { label: "Likviditet", href: "/liquidity", keywords: "likviditet buffert kassa" },
+];
+
+function matchActions(query: string) {
+  const q = query.trim().toLowerCase();
+  if (q.length === 0) return ACTIONS.slice(0, 6);
+  return ACTIONS.filter(
+    (action) =>
+      action.label.toLowerCase().includes(q) || action.keywords.includes(q),
+  ).slice(0, 5);
+}
+
 export function CommandPalette() {
   const router = useRouter();
   const [open, setOpen] = useState(false);
@@ -82,10 +110,28 @@ export function CommandPalette() {
           className="min-h-12 w-full border-b border-border bg-transparent px-4 text-sm outline-none"
         />
         <ul className="max-h-80 overflow-y-auto py-2">
+          {matchActions(q).map((action) => (
+            <li key={action.href}>
+              <button
+                type="button"
+                className="flex w-full items-center gap-2 px-4 py-2.5 text-left hover:bg-surface"
+                onClick={() => {
+                  setOpen(false);
+                  setQ("");
+                  router.push(action.href);
+                }}
+              >
+                <span aria-hidden className="text-xs text-text-muted">
+                  →
+                </span>
+                <span className="text-sm">{action.label}</span>
+              </button>
+            </li>
+          ))}
           {busy ? (
             <li className="px-4 py-3 text-sm text-text-muted">Söker…</li>
           ) : null}
-          {!busy && data?.results.length === 0 ? (
+          {!busy && data?.results.length === 0 && matchActions(q).length === 0 ? (
             <li className="px-4 py-3 text-sm text-text-muted">Inga träffar</li>
           ) : null}
           {data?.results.map((r) => (
