@@ -6,6 +6,7 @@ import type { AnomaliesResponse, CategoriesResponse, ReviewResponse } from "@ffo
 import { api } from "@/lib/api";
 import { ensureHouseholdSession } from "@/lib/session";
 import { MoneyValue } from "../financial/money-value";
+import { ClusterReviewSection } from "./cluster-review-section";
 import { EmptyState } from "../feedback/empty-state";
 import { ErrorState } from "../feedback/error-state";
 import { LoadingState } from "../feedback/loading-state";
@@ -85,10 +86,18 @@ export function ReviewPage() {
 
   if (data.total === 0 && anomalyCount === 0) {
     return (
-      <EmptyState
-        title="Inget att granska"
-        description="Alla transaktioner ser klassificerade ut just nu."
-      />
+      <div className="space-y-6">
+        <div>
+          <h1 className="font-[family-name:var(--ffos-font-display)] text-3xl tracking-tight">
+            Granska
+          </h1>
+        </div>
+        {householdId ? <ClusterReviewSection householdId={householdId} /> : null}
+        <EmptyState
+          title="Inga enskilda poster att granska"
+          description="Inga enskilda transaktioner behöver granskas just nu."
+        />
+      </div>
     );
   }
 
@@ -109,6 +118,8 @@ export function ReviewPage() {
           {error}
         </p>
       ) : null}
+
+      {householdId ? <ClusterReviewSection householdId={householdId} /> : null}
 
       {anomalyCount > 0 ? (
         <section className="rounded-[16px] bg-surface-elevated p-5">

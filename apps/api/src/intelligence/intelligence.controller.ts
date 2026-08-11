@@ -1,10 +1,27 @@
-import { Controller, Get, Inject, Post, Query, UseGuards } from "@nestjs/common";
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Inject,
+  Param,
+  ParseUUIDPipe,
+  Patch,
+  Post,
+  Query,
+  UseGuards,
+} from "@nestjs/common";
 import { ApiBearerAuth, ApiTags } from "@nestjs/swagger";
-import { householdIdQuerySchema } from "@ffos/schemas";
+import {
+  householdIdQuerySchema,
+  resolveClusterSchema,
+  updateClassificationRuleSchema,
+} from "@ffos/schemas";
 import { AuthGuard } from "../auth/auth.guard";
 import { CurrentUser } from "../auth/current-user.decorator";
 import type { AuthenticatedUser } from "../auth/auth.types";
 import { ZodValidationPipe } from "../common/zod-validation.pipe";
+import { ClassificationReviewService } from "./classification-review.service";
 import { FinancialIntelligenceService } from "./financial-intelligence.service";
 import { TransactionClusteringService } from "./transaction-clustering.service";
 
@@ -24,6 +41,8 @@ export class IntelligenceController {
     private readonly intelligence: FinancialIntelligenceService,
     @Inject(TransactionClusteringService)
     private readonly clustering: TransactionClusteringService,
+    @Inject(ClassificationReviewService)
+    private readonly review: ClassificationReviewService,
   ) {}
 
   /**
@@ -59,6 +78,60 @@ export class IntelligenceController {
     query: { householdId: string },
   ) {
     return this.clustering.unresolvedClusters(user.userId, query.householdId);
+  }
+
+  /** The open questions: one review item per unresolved cluster, not per row. */
+  @Get("review")
+  clusterReview(
+    @CurrentUser() user: AuthenticatedUser,
+    @Query(new ZodValidationPipe(householdIdQuerySchema))
+    query: { householdId: string },
+  ) {
+    return this.review.list(user.userId, query.householdId);
+  }
+
+  /** Answer one cluster: accept the candidate, correct it, or skip. */
+  @Post("clusters/resolve")
+  resolveCluster(
+    @CurrentUser() user: AuthenticatedUser,
+    @Body(new ZodValidationPipe(resolveClusterSchema)) body: unknown,
+  ) {
+    return this.review.resolve(user.userId, resolveClusterSchema.parse(body));
+  }
+
+  /** The rules this household has taught the system. */
+  @Get("rules")
+  rules(
+    @CurrentUser() user: AuthenticatedUser,
+    @Query(new ZodValidationPipe(householdIdQuerySchema))
+    query: { householdId: string },
+  ) {
+    return this.review.listRules(user.userId, query.householdId);
+  }
+
+  @Patch("rules/:ruleId")
+  updateRule(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param("ruleId", new ParseUUIDPipe()) ruleId: string,
+    @Body(new ZodValidationPipe(updateClassificationRuleSchema)) body: unknown,
+  ) {
+    const input = updateClassificationRuleSchema.parse(body);
+    return this.review.setRuleEnabled(
+      user.userId,
+      input.householdId,
+      ruleId,
+      input.enabled,
+    );
+  }
+
+  @Delete("rules/:ruleId")
+  deleteRule(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param("ruleId", new ParseUUIDPipe()) ruleId: string,
+    @Query(new ZodValidationPipe(householdIdQuerySchema))
+    query: { householdId: string },
+  ) {
+    return this.review.deleteRule(user.userId, query.householdId, ruleId);
   }
 
   @Get("liquidity")
