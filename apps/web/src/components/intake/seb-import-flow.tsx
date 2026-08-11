@@ -8,6 +8,7 @@ import { api } from "@/lib/api";
 import { describeError } from "@/lib/error-message";
 import { invalidateAfterFinancialImport, queryKeys } from "@/lib/query-keys";
 import { MoneyValue } from "../financial/money-value";
+import { AnalysisExperience } from "./analysis-experience";
 
 /**
  * Importing a SEB account statement.
@@ -518,6 +519,19 @@ export function SebImportFlow({ householdId }: { householdId: string }) {
   }
 
   /* ----------------------------------------------------------------- done */
+
+  // A successful import flows straight into the analysis experience: the
+  // pipeline runs, real stages are shown, and the user lands in a summary of
+  // what the system understood — not on a generic dashboard.
+  if (result && result.status !== "FAILED" && result.created > 0) {
+    return (
+      <AnalysisExperience
+        householdId={householdId}
+        importedCount={result.created}
+        onDismiss={reset}
+      />
+    );
+  }
 
   return (
     <section className="space-y-4 rounded-[16px] bg-surface-elevated p-5">
