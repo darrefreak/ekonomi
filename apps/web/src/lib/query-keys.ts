@@ -82,6 +82,39 @@ export const queryKeys = {
   brief: {
     all: (householdId: string) => ["brief", householdId] as const,
   },
+  calendar: {
+    all: (householdId: string, days?: number) =>
+      ["calendar", householdId, { days: days ?? 90 }] as const,
+  },
+  smartBudget: {
+    month: (householdId: string, month?: string) =>
+      ["smart-budget", householdId, { month: month ?? "current" }] as const,
+  },
+  whatChanged: {
+    mode: (householdId: string, mode: string) =>
+      ["what-changed", householdId, mode] as const,
+  },
+  reports: {
+    explore: (
+      householdId: string,
+      params?: Record<string, string | undefined>,
+    ) => ["reports", householdId, "explore", params ?? {}] as const,
+    weekly: (householdId: string) => ["reports", householdId, "weekly"] as const,
+    monthly: (householdId: string, period?: string) =>
+      ["reports", householdId, "monthly", period ?? ""] as const,
+  },
+  liquidity: {
+    all: (householdId: string) => ["liquidity", householdId] as const,
+  },
+  savings: {
+    target: (householdId: string) => ["savings-target", householdId] as const,
+  },
+  baselines: {
+    all: (householdId: string) => ["baselines", householdId] as const,
+  },
+  notifications: {
+    all: (householdId: string) => ["notifications", householdId] as const,
+  },
 } as const;
 
 /**

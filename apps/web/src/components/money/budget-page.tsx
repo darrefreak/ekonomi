@@ -12,7 +12,7 @@ import { ErrorState } from "../feedback/error-state";
 import { LoadingState } from "../feedback/loading-state";
 import { describeError } from "@/lib/error-message";
 
-export function BudgetPage() {
+export function BudgetPage({ embedded = false }: { embedded?: boolean } = {}) {
   const [householdId, setHouseholdId] = useState<string | null>(null);
   const [data, setData] = useState<BudgetResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -133,14 +133,16 @@ export function BudgetPage() {
   if (data.hasBudget === false) {
     return (
       <div className="space-y-6" data-testid="budget-empty-state">
-        <div>
-          <h1 className="font-[family-name:var(--ffos-font-display)] text-3xl tracking-tight">
-            Budget
-          </h1>
-          <p className="mt-2 text-sm text-text-secondary">
-            Ingen budget ännu · as of {data.asOf}
-          </p>
-        </div>
+        {embedded ? null : (
+          <div>
+            <h1 className="font-[family-name:var(--ffos-font-display)] text-3xl tracking-tight">
+              Budget
+            </h1>
+            <p className="mt-2 text-sm text-text-secondary">
+              Ingen budget ännu · as of {data.asOf}
+            </p>
+          </div>
+        )}
 
         <section className="rounded-[18px] bg-surface-elevated p-6">
           <h2 className="text-lg font-medium text-text-primary">
@@ -182,15 +184,17 @@ export function BudgetPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="font-[family-name:var(--ffos-font-display)] text-3xl tracking-tight">
-          Budget
-        </h1>
-        <p className="mt-2 text-sm text-text-secondary">
-          Planerat vs faktiskt (från financial events) · {data.period?.label} ·
-          as of {data.asOf}
-        </p>
-      </div>
+      {embedded ? null : (
+        <div>
+          <h1 className="font-[family-name:var(--ffos-font-display)] text-3xl tracking-tight">
+            Budget
+          </h1>
+          <p className="mt-2 text-sm text-text-secondary">
+            Planerat vs faktiskt (från financial events) · {data.period?.label} ·
+            as of {data.asOf}
+          </p>
+        </div>
+      )}
 
       <div className="grid gap-4 md:grid-cols-4">
         <Stat label="Planerat" value={<MoneyValue value={data.totals.planned} />} />
