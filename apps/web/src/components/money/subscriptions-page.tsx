@@ -141,16 +141,40 @@ function RecurringSurface({ householdId }: { householdId: string }) {
   const verify = (recurringId: string, input: Omit<VerifyRecurringStreamInput, "householdId">) =>
     verifyMutation.mutate({ recurringId, householdId, ...input });
 
+  // "Nytt återkommande": patterns first observed in the last 90 days that the
+  // user has not yet confirmed — new financial commitments deserve a look.
+  const newSince = new Date();
+  newSince.setDate(newSince.getDate() - 90);
+  const newSinceIso = newSince.toISOString().slice(0, 10);
+  const newStreams = overview.groups
+    .flatMap((group) => group.streams)
+    .filter(
+      (stream) =>
+        stream.firstSeenOn !== null &&
+        stream.firstSeenOn >= newSinceIso &&
+        !stream.userVerified &&
+        stream.status !== "DISMISSED" &&
+        stream.recurringType !== "SALARY",
+    );
+
   return (
     <div className="space-y-6" data-testid="recurring-page">
-      <div>
-        <h1 className="font-[family-name:var(--ffos-font-display)] text-3xl tracking-tight">
-          Abonnemang & återkommande
-        </h1>
-        <p className="mt-2 text-sm text-text-secondary">
-          Upptäckta återkommande mönster från hushållets egna transaktioner · per{" "}
-          {overview.asOf}
-        </p>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h1 className="font-[family-name:var(--ffos-font-display)] text-3xl tracking-tight">
+            Abonnemang & återkommande
+          </h1>
+          <p className="mt-2 text-sm text-text-secondary">
+            Upptäckta återkommande mönster från hushållets egna transaktioner · per{" "}
+            {overview.asOf}
+          </p>
+        </div>
+        <a
+          href="/calendar"
+          className="min-h-11 shrink-0 text-sm font-medium text-accent"
+        >
+          Visa i kalendern →
+        </a>
       </div>
 
       {error ? (
@@ -195,9 +219,10 @@ function RecurringSurface({ householdId }: { householdId: string }) {
           data-testid="price-insights"
         >
           <h2 className="text-sm font-medium">
+            Har blivit dyrare —{" "}
             {overview.priceInsights.increasedStreams === 1
-              ? "Ett återkommande belopp har höjts senaste 12 månaderna."
-              : `${overview.priceInsights.increasedStreams} återkommande belopp har höjts senaste 12 månaderna.`}
+              ? "ett återkommande belopp höjt senaste 12 månaderna"
+              : `${overview.priceInsights.increasedStreams} återkommande belopp höjda senaste 12 månaderna`}
           </h2>
           <p className="mt-1 text-sm text-text-secondary">
             Samlad årlig ökning:{" "}
@@ -211,6 +236,53 @@ function RecurringSurface({ householdId }: { householdId: string }) {
                 {item.percentChange !== null ? ` (${item.percentChange > 0 ? "+" : ""}${item.percentChange} %)` : ""}
                 {" · "}
                 {formatMinor(item.annualImpactMinor, "SEK")}/år · från {item.changedOn}
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
+
+      {newStreams.length > 0 ? (
+        <section
+          className="overflow-hidden rounded-[16px] bg-surface-elevated"
+          data-testid="new-recurring"
+        >
+          <h2 className="border-b border-border px-5 py-3 text-sm text-text-secondary">
+            Nytt återkommande ({newStreams.length})
+          </h2>
+          <ul className="divide-y divide-border">
+            {newStreams.map((stream) => (
+              <li key={stream.id} className="px-5 py-4">
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium">
+                      {stream.merchantName ?? stream.name}
+                    </p>
+                    <p className="mt-1 text-xs text-text-muted">
+                      Först sedd {stream.firstSeenOn} ·{" "}
+                      {CADENCE_LABELS[stream.cadence] ?? stream.cadence.toLowerCase()}
+                    </p>
+                  </div>
+                  <p className="text-right text-sm tabular-nums">
+                    {stream.monthlyEquivalentMinor
+                      ? `${formatMinor(stream.monthlyEquivalentMinor, stream.currency)}/mån`
+                      : formatMinor(stream.currentAmountMinor, stream.currency)}
+                  </p>
+                </div>
+                <div className="mt-2 flex flex-wrap gap-2">
+                  <ActionButton
+                    busy={busyId === stream.id}
+                    onClick={() => verify(stream.id, { status: "CONFIRMED" })}
+                  >
+                    Stämmer
+                  </ActionButton>
+                  <ActionButton
+                    busy={busyId === stream.id}
+                    onClick={() => verify(stream.id, { status: "DISMISSED" })}
+                  >
+                    Inte återkommande
+                  </ActionButton>
+                </div>
               </li>
             ))}
           </ul>
