@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto";
 import { Inject, Injectable, Logger } from "@nestjs/common";
-import { and, eq, inArray, isNull, sql } from "drizzle-orm";
+import { and, eq, inArray, sql } from "drizzle-orm";
 import {
   AI_CLASSIFICATION_SCHEMA_VERSION,
   HIGH_RISK_TRANSACTION_TYPES,

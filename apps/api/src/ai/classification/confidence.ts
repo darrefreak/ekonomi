@@ -74,11 +74,15 @@ export function combineConfidence(
         : 0
       : 0.5; // No candidate to compare against: neutral.
 
-  // A recurring cadence with a stable amount corroborates a bill/subscription claim.
-  const min = BigInt(cluster.minAmountMinor);
-  const max = BigInt(cluster.maxAmountMinor);
-  const median = BigInt(cluster.medianAmountMinor);
-  const spread = median > 0n ? Number(((max - min) * 100n) / median) : 100;
+  // A recurring cadence with a stable amount corroborates a bill/subscription
+  // claim. Amounts are signed (outflows negative), so compare magnitudes.
+  const abs = (value: bigint) => (value < 0n ? -value : value);
+  const a = abs(BigInt(cluster.minAmountMinor));
+  const b = abs(BigInt(cluster.maxAmountMinor));
+  const lo = a < b ? a : b;
+  const hi = a < b ? b : a;
+  const median = abs(BigInt(cluster.medianAmountMinor));
+  const spread = median > 0n ? Number(((hi - lo) * 100n) / median) : 100;
   const recurrenceConsistency =
     cluster.medianIntervalDays != null && spread <= 20 ? 1 : cluster.medianIntervalDays != null ? 0.6 : 0.4;
 
