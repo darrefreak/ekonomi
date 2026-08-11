@@ -36,7 +36,11 @@ test.describe("P1-U3 product polish", () => {
     page,
   }) => {
     await page.goto("/review");
-    const heading = page.getByRole("heading", { name: /granska|inget att granska/i });
+    // .first(): once review data loads, the section heading "Mönster att
+    // granska" also matches /granska/ and a strict locator would be ambiguous.
+    const heading = page
+      .getByRole("heading", { name: /granska|inget att granska/i })
+      .first();
     await expect(heading).toBeVisible({ timeout: 20_000 });
 
     const empty = page.getByRole("heading", { name: /inget att granska/i });
