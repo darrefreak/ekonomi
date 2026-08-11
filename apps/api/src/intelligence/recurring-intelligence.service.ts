@@ -184,8 +184,14 @@ export class RecurringIntelligenceService {
   async runPipeline(householdId: string, asOf?: string): Promise<RecurringPipelineResult> {
     const resolvedAsOf = await resolveHouseholdAsOf(householdId, asOf);
     const detect = await this.detectAndPersistStreams(householdId);
-    const expected = await this.generateExpectedTransactions(householdId);
+    /*
+     * Match before regenerating: a new import may have fulfilled the window
+     * that is currently open, and generation would otherwise supersede that
+     * window (the stream's last occurrence just moved) before matching could
+     * claim it.
+     */
     const matched = await this.matchExpectedTransactions(householdId);
+    const expected = await this.generateExpectedTransactions(householdId);
     const missing = await this.detectMissingExpected(householdId, resolvedAsOf);
     return {
       ...detect,
