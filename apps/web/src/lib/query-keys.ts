@@ -76,6 +76,11 @@ export const queryKeys = {
       ["intelligence", householdId, "recurring"] as const,
     expected: (householdId: string) =>
       ["intelligence", householdId, "expected"] as const,
+    aiStatus: (householdId: string) =>
+      ["intelligence", householdId, "ai-status"] as const,
+  },
+  brief: {
+    all: (householdId: string) => ["brief", householdId] as const,
   },
 } as const;
 

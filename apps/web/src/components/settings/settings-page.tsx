@@ -17,6 +17,7 @@ import { queryKeys } from "@/lib/query-keys";
 import { minorToKronorInput, kronorToMinorString } from "@/lib/money-input";
 import { MEMBER_ROLE_LABELS, PRIVACY_POLICY_LABELS } from "@/lib/account-labels";
 import { ErrorState } from "../feedback/error-state";
+import { AiAnalysisSection } from "./ai-analysis-section";
 import { LearnedRulesSection } from "./learned-rules-section";
 import { LoadingState } from "../feedback/loading-state";
 import { writeStoredAppearance } from "../providers/theme-applicator";
@@ -123,6 +124,8 @@ export function SettingsPage() {
       <CategoriesSection householdId={householdId} onError={setError} />
 
       <LearnedRulesSection householdId={householdId} />
+
+      <AiAnalysisSection householdId={householdId} data={data} />
 
       <section className="space-y-3 rounded-[16px] bg-surface-elevated p-5">
         <h2 className="text-sm text-text-secondary">Notiser</h2>

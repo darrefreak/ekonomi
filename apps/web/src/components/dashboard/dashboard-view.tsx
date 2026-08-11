@@ -4,6 +4,7 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 import type { DashboardResponse } from "@ffos/schemas";
 import { CoverageList } from "../financial/coverage-list";
+import { FinancialBriefCard } from "./financial-brief-card";
 import { MiniCashflowChart } from "../financial/mini-cashflow-chart";
 import { MoneyValue } from "../financial/money-value";
 import { EmptyState } from "../feedback/empty-state";
@@ -217,24 +218,7 @@ export function DashboardView({ data }: { data: DashboardResponse }) {
           ) : null}
         </section>
 
-        <section className="rounded-[18px] bg-surface-elevated p-5 shadow-[var(--ffos-shadow-soft)]">
-          <h2 className="text-sm font-medium text-text-secondary">Finansiell brief</h2>
-          <p className="mt-2 text-base text-text-primary">{data.brief.headline}</p>
-          {data.brief.items.length === 0 ? (
-            <p className="mt-4 text-sm text-text-muted">Inga briefpunkter just nu.</p>
-          ) : (
-            <ol className="mt-4 space-y-3">
-              {data.brief.items.map((item, index) => (
-                <li key={item.id} className="text-sm">
-                  <p className="font-medium text-text-primary">
-                    {index + 1}. {item.title}
-                  </p>
-                  <p className="mt-1 text-text-secondary">{item.detail}</p>
-                </li>
-              ))}
-            </ol>
-          )}
-        </section>
+        <FinancialBriefCard />
       </div>
 
       <section className="rounded-[18px] bg-surface-elevated p-5 shadow-[var(--ffos-shadow-soft)]">
