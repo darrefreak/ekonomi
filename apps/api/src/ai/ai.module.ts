@@ -3,6 +3,7 @@ import { AuthModule } from "../auth/auth.module";
 import { DecisionsModule } from "../decisions/decisions.module";
 import { FeatureFlagsModule } from "../feature-flags/feature-flags.module";
 import { HouseholdsModule } from "../households/households.module";
+import { IntelligenceModule } from "../intelligence/intelligence.module";
 import { MetricsModule } from "../metrics/metrics.module";
 import { PlanningModule } from "../planning/planning.module";
 import { VehiclesModule } from "../vehicles/vehicles.module";
@@ -20,6 +21,7 @@ import { AdvisorService } from "./advisor.service";
     VehicleIntelModule,
     MetricsModule,
     FeatureFlagsModule,
+    IntelligenceModule,
   ],
   controllers: [AdvisorController],
   providers: [AdvisorService],

@@ -1,5 +1,6 @@
 import type { JobsOptions } from "bullmq";
 import {
+  aiClassifyTransactionClustersJobPayloadSchema,
   calculateMetricsJobPayloadSchema,
   calculateRecurringPriceChangesJobPayloadSchema,
   commitStatementImportJobPayloadSchema,
@@ -240,6 +241,18 @@ export const jobRegistry: Record<JobType, JobDefinition> = {
     attempts: 3,
     backoff: { type: "exponential", delay: 2_000 },
     timeoutMs: 30_000,
+    buildJobId: defaultAsOfJobId,
+  },
+  AI_CLASSIFY_TRANSACTION_CLUSTERS: {
+    type: "AI_CLASSIFY_TRANSACTION_CLUSTERS",
+    payloadSchema: aiClassifyTransactionClustersJobPayloadSchema,
+    queue: QUEUE_NAME,
+    // One attempt: the service already survives provider failure per batch,
+    // and a blind BullMQ retry of an external-call job would double the cost
+    // of a genuinely failing provider without changing the outcome.
+    attempts: 1,
+    backoff: { type: "fixed", delay: 5_000 },
+    timeoutMs: 120_000,
     buildJobId: defaultAsOfJobId,
   },
 };

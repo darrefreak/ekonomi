@@ -188,6 +188,392 @@ export function explainFromTools(
     });
   }
 
+  /*
+   * Financial Intelligence sections (§46–§48). Each one repeats an engine
+   * figure and links to the surface where the household can inspect it —
+   * "Matkostnaderna ökade främst på grund av restaurang" must be clickable
+   * evidence, not an assertion.
+   */
+  const liquidityTool = byName.get_liquidity_requirement;
+  const liquidity = liquidityTool?.data as
+    | {
+        recommendedMinor?: string;
+        surplusMinor?: string;
+        shortfallMinor?: string;
+        liquidCashMinor?: string;
+        confidence?: string;
+      }
+    | undefined;
+  if (liquidityTool?.ok && liquidity?.recommendedMinor) {
+    const recommended = formatMinorSek(liquidity.recommendedMinor, currency);
+    const cash = formatMinorSek(liquidity.liquidCashMinor, currency);
+    const surplus = BigInt(liquidity.surplusMinor ?? "0");
+    const shortfall = BigInt(liquidity.shortfallMinor ?? "0");
+    const position =
+      shortfall > 0n
+        ? `Det saknas ${formatMinorSek(liquidity.shortfallMinor, currency)} upp till nivån.`
+        : surplus > 0n
+          ? `Kassan ligger ${formatMinorSek(liquidity.surplusMinor, currency)} över nivån.`
+          : "Kassan ligger på nivån.";
+    sections.push({
+      title: "Buffert och likviditet",
+      detail: `Rekommenderad likviditetsnivå är ${recommended} (beräknad från hushållets egna kostnader, konfidens ${liquidity.confidence ?? "okänd"}). Tillgänglig kassa är ${cash}. ${position}`,
+      sourceTools: ["get_liquidity_requirement"],
+      citations: [
+        {
+          tool: "get_liquidity_requirement",
+          label: `Rekommenderad nivå ${recommended}`,
+          href: "/intelligence/liquidity",
+          value: recommended,
+        },
+      ],
+    });
+  }
+
+  const savingsTool = byName.get_savings_target;
+  const savings = savingsTool?.data as
+    | {
+        totalAllocatedMinor?: string;
+        normalMonthlySurplusMinor?: string;
+        cashflowNegative?: boolean;
+      }
+    | undefined;
+  if (savingsTool?.ok && savings) {
+    const allocated = formatMinorSek(savings.totalAllocatedMinor, currency);
+    sections.push({
+      title: "Sparande",
+      detail: savings.cashflowNegative
+        ? "En normal månad går inte ihop just nu, så ingen sparnivå rekommenderas — det vore en siffra utan täckning."
+        : `Rekommenderat månadssparande är ${allocated}, fördelat av sparvattenfallet utifrån ett normalt månadsöverskott på ${formatMinorSek(savings.normalMonthlySurplusMinor, currency)}.`,
+      sourceTools: ["get_savings_target"],
+      citations: [
+        {
+          tool: "get_savings_target",
+          label: `Månadssparande ${allocated}`,
+          href: "/intelligence/liquidity",
+          value: allocated,
+        },
+      ],
+    });
+  }
+
+  const surplusTool = byName.get_available_surplus;
+  const surplusData = surplusTool?.data as
+    | { availableSurplusMinor?: string; shortfallMinor?: string }
+    | undefined;
+  if (surplusTool?.ok && surplusData?.availableSurplusMinor) {
+    const surplus = formatMinorSek(surplusData.availableSurplusMinor, currency);
+    sections.push({
+      title: "Tillgängligt överskott",
+      detail: `Kassa över den rekommenderade likviditetsnivån: ${surplus}. Samma likviditetsmodell som buffertberäkningen — inte en andra formel.`,
+      sourceTools: ["get_available_surplus"],
+      citations: [
+        {
+          tool: "get_available_surplus",
+          label: `Överskott ${surplus}`,
+          href: "/intelligence/liquidity",
+          value: surplus,
+        },
+      ],
+    });
+  }
+
+  const subsTool = byName.get_subscription_changes;
+  const subs = subsTool?.data as
+    | {
+        increasedStreams?: number;
+        annualIncreaseMinor?: string;
+        items?: Array<{ name?: string }>;
+      }
+    | undefined;
+  if (subsTool?.ok && subs && (subs.increasedStreams ?? 0) > 0) {
+    const annual = formatMinorSek(subs.annualIncreaseMinor, currency);
+    const names = (subs.items ?? [])
+      .map((item) => item.name)
+      .filter(Boolean)
+      .slice(0, 3)
+      .join(", ");
+    sections.push({
+      title: "Prishöjningar",
+      detail: `${subs.increasedStreams} återkommande kostnad(er) har höjt priset${names ? ` (${names})` : ""}, sammanlagt ${annual} per år. Beloppen kommer från prisintelligensen, exakta i minor units.`,
+      sourceTools: ["get_subscription_changes"],
+      citations: [
+        {
+          tool: "get_subscription_changes",
+          label: `Årseffekt ${annual}`,
+          href: "/subscriptions",
+          value: annual,
+        },
+      ],
+    });
+  }
+
+  const recurringTool = byName.get_recurring_summary;
+  const recurring = recurringTool?.data as
+    | {
+        totals?: {
+          recurringExpensesMonthlyMinor?: string;
+          subscriptionsMonthlyMinor?: string;
+        };
+        counts?: { streams?: number; subscriptions?: number };
+      }
+    | undefined;
+  if (recurringTool?.ok && recurring?.totals) {
+    const monthly = formatMinorSek(
+      recurring.totals.recurringExpensesMonthlyMinor,
+      currency,
+    );
+    const subsMonthly = formatMinorSek(
+      recurring.totals.subscriptionsMonthlyMinor,
+      currency,
+    );
+    sections.push({
+      title: "Återkommande kostnader",
+      detail: `${recurring.counts?.streams ?? 0} återkommande strömmar, ${monthly} per månad, varav abonnemang ${subsMonthly} (${recurring.counts?.subscriptions ?? 0} st).`,
+      sourceTools: ["get_recurring_summary"],
+      citations: [
+        {
+          tool: "get_recurring_summary",
+          label: `Återkommande ${monthly}/mån`,
+          href: "/subscriptions",
+          value: monthly,
+        },
+      ],
+    });
+  }
+
+  const driversTool = byName.get_period_change_drivers;
+  const drivers = driversTool?.data as
+    | {
+        beforeMonth?: string;
+        afterMonth?: string;
+        expenseChangeMinor?: string;
+        categoryDrivers?: Array<{ key?: string; changeMinor?: string }>;
+      }
+    | undefined;
+  if (driversTool?.ok && drivers?.expenseChangeMinor) {
+    const change = formatMinorSek(drivers.expenseChangeMinor, currency);
+    const top = drivers.categoryDrivers?.[0];
+    const topText = top?.key
+      ? ` Största drivkraften: ${top.key} (${formatMinorSek(top.changeMinor, currency)}).`
+      : "";
+    sections.push({
+      title: "Vad som förändrades",
+      detail: `Utgifterna ändrades ${change} mellan ${drivers.beforeMonth ?? "föregående månad"} och ${drivers.afterMonth ?? "senaste månaden"}.${topText} Aritmetiken är exakt: drivkrafterna summerar till förändringen.`,
+      sourceTools: ["get_period_change_drivers"],
+      citations: [
+        {
+          tool: "get_period_change_drivers",
+          label: `Förändring ${change}`,
+          href: "/cashflow",
+          value: change,
+        },
+      ],
+    });
+  }
+
+  const trendTool = byName.get_category_trend;
+  const trend = trendTool?.data as
+    | {
+        items?: Array<{
+          categoryName?: string;
+          categoryKey?: string;
+          changeVsBaselinePercent?: number | null;
+        }>;
+      }
+    | undefined;
+  const topTrend = trend?.items?.[0];
+  if (trendTool?.ok && topTrend?.changeVsBaselinePercent != null) {
+    const percent = `${topTrend.changeVsBaselinePercent > 0 ? "+" : ""}${topTrend.changeVsBaselinePercent}%`;
+    sections.push({
+      title: "Kategoritrend",
+      detail: `${topTrend.categoryName ?? topTrend.categoryKey} ligger ${percent} mot sitt eget 12-månadersmönster. Jämförelsen görs mot kategorins egen baslinje, inte mot en godtycklig månad.`,
+      sourceTools: ["get_category_trend"],
+      citations: [
+        {
+          tool: "get_category_trend",
+          label: `${topTrend.categoryName ?? "Kategori"} ${percent}`,
+          href: `/transactions?categoryKey=${encodeURIComponent(topTrend.categoryKey ?? "")}`,
+          value: percent,
+        },
+      ],
+    });
+  }
+
+  const merchantTrendTool = byName.get_merchant_trend;
+  const merchantTrend = merchantTrendTool?.data as
+    | {
+        items?: Array<{
+          merchantName?: string;
+          changeVsAveragePercent?: number | null;
+        }>;
+      }
+    | undefined;
+  const topMerchant = merchantTrend?.items?.[0];
+  if (merchantTrendTool?.ok && topMerchant?.changeVsAveragePercent != null) {
+    const percent = `${topMerchant.changeVsAveragePercent > 0 ? "+" : ""}${topMerchant.changeVsAveragePercent}%`;
+    sections.push({
+      title: "Handlartrend",
+      detail: `${topMerchant.merchantName} ligger ${percent} mot sitt eget 12-månaderssnitt.`,
+      sourceTools: ["get_merchant_trend"],
+      citations: [
+        {
+          tool: "get_merchant_trend",
+          label: `${topMerchant.merchantName} ${percent}`,
+          href: "/transactions",
+          value: percent,
+        },
+      ],
+    });
+  }
+
+  const expectedTool = byName.get_expected_transactions;
+  const expected = expectedTool?.data as
+    | { upcoming?: Array<Record<string, unknown>> }
+    | undefined;
+  if (expectedTool?.ok && expected?.upcoming && expected.upcoming.length > 0) {
+    sections.push({
+      title: "Förväntade transaktioner",
+      detail: `${expected.upcoming.length} förväntade transaktioner är beräknade från de återkommande strömmarnas egna mönster.`,
+      sourceTools: ["get_expected_transactions"],
+      citations: [
+        {
+          tool: "get_expected_transactions",
+          label: `${expected.upcoming.length} kommande`,
+          href: "/subscriptions",
+        },
+      ],
+    });
+  }
+
+  const missingTool = byName.get_missing_expected;
+  const missing = missingTool?.data as
+    | { missing?: Array<Record<string, unknown>> }
+    | undefined;
+  if (missingTool?.ok && missing?.missing) {
+    sections.push({
+      title: "Uteblivna förväntade transaktioner",
+      detail:
+        missing.missing.length === 0
+          ? "Inga förväntade transaktioner saknas just nu."
+          : `${missing.missing.length} förväntade transaktioner har inte dykt upp inom sitt fönster.`,
+      sourceTools: ["get_missing_expected"],
+      citations: [
+        {
+          tool: "get_missing_expected",
+          label: `${missing.missing.length} saknas`,
+          href: "/subscriptions",
+        },
+      ],
+    });
+  }
+
+  const anomaliesTool = byName.get_anomalies;
+  const anomalies = anomaliesTool?.data as
+    | { items?: Array<Record<string, unknown>> }
+    | undefined;
+  if (anomaliesTool?.ok && anomalies?.items && anomalies.items.length > 0) {
+    sections.push({
+      title: "Avvikelser",
+      detail: `${anomalies.items.length} öppna avvikelser (ovanliga transaktioner, dubbletter eller utebliven inkomst) från den deterministiska avvikelsedetektorn.`,
+      sourceTools: ["get_anomalies"],
+      citations: [
+        {
+          tool: "get_anomalies",
+          label: `${anomalies.items.length} avvikelser`,
+          href: "/anomalies",
+        },
+      ],
+    });
+  }
+
+  const baselineTool = byName.get_spending_baseline;
+  const baseline = baselineTool?.data as
+    | { median12mMinor?: string | null; monthsOfHistory?: number }
+    | undefined;
+  if (baselineTool?.ok && baseline?.median12mMinor) {
+    const median = formatMinorSek(baseline.median12mMinor, currency);
+    sections.push({
+      title: "Normalnivå",
+      detail: `Hushållets normala månadsutgift (12-månadersmedian) är ${median}, beräknad med robust statistik över ${baseline.monthsOfHistory ?? "?"} månaders historik.`,
+      sourceTools: ["get_spending_baseline"],
+      citations: [
+        {
+          tool: "get_spending_baseline",
+          label: `Normalnivå ${median}`,
+          href: "/cashflow",
+          value: median,
+        },
+      ],
+    });
+  }
+
+  const resilienceTool = byName.get_financial_resilience;
+  const resilience = resilienceTool?.data as
+    | { resilience?: { level?: string; reasons?: string[] } }
+    | undefined;
+  if (resilienceTool?.ok && resilience?.resilience?.level) {
+    sections.push({
+      title: "Motståndskraft",
+      detail: `Bedömning: ${resilience.resilience.level}. ${resilience.resilience.reasons?.[0] ?? ""}`,
+      sourceTools: ["get_financial_resilience"],
+      citations: [
+        {
+          tool: "get_financial_resilience",
+          label: `Motståndskraft ${resilience.resilience.level}`,
+          href: "/intelligence/liquidity",
+        },
+      ],
+    });
+  }
+
+  const coverageTool = byName.get_financial_coverage;
+  const coverage = coverageTool?.data as
+    | { percent?: number; areas?: Array<{ label?: string; status?: string }> }
+    | undefined;
+  if (coverageTool?.ok && coverage?.percent != null) {
+    const missingAreas = (coverage.areas ?? [])
+      .filter((area) => area.status === "missing")
+      .map((area) => area.label)
+      .filter(Boolean);
+    sections.push({
+      title: "Datatäckning",
+      detail:
+        missingAreas.length === 0
+          ? `Datatäckning ${coverage.percent}%.`
+          : `Datatäckning ${coverage.percent}%. Saknas: ${missingAreas.join(", ")}. Analyser som bygger på helheten ska läsas med det i åtanke.`,
+      sourceTools: ["get_financial_coverage"],
+      citations: [
+        {
+          tool: "get_financial_coverage",
+          label: `Täckning ${coverage.percent}%`,
+          href: "/settings",
+        },
+      ],
+    });
+  }
+
+  const creepTool = byName.get_lifestyle_creep;
+  const creep = creepTool?.data as
+    | { creeping?: boolean; annualisedIncreaseMinor?: string }
+    | undefined;
+  if (creepTool?.ok && creep?.creeping != null) {
+    sections.push({
+      title: "Lifestyle creep",
+      detail: creep.creeping
+        ? `Diskretionära utgifter driver uppåt${creep.annualisedIncreaseMinor ? ` (${formatMinorSek(creep.annualisedIncreaseMinor, currency)} per år)` : ""}.`
+        : "Ingen lifestyle creep detekterad i kassaflödet.",
+      sourceTools: ["get_lifestyle_creep"],
+      citations: [
+        {
+          tool: "get_lifestyle_creep",
+          label: creep.creeping ? "Creep detekterad" : "Ingen creep",
+          href: "/opportunities",
+        },
+      ],
+    });
+  }
+
   return {
     headline: "AI-brief baserad på deterministiska verktyg",
     disclaimer:
@@ -232,14 +618,53 @@ export function selectToolsForMessage(message: string): string[] {
   const selected = new Set<string>();
 
   if (/budget|kvar|utnytt/.test(m)) selected.add("get_budget");
-  if (/möjlig|opportunity|spara|abonnemang|ränta|lifestyle/.test(m)) {
+  if (/möjlig|opportunity|lifestyle/.test(m)) {
     selected.add("get_opportunities");
   }
-  if (/risk|hälsa|likvid|skuld/.test(m)) selected.add("get_risk");
+  if (/risk|hälsa|skuld/.test(m)) selected.add("get_risk");
   if (/bil|fordon|equity|tco|leasing/.test(m)) selected.add("get_vehicle_equity");
-  if (/netto|förmögen|kassa|cash|nw|position/.test(m)) {
+  if (/netto|förmögen|nw|position/.test(m)) {
     selected.add("get_net_worth");
   }
+
+  /*
+   * Financial Intelligence routing (§47): the questions the spec names go to
+   * deterministic engines. "Hur mycket behöver vi i buffert?" is a liquidity
+   * question, not an invitation to invent a formula.
+   */
+  if (/buffert|likvid|reserv|nödfond/.test(m)) {
+    selected.add("get_liquidity_requirement");
+  }
+  if (/spara|sparande|sparkvot|månadsspar/.test(m)) {
+    selected.add("get_savings_target");
+    selected.add("get_available_surplus");
+  }
+  if (/abonnemang|prenumer|höjt|prishöjning|dyrare/.test(m)) {
+    selected.add("get_subscription_changes");
+    selected.add("get_recurring_summary");
+  }
+  if (/varför.*(ökade|ökat|steg|högre)|förändr|jämfört med förra/.test(m)) {
+    selected.add("get_period_change_drivers");
+    selected.add("get_category_trend");
+  }
+  if (/kategori|matkostnad|mat |livsmedel|restaurang/.test(m)) {
+    selected.add("get_category_trend");
+  }
+  if (/handlare|butik|merchant/.test(m)) selected.add("get_merchant_trend");
+  if (/återkommande|räkning/.test(m)) selected.add("get_recurring_summary");
+  if (/förväntad|väntad|kommande betal/.test(m)) {
+    selected.add("get_expected_transactions");
+    selected.add("get_missing_expected");
+  }
+  if (/avvikelse|ovanlig|konstig|dubbel/.test(m)) selected.add("get_anomalies");
+  if (/normal|baslinje|baseline|brukar/.test(m)) selected.add("get_spending_baseline");
+  if (/motståndskraft|resilien|klarar vi/.test(m)) {
+    selected.add("get_financial_resilience");
+  }
+  if (/täckning|coverage|saknas data|underlag/.test(m)) {
+    selected.add("get_financial_coverage");
+  }
+  if (/kassa|cash/.test(m)) selected.add("get_net_worth");
 
   if (selected.size === 0) {
     return [

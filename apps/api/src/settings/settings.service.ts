@@ -79,6 +79,7 @@ export class SettingsService {
           row.investmentContributionTargetMinor.toString(),
         currency: row.currency,
       },
+      aiTransactionAnalysisEnabled: row.aiTransactionAnalysisEnabled,
       members: members.map((m) => ({
         id: m.id,
         userId: m.userId,
@@ -151,6 +152,9 @@ export class SettingsService {
     if (input.financialPolicies?.currency) {
       patch.currency = input.financialPolicies.currency;
     }
+    if (input.aiTransactionAnalysisEnabled != null) {
+      patch.aiTransactionAnalysisEnabled = input.aiTransactionAnalysisEnabled;
+    }
 
     await db
       .update(householdSettings)
@@ -175,11 +179,15 @@ export class SettingsService {
           investmentContributionTargetMinor:
             existingRow.investmentContributionTargetMinor.toString(),
           currency: existingRow.currency,
+          aiTransactionAnalysisEnabled: existingRow.aiTransactionAnalysisEnabled,
         },
         after: {
           ...(input.householdName ? { householdName: input.householdName } : {}),
           ...(input.locale ? { locale: input.locale } : {}),
           ...(input.appearance ? { appearance: input.appearance } : {}),
+          ...(input.aiTransactionAnalysisEnabled != null
+            ? { aiTransactionAnalysisEnabled: input.aiTransactionAnalysisEnabled }
+            : {}),
           ...(input.financialPolicies ?? {}),
         },
       });

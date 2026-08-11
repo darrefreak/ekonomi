@@ -226,6 +226,53 @@ function ClusterReviewCard({
         </p>
       ) : null}
 
+      {item.aiSuggestion ? (
+        <div
+          className="mt-2 rounded-[12px] border border-border bg-surface p-3"
+          data-testid="ai-suggestion"
+        >
+          <p className="text-xs uppercase tracking-wide text-text-muted">AI-förslag</p>
+          <p className="mt-1 text-sm">
+            Vi tror att detta är{" "}
+            <span className="font-medium">
+              {item.aiSuggestion.merchantCandidate ?? "okänd mottagare"}
+            </span>
+            {item.aiSuggestion.categoryName ? ` · ${item.aiSuggestion.categoryName}` : ""}
+            <span className="text-text-secondary">
+              {" "}
+              · Konfidens {Math.round(item.aiSuggestion.confidence * 100)} %
+            </span>
+          </p>
+          {item.aiSuggestion.shortExplanation ? (
+            <p className="mt-1 text-sm text-text-secondary">
+              {item.aiSuggestion.shortExplanation}
+            </p>
+          ) : null}
+          {(item.aiSuggestion.merchantCandidate || item.aiSuggestion.categoryId) &&
+          mode === "idle" ? (
+            <button
+              type="button"
+              disabled={busy}
+              data-testid="ai-suggestion-use"
+              className="mt-2 min-h-11 rounded-[12px] border border-border-strong px-4 text-sm disabled:opacity-50"
+              onClick={() => {
+                // Confirming an AI suggestion is a user verification: pre-fill
+                // the correct form so the user sees exactly what applies.
+                if (item.aiSuggestion?.merchantCandidate) {
+                  setMerchantName(item.aiSuggestion.merchantCandidate);
+                }
+                if (item.aiSuggestion?.categoryId) {
+                  setCategoryId(item.aiSuggestion.categoryId);
+                }
+                setMode("correct");
+              }}
+            >
+              Använd AI-förslaget
+            </button>
+          ) : null}
+        </div>
+      ) : null}
+
       {mode === "correct" ? (
         <div className="mt-3 space-y-3 rounded-[12px] border border-border p-3">
           <label className="block text-sm">

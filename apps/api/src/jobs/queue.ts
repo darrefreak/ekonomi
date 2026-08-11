@@ -108,6 +108,12 @@ export async function enqueueRecurringIntelligenceChain(
     "MATCH_EXPECTED_TRANSACTIONS",
     "GENERATE_EXPECTED_TRANSACTIONS",
     "DETECT_MISSING_EXPECTED",
+    /*
+     * Last, after every deterministic mechanism has had its chance (§7).
+     * With AI disabled the job degrades to a dry-run report; it never blocks
+     * or fails the chain (§5).
+     */
+    "AI_CLASSIFY_TRANSACTION_CLUSTERS",
   ];
   const ids: string[] = [];
   for (const type of types) {

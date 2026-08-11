@@ -4,6 +4,7 @@ import { logger } from "../common/logger";
 import { getDb } from "../db/client";
 import { householdMembers } from "../db/schema";
 import { AdvisorService } from "../ai/advisor.service";
+import { AiClassificationService } from "../ai/classification/ai-classification.service";
 import { AnalysisRunsService } from "../decisions/analysis-runs.service";
 import { AnomalyService } from "../decisions/anomaly.service";
 import { DecisionsService } from "../decisions/decisions.service";
@@ -17,6 +18,8 @@ import { HouseholdMetricsService } from "../metrics/household-metrics.service";
 import { MetricRegistryService } from "../metrics/metric-registry.service";
 import { IntakeService } from "../intake/intake.service";
 import { StatementImportService } from "../imports/statement-import.service";
+import { FinancialIntelligenceInputService } from "../intelligence/financial-intelligence-input.service";
+import { FinancialIntelligenceService } from "../intelligence/financial-intelligence.service";
 import { RecurringIntelligenceService } from "../intelligence/recurring-intelligence.service";
 import { AuditService } from "../audit/audit.service";
 import { resolveHouseholdAsOf } from "../common/as-of";
@@ -59,6 +62,9 @@ function buildServices() {
   const analysisRuns = new AnalysisRunsService();
   const metricRegistry = new MetricRegistryService(metrics);
   const flags = new FeatureFlagsService();
+  const intelligenceInput = new FinancialIntelligenceInputService(access, metrics);
+  const intelligence = new FinancialIntelligenceService(intelligenceInput);
+  const recurringForAdvisor = new RecurringIntelligenceService(access);
   const advisor = new AdvisorService(
     access,
     planning,
@@ -67,6 +73,9 @@ function buildServices() {
     vehicleIntel,
     metrics,
     flags,
+    intelligence,
+    recurringForAdvisor,
+    anomaly,
   );
   const audit = new AuditService();
   const ledger = new LedgerTruthService(audit);
@@ -74,8 +83,10 @@ function buildServices() {
   const intake = new IntakeService(access, storage);
   const statementImports = new StatementImportService(access, storage, ledger);
   const recurring = new RecurringIntelligenceService(access);
+  const aiClassification = new AiClassificationService(access);
   return {
     recurring,
+    aiClassification,
     access,
     metrics,
     planning,
@@ -236,6 +247,19 @@ async function executeJob(
         asOf,
       );
       return { asOf, missing: result.missing };
+    }
+
+    case "AI_CLASSIFY_TRANSACTION_CLUSTERS": {
+      /*
+       * §22: the job re-derives eligibility from the database, so a stale
+       * payload cannot send resolved clusters. When AI is disabled the run
+       * degrades to a dry-run report — the job never fails because a switch
+       * is off (§5, §62).
+       */
+      const result = await services.aiClassification.classifyForHousehold(
+        payload.householdId,
+      );
+      return { ...result };
     }
 
     case "COMMIT_STATEMENT_IMPORT": {

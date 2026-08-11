@@ -80,6 +80,9 @@ import {
   clusterReviewResponseSchema,
   resolveClusterSchema,
   resolveClusterResponseSchema,
+  aiDryRunReportSchema,
+  aiStatusResponseSchema,
+  financialBriefResponseSchema,
   classificationRulesResponseSchema,
   updateClassificationRuleSchema,
   riskResponseSchema,
@@ -181,6 +184,9 @@ import {
   type ClusterReviewResponse,
   type ResolveClusterInput,
   type ResolveClusterResponse,
+  type AiDryRunReport,
+  type AiStatusResponse,
+  type FinancialBriefResponse,
   type ClassificationRulesResponse,
   type UpdateClassificationRuleInput,
   type ReviewResponse,
@@ -1051,6 +1057,30 @@ export function createApiClient(options: ApiClientOptions) {
         `/api/v1/intelligence/analyse?householdId=${encodeURIComponent(householdId)}`,
         { method: "POST" },
       );
+    },
+
+    /** AI enablement + cost observability. Safe to call with AI disabled. */
+    getAiStatus: async (householdId: string) => {
+      const data = await request<unknown>(
+        `/api/v1/intelligence/ai/status?householdId=${encodeURIComponent(householdId)}`,
+      );
+      return aiStatusResponseSchema.parse(data) as AiStatusResponse;
+    },
+
+    /** AI classification dry-run: counts only, no external calls. */
+    getAiDryRun: async (householdId: string) => {
+      const data = await request<unknown>(
+        `/api/v1/intelligence/ai/dry-run?householdId=${encodeURIComponent(householdId)}`,
+      );
+      return aiDryRunReportSchema.parse(data) as AiDryRunReport;
+    },
+
+    /** Financial Brief V2: ranked deterministic findings, template or AI prose. */
+    getFinancialBrief: async (householdId: string) => {
+      const data = await request<unknown>(
+        `/api/v1/brief?householdId=${encodeURIComponent(householdId)}`,
+      );
+      return financialBriefResponseSchema.parse(data) as FinancialBriefResponse;
     },
 
     /** All recurring streams, grouped, with totals, price insights and review. */

@@ -1,14 +1,19 @@
 import { Inject, Injectable } from "@nestjs/common";
+import { and, eq, sql } from "drizzle-orm";
 import {
   assessFinancialResilience,
   backtestLiquidityRecommendation,
   calculateAllBaselines,
   calculateCashRunway,
+  calculateCategoryTrend,
   calculateLiquidityRequirement,
   calculateSavingsTarget,
+  comparePeriodDrivers,
   medianMinor,
   runStressScenarios,
 } from "@ffos/financial-engine";
+import { getDb } from "../db/client";
+import { categories, merchants, sourceTransactions } from "../db/schema-economic";
 import { FinancialIntelligenceInputService } from "./financial-intelligence-input.service";
 
 /**
@@ -315,4 +320,240 @@ export class FinancialIntelligenceService {
       confidence: requirement.confidence,
     };
   }
+
+  /**
+   * Category trends against each category's own 12-month baseline (§46).
+   *
+   * The comparison the advisor's "why did spending increase" answer rests on:
+   * per-category monthly totals from the ledger's transactions, trend maths
+   * from the engine, nothing invented in between.
+   */
+  async categoryTrends(userId: string, householdId: string) {
+    const input = await this.input.build(userId, householdId);
+    const db = getDb();
+    const currentMonth = lastCompletedMonth(input.asOf);
+
+    const rows = await db
+      .select({
+        month: sql<string>`to_char(${sourceTransactions.bookingDate}, 'YYYY-MM')`,
+        categoryKey: categories.key,
+        categoryName: categories.name,
+        amountMinor: sql<string>`sum(abs(${sourceTransactions.amountMinor}))::text`,
+      })
+      .from(sourceTransactions)
+      .innerJoin(categories, eq(sourceTransactions.categoryId, categories.id))
+      .where(
+        and(
+          eq(sourceTransactions.householdId, householdId),
+          sql`${sourceTransactions.amountMinor} < 0`,
+          sql`${sourceTransactions.bookingDate} >= (${input.asOf}::date - interval '15 months')`,
+        ),
+      )
+      .groupBy(
+        sql`to_char(${sourceTransactions.bookingDate}, 'YYYY-MM')`,
+        categories.key,
+        categories.name,
+      );
+
+    const nameByKey = new Map(rows.map((row) => [row.categoryKey, row.categoryName]));
+    const points = rows.map((row) => ({
+      month: row.month,
+      categoryKey: row.categoryKey,
+      amountMinor: BigInt(row.amountMinor),
+    }));
+
+    const items = [...new Set(points.map((point) => point.categoryKey))]
+      .map((key) => {
+        const trend = calculateCategoryTrend({
+          categoryKey: key,
+          points,
+          currentMonth,
+        });
+        return {
+          categoryKey: key,
+          categoryName: nameByKey.get(key) ?? key,
+          month: currentMonth,
+          thisMonthMinor: trend.thisMonthMinor.toString(),
+          average12mMinor: trend.average12mMinor?.toString() ?? null,
+          changeVsBaselineMinor: trend.changeVsBaselineMinor?.toString() ?? null,
+          changeVsBaselinePercent: trend.changeVsBaselinePercent,
+          changeVsPreviousMonthPercent: trend.changeVsPreviousMonthPercent,
+          yearOverYearPercent: trend.yearOverYearPercent,
+          direction: trend.direction,
+        };
+      })
+      .filter((item) => item.average12mMinor !== null)
+      .sort(
+        (a, b) =>
+          Math.abs(b.changeVsBaselinePercent ?? 0) -
+          Math.abs(a.changeVsBaselinePercent ?? 0),
+      );
+
+    return { asOf: input.asOf, currency: input.currency, month: currentMonth, items };
+  }
+
+  /** Merchant spending trends: this completed month vs the merchant's 12m average. */
+  async merchantTrends(userId: string, householdId: string) {
+    const input = await this.input.build(userId, householdId);
+    const db = getDb();
+    const currentMonth = lastCompletedMonth(input.asOf);
+
+    const rows = await db
+      .select({
+        month: sql<string>`to_char(${sourceTransactions.bookingDate}, 'YYYY-MM')`,
+        merchantName: merchants.canonicalName,
+        amountMinor: sql<string>`sum(abs(${sourceTransactions.amountMinor}))::text`,
+      })
+      .from(sourceTransactions)
+      .innerJoin(merchants, eq(sourceTransactions.merchantId, merchants.id))
+      .where(
+        and(
+          eq(sourceTransactions.householdId, householdId),
+          sql`${sourceTransactions.amountMinor} < 0`,
+          sql`${sourceTransactions.bookingDate} >= (${input.asOf}::date - interval '13 months')`,
+        ),
+      )
+      .groupBy(
+        sql`to_char(${sourceTransactions.bookingDate}, 'YYYY-MM')`,
+        merchants.canonicalName,
+      );
+
+    const byMerchant = new Map<string, Array<{ month: string; amountMinor: bigint }>>();
+    for (const row of rows) {
+      const list = byMerchant.get(row.merchantName) ?? [];
+      list.push({ month: row.month, amountMinor: BigInt(row.amountMinor) });
+      byMerchant.set(row.merchantName, list);
+    }
+
+    const items = [...byMerchant.entries()]
+      .map(([merchantName, list]) => {
+        const thisMonth =
+          list.find((entry) => entry.month === currentMonth)?.amountMinor ?? 0n;
+        const history = list.filter((entry) => entry.month < currentMonth);
+        const total = history.reduce((sum, entry) => sum + entry.amountMinor, 0n);
+        const average = history.length > 0 ? total / BigInt(history.length) : null;
+        const changePercent =
+          average != null && average > 0n
+            ? Number(((thisMonth - average) * 1000n) / average) / 10
+            : null;
+        return {
+          merchantName,
+          month: currentMonth,
+          thisMonthMinor: thisMonth.toString(),
+          averageMinor: average?.toString() ?? null,
+          monthsObserved: history.length,
+          changeVsAveragePercent: changePercent,
+        };
+      })
+      .filter((item) => item.averageMinor !== null)
+      .sort(
+        (a, b) =>
+          Math.abs(b.changeVsAveragePercent ?? 0) - Math.abs(a.changeVsAveragePercent ?? 0),
+      )
+      .slice(0, 10);
+
+    return { asOf: input.asOf, currency: input.currency, month: currentMonth, items };
+  }
+
+  /**
+   * What changed between the last two completed months (§46, §47): income,
+   * expenses, and the category/merchant drivers behind the difference.
+   */
+  async periodChangeDrivers(userId: string, householdId: string) {
+    const input = await this.input.build(userId, householdId);
+    const db = getDb();
+    const after = lastCompletedMonth(input.asOf);
+    const before = monthBefore(after);
+
+    const loadPeriod = async (month: string) => {
+      const rows = await db
+        .select({
+          amountMinor: sql<string>`sum(${sourceTransactions.amountMinor})::text`,
+          isInflow: sql<boolean>`${sourceTransactions.amountMinor} >= 0`,
+          categoryKey: categories.key,
+          merchantName: merchants.canonicalName,
+        })
+        .from(sourceTransactions)
+        .leftJoin(categories, eq(sourceTransactions.categoryId, categories.id))
+        .leftJoin(merchants, eq(sourceTransactions.merchantId, merchants.id))
+        .where(
+          and(
+            eq(sourceTransactions.householdId, householdId),
+            sql`to_char(${sourceTransactions.bookingDate}, 'YYYY-MM') = ${month}`,
+          ),
+        )
+        .groupBy(
+          sql`${sourceTransactions.amountMinor} >= 0`,
+          categories.key,
+          merchants.canonicalName,
+        );
+
+      let incomeMinor = 0n;
+      let expenseMinor = 0n;
+      const byCategory = new Map<string, bigint>();
+      const byMerchant = new Map<string, bigint>();
+      for (const row of rows) {
+        const amount = BigInt(row.amountMinor);
+        if (row.isInflow) {
+          incomeMinor += amount;
+          continue;
+        }
+        const magnitude = -amount;
+        expenseMinor += magnitude;
+        const categoryKey = row.categoryKey ?? "uncategorised";
+        byCategory.set(categoryKey, (byCategory.get(categoryKey) ?? 0n) + magnitude);
+        if (row.merchantName) {
+          byMerchant.set(
+            row.merchantName,
+            (byMerchant.get(row.merchantName) ?? 0n) + magnitude,
+          );
+        }
+      }
+      return { incomeMinor, expenseMinor, byCategory, byMerchant };
+    };
+
+    const [beforePeriod, afterPeriod] = await Promise.all([
+      loadPeriod(before),
+      loadPeriod(after),
+    ]);
+    const comparison = comparePeriodDrivers({
+      before: beforePeriod,
+      after: afterPeriod,
+    });
+
+    return {
+      asOf: input.asOf,
+      currency: input.currency,
+      beforeMonth: before,
+      afterMonth: after,
+      incomeChangeMinor: comparison.incomeChangeMinor.toString(),
+      expenseChangeMinor: comparison.expenseChangeMinor.toString(),
+      savingsChangeMinor: comparison.savingsChangeMinor.toString(),
+      categoryDrivers: comparison.categoryDrivers.slice(0, 8).map(serializeDriver),
+      merchantDrivers: comparison.merchantDrivers.slice(0, 8).map(serializeDriver),
+    };
+  }
+}
+
+function serializeDriver(driver: {
+  key: string;
+  changeMinor: bigint;
+  contributionBps: number | null;
+}) {
+  return {
+    key: driver.key,
+    changeMinor: driver.changeMinor.toString(),
+    contributionBps: driver.contributionBps,
+  };
+}
+
+/** The last completed month before asOf, `YYYY-MM`. */
+function lastCompletedMonth(asOf: string): string {
+  return monthBefore(asOf.slice(0, 7));
+}
+
+function monthBefore(month: string): string {
+  const [year, m] = month.split("-").map(Number);
+  const index = year! * 12 + (m! - 1) - 1;
+  return `${Math.floor(index / 12)}-${String((index % 12) + 1).padStart(2, "0")}`;
 }

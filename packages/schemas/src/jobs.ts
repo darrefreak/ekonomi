@@ -181,6 +181,20 @@ export const detectMissingExpectedJobPayloadSchema = z
   })
   .strict();
 
+/**
+ * AI classification of unresolved, eligible clusters only (§22).
+ *
+ * The job carries no cluster text — it re-derives eligibility from the
+ * database on every run so a stale payload can never send resolved clusters.
+ */
+export const aiClassifyTransactionClustersJobPayloadSchema = z
+  .object({
+    type: z.literal("AI_CLASSIFY_TRANSACTION_CLUSTERS"),
+    householdId: uuidSchema,
+    ...jobCommonFields,
+  })
+  .strict();
+
 export const jobPayloadSchema = z.discriminatedUnion("type", [
   healthCheckJobPayloadSchema,
   reconcileAccountBalancesJobPayloadSchema,
@@ -201,6 +215,7 @@ export const jobPayloadSchema = z.discriminatedUnion("type", [
   generateExpectedTransactionsJobPayloadSchema,
   matchExpectedTransactionsJobPayloadSchema,
   detectMissingExpectedJobPayloadSchema,
+  aiClassifyTransactionClustersJobPayloadSchema,
 ]);
 
 export type JobPayload = z.infer<typeof jobPayloadSchema>;

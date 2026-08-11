@@ -12,6 +12,7 @@ import {
   sourceTransactions,
 } from "../db/schema-economic";
 import { requireTestDatabase } from "../testing/require-test-database";
+import { AiClassificationService } from "../ai/classification/ai-classification.service";
 import { HouseholdAccessService } from "../households/household-access.service";
 import { ClassificationReviewService } from "./classification-review.service";
 import { TransactionClusteringService } from "./transaction-clustering.service";
@@ -33,7 +34,7 @@ const suffix = () => `${Date.now().toString(36)}-${Math.random().toString(36).sl
 
 const access = new HouseholdAccessService();
 const clustering = new TransactionClusteringService(access);
-const review = new ClassificationReviewService(access);
+const review = new ClassificationReviewService(access, new AiClassificationService(access));
 
 async function fixture() {
   const db = getDb();

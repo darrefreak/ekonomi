@@ -1,5 +1,6 @@
 import {
   bigint,
+  boolean,
   jsonb,
   numeric,
   pgTable,
@@ -50,6 +51,14 @@ export const householdSettings = pgTable("household_settings", {
     .notNull()
     .default(0n),
   currency: varchar("currency", { length: 3 }).notNull().default("SEK"),
+  /**
+   * Household opt-in for external AI transaction analysis (§21). Default off:
+   * no cluster text leaves the system unless a person turned this on *and*
+   * the environment allows it.
+   */
+  aiTransactionAnalysisEnabled: boolean("ai_transaction_analysis_enabled")
+    .notNull()
+    .default(false),
   updatedAt: timestamp("updated_at", { withTimezone: true })
     .defaultNow()
     .notNull(),

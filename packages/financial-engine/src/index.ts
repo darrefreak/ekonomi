@@ -30,3 +30,6 @@ export * from "./intelligence/merchant-rules";
 export * from "./intelligence/recurring";
 export * from "./intelligence/baseline";
 export * from "./intelligence/liquidity";
+
+// Financial Brief V2 — findings, ranking, templates, numeric grounding.
+export * from "./brief/findings";

@@ -6,11 +6,13 @@ import {
 } from "@nestjs/common";
 import { and, desc, eq, inArray, isNull, sql } from "drizzle-orm";
 import type {
+  AiTransactionType,
   ClusterReviewItem,
   ClusterReviewResponse,
   ResolveClusterInput,
   ResolveClusterResponse,
 } from "@ffos/schemas";
+import { AiClassificationService } from "../ai/classification/ai-classification.service";
 import { getDb } from "../db/client";
 import { auditLogs, households } from "../db/schema";
 import {
@@ -40,6 +42,8 @@ import { HouseholdAccessService } from "../households/household-access.service";
 export class ClassificationReviewService {
   constructor(
     @Inject(HouseholdAccessService) private readonly access: HouseholdAccessService,
+    @Inject(AiClassificationService)
+    private readonly aiClassification: AiClassificationService,
   ) {}
 
   /** The open questions: unresolved clusters, largest first. */
@@ -92,9 +96,23 @@ export class ClassificationReviewService {
       totals.map((row) => [`${row.signature}|${row.isInflow ? "INFLOW" : "OUTFLOW"}`, row.total]),
     );
 
-    const categoryIds = rows
-      .map((row) => row.categoryId)
-      .filter((id): id is string => id !== null);
+    /*
+     * AI suggestions for these clusters (§24): a SUGGESTED result attaches to
+     * the review card so a person sees "Vi tror att detta är …" with the AI
+     * label — never applied silently, always theirs to accept or correct.
+     */
+    const aiSuggestions = await this.aiClassification.suggestionsBySignature(
+      householdId,
+      signatures,
+    );
+
+    const aiCategoryIds = [...aiSuggestions.values()]
+      .map((row) => (row.result as { categoryId?: string | null } | null)?.categoryId)
+      .filter((id): id is string => !!id);
+    const categoryIds = [
+      ...rows.map((row) => row.categoryId).filter((id): id is string => id !== null),
+      ...aiCategoryIds,
+    ];
     const categoryRows = categoryIds.length
       ? await db
           .select({ id: categories.id, name: categories.name })
@@ -107,6 +125,35 @@ export class ClassificationReviewService {
       const confidence = row.merchantConfidence
         ? Number(row.merchantConfidence)
         : null;
+      const aiRow = aiSuggestions.get(`${row.signature}|${row.direction}`);
+      const aiResult = aiRow?.result as
+        | {
+            merchantCandidate?: string | null;
+            merchantConfidence?: number;
+            categoryId?: string | null;
+            transactionType?: string;
+            shortExplanation?: string;
+          }
+        | null
+        | undefined;
+      const aiSuggestion =
+        aiRow && aiResult
+          ? {
+              merchantCandidate: aiResult.merchantCandidate ?? null,
+              merchantConfidence: aiResult.merchantConfidence ?? null,
+              categoryId: aiResult.categoryId ?? null,
+              categoryName: aiResult.categoryId
+                ? (categoryNameById.get(aiResult.categoryId) ?? null)
+                : null,
+              transactionType: (aiResult.transactionType ?? null) as
+                | AiTransactionType
+                | null,
+              confidence: Number(aiRow.combinedConfidence ?? 0),
+              shortExplanation: aiResult.shortExplanation ?? "",
+              source: "AI_SUGGESTION" as const,
+              createdAt: aiRow.updatedAt.toISOString(),
+            }
+          : null;
       const reviewType = !row.merchantCandidate
         ? ("UNKNOWN_MERCHANT" as const)
         : row.categoryId
@@ -144,6 +191,7 @@ export class ClassificationReviewService {
         confidence,
         classificationSource: row.classificationSource,
         explanation,
+        aiSuggestion,
       };
     });
 
