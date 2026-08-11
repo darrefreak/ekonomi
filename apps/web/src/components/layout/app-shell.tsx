@@ -4,6 +4,7 @@ import type { ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { logout } from "@/lib/session";
+import { AdvisorPanel } from "../ai/advisor-panel";
 import { CommandPalette, SearchTriggerButton } from "../search/command-palette";
 import { DesktopSidebar } from "./desktop-sidebar";
 import { MobileNavigation } from "./mobile-navigation";
@@ -55,6 +56,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         <MobileNavigation />
       </div>
       <CommandPalette />
+      <AdvisorPanel />
     </div>
   );
 }

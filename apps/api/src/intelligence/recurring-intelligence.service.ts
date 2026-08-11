@@ -1064,6 +1064,10 @@ export class RecurringIntelligenceService {
         });
       }
     }
+    // Biggest annual impact first: the ranking is the product feature.
+    priceInsightItems.sort((a, b) =>
+      Number(BigInt(b.annualImpactMinor) - BigInt(a.annualImpactMinor)),
+    );
 
     /*
      * Stream-level review (§35): uncertain recurrence is a question, not a

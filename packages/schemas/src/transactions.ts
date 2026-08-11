@@ -84,6 +84,12 @@ export const listTransactionsQuerySchema = z
     to: isoDateSchema.optional(),
     includeExcluded: z.enum(["true", "false", "1", "0"]).optional(),
     vehicleId: uuidSchema.optional(),
+    categoryId: uuidSchema.optional(),
+    merchantId: uuidSchema.optional(),
+    direction: z.enum(["inflow", "outflow"]).optional(),
+    /** Absolute amount bounds in minor units. */
+    minAmountMinor: z.string().regex(/^\d+$/).optional(),
+    maxAmountMinor: z.string().regex(/^\d+$/).optional(),
     sort: z
       .enum(["date_desc", "date_asc", "amount_desc", "amount_asc"])
       .optional(),

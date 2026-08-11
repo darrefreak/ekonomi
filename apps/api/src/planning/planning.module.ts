@@ -1,8 +1,11 @@
 import { Module } from "@nestjs/common";
 import { AuthModule } from "../auth/auth.module";
 import { HouseholdsModule } from "../households/households.module";
+import { IntelligenceModule } from "../intelligence/intelligence.module";
 import { BudgetController } from "./budget.controller";
 import { BudgetService } from "./budget.service";
+import { SmartBudgetController } from "./smart-budget.controller";
+import { SmartBudgetService } from "./smart-budget.service";
 import { ContractsController } from "./contracts.controller";
 import { ContractsService } from "./contracts.service";
 import { GoalsController } from "./goals.controller";
@@ -14,9 +17,10 @@ import { SubscriptionsController } from "./subscriptions.controller";
 import { SubscriptionsService } from "./subscriptions.service";
 
 @Module({
-  imports: [AuthModule, HouseholdsModule],
+  imports: [AuthModule, HouseholdsModule, IntelligenceModule],
   controllers: [
     BudgetController,
+    SmartBudgetController,
     SubscriptionsController,
     ContractsController,
     GoalsController,
@@ -25,6 +29,7 @@ import { SubscriptionsService } from "./subscriptions.service";
   providers: [
     PlanningMetricsService,
     BudgetService,
+    SmartBudgetService,
     SubscriptionsService,
     ContractsService,
     GoalsService,

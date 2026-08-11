@@ -108,9 +108,10 @@ test.describe("navigation route contract", () => {
     expect(response?.status()).toBe(404);
     await expectNotFoundPage(page, true);
 
-    // And the historical false positive: /money never existed.
-    const money = await page.goto("/money");
-    expect(money?.status()).toBe(404);
+    // The historical false positive was `/money`, which has since become a
+    // real hub page — so the calibration probe is a route that stays fictional.
+    const probe = await page.goto("/money-does-not-exist");
+    expect(probe?.status()).toBe(404);
     await expectNotFoundPage(page, true);
   });
 });

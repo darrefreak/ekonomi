@@ -112,6 +112,11 @@ export class TransactionsController {
       to?: string;
       includeExcluded?: string;
       vehicleId?: string;
+      categoryId?: string;
+      merchantId?: string;
+      direction?: "inflow" | "outflow";
+      minAmountMinor?: string;
+      maxAmountMinor?: string;
     },
   ) {
     const limitRaw = query.limit ? Number(query.limit) : 50;
@@ -127,6 +132,11 @@ export class TransactionsController {
       includeExcluded:
         query.includeExcluded === "true" || query.includeExcluded === "1",
       vehicleId: query.vehicleId,
+      categoryId: query.categoryId,
+      merchantId: query.merchantId,
+      direction: query.direction,
+      minAmountMinor: query.minAmountMinor,
+      maxAmountMinor: query.maxAmountMinor,
     });
   }
 

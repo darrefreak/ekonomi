@@ -10,6 +10,9 @@ test.describe("P1-U3 product polish", () => {
     await expect(page.getByRole("heading", { name: /budget/i })).toBeVisible({
       timeout: 20_000,
     });
+    // The category-level budget lives behind the "Detaljerad" mode since
+    // Smart Budget became the default experience.
+    await page.getByRole("button", { name: /^Detaljerad$/ }).click();
 
     const firstLine = page.locator("li").filter({ has: page.getByText(/planerat \(kr\)/i) }).first();
     await expect(firstLine).toBeVisible({ timeout: 15_000 });
@@ -24,6 +27,7 @@ test.describe("P1-U3 product polish", () => {
     await expect(page.getByRole("heading", { name: /budget/i })).toBeVisible({
       timeout: 20_000,
     });
+    await page.getByRole("button", { name: /^Detaljerad$/ }).click();
     const reloaded = page
       .locator("li")
       .filter({ has: page.getByText(/planerat \(kr\)/i) })

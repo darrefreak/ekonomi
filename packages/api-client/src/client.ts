@@ -75,6 +75,20 @@ import {
   opportunitiesResponseSchema,
   monthlyReportSchema,
   notificationsResponseSchema,
+  calendarResponseSchema,
+  smartBudgetResponseSchema,
+  adoptSmartBudgetSchema,
+  whatChangedResponseSchema,
+  reportExploreResponseSchema,
+  weeklyReviewSchema,
+  type CalendarResponse,
+  type SmartBudgetResponse,
+  type AdoptSmartBudgetInput,
+  type WhatChangedMode,
+  type WhatChangedResponse,
+  type ReportExploreQuery,
+  type ReportExploreResponse,
+  type WeeklyReview,
   resolveReviewSchema,
   reviewResponseSchema,
   clusterReviewResponseSchema,
@@ -567,6 +581,11 @@ export function createApiClient(options: ApiClientOptions) {
         from?: string;
         to?: string;
         includeExcluded?: boolean;
+        categoryId?: string;
+        merchantId?: string;
+        direction?: "inflow" | "outflow";
+        minAmountMinor?: string;
+        maxAmountMinor?: string;
       },
     ) => {
       const params = new URLSearchParams({
@@ -578,6 +597,11 @@ export function createApiClient(options: ApiClientOptions) {
       if (opts?.from) params.set("from", opts.from);
       if (opts?.to) params.set("to", opts.to);
       if (opts?.includeExcluded) params.set("includeExcluded", "true");
+      if (opts?.categoryId) params.set("categoryId", opts.categoryId);
+      if (opts?.merchantId) params.set("merchantId", opts.merchantId);
+      if (opts?.direction) params.set("direction", opts.direction);
+      if (opts?.minAmountMinor) params.set("minAmountMinor", opts.minAmountMinor);
+      if (opts?.maxAmountMinor) params.set("maxAmountMinor", opts.maxAmountMinor);
       const data = await request<unknown>(`/api/v1/transactions?${params}`);
       return transactionsResponseSchema.parse(data) as TransactionsResponse;
     },
@@ -918,6 +942,62 @@ export function createApiClient(options: ApiClientOptions) {
         { method: "POST" },
       );
       return notificationsResponseSchema.parse(data) as NotificationsResponse;
+    },
+    getCalendar: async (householdId: string, days?: number) => {
+      const qs = days != null ? `&days=${days}` : "";
+      const data = await request<unknown>(
+        `/api/v1/calendar?householdId=${encodeURIComponent(householdId)}${qs}`,
+      );
+      return calendarResponseSchema.parse(data) as CalendarResponse;
+    },
+    getSmartBudget: async (householdId: string, month?: string) => {
+      const qs = month ? `&month=${encodeURIComponent(month)}` : "";
+      const data = await request<unknown>(
+        `/api/v1/smart-budget?householdId=${encodeURIComponent(householdId)}${qs}`,
+      );
+      return smartBudgetResponseSchema.parse(data) as SmartBudgetResponse;
+    },
+    adoptSmartBudget: async (input: AdoptSmartBudgetInput) => {
+      const body = adoptSmartBudgetSchema.parse(input);
+      const data = await request<unknown>(`/api/v1/smart-budget`, {
+        method: "POST",
+        body: JSON.stringify(body),
+      });
+      return smartBudgetResponseSchema.parse(data) as SmartBudgetResponse;
+    },
+    getWhatChanged: async (householdId: string, mode?: WhatChangedMode) => {
+      const qs = mode ? `&mode=${encodeURIComponent(mode)}` : "";
+      const data = await request<unknown>(
+        `/api/v1/intelligence/what-changed?householdId=${encodeURIComponent(householdId)}${qs}`,
+      );
+      return whatChangedResponseSchema.parse(data) as WhatChangedResponse;
+    },
+    getReportExplore: async (query: {
+      householdId: string;
+      measure?: ReportExploreQuery["measure"];
+      dimension?: ReportExploreQuery["dimension"];
+      from?: string;
+      to?: string;
+      categoryId?: string;
+      merchantId?: string;
+      accountId?: string;
+    }) => {
+      const params = new URLSearchParams({ householdId: query.householdId });
+      if (query.measure) params.set("measure", query.measure);
+      if (query.dimension) params.set("dimension", query.dimension);
+      if (query.from) params.set("from", query.from);
+      if (query.to) params.set("to", query.to);
+      if (query.categoryId) params.set("categoryId", query.categoryId);
+      if (query.merchantId) params.set("merchantId", query.merchantId);
+      if (query.accountId) params.set("accountId", query.accountId);
+      const data = await request<unknown>(`/api/v1/reports/explore?${params}`);
+      return reportExploreResponseSchema.parse(data) as ReportExploreResponse;
+    },
+    getWeeklyReview: async (householdId: string) => {
+      const data = await request<unknown>(
+        `/api/v1/reports/weekly?householdId=${encodeURIComponent(householdId)}`,
+      );
+      return weeklyReviewSchema.parse(data) as WeeklyReview;
     },
     getMonthlyReport: async (householdId: string, period?: string) => {
       const qs = period

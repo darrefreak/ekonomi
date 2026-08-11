@@ -128,7 +128,7 @@ export class AdvisorService {
   async chat(userId: string, input: AdvisorChatInput) {
     await this.requireAi();
     const ctx = await this.toolContext(userId, input.householdId);
-    const selected = selectToolsForMessage(input.message);
+    const selected = selectToolsForMessage(input.message, input.context);
     const tools = await runAdvisorTools(selected, ctx);
     const answered = answerFromTools(input.message, tools, ctx.currency);
     return {

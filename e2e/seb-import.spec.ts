@@ -75,6 +75,10 @@ async function ensureImportableAccount(page: Page): Promise<string> {
   return name;
 }
 
+// Importing now flows into the real analysis pipeline, which needs more than
+// the default 60 s budget on a household that accumulates data across runs.
+test.describe.configure({ timeout: 180_000 });
+
 test.describe("SEB statement import", () => {
   test("a statement is previewed before anything is booked, then imported", async ({ page }) => {
     const accountName = await ensureImportableAccount(page);
@@ -101,11 +105,20 @@ test.describe("SEB statement import", () => {
     await expect(confirm).toBeVisible();
 
     await confirm.click();
-    await expect(page.getByText(/importen är klar/i)).toBeVisible({ timeout: 120_000 });
-    await expect(page.getByText(/5 transaktioner bokförda/i)).toBeVisible();
+
+    // A successful import flows straight into the analysis experience: the
+    // pipeline runs for real and ends in a summary, not a generic done screen.
+    await expect(page.getByTestId("analysis-complete")).toBeVisible({
+      timeout: 120_000,
+    });
+    await expect(page.getByText(/din ekonomi är analyserad/i)).toBeVisible();
+    await expect(page.getByText(/transaktioner analyserade/i)).toBeVisible();
+    await expect(
+      page.getByRole("link", { name: /gå till översikten/i }),
+    ).toBeVisible();
 
     // The transactions are visible without a manual reload.
-    await page.getByRole("link", { name: /visa transaktioner/i }).click();
+    await page.goto("/transactions");
     await expect(page).toHaveURL(/\/transactions/);
     // Searched rather than scrolled: the list shows the most recent 80 and this
     // household accumulates data across runs, so searching is what makes the
@@ -125,7 +138,9 @@ test.describe("SEB statement import", () => {
     await page.getByLabel(/konto att importera till/i).selectOption({ label: accountName });
     await page.getByRole("button", { name: /granska innehållet/i }).click();
     await page.getByRole("button", { name: /^importera 5 transaktioner$/i }).click();
-    await expect(page.getByText(/importen är klar/i)).toBeVisible({ timeout: 120_000 });
+    await expect(page.getByTestId("analysis-complete")).toBeVisible({
+      timeout: 120_000,
+    });
 
     // Second pass, same bytes.
     await page.getByRole("button", { name: /importera en till fil/i }).click();
@@ -165,7 +180,9 @@ test.describe("SEB statement import", () => {
     await page.getByLabel(/konto att importera till/i).selectOption({ label: accountName });
     await page.getByRole("button", { name: /granska innehållet/i }).click();
     await page.getByRole("button", { name: /^importera 5 transaktioner$/i }).click();
-    await expect(page.getByText(/importen är klar/i)).toBeVisible({ timeout: 120_000 });
+    await expect(page.getByTestId("analysis-complete")).toBeVisible({
+      timeout: 120_000,
+    });
 
     await page.reload();
     await expect(page.getByText(/tidigare importer/i)).toBeVisible();
@@ -211,6 +228,8 @@ test.describe("SEB import on a phone", () => {
     expect(box!.height).toBeGreaterThanOrEqual(44);
 
     await confirm.click();
-    await expect(page.getByText(/importen är klar/i)).toBeVisible({ timeout: 120_000 });
+    await expect(page.getByTestId("analysis-complete")).toBeVisible({
+      timeout: 120_000,
+    });
   });
 });

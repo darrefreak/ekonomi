@@ -42,10 +42,39 @@ export const advisorBriefResponseSchema = z.object({
 });
 export type AdvisorBriefResponse = z.infer<typeof advisorBriefResponseSchema>;
 
+/**
+ * Safe structured page context for the contextual advisor.
+ *
+ * Only identifiers and short labels — never raw financial values. The advisor
+ * still fetches every number through its deterministic tools; the context only
+ * tells it what the user is looking at so the answer can be relevant.
+ */
+export const advisorPageContextSchema = z
+  .object({
+    page: z.string().max(80),
+    entityType: z
+      .enum([
+        "category",
+        "merchant",
+        "subscription",
+        "recurring",
+        "vehicle",
+        "account",
+        "goal",
+        "budget_group",
+      ])
+      .optional(),
+    entityId: z.string().max(80).optional(),
+    label: z.string().max(120).optional(),
+  })
+  .strict();
+export type AdvisorPageContext = z.infer<typeof advisorPageContextSchema>;
+
 export const advisorChatRequestSchema = z
   .object({
     householdId: z.string().uuid(),
     message: z.string().min(1).max(2000),
+    context: advisorPageContextSchema.optional(),
   })
   .strict();
 export type AdvisorChatInput = z.input<typeof advisorChatRequestSchema>;

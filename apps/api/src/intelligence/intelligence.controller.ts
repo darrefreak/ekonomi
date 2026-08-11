@@ -17,6 +17,8 @@ import {
   resolveClusterSchema,
   updateClassificationRuleSchema,
   verifyRecurringStreamSchema,
+  whatChangedQuerySchema,
+  type WhatChangedMode,
 } from "@ffos/schemas";
 import { AiClassificationService } from "../ai/classification/ai-classification.service";
 import { AuthGuard } from "../auth/auth.guard";
@@ -27,6 +29,7 @@ import { ClassificationReviewService } from "./classification-review.service";
 import { FinancialIntelligenceService } from "./financial-intelligence.service";
 import { RecurringIntelligenceService } from "./recurring-intelligence.service";
 import { TransactionClusteringService } from "./transaction-clustering.service";
+import { WhatChangedService } from "./what-changed.service";
 
 /**
  * Read-only intelligence surfaces.
@@ -50,6 +53,8 @@ export class IntelligenceController {
     private readonly recurring: RecurringIntelligenceService,
     @Inject(AiClassificationService)
     private readonly aiClassification: AiClassificationService,
+    @Inject(WhatChangedService)
+    private readonly whatChangedService: WhatChangedService,
   ) {}
 
   /**
@@ -244,5 +249,14 @@ export class IntelligenceController {
     query: { householdId: string },
   ) {
     return this.intelligence.savingsTarget(user.userId, query.householdId);
+  }
+
+  @Get("what-changed")
+  whatChanged(
+    @CurrentUser() user: AuthenticatedUser,
+    @Query(new ZodValidationPipe(whatChangedQuerySchema))
+    query: { householdId: string; mode: WhatChangedMode },
+  ) {
+    return this.whatChangedService.get(user.userId, query.householdId, query.mode);
   }
 }

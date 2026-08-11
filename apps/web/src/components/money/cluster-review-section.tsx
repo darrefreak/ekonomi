@@ -36,6 +36,10 @@ function formatKr(minor: string | null, currency: string): string | null {
 export function ClusterReviewSection({ householdId }: { householdId: string }) {
   const queryClient = useQueryClient();
   const [error, setError] = useState<string | null>(null);
+  // Whether the user resolved anything in this visit — makes the difference
+  // between "nothing to review" (render nothing) and "you just finished" (a
+  // deserved done state).
+  const [resolvedThisSession, setResolvedThisSession] = useState(0);
 
   const reviewQuery = useQuery({
     queryKey: queryKeys.intelligence.review(householdId),
@@ -50,6 +54,7 @@ export function ClusterReviewSection({ householdId }: { householdId: string }) {
     mutationFn: (input: ResolveClusterInput) => api.resolveCluster(input),
     onSuccess: async () => {
       setError(null);
+      setResolvedThisSession((count) => count + 1);
       // A correction moves transactions, merchants and every downstream figure.
       await Promise.all(
         [
@@ -91,7 +96,35 @@ export function ClusterReviewSection({ householdId }: { householdId: string }) {
       </section>
     );
   }
-  if (!data || data.total === 0) return null;
+  if (!data || data.total === 0) {
+    if (resolvedThisSession > 0) {
+      return (
+        <section
+          className="rounded-[16px] bg-surface-elevated p-5"
+          data-testid="review-done"
+        >
+          <h2 className="font-[family-name:var(--ffos-font-display)] text-2xl tracking-tight">
+            Klart.
+          </h2>
+          <p className="mt-2 text-sm text-text-secondary">
+            Vi kommer ihåg dina val inför framtida importer.
+          </p>
+        </section>
+      );
+    }
+    return null;
+  }
+
+  // Biggest financial impact first: the pattern worth 40 000 kr is a better
+  // use of the first ten seconds than the one worth 90 kr.
+  const items = [...data.items].sort((a, b) => {
+    const abs = (minor: string | null) => {
+      if (minor === null) return 0n;
+      const value = BigInt(minor);
+      return value < 0n ? -value : value;
+    };
+    return Number(abs(b.totalAmountMinor) - abs(a.totalAmountMinor));
+  });
 
   return (
     <section aria-labelledby="cluster-review-heading" className="space-y-3">
@@ -99,11 +132,11 @@ export function ClusterReviewSection({ householdId }: { householdId: string }) {
         <h2 id="cluster-review-heading" className="font-medium">
           Mönster att granska
         </h2>
-        <p className="mt-1 text-sm text-text-secondary">
-          {data.total === 1
-            ? "1 återkommande mönster behöver din hjälp."
-            : `${data.total} återkommande mönster behöver din hjälp.`}{" "}
-          Ett svar gäller alla transaktioner i mönstret.
+        <p className="mt-1 text-sm text-text-secondary" data-testid="review-progress">
+          <span className="font-medium tabular-nums text-text-primary">
+            {data.total === 1 ? "1 sak kvar" : `${data.total} saker kvar`}
+          </span>
+          {" · "}Ett svar gäller alla transaktioner i mönstret.
         </p>
       </div>
       {error ? (
@@ -112,7 +145,7 @@ export function ClusterReviewSection({ householdId }: { householdId: string }) {
         </p>
       ) : null}
       <ul className="space-y-3">
-        {data.items.map((item) => (
+        {items.map((item) => (
           <ClusterReviewCard
             key={item.id}
             item={item}

@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { desktopNav } from "./nav-config";
 
-const mobilePrimary = new Set(["/", "/transactions", "/forecast", "/insights", "/more"]);
+const mobilePrimary = new Set(["/", "/money", "/plan", "/insights", "/more"]);
 
 export function MorePage() {
   const items = desktopNav.filter((item) => !mobilePrimary.has(item.href));

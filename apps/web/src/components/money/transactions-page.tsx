@@ -12,21 +12,25 @@ import { ErrorState } from "../feedback/error-state";
 import { LoadingState } from "../feedback/loading-state";
 import { NewTransactionForm } from "./new-transaction-form";
 
-function readQueryAccountId() {
+function readQueryParam(name: string) {
   if (typeof window === "undefined") return "";
-  return new URLSearchParams(window.location.search).get("accountId") ?? "";
+  return new URLSearchParams(window.location.search).get(name) ?? "";
 }
 
 export function TransactionsPage() {
   const householdId = useHouseholdId();
   const [q, setQ] = useState("");
-  const [accountId, setAccountId] = useState(readQueryAccountId());
-  const [from, setFrom] = useState("");
-  const [to, setTo] = useState("");
+  const [accountId, setAccountId] = useState(() => readQueryParam("accountId"));
+  const [from, setFrom] = useState(() => readQueryParam("from"));
+  const [to, setTo] = useState(() => readQueryParam("to"));
+  // Drill-down filters arrive via URL from reports/insights; they are shown as
+  // removable chips rather than duplicated as form fields.
+  const [categoryId, setCategoryId] = useState(() => readQueryParam("categoryId"));
+  const [merchantId, setMerchantId] = useState(() => readQueryParam("merchantId"));
   const [includeExcluded, setIncludeExcluded] = useState(false);
   const [showNew, setShowNew] = useState(false);
 
-  const filters = { q, accountId, from, to, includeExcluded };
+  const filters = { q, accountId, from, to, categoryId, merchantId, includeExcluded };
 
   const transactionsQuery = useQuery({
     queryKey: householdId
@@ -39,6 +43,8 @@ export function TransactionsPage() {
         accountId: accountId || undefined,
         from: from || undefined,
         to: to || undefined,
+        categoryId: categoryId || undefined,
+        merchantId: merchantId || undefined,
         includeExcluded,
       }),
     enabled: Boolean(householdId),
@@ -104,6 +110,34 @@ export function TransactionsPage() {
           categories={categories}
           onDone={() => setShowNew(false)}
         />
+      ) : null}
+
+      {categoryId || merchantId ? (
+        <div className="flex flex-wrap items-center gap-2" data-testid="drill-filters">
+          <span className="text-xs text-text-muted">Filtrerat på</span>
+          {categoryId ? (
+            <button
+              type="button"
+              onClick={() => setCategoryId("")}
+              className="inline-flex min-h-9 items-center gap-1 rounded-full bg-accent/10 px-3 text-sm text-accent"
+            >
+              {categories.find((c) => c.id === categoryId)?.name ?? "Kategori"}
+              <span aria-hidden>×</span>
+              <span className="sr-only">Ta bort kategorifilter</span>
+            </button>
+          ) : null}
+          {merchantId ? (
+            <button
+              type="button"
+              onClick={() => setMerchantId("")}
+              className="inline-flex min-h-9 items-center gap-1 rounded-full bg-accent/10 px-3 text-sm text-accent"
+            >
+              Mottagare
+              <span aria-hidden>×</span>
+              <span className="sr-only">Ta bort mottagarfilter</span>
+            </button>
+          ) : null}
+        </div>
       ) : null}
 
       <form

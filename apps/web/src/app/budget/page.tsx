@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
-import { BudgetPage } from "@/components/money/budget-page";
+import { SmartBudgetPage } from "@/components/plan/smart-budget-page";
 
 export const metadata: Metadata = {
-  title: "Budget",
+  title: "Smart budget",
 };
 
 export default function Page() {
-  return <BudgetPage />;
+  return <SmartBudgetPage />;
 }

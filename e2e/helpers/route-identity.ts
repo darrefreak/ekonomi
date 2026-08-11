@@ -56,7 +56,35 @@ export const ROUTE_IDENTITY: Record<string, RouteIdentity> = {
     control: (page) => page.getByRole("button", { name: /skapa konto/i }),
   },
   "/cashflow": { title: "Kassaflöde", heading: /^Kassaflöde$/ },
-  "/budget": { title: "Budget", heading: /^Budget$/ },
+  "/budget": {
+    title: "Smart budget",
+    heading: /^Budget$/,
+    // Only the budget page offers the smart/detailed mode switch.
+    control: (page) => page.getByRole("button", { name: /^Smart budget$/ }),
+  },
+  "/money": {
+    title: "Pengar",
+    heading: /^Pengar$/,
+    control: (page) => page.getByRole("navigation", { name: /^Pengar$/ }),
+  },
+  "/plan": {
+    title: "Planera",
+    heading: /^Planera$/,
+    control: (page) => page.getByRole("navigation", { name: /^Planera$/ }),
+  },
+  "/calendar": {
+    title: "Finansiell kalender",
+    heading: /^Finansiell kalender$/,
+    // Only the calendar offers the horizon toggle.
+    control: (page) => page.getByRole("group", { name: /tidshorisont/i }),
+  },
+  "/what-changed": {
+    title: "Vad har förändrats?",
+    heading: /^Vad har förändrats\?$/,
+    control: (page) => page.getByRole("group", { name: /^Jämförelse$/ }),
+  },
+  "/savings": { title: "Sparande", heading: /^Sparande$/ },
+  "/weekly": { title: "Veckan", heading: /^Veckan$/ },
   "/net-worth": { title: "Nettoförmögenhet", heading: /^Nettoförmögenhet$/ },
   "/investments": { title: "Investeringar", heading: /^Investeringar$/ },
   "/assets": { title: "Tillgångar", heading: /^Tillgångar$/ },

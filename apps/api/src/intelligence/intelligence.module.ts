@@ -10,6 +10,7 @@ import { FinancialIntelligenceInputService } from "./financial-intelligence-inpu
 import { FinancialIntelligenceService } from "./financial-intelligence.service";
 import { RecurringIntelligenceService } from "./recurring-intelligence.service";
 import { TransactionClusteringService } from "./transaction-clustering.service";
+import { WhatChangedService } from "./what-changed.service";
 import { IntelligenceController } from "./intelligence.controller";
 
 /**
@@ -26,6 +27,7 @@ import { IntelligenceController } from "./intelligence.controller";
     FinancialIntelligenceService,
     RecurringIntelligenceService,
     TransactionClusteringService,
+    WhatChangedService,
   ],
   exports: [
     AiClassificationService,
@@ -35,6 +37,7 @@ import { IntelligenceController } from "./intelligence.controller";
     FinancialIntelligenceService,
     RecurringIntelligenceService,
     TransactionClusteringService,
+    WhatChangedService,
   ],
 })
 export class IntelligenceModule {}
