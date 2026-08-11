@@ -258,6 +258,139 @@ check(
     f"{opaque_distinct} distinct opaque signatures covering {opaque_rows} transactions",
 )
 
+# ---------------------------------------------- Needs Review + learned rules
+#
+# The §16 flow, through the product API only: an unresolved cluster is one
+# review item; the user answers it once with "remember for the future"; the
+# answer becomes a rule; a re-run and a NEW import both resolve the pattern via
+# LEARNED_RULE, and the question is never asked again. No SQL writes anywhere.
+
+status, queue = call("GET", "/intelligence/review", token, query={"householdId": household})
+if status >= 400:
+    raise SystemExit(f"review list failed: {status} {json.dumps(queue)[:400]}")
+FACTS["needsReviewBefore"] = queue["total"]
+unknown_before = coverage["unknown"]
+check(
+    "FI-030", "Needs Review is one item per unresolved cluster, not one per transaction",
+    0 < queue["total"] < unknown_before,
+    f"{queue['total']} review items for {unknown_before} unknown transactions",
+)
+
+item = next(i for i in queue["items"] if "HYRA" in i["representativeDescription"])
+check(
+    "FI-031", "a review item carries what a person needs to answer it",
+    item["transactionCount"] > 0 and item["firstSeen"] and item["lastSeen"]
+    and item["medianAmountMinor"] is not None and len(item["explanation"]) > 10
+    and item["reviewType"] in {"UNKNOWN_MERCHANT", "UNKNOWN_CATEGORY", "LOW_CLASSIFICATION_CONFIDENCE"},
+    f"{item['transactionCount']} tx, {item['firstSeen']}→{item['lastSeen']}, "
+    f"median {int(item['medianAmountMinor']) / 100:.0f} kr, type {item['reviewType']}",
+)
+
+status, resolved = call(
+    "POST", "/intelligence/clusters/resolve", token,
+    {
+        "householdId": household, "clusterId": item["id"], "action": "correct",
+        "merchantName": "Hyresvärden AB", "rememberRule": True,
+    },
+)
+if status >= 400:
+    raise SystemExit(f"resolve failed: {status} {json.dumps(resolved)[:400]}")
+FACTS["needsReviewAfterCorrection"] = resolved["remainingReviewCount"]
+check(
+    "FI-032", "answering one cluster resolves it, teaches a rule, and shrinks the queue by one",
+    resolved["status"] == "RESOLVED" and resolved["ruleCreated"]
+    and resolved["transactionsUpdated"] == item["transactionCount"]
+    and resolved["remainingReviewCount"] == queue["total"] - 1,
+    f"{resolved['transactionsUpdated']} transactions updated, "
+    f"queue {queue['total']} → {resolved['remainingReviewCount']}",
+)
+
+status, rerun = call("POST", "/intelligence/analyse", token, query={"householdId": household})
+status2, queue_after = call("GET", "/intelligence/review", token, query={"householdId": household})
+check(
+    "FI-033", "a re-run keeps the answer: the queue stays smaller and nothing reopens",
+    queue_after["total"] == queue["total"] - 1,
+    f"queue after re-run: {queue_after['total']} (was {queue['total']})",
+)
+
+# A NEW matching transaction arrives through the real importer.
+import datetime as _dt
+extra_amount = -1_250_000
+extra_balance = closing + extra_amount
+extra_csv = (
+    "\ufeffBokföringsdatum;Valutadatum;Verifikationsnummer;Text;Belopp;Saldo\n"
+    f"2026-08-27;2026-08-27;990001;HYRA BOSTAD;{to_seb_decimal(extra_amount)};{to_seb_decimal(extra_balance)}\n"
+).encode("utf-8")
+status, extra_preview = call(
+    "POST", "/imports/statements/inspect", token,
+    {
+        "householdId": household, "accountId": account["id"],
+        "filename": "kontoutdrag-ny.csv", "contentBase64": base64.b64encode(extra_csv).decode(),
+    },
+)
+if status >= 400:
+    raise SystemExit(f"second inspect failed: {status} {json.dumps(extra_preview)[:400]}")
+call("POST", "/imports/statements/commit", token, {"householdId": household, "batchId": extra_preview["batchId"]})
+await_batch(token, household, extra_preview["batchId"])
+
+status, rerun2 = call("POST", "/intelligence/analyse", token, query={"householdId": household})
+learned_after = rerun2["coverage"]["learnedRule"]
+FACTS["learnedRuleClassified"] = learned_after
+FACTS["userVerified"] = rerun2["coverage"]["userVerified"]
+check(
+    "FI-034", "a newly imported matching transaction is classified by the learned rule, not asked about",
+    learned_after >= 1 and rerun2["learnedRulesApplied"] >= 1,
+    f"{learned_after} transactions via LEARNED_RULE, {rerun2['coverage']['userVerified']} USER_VERIFIED",
+)
+status, queue_final = call("GET", "/intelligence/review", token, query={"householdId": household})
+check(
+    "FI-035", "the answered pattern does not return to Needs Review after new data",
+    queue_final["total"] == queue["total"] - 1
+    and not any("HYRA" in i["representativeDescription"] for i in queue_final["items"]),
+    f"queue: {queue_final['total']}, no HYRA item",
+)
+
+# The classification metric distinguishes the person's work from the rule's.
+check(
+    "FI-036", "classification sources are truthful: USER_VERIFIED for the correction, LEARNED_RULE for the rule",
+    rerun2["coverage"]["userVerified"] == item["transactionCount"]
+    and rerun2["coverage"]["learnedRule"] >= 1,
+    f"{rerun2['coverage']['userVerified']} user-verified (the corrected cluster), "
+    f"{rerun2['coverage']['learnedRule']} learned-rule (the new import)",
+)
+FACTS["meaningfullyClassified"] = rerun2["coverage"]["meaningfullyClassified"]
+FACTS["meaningfullyClassifiedPercent"] = rerun2["coverage"]["meaningfullyClassifiedPercent"]
+FACTS["deterministicMatch"] = rerun2["coverage"]["deterministicMatch"]
+FACTS["unknown"] = rerun2["coverage"]["unknown"]
+FACTS["transactionsAnalyzed"] = rerun2["coverage"]["total"]
+
+# The rule is visible and manageable.
+status, rules = call("GET", "/intelligence/rules", token, query={"householdId": household})
+check(
+    "FI-037", "the learned rule is listed, attributed, and can be managed",
+    status < 400 and rules["total"] == 1 and rules["items"][0]["userVerified"]
+    and rules["items"][0]["merchantName"] == "Hyresvärden AB",
+    f"{rules['total']} rule(s), first: {rules['items'][0]['merchantName']} "
+    f"(matched {rules['items'][0]['matchCount']} times)",
+)
+
+# Isolation: the other household cannot see or touch any of this.
+iso_token, iso_household = register("Isolering")
+status_a, _ = call("GET", "/intelligence/review", iso_token, query={"householdId": household})
+status_b, _ = call(
+    "POST", "/intelligence/clusters/resolve", iso_token,
+    {
+        "householdId": iso_household, "clusterId": item["id"], "action": "correct",
+        "merchantName": "Kapning", "rememberRule": True,
+    },
+)
+status_c, _ = call("GET", "/intelligence/rules", iso_token, query={"householdId": household})
+check(
+    "FI-038", "another household can neither read the queue, resolve a cluster, nor read the rules",
+    status_a in {403, 404} and status_b in {403, 404} and status_c in {403, 404},
+    f"review {status_a}, resolve {status_b}, rules {status_c}",
+)
+
 # Only now categorise, so the liquidity checks below have necessity to work with.
 # This is test setup, and it is no longer reported as product classification.
 seeded = sql(f"select count(*) from categories where household_id = '{household}'")
