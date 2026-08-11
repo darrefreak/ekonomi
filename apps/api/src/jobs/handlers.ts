@@ -17,6 +17,7 @@ import { HouseholdMetricsService } from "../metrics/household-metrics.service";
 import { MetricRegistryService } from "../metrics/metric-registry.service";
 import { IntakeService } from "../intake/intake.service";
 import { StatementImportService } from "../imports/statement-import.service";
+import { RecurringIntelligenceService } from "../intelligence/recurring-intelligence.service";
 import { AuditService } from "../audit/audit.service";
 import { resolveHouseholdAsOf } from "../common/as-of";
 import { DebtService } from "../debt/debt.service";
@@ -72,7 +73,9 @@ function buildServices() {
   const storage = new ObjectStorageService();
   const intake = new IntakeService(access, storage);
   const statementImports = new StatementImportService(access, storage, ledger);
+  const recurring = new RecurringIntelligenceService(access);
   return {
+    recurring,
     access,
     metrics,
     planning,
@@ -194,6 +197,45 @@ async function executeJob(
         "Scheduled sync job",
       );
       return { syncRunId: result.syncRunId, importBatchId: result.importBatchId };
+    }
+
+    case "DETECT_RECURRING_STREAMS": {
+      // Detection and its write phase are one atomic pass (see registry note).
+      const result = await services.recurring.detectAndPersistStreams(payload.householdId);
+      return { ...result };
+    }
+
+    case "DETECT_SUBSCRIPTIONS": {
+      const result = await services.recurring.refreshSubscriptions(payload.householdId);
+      return { updated: result.updated };
+    }
+
+    case "CALCULATE_RECURRING_PRICE_CHANGES": {
+      const result = await services.recurring.refreshPriceIntelligence(payload.householdId);
+      return { streams: result.streams, changes: result.changes };
+    }
+
+    case "GENERATE_EXPECTED_TRANSACTIONS": {
+      const result = await services.recurring.generateExpectedTransactions(
+        payload.householdId,
+      );
+      return { generated: result.generated, active: result.active };
+    }
+
+    case "MATCH_EXPECTED_TRANSACTIONS": {
+      const result = await services.recurring.matchExpectedTransactions(
+        payload.householdId,
+      );
+      return { matched: result.matched, lateResolved: result.lateResolved };
+    }
+
+    case "DETECT_MISSING_EXPECTED": {
+      const asOf = await resolveHouseholdAsOf(payload.householdId, payload.asOf);
+      const result = await services.recurring.detectMissingExpected(
+        payload.householdId,
+        asOf,
+      );
+      return { asOf, missing: result.missing };
     }
 
     case "COMMIT_STATEMENT_IMPORT": {

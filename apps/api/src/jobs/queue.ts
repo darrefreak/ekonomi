@@ -90,6 +90,30 @@ export async function enqueueSyncIntegration(
   return enqueueJob({ type: "SYNC_INTEGRATION", householdId, entityId, asOf });
 }
 
+/**
+ * The recurring-intelligence chain, in pipeline order (§37): detect/persist →
+ * subscriptions → price changes → expected → match → missing. Enqueued in
+ * sequence on the single shared FIFO queue, so the worker runs them in order.
+ */
+export async function enqueueRecurringIntelligenceChain(
+  householdId: string,
+  asOf?: string,
+): Promise<string[]> {
+  const types: JobType[] = [
+    "DETECT_RECURRING_STREAMS",
+    "DETECT_SUBSCRIPTIONS",
+    "CALCULATE_RECURRING_PRICE_CHANGES",
+    "GENERATE_EXPECTED_TRANSACTIONS",
+    "MATCH_EXPECTED_TRANSACTIONS",
+    "DETECT_MISSING_EXPECTED",
+  ];
+  const ids: string[] = [];
+  for (const type of types) {
+    ids.push(await enqueueJob({ type, householdId, asOf } as JobPayload));
+  }
+  return ids;
+}
+
 export function startWorker() {
   const worker = new Worker(
     QUEUE_NAME,

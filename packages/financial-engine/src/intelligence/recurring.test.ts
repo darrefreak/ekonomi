@@ -243,6 +243,18 @@ describe("recurrence detection", () => {
     );
   });
 
+  it("detects semiannual and keeps it distinct from annual (§45)", () => {
+    const detection = detectRecurrence(
+      stream(["2024-03-01", "2024-09-02", "2025-03-03", "2025-09-01", "2026-03-02"], -320_000n),
+    );
+    assert.equal(detection.frequency, "SEMIANNUAL");
+    const normalised = normaliseRecurringCost({
+      amountMinor: -320_000n,
+      frequency: detection.frequency,
+    });
+    assert.equal(normalised.annualMinor, 640_000n, "annualised ×2, never ×1");
+  });
+
   it("refuses to conclude anything from two occurrences", () => {
     const detection = detectRecurrence(stream(["2026-01-04", "2026-02-04"], -21_900n));
     assert.equal(detection.frequency, "NONE");

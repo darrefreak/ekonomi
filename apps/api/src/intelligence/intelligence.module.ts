@@ -5,6 +5,7 @@ import { MetricsModule } from "../metrics/metrics.module";
 import { ClassificationReviewService } from "./classification-review.service";
 import { FinancialIntelligenceInputService } from "./financial-intelligence-input.service";
 import { FinancialIntelligenceService } from "./financial-intelligence.service";
+import { RecurringIntelligenceService } from "./recurring-intelligence.service";
 import { TransactionClusteringService } from "./transaction-clustering.service";
 import { IntelligenceController } from "./intelligence.controller";
 
@@ -18,12 +19,14 @@ import { IntelligenceController } from "./intelligence.controller";
     ClassificationReviewService,
     FinancialIntelligenceInputService,
     FinancialIntelligenceService,
+    RecurringIntelligenceService,
     TransactionClusteringService,
   ],
   exports: [
     ClassificationReviewService,
     FinancialIntelligenceInputService,
     FinancialIntelligenceService,
+    RecurringIntelligenceService,
     TransactionClusteringService,
   ],
 })

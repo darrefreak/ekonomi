@@ -3,6 +3,7 @@ import {
   enqueueCalculateMetrics,
   enqueueGenerateForecast,
   enqueueGenerateOpportunities,
+  enqueueRecurringIntelligenceChain,
   enqueueRunRiskAnalysis,
 } from "./queue";
 
@@ -20,6 +21,10 @@ export async function invalidateAfterEconomicMutation(
     ["GENERATE_OPPORTUNITIES", () => enqueueGenerateOpportunities(householdId, asOf)],
     ["RUN_RISK_ANALYSIS", () => enqueueRunRiskAnalysis(householdId, asOf)],
     ["GENERATE_FORECAST", () => enqueueGenerateForecast(householdId, asOf)],
+    [
+      "RECURRING_INTELLIGENCE_CHAIN",
+      () => enqueueRecurringIntelligenceChain(householdId, asOf),
+    ],
   ];
 
   await Promise.all(

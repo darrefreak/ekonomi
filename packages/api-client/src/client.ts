@@ -53,6 +53,12 @@ import {
   analysisRunsResponseSchema,
   auditLogsResponseSchema,
   updateRecurringStatusSchema,
+  recurringOverviewResponseSchema,
+  verifyRecurringStreamSchema,
+  expectedTransactionsResponseSchema,
+  type RecurringOverviewResponse,
+  type VerifyRecurringStreamInput,
+  type ExpectedTransactionsResponse,
   integrationsResponseSchema,
   reconnectSourceSchema,
   sourceSchema,
@@ -1029,10 +1035,53 @@ export function createApiClient(options: ApiClientOptions) {
           meaningfullyClassified: number;
           meaningfullyClassifiedPercent: number;
         };
+        recurring: {
+          clustersConsidered: number;
+          recurringStreams: number;
+          subscriptions: number;
+          recurringExpense: number;
+          recurringIncome: number;
+          priceChangesDetected: number;
+          expectedGenerated: number;
+          expectedMatched: number;
+          missingExpected: number;
+          reviewItems: number;
+        };
       }>(
         `/api/v1/intelligence/analyse?householdId=${encodeURIComponent(householdId)}`,
         { method: "POST" },
       );
+    },
+
+    /** All recurring streams, grouped, with totals, price insights and review. */
+    getRecurringOverview: async (householdId: string) => {
+      const data = await request<unknown>(
+        `/api/v1/intelligence/recurring?householdId=${encodeURIComponent(householdId)}`,
+      );
+      return recurringOverviewResponseSchema.parse(data) as RecurringOverviewResponse;
+    },
+
+    /** The household's answer: recurring or not, subscription or not. */
+    verifyRecurringStream: async (
+      recurringId: string,
+      input: VerifyRecurringStreamInput,
+    ) => {
+      const body = verifyRecurringStreamSchema.parse(input);
+      const data = await request<unknown>(
+        `/api/v1/intelligence/recurring/${encodeURIComponent(recurringId)}/verify`,
+        { method: "POST", body: JSON.stringify(body) },
+      );
+      return recurringOverviewResponseSchema.parse(data) as RecurringOverviewResponse;
+    },
+
+    /** Upcoming expected transactions and unresolved missing-expected notices. */
+    getExpectedTransactions: async (householdId: string) => {
+      const data = await request<unknown>(
+        `/api/v1/intelligence/expected?householdId=${encodeURIComponent(householdId)}`,
+      );
+      return expectedTransactionsResponseSchema.parse(
+        data,
+      ) as ExpectedTransactionsResponse;
     },
 
     /** The household's liquidity requirement, derived from its own history. */

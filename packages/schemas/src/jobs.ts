@@ -126,6 +126,61 @@ export const commitStatementImportJobPayloadSchema = z
   })
   .strict();
 
+/**
+ * Recurring intelligence jobs (§38).
+ *
+ * DETECT_RECURRING_STREAMS covers detection *and* persistence: persistence is
+ * detection's write phase, and a separate persist job would have to re-run
+ * detection to know what to write.
+ */
+export const detectRecurringStreamsJobPayloadSchema = z
+  .object({
+    type: z.literal("DETECT_RECURRING_STREAMS"),
+    householdId: uuidSchema,
+    ...jobCommonFields,
+  })
+  .strict();
+
+export const detectSubscriptionsJobPayloadSchema = z
+  .object({
+    type: z.literal("DETECT_SUBSCRIPTIONS"),
+    householdId: uuidSchema,
+    ...jobCommonFields,
+  })
+  .strict();
+
+export const calculateRecurringPriceChangesJobPayloadSchema = z
+  .object({
+    type: z.literal("CALCULATE_RECURRING_PRICE_CHANGES"),
+    householdId: uuidSchema,
+    ...jobCommonFields,
+  })
+  .strict();
+
+export const generateExpectedTransactionsJobPayloadSchema = z
+  .object({
+    type: z.literal("GENERATE_EXPECTED_TRANSACTIONS"),
+    householdId: uuidSchema,
+    ...jobCommonFields,
+  })
+  .strict();
+
+export const matchExpectedTransactionsJobPayloadSchema = z
+  .object({
+    type: z.literal("MATCH_EXPECTED_TRANSACTIONS"),
+    householdId: uuidSchema,
+    ...jobCommonFields,
+  })
+  .strict();
+
+export const detectMissingExpectedJobPayloadSchema = z
+  .object({
+    type: z.literal("DETECT_MISSING_EXPECTED"),
+    householdId: uuidSchema,
+    ...jobCommonFields,
+  })
+  .strict();
+
 export const jobPayloadSchema = z.discriminatedUnion("type", [
   healthCheckJobPayloadSchema,
   reconcileAccountBalancesJobPayloadSchema,
@@ -140,6 +195,12 @@ export const jobPayloadSchema = z.discriminatedUnion("type", [
   processDocumentJobPayloadSchema,
   syncIntegrationJobPayloadSchema,
   commitStatementImportJobPayloadSchema,
+  detectRecurringStreamsJobPayloadSchema,
+  detectSubscriptionsJobPayloadSchema,
+  calculateRecurringPriceChangesJobPayloadSchema,
+  generateExpectedTransactionsJobPayloadSchema,
+  matchExpectedTransactionsJobPayloadSchema,
+  detectMissingExpectedJobPayloadSchema,
 ]);
 
 export type JobPayload = z.infer<typeof jobPayloadSchema>;

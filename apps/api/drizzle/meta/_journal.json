@@ -225,6 +225,13 @@
       "when": 1754852400000,
       "tag": "0031_learned_rules_and_cluster_review",
       "breakpoints": true
+    },
+    {
+      "idx": 32,
+      "version": "7",
+      "when": 1754856000000,
+      "tag": "0032_recurring_streams_and_expected",
+      "breakpoints": true
     }
   ]
 }
