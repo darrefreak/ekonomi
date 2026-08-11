@@ -113,7 +113,7 @@ test.describe("smart budget", () => {
       const why = page.getByText(/varför detta belopp\?/i);
       expect(await why.count()).toBeGreaterThanOrEqual(3);
       await why.first().click();
-      await expect(page.getByText(/median/i).first()).toBeVisible();
+      await expect(page.getByText(/median \(upp till 24 mån\)/i).first()).toBeVisible();
       // The flex number is explicitly not the account balance.
       await expect(page.getByText(/inte ditt kontosaldo/i)).toBeVisible();
     }
@@ -165,9 +165,10 @@ test.describe("reports V2", () => {
 test.describe("weekly review", () => {
   test("summarises the week and points to what comes next", async ({ page }) => {
     await gotoRoute(page, "/weekly");
-    await expect(page.getByText(/^Utgifter$/).first()).toBeVisible({ timeout: 20_000 });
-    await expect(page.getByRole("heading", { name: /nästa vecka/i })).toBeVisible();
-    await expect(page.getByRole("link", { name: /kalender/i })).toBeVisible();
+    const main = page.getByRole("main");
+    await expect(main.getByText(/^Utgifter$/).first()).toBeVisible({ timeout: 20_000 });
+    await expect(main.getByRole("heading", { name: /nästa vecka/i })).toBeVisible();
+    await expect(main.getByRole("link", { name: /kalender/i }).first()).toBeVisible();
     await expectNoHorizontalOverflow(page);
   });
 });
@@ -179,11 +180,12 @@ test.describe("dashboard V2", () => {
     await gotoRoute(page, "/");
 
     // Position first, then the month, then change, then the future.
-    await expect(page.getByText(/^Nettoförmögenhet$/).first()).toBeVisible({ timeout: 20_000 });
+    const main = page.getByRole("main");
+    await expect(main.getByText(/^Nettoförmögenhet$/).first()).toBeVisible({ timeout: 20_000 });
     const vsNormal = page.getByTestId("spending-vs-normal");
     await expect(vsNormal).toBeVisible();
     await expect(vsNormal.getByRole("link", { name: /vad har förändrats/i })).toBeVisible();
-    await expect(page.getByRole("link", { name: /kalender/i }).first()).toBeVisible();
+    await expect(main.getByRole("link", { name: /kalender/i }).first()).toBeVisible();
   });
 });
 
