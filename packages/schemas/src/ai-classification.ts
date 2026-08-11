@@ -9,8 +9,12 @@ import { z } from "zod";
  * answer, invented category ids are not.
  */
 
-/** Prompt version persisted with every result (§16). */
-export const TRANSACTION_CLASSIFIER_PROMPT_VERSION = "transaction-classifier-v1";
+/**
+ * Prompt version persisted with every result (§16). v2 added the
+ * empty-taxonomy rule after the first live provider run: a household without
+ * categories must yield categoryId null, not an invented id.
+ */
+export const TRANSACTION_CLASSIFIER_PROMPT_VERSION = "transaction-classifier-v2";
 /** Structured-output schema version persisted with every result (§17). */
 export const AI_CLASSIFICATION_SCHEMA_VERSION = "ai-cls-1";
 
@@ -60,26 +64,54 @@ export const aiClassificationSignalSchema = z.enum([
   "AMBIGUOUS_TEXT",
 ]);
 
+/*
+ * Value normalization for what strict structured output cannot guarantee.
+ *
+ * OpenAI's strict json_schema enforces shape, types and enums — but not
+ * string lengths, array lengths or numeric ranges. The first live provider
+ * run proved the consequence: one out-of-contract VALUE (a non-uuid
+ * categoryId, produced when the household's taxonomy was empty) failed the
+ * whole batch at the Zod boundary, turning seven per-cluster questions into
+ * seven ERRORs. Structural violations must still fail loudly; value drift is
+ * normalized here so it degrades per result, where the service's semantic
+ * validation (§11) can reject it with a named reason.
+ */
+
+/** Empty or whitespace-only strings become null instead of a parse failure. */
+const optionalText = (max: number) =>
+  z
+    .string()
+    .nullable()
+    .transform((value) => {
+      const trimmed = value?.trim() ?? "";
+      return trimmed.length > 0 ? trimmed.slice(0, max) : null;
+    });
+
+/** Confidences are clamped to [0, 1] instead of failing the batch. */
+const confidence = z.number().transform((value) => Math.min(1, Math.max(0, value)));
+
 /**
  * One cluster's structured answer from the provider (§10).
  *
  * `categoryId`/`subcategoryId` must be ids from the allowed taxonomy the
  * request carried; anything else is rejected after validation (§11). The
  * schema itself cannot know the household's taxonomy, so that check lives in
- * the service.
+ * the service — which is also why the id fields accept any short string
+ * here: an invented id must reach the service to be rejected per result
+ * (UNKNOWN_CATEGORY_ID), not detonate the batch in transit.
  */
 export const aiClusterClassificationSchema = z.object({
   /** Echo of the cluster reference in the request, never raw text. */
   clusterRef: z.string().min(1).max(64),
-  merchantCandidate: z.string().trim().min(1).max(160).nullable(),
-  merchantConfidence: z.number().min(0).max(1),
-  categoryId: z.string().uuid().nullable(),
-  subcategoryId: z.string().uuid().nullable(),
+  merchantCandidate: optionalText(160),
+  merchantConfidence: confidence,
+  categoryId: optionalText(64),
+  subcategoryId: optionalText(64),
   transactionType: aiTransactionTypeSchema,
   recurringTypeCandidate: aiRecurringTypeCandidateSchema.nullable(),
-  classificationConfidence: z.number().min(0).max(1),
-  shortExplanation: z.string().max(300),
-  signals: z.array(aiClassificationSignalSchema).max(8),
+  classificationConfidence: confidence,
+  shortExplanation: z.string().transform((value) => value.slice(0, 300)),
+  signals: z.array(aiClassificationSignalSchema).transform((value) => value.slice(0, 8)),
 });
 export type AiClusterClassification = z.infer<typeof aiClusterClassificationSchema>;
 

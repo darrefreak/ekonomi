@@ -113,6 +113,7 @@ function classifierInstructions(promptVersion: string): string {
     "You receive clusters of similar transactions, already grouped and minimized. For each cluster, identify the merchant and the best category from the ALLOWED TAXONOMY.",
     "Rules:",
     "- categoryId and subcategoryId MUST be ids copied exactly from the allowed taxonomy, or null. Never invent an id.",
+    "- If the allowed taxonomy is empty, categoryId and subcategoryId MUST be null for every cluster. Classify the merchant only.",
     "- If the evidence is insufficient, return merchantCandidate null, categoryId null and transactionType UNKNOWN with low confidence. UNKNOWN is a correct answer; a fabricated merchant is not.",
     "- Reference-only descriptions (mostly digits or placeholders like [REF]) are UNKNOWN.",
     "- Do not assume a subscription just because a merchant sells subscriptions.",
