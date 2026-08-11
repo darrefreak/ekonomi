@@ -354,23 +354,29 @@ export class RecurringIntelligenceService {
         amountStable,
       });
       /*
-       * A guessed kind on an unclassified cluster is not knowledge. When no
-       * keyword matched and nobody has named the merchant, the honest answer
-       * is UNKNOWN_RECURRING: the cadence is real, the kind is not known (§42).
+       * A guessed kind is not knowledge. When no keyword matched and nobody
+       * has named the merchant, the honest answer is UNKNOWN_RECURRING (§42).
+       * A named merchant without a keyword keeps its shape-based guess —
+       * except the SUBSCRIPTION guess, which would put rent in the
+       * subscription total; that stays OTHER_RECURRING until a person or a
+       * keyword says otherwise (§10).
        */
-      const recurringType: RecurringKind | "UNKNOWN_RECURRING" =
-        classified.matched || cluster.classificationSource !== "UNKNOWN"
-          ? classified.kind
+      const recurringType: RecurringKind | "UNKNOWN_RECURRING" = classified.matched
+        ? classified.kind
+        : cluster.classificationSource !== "UNKNOWN"
+          ? classified.kind === "SUBSCRIPTION"
+            ? "OTHER_RECURRING"
+            : classified.kind
           : "UNKNOWN_RECURRING";
 
       /*
-       * Subscription = subscription-shaped kind + fixed schedule + stable
-       * price. Utilities, mortgages and insurance are recurring bills, not
-       * subscriptions (§10). VARIABLE and ANNUAL streams are never
+       * Subscription = a matched subscription-shaped kind + fixed schedule +
+       * stable price. Utilities, mortgages and insurance are recurring bills,
+       * not subscriptions (§10). VARIABLE and ANNUAL streams are never
        * subscriptions by detection — only a person can say otherwise.
        */
       const isSubscription =
-        recurringType !== "UNKNOWN_RECURRING" &&
+        classified.matched &&
         isSubscriptionKind(classified.kind) &&
         amountStable &&
         FIXED_CADENCES.has(cadence) &&
@@ -619,12 +625,19 @@ export class RecurringIntelligenceService {
         direction,
         amountStable: item.amountStable,
       });
-      const recurringType =
-        classified.matched || merchantName ? classified.kind : "UNKNOWN_RECURRING";
+      // Same honesty rules as detection: guesses are not assertions, and the
+      // SUBSCRIPTION shape-guess never puts a named rent in the subscription total.
+      const recurringType = classified.matched
+        ? classified.kind
+        : merchantName
+          ? classified.kind === "SUBSCRIPTION"
+            ? "OTHER_RECURRING"
+            : classified.kind
+          : "UNKNOWN_RECURRING";
       const isSubscription =
         item.userMarkedSubscription != null
           ? item.userMarkedSubscription
-          : recurringType !== "UNKNOWN_RECURRING" &&
+          : classified.matched &&
             isSubscriptionKind(classified.kind) &&
             item.amountStable &&
             FIXED_CADENCES.has(item.cadence) &&
