@@ -965,7 +965,6 @@ export class RecurringIntelligenceService {
         amountMinor: item.amountMinor,
         frequency,
       });
-      const lastChange = item.priceChanges[item.priceChanges.length - 1] ?? null;
       return {
         id: item.id,
         name: item.name,
