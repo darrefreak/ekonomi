@@ -18,6 +18,7 @@ import {
   updateClassificationRuleSchema,
   verifyRecurringStreamSchema,
 } from "@ffos/schemas";
+import { AiClassificationService } from "../ai/classification/ai-classification.service";
 import { AuthGuard } from "../auth/auth.guard";
 import { CurrentUser } from "../auth/current-user.decorator";
 import type { AuthenticatedUser } from "../auth/auth.types";
@@ -47,6 +48,8 @@ export class IntelligenceController {
     private readonly review: ClassificationReviewService,
     @Inject(RecurringIntelligenceService)
     private readonly recurring: RecurringIntelligenceService,
+    @Inject(AiClassificationService)
+    private readonly aiClassification: AiClassificationService,
   ) {}
 
   /**
@@ -177,6 +180,43 @@ export class IntelligenceController {
     query: { householdId: string },
   ) {
     return this.review.deleteRule(user.userId, query.householdId, ruleId);
+  }
+
+  /**
+   * AI dry-run (§6): the exact eligibility maths a real run would use, with
+   * zero external requests. Counts only — descriptions never leave the API.
+   */
+  @Get("ai/dry-run")
+  aiDryRun(
+    @CurrentUser() user: AuthenticatedUser,
+    @Query(new ZodValidationPipe(householdIdQuerySchema))
+    query: { householdId: string },
+  ) {
+    return this.aiClassification.dryRun(user.userId, query.householdId);
+  }
+
+  /**
+   * Run AI classification of unresolved eligible clusters (§22). When any
+   * gate is off (env, household opt-in, dry-run, missing key) this degrades
+   * to the dry-run report rather than failing.
+   */
+  @Post("ai/classify")
+  aiClassify(
+    @CurrentUser() user: AuthenticatedUser,
+    @Query(new ZodValidationPipe(householdIdQuerySchema))
+    query: { householdId: string },
+  ) {
+    return this.aiClassification.classify(user.userId, query.householdId);
+  }
+
+  /** Enablement flags + cost observability (§20, §50). */
+  @Get("ai/status")
+  aiStatus(
+    @CurrentUser() user: AuthenticatedUser,
+    @Query(new ZodValidationPipe(householdIdQuerySchema))
+    query: { householdId: string },
+  ) {
+    return this.aiClassification.status(user.userId, query.householdId);
   }
 
   @Get("liquidity")

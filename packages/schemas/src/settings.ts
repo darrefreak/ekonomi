@@ -17,6 +17,11 @@ export const settingsResponseSchema = z.object({
     investmentContributionTargetMinor: minorString,
     currency: z.string(),
   }),
+  /**
+   * "Extern AI-analys av transaktioner" — household opt-in for sending
+   * minimized cluster text to the configured AI provider. Default off (§21).
+   */
+  aiTransactionAnalysisEnabled: z.boolean(),
   members: z
     .array(
       z.object({
@@ -51,6 +56,7 @@ export const updateSettingsSchema = z
     locale: z.enum(["sv-SE", "en-US"]).optional(),
     appearance: z.enum(["system", "light", "dark"]).optional(),
     householdName: z.string().min(1).max(120).optional(),
+    aiTransactionAnalysisEnabled: z.boolean().optional(),
     financialPolicies: z
       .object({
         minimumCashBalanceMinor: minorString.optional(),

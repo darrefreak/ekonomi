@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { aiReviewSuggestionSchema } from "./ai-classification";
 
 /**
  * Cluster-level Needs Review and learned household classification rules.
@@ -36,6 +37,8 @@ export const clusterReviewItemSchema = z.object({
   confidence: z.number().nullable(),
   classificationSource: z.string(),
   explanation: z.string(),
+  /** Present when external AI proposed an answer that was not auto-applied (§24). */
+  aiSuggestion: aiReviewSuggestionSchema.nullable().optional(),
 });
 export type ClusterReviewItem = z.infer<typeof clusterReviewItemSchema>;
 
