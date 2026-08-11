@@ -419,3 +419,30 @@ export const sinkingFundContributions = pgTable(
     index("sinking_fund_contributions_household_idx").on(t.householdId),
   ],
 );
+
+/**
+ * Smart Budget — the adopted six-group plan for one month.
+ *
+ * `lines` is `[{ key, plannedMinor }]` with minor units as strings (JSON-safe
+ * bigint). The suggestion is recomputed from history on every read and never
+ * stored; only the user's decision is.
+ */
+export const smartBudgets = pgTable(
+  "smart_budgets",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    householdId: uuid("household_id")
+      .notNull()
+      .references(() => households.id, { onDelete: "cascade" }),
+    month: varchar("month", { length: 7 }).notNull(),
+    lines: jsonb("lines")
+      .$type<Array<{ key: string; plannedMinor: string }>>()
+      .notNull()
+      .default(sql`'[]'::jsonb`),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (t) => [
+    uniqueIndex("smart_budgets_household_month_idx").on(t.householdId, t.month),
+  ],
+);

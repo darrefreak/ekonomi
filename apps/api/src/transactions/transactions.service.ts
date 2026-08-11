@@ -44,6 +44,11 @@ export type TransactionListFilters = {
   to?: string;
   includeExcluded?: boolean;
   vehicleId?: string;
+  categoryId?: string;
+  merchantId?: string;
+  direction?: "inflow" | "outflow";
+  minAmountMinor?: string;
+  maxAmountMinor?: string;
 };
 
 @Injectable()
@@ -328,6 +333,27 @@ export class TransactionsService {
     }
     if (filters.vehicleId) {
       conditions.push(eq(financialEvents.vehicleId, filters.vehicleId));
+    }
+    if (filters.categoryId) {
+      conditions.push(eq(sourceTransactions.categoryId, filters.categoryId));
+    }
+    if (filters.merchantId) {
+      conditions.push(eq(sourceTransactions.merchantId, filters.merchantId));
+    }
+    if (filters.direction === "inflow") {
+      conditions.push(sql`${sourceTransactions.amountMinor} >= 0`);
+    } else if (filters.direction === "outflow") {
+      conditions.push(sql`${sourceTransactions.amountMinor} < 0`);
+    }
+    if (filters.minAmountMinor) {
+      conditions.push(
+        sql`abs(${sourceTransactions.amountMinor}) >= ${BigInt(filters.minAmountMinor)}`,
+      );
+    }
+    if (filters.maxAmountMinor) {
+      conditions.push(
+        sql`abs(${sourceTransactions.amountMinor}) <= ${BigInt(filters.maxAmountMinor)}`,
+      );
     }
 
     const rows = await db

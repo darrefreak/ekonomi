@@ -612,10 +612,60 @@ export function answerFromTools(
   };
 }
 
-/** Map natural-language chat to allowlisted tool names. */
-export function selectToolsForMessage(message: string): string[] {
-  const m = message.toLowerCase();
+/**
+ * Contextual tool bias: what page the user asked from decides which
+ * deterministic tools are relevant even when the message itself is terse
+ * ("Varför?"). Context never adds data — only tool selection.
+ */
+export function toolsForPageContext(context?: {
+  page: string;
+  entityType?: string;
+}): string[] {
+  if (!context) return [];
+  const page = context.page.toLowerCase();
   const selected = new Set<string>();
+  if (page.includes("liquidity") || page.includes("likvid")) {
+    selected.add("get_liquidity_requirement");
+    selected.add("get_available_surplus");
+  }
+  if (page.includes("calendar") || page.includes("kalender")) {
+    selected.add("get_expected_transactions");
+    selected.add("get_missing_expected");
+  }
+  if (page.includes("subscription") || page.includes("abonnemang")) {
+    selected.add("get_subscription_changes");
+    selected.add("get_recurring_summary");
+  }
+  if (page.includes("budget")) selected.add("get_budget");
+  if (page.includes("savings") || page.includes("sparande")) {
+    selected.add("get_savings_target");
+    selected.add("get_available_surplus");
+  }
+  if (page.includes("what-changed") || page.includes("insights")) {
+    selected.add("get_period_change_drivers");
+    selected.add("get_category_trend");
+  }
+  if (page.includes("forecast") || page.includes("prognos")) {
+    selected.add("get_expected_transactions");
+    selected.add("get_net_worth");
+  }
+  if (context.entityType === "category") selected.add("get_category_trend");
+  if (context.entityType === "merchant") selected.add("get_merchant_trend");
+  if (context.entityType === "vehicle") selected.add("get_vehicle_equity");
+  if (context.entityType === "subscription" || context.entityType === "recurring") {
+    selected.add("get_subscription_changes");
+    selected.add("get_recurring_summary");
+  }
+  return [...selected];
+}
+
+/** Map natural-language chat to allowlisted tool names. */
+export function selectToolsForMessage(
+  message: string,
+  context?: { page: string; entityType?: string },
+): string[] {
+  const m = message.toLowerCase();
+  const selected = new Set<string>(toolsForPageContext(context));
 
   if (/budget|kvar|utnytt/.test(m)) selected.add("get_budget");
   if (/möjlig|opportunity|lifestyle/.test(m)) {

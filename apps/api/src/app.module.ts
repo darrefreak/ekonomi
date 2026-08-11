@@ -5,6 +5,7 @@ import { AccountsModule } from "./accounts/accounts.module";
 import { AiModule } from "./ai/ai.module";
 import { AuditModule } from "./audit/audit.module";
 import { AuthModule } from "./auth/auth.module";
+import { CalendarModule } from "./calendar/calendar.module";
 import { CashflowModule } from "./cashflow/cashflow.module";
 import { DashboardModule } from "./dashboard/dashboard.module";
 import { DebtModule } from "./debt/debt.module";
@@ -55,6 +56,7 @@ import { WealthModule } from "./wealth/wealth.module";
     LedgerModule,
     MetricsModule,
     TransactionsModule,
+    CalendarModule,
     CashflowModule,
     NetWorthModule,
     FinancialCoverageModule,

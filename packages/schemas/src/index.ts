@@ -35,4 +35,7 @@ export * from "./categories";
 export * from "./members";
 export * from "./merchants";
 export * from "./audit";
+export * from "./calendar";
+export * from "./smart-budget";
+export * from "./what-changed";
 

@@ -3,10 +3,12 @@ import { and, desc, eq, ilike, or, sql } from "drizzle-orm";
 import { getDb } from "../db/client";
 import {
   accounts,
+  categories,
   merchants,
   sourceTransactions,
 } from "../db/schema-economic";
 import { documents } from "../db/schema-intake";
+import { recurringItems } from "../db/schema-planning";
 import { vehicles } from "../db/schema-vehicles";
 import { HouseholdAccessService } from "../households/household-access.service";
 
@@ -15,6 +17,8 @@ type SearchHit = {
     | "transaction"
     | "account"
     | "merchant"
+    | "category"
+    | "subscription"
     | "document"
     | "vehicle"
     | "opportunity"
@@ -33,6 +37,21 @@ const STATIC_PAGES: Array<{ title: string; href: string; keywords: string[] }> =
   { title: "Granska", href: "/review", keywords: ["gransk", "review"] },
   { title: "Rapporter", href: "/reports", keywords: ["rapport", "report"] },
   { title: "Onboarding", href: "/onboarding", keywords: ["onboard", "kom igång"] },
+  { title: "Kalender", href: "/calendar", keywords: ["kalender", "calendar", "kommande"] },
+  { title: "Smart budget", href: "/budget", keywords: ["budget", "smart"] },
+  {
+    title: "Vad har förändrats?",
+    href: "/what-changed",
+    keywords: ["förändr", "changed", "jämför"],
+  },
+  { title: "Likviditet", href: "/liquidity", keywords: ["likviditet", "buffert", "kassa"] },
+  { title: "Sparande", href: "/savings", keywords: ["sparande", "spara", "överskott"] },
+  { title: "Prognos", href: "/forecast", keywords: ["prognos", "forecast"] },
+  { title: "Abonnemang", href: "/subscriptions", keywords: ["abonnemang", "återkommande", "prenumeration"] },
+  { title: "Kassaflöde", href: "/cashflow", keywords: ["kassaflöde", "cashflow"] },
+  { title: "Insikter", href: "/insights", keywords: ["insikt", "insight", "brief"] },
+  { title: "Veckoöversikt", href: "/reports?tab=weekly", keywords: ["vecka", "weekly"] },
+  { title: "Månadsrapport", href: "/reports?tab=monthly", keywords: ["månad", "monthly"] },
 ];
 
 @Injectable()
@@ -136,8 +155,53 @@ export class SearchService {
         type: "merchant",
         id: row.id,
         title: row.name,
-        subtitle: "Merchant",
-        href: `/transactions?q=${encodeURIComponent(row.name)}`,
+        subtitle: "Mottagare",
+        href: `/transactions?merchantId=${row.id}`,
+      });
+    }
+
+    const categoryRows = await db
+      .select({ id: categories.id, name: categories.name })
+      .from(categories)
+      .where(
+        and(
+          eq(categories.householdId, householdId),
+          ilike(categories.name, pattern),
+        ),
+      )
+      .limit(6);
+    for (const row of categoryRows) {
+      results.push({
+        type: "category",
+        id: row.id,
+        title: row.name,
+        subtitle: "Kategori",
+        href: `/reports?measure=spending&dimension=merchant&categoryId=${row.id}`,
+      });
+    }
+
+    const recurringRows = await db
+      .select({
+        id: recurringItems.id,
+        name: recurringItems.name,
+        isSubscription: recurringItems.isSubscription,
+      })
+      .from(recurringItems)
+      .where(
+        and(
+          eq(recurringItems.householdId, householdId),
+          ilike(recurringItems.name, pattern),
+          sql`${recurringItems.status} in ('DETECTED', 'CONFIRMED')`,
+        ),
+      )
+      .limit(6);
+    for (const row of recurringRows) {
+      results.push({
+        type: "subscription",
+        id: row.id,
+        title: row.name,
+        subtitle: row.isSubscription ? "Abonnemang" : "Återkommande",
+        href: "/subscriptions",
       });
     }
 
