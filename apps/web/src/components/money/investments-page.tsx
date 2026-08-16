@@ -66,7 +66,10 @@ export function InvestmentsPage() {
           {data.asOf}
         </p>
         <p className="mt-3 text-sm">
-          <Link href="/net-worth" className="text-accent hover:underline">
+          <Link
+            href="/net-worth"
+            className="inline-flex min-h-11 items-center text-accent hover:underline"
+          >
             Nettoförmögenhet →
           </Link>
         </p>

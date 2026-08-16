@@ -98,7 +98,7 @@ export function RiskPage() {
                   <Link
                     key={`${e.kind}-${e.id}-${e.href}`}
                     href={e.href}
-                    className="text-accent hover:underline"
+                    className="inline-flex min-h-11 min-w-11 items-center justify-center text-accent hover:underline"
                   >
                     {e.label} →
                   </Link>

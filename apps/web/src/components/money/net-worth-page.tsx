@@ -81,13 +81,22 @@ export function NetWorthPage() {
           <MoneyValue value={data.changeMonth} signed /> den här månaden
         </p>
         <p className="mt-3 flex flex-wrap gap-4 text-sm">
-          <Link href="/investments" className="text-accent hover:underline">
+          <Link
+            href="/investments"
+            className="inline-flex min-h-11 items-center text-accent hover:underline"
+          >
             Investeringar →
           </Link>
-          <Link href="/assets" className="text-accent hover:underline">
+          <Link
+            href="/assets"
+            className="inline-flex min-h-11 items-center text-accent hover:underline"
+          >
             Tillgångar →
           </Link>
-          <Link href="/debt" className="text-accent hover:underline">
+          <Link
+            href="/debt"
+            className="inline-flex min-h-11 items-center text-accent hover:underline"
+          >
             Skulder →
           </Link>
         </p>
@@ -98,7 +107,10 @@ export function NetWorthPage() {
         <Stat
           label="Investeringar"
           value={
-            <Link href="/investments" className="hover:text-accent">
+            <Link
+              href="/investments"
+              className="inline-flex min-h-11 min-w-11 items-center hover:text-accent"
+            >
               <MoneyValue value={data.breakdown.investments} />
             </Link>
           }
@@ -106,7 +118,10 @@ export function NetWorthPage() {
         <Stat
           label="Tillgångar"
           value={
-            <Link href="/assets" className="hover:text-accent">
+            <Link
+              href="/assets"
+              className="inline-flex min-h-11 min-w-11 items-center hover:text-accent"
+            >
               <MoneyValue value={data.breakdown.assets} />
             </Link>
           }
@@ -114,7 +129,10 @@ export function NetWorthPage() {
         <Stat
           label="Skulder"
           value={
-            <Link href="/debt" className="hover:text-accent">
+            <Link
+              href="/debt"
+              className="inline-flex min-h-11 min-w-11 items-center hover:text-accent"
+            >
               <MoneyValue value={data.breakdown.liabilities} />
             </Link>
           }

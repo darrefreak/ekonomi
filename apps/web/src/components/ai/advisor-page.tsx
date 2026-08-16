@@ -222,7 +222,7 @@ export function AdvisorPage() {
                         {c.href ? (
                           <Link
                             href={c.href}
-                            className="inline-flex min-h-11 items-center text-accent hover:underline"
+                            className="inline-flex min-h-11 min-w-11 items-center justify-center text-accent hover:underline"
                           >
                             {c.label}
                           </Link>
@@ -271,7 +271,7 @@ export function AdvisorPage() {
                     {c.href ? (
                       <Link
                         href={c.href}
-                        className="inline-flex min-h-11 items-center text-accent hover:underline"
+                        className="inline-flex min-h-11 min-w-11 items-center justify-center text-accent hover:underline"
                       >
                         {c.label}
                       </Link>
