@@ -42,6 +42,7 @@ export function AccountsPage() {
   const householdId = useHouseholdId();
   const queryClient = useQueryClient();
   const [includeArchived, setIncludeArchived] = useState(false);
+  const [showCreate, setShowCreate] = useState(false);
   const [form, setForm] = useState<FormState>(INITIAL_FORM);
   const [formError, setFormError] = useState<string | null>(null);
   const submissionKey = useSubmissionKey();
@@ -101,6 +102,7 @@ export function AccountsPage() {
       submissionKey.renew();
       setForm(INITIAL_FORM);
       setFormError(null);
+      setShowCreate(false);
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: ["accounts", householdId] }),
         queryClient.invalidateQueries({ queryKey: queryKeys.dashboard.all(householdId!) }),
@@ -122,11 +124,7 @@ export function AccountsPage() {
     return (
       <ErrorState
         title="Kunde inte hämta konton"
-        description={
-          accountsQuery.error instanceof Error
-            ? accountsQuery.error.message
-            : "Något gick fel"
-        }
+        description={describeError(accountsQuery.error, "Något gick fel")}
         onRetry={() => void accountsQuery.refetch()}
       />
     );
@@ -134,13 +132,25 @@ export function AccountsPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="font-[family-name:var(--ffos-font-display)] text-3xl tracking-tight">
-          Konton
-        </h1>
-        <p className="mt-2 text-sm text-text-secondary">
-          Hushållets konton med saldo och status.
-        </p>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h1 className="font-[family-name:var(--ffos-font-display)] text-3xl tracking-tight">
+            Konton
+          </h1>
+          <p className="mt-2 text-sm text-text-secondary">
+            Hushållets konton med saldo och status.
+          </p>
+        </div>
+        {items.length > 0 ? (
+          <button
+            type="button"
+            aria-expanded={showCreate}
+            onClick={() => setShowCreate((value) => !value)}
+            className="min-h-11 rounded-[12px] bg-accent px-4 text-sm font-medium text-on-accent"
+          >
+            {showCreate ? "Stäng formuläret" : "+ Nytt konto"}
+          </button>
+        ) : null}
       </div>
 
       {!currencySupported ? (
@@ -164,6 +174,7 @@ export function AccountsPage() {
         </div>
       ) : null}
 
+      {showCreate || items.length === 0 ? (
       <form
         noValidate
         /*
@@ -232,7 +243,7 @@ export function AccountsPage() {
             </p>
           </div>
           <label className="block text-sm">
-            <span className="text-text-muted">Provider (valfritt)</span>
+            <span className="text-text-muted">Bank eller källa (valfritt)</span>
             <input
               value={form.provider}
               onChange={(e) => setForm((f) => ({ ...f, provider: e.target.value }))}
@@ -313,6 +324,7 @@ export function AccountsPage() {
           {createMutation.isPending ? "Skapar…" : "Skapa konto"}
         </button>
       </form>
+      ) : null}
 
       <label className="flex min-h-11 items-center gap-2 text-sm text-text-secondary">
         <input
@@ -326,7 +338,7 @@ export function AccountsPage() {
       {items.length === 0 ? (
         <EmptyState
           title="Inga konton ännu"
-          description="Skapa ett konto ovan för att börja följa saldon och transaktioner."
+          description="Fyll i formuläret ovan för att börja följa saldon och transaktioner."
         />
       ) : (
         <ul className="divide-y divide-border rounded-[16px] bg-surface-elevated shadow-[var(--ffos-shadow-soft)]">

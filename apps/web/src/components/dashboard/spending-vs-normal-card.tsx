@@ -29,7 +29,10 @@ export function SpendingVsNormalCard() {
     >
       <div className="flex items-center justify-between gap-3">
         <h2 className="text-sm font-medium text-text-secondary">Mot normalt</h2>
-        <Link href="/what-changed" className="text-sm text-accent">
+        <Link
+          href="/what-changed"
+          className="inline-flex min-h-11 items-center text-sm text-accent"
+        >
           Vad har förändrats? →
         </Link>
       </div>
@@ -65,11 +68,14 @@ function VsNormalBody({ data }: { data: WhatChangedResponse }) {
         </span>
       </p>
       {drivers.length > 0 ? (
-        <ul className="mt-3 space-y-1.5 text-sm">
+        <ul className="mt-3 divide-y divide-border text-sm">
           {drivers.map((driver) => (
-            <li key={driver.key} className="flex items-baseline justify-between gap-3">
+            <li key={driver.key} className="flex min-h-11 items-center justify-between gap-3">
               {driver.href ? (
-                <Link href={driver.href} className="min-w-0 truncate hover:text-accent">
+                <Link
+                  href={driver.href}
+                  className="flex min-h-11 min-w-0 flex-1 items-center truncate hover:text-accent"
+                >
                   {driver.name}
                 </Link>
               ) : (

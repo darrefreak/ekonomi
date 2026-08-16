@@ -50,7 +50,7 @@ export function DashboardPage() {
     return (
       <ErrorState
         title="Vi kunde inte hämta översikten"
-        description={`${error}. Kör pnpm db:seed om demodata saknas.`}
+        description={`${error}. Dina sparade uppgifter påverkas inte. Försök igen om en stund.`}
         onRetry={() => void load()}
       />
     );

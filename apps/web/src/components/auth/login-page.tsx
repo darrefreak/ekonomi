@@ -100,22 +100,46 @@ export function LoginPage() {
   }
 
   return (
-    <div className="mx-auto flex min-h-screen w-full max-w-md flex-col justify-center px-4 py-10">
-      <div className="mb-8">
-        <p className="font-[family-name:var(--ffos-font-display)] text-3xl tracking-tight text-text-primary">
-          Family Financial OS
-        </p>
-        <p className="mt-2 text-sm text-text-secondary">
-          {mode === "login"
-            ? "Logga in för att se hushållets ekonomi."
-            : "Skapa konto och gå vidare till onboarding."}
-        </p>
-      </div>
+    <div className="mx-auto flex min-h-screen w-full max-w-5xl flex-col justify-center px-4 py-10">
+      <div className="grid w-full items-center gap-10 md:grid-cols-[1fr_26rem]">
+        <section className="max-w-xl">
+          <p className="text-sm font-medium text-accent">
+            Hushållets ekonomi, på ett ställe
+          </p>
+          <h1 className="mt-3 font-[family-name:var(--ffos-font-display)] text-4xl tracking-tight text-text-primary md:text-5xl">
+            Se läget. Förstå förändringen. Välj nästa steg.
+          </h1>
+          <p className="mt-4 text-base leading-7 text-text-secondary">
+            Family Financial OS samlar konton, planering och insikter så att ni
+            kan fatta beslut tillsammans utan att börja i ett kalkylblad.
+          </p>
+          <ul className="mt-6 grid gap-3 text-sm text-text-secondary sm:grid-cols-3 md:grid-cols-1">
+            <li className="rounded-[14px] bg-surface-elevated px-4 py-3">
+              Se vad som behöver uppmärksamhet
+            </li>
+            <li className="rounded-[14px] bg-surface-elevated px-4 py-3">
+              Förstå vart pengarna tar vägen
+            </li>
+            <li className="rounded-[14px] bg-surface-elevated px-4 py-3">
+              Planera kommande månader
+            </li>
+          </ul>
+        </section>
 
-      <form
-        onSubmit={onSubmit}
-        className="space-y-4 rounded-[18px] bg-surface-elevated p-5 shadow-[var(--ffos-shadow-soft)]"
-      >
+        <div>
+          <p className="font-[family-name:var(--ffos-font-display)] text-2xl tracking-tight text-text-primary">
+          Family Financial OS
+          </p>
+          <p className="mb-5 mt-2 text-sm text-text-secondary">
+            {mode === "login"
+              ? "Välkommen tillbaka."
+              : "Skapa konto och sätt upp hushållet på några minuter."}
+          </p>
+
+          <form
+            onSubmit={onSubmit}
+            className="space-y-4 rounded-[18px] bg-surface-elevated p-5 shadow-[var(--ffos-shadow-soft)]"
+          >
         {mode === "register" ? (
           <label className="block space-y-1.5 text-sm">
             <span className="text-text-secondary">Namn</span>
@@ -206,7 +230,7 @@ export function LoginPage() {
 
         <button
           type="button"
-          className="w-full text-sm text-accent"
+          className="min-h-11 w-full text-sm text-accent"
           onClick={() =>
             setMode((m) => (m === "login" ? "register" : "login"))
           }
@@ -222,6 +246,8 @@ export function LoginPage() {
           Demo: {DEMO_CREDENTIALS.email} / {DEMO_CREDENTIALS.password}
         </p>
       ) : null}
+        </div>
+      </div>
     </div>
   );
 }
