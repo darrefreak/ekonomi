@@ -47,6 +47,9 @@ export const mobileNav = [
   { href: "/more", label: "Mer" },
 ] as const;
 
+/** The same five outcome-oriented destinations anchor desktop and mobile. */
+export const primaryNav: NavItem[] = mobileNav.map((item) => ({ ...item }));
+
 /** The Money hub: everything about what has happened with the money. */
 export const moneyHub: NavItem[] = [
   { href: "/transactions", label: "Transaktioner" },
@@ -75,3 +78,56 @@ export const insightsHub: NavItem[] = [
   { href: "/savings", label: "Sparande" },
   { href: "/risk", label: "Risk & motståndskraft" },
 ];
+
+const hubChildren = new Set(
+  [...moneyHub, ...planHub, ...insightsHub].map((item) => item.href),
+);
+const primaryHrefs = new Set(primaryNav.map((item) => item.href));
+
+/**
+ * "Mer" is true overflow, not a second copy of the Money and Plan hubs.
+ * Review remains discoverable here as well as from the action-first home view.
+ */
+export const moreNav: NavItem[] = desktopNav.filter(
+  (item) => !primaryHrefs.has(item.href) && !hubChildren.has(item.href),
+);
+
+function routeMatches(pathname: string, href: string): boolean {
+  return pathname === href || pathname.startsWith(`${href}/`);
+}
+
+/** Resolve a feature route back to the primary destination it belongs to. */
+export function primaryHrefForPathname(pathname: string): string {
+  if (pathname === "/" || pathname === "/dashboard" || routeMatches(pathname, "/review")) {
+    return "/";
+  }
+  if (pathname === "/money" || moneyHub.some((item) => routeMatches(pathname, item.href))) {
+    return "/money";
+  }
+  if (pathname === "/plan" || planHub.some((item) => routeMatches(pathname, item.href))) {
+    return "/plan";
+  }
+  if (
+    pathname === "/insights" ||
+    insightsHub.some((item) => routeMatches(pathname, item.href))
+  ) {
+    return "/insights";
+  }
+  return "/more";
+}
+
+/** Context links shown below the five primary destinations on desktop. */
+export function contextNavForPathname(pathname: string): NavItem[] {
+  switch (primaryHrefForPathname(pathname)) {
+    case "/":
+      return desktopNav.filter((item) => item.href === "/review");
+    case "/money":
+      return moneyHub;
+    case "/plan":
+      return planHub;
+    case "/insights":
+      return insightsHub;
+    default:
+      return moreNav;
+  }
+}
