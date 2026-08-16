@@ -143,9 +143,7 @@ export function AccountDetailPage({ accountId }: { accountId: string }) {
     return (
       <ErrorState
         title="Kunde inte hämta kontot"
-        description={
-          detailQuery.error instanceof Error ? detailQuery.error.message : "Något gick fel"
-        }
+        description={describeError(detailQuery.error, "Något gick fel")}
         onRetry={() => void detailQuery.refetch()}
       />
     );
@@ -183,7 +181,9 @@ export function AccountDetailPage({ accountId }: { accountId: string }) {
       </div>
 
       <section className="rounded-[16px] bg-surface-elevated p-5">
-        <p className="text-sm text-text-secondary">Saldo (ledger, ej redigerbart)</p>
+        <p className="text-sm text-text-secondary">
+          Bokfört saldo (ändras via transaktioner)
+        </p>
         <p className="mt-1 text-3xl font-medium">
           <MoneyValue value={data.ledgerBalance ?? data.currentBalance} />
         </p>
@@ -234,7 +234,7 @@ export function AccountDetailPage({ accountId }: { accountId: string }) {
           />
         </label>
         <label className="block text-sm">
-          <span className="text-text-secondary">Provider</span>
+          <span className="text-text-secondary">Bank eller källa</span>
           <input
             value={provider}
             onChange={(e) => setProvider(e.target.value)}

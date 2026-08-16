@@ -51,7 +51,9 @@ export function VehicleMarketPage({
         setHouseholdId(id);
         await reload(id, vehicleId);
       })
-      .catch((err: Error) => setError(err.message))
+      .catch((err: unknown) =>
+        setError(describeError(err, "Kunde inte hämta marknadsanalysen")),
+      )
       .finally(() => setLoading(false));
   }, [vehicleId, reload]);
 
@@ -124,8 +126,7 @@ export function VehicleMarketPage({
           {title}
         </h1>
         <p className="mt-2 text-sm text-text-secondary">
-          Live analys över mock-annonser · {data.analysisSource} · as of{" "}
-          {data.asOf}
+          Marknadsanalys från tillgängligt annonsunderlag · per {data.asOf}
         </p>
         {data.currentMonthlyEconomic ? (
           <p className="mt-2 text-sm text-text-secondary">

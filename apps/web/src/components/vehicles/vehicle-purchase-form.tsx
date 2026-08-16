@@ -113,7 +113,7 @@ export function VehiclePurchaseForm({
   if (!assetAccountId) {
     return (
       <section className="rounded-[16px] bg-surface-elevated p-5">
-        <h2 className="text-sm text-text-secondary">Registrera köp i ledger</h2>
+        <h2 className="text-sm text-text-secondary">Registrera fordonsköp</h2>
         <p className="mt-2 text-sm text-text-muted">
           Fordonet saknar länkat tillgångskonto — koppla ett ASSET-konto innan
           köp kan bokföras.
@@ -125,10 +125,10 @@ export function VehiclePurchaseForm({
   return (
     <section className="space-y-4 rounded-[16px] bg-surface-elevated p-5">
       <div>
-        <h2 className="text-sm text-text-secondary">Registrera köp i ledger</h2>
+        <h2 className="text-sm text-text-secondary">Registrera fordonsköp</h2>
         <p className="mt-1 text-xs text-text-muted">
-          Skapar en balanserad ledger-händelse (kontant eller finansierat).
-          Demo-fordonet är redan bokfört — använd formuläret för nya fordon
+          Bokför köpet som kontant eller finansierat utan att dubbelräkna.
+          Demo-fordonet är redan registrerat — använd formuläret för nya fordon
           eller tester.
         </p>
       </div>

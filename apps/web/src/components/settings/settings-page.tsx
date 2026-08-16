@@ -57,9 +57,7 @@ export function SettingsPage() {
     return (
       <ErrorState
         title="Kunde inte hämta inställningar"
-        description={
-          settingsQuery.error instanceof Error ? settingsQuery.error.message : "Något gick fel"
-        }
+        description={describeError(settingsQuery.error, "Något gick fel")}
         onRetry={() => void settingsQuery.refetch()}
       />
     );
@@ -190,7 +188,7 @@ function AuditLogsSection({
         <h2 className="text-sm text-text-secondary">Auditlogg</h2>
         <p className="text-sm text-text-secondary">
           Kräver OWNER/ADMIN.{" "}
-          {query.error instanceof Error ? query.error.message : "Kunde inte hämta."}
+          {describeError(query.error, "Kunde inte hämta.")}
         </p>
         <button
           type="button"
@@ -264,7 +262,7 @@ function AnalysisRunsSection({
       <section className="space-y-3 rounded-[16px] bg-surface-elevated p-5">
         <h2 className="text-sm text-text-secondary">Jobbstatus</h2>
         <p className="text-sm text-warning">
-          {query.error instanceof Error ? query.error.message : "Kunde inte hämta."}
+          {describeError(query.error, "Kunde inte hämta.")}
         </p>
         <button
           type="button"
@@ -302,8 +300,7 @@ function AnalysisRunsSection({
                 {row.kind} · {row.status}
               </p>
               <p className="mt-1 text-xs text-text-muted">
-                as of {row.asOf} · {new Date(row.startedAt).toLocaleString("sv-SE")}
-                {row.errorCode ? ` · ${row.errorCode}` : ""}
+                per {row.asOf} · {new Date(row.startedAt).toLocaleString("sv-SE")}
               </p>
             </li>
           ))}

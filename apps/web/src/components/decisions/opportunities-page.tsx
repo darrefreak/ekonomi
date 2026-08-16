@@ -72,14 +72,12 @@ function OpportunityCard({
 
           <div className="mt-3 flex flex-wrap items-center gap-2">
             {confidenceLabel ? <Badge>{confidenceLabel}</Badge> : null}
-            <Badge>{effortLabel} insats</Badge>
-            <Badge>{item.status}</Badge>
-            {item.detectorKey ? <Badge>{item.detectorKey}</Badge> : null}
+            <Badge>{effortLabel}</Badge>
           </div>
 
           {facts.length > 0 ? (
             <details className="mt-3 text-xs text-text-secondary">
-              <summary className="cursor-pointer select-none text-accent">
+              <summary className="flex min-h-11 cursor-pointer select-none items-center text-accent">
                 Varför? ({facts.length})
               </summary>
               <dl className="mt-2 space-y-1.5 border-l border-surface-muted pl-3">
@@ -106,7 +104,7 @@ function OpportunityCard({
                 <Link
                   key={`${e.kind}-${e.id}-${e.href}`}
                   href={e.href}
-                  className="text-accent hover:underline"
+                  className="inline-flex min-h-11 items-center text-accent hover:underline"
                   onClick={() => {
                     if (!householdId) return;
                     void api.trackRecommendationOutcome({
@@ -189,11 +187,11 @@ export function OpportunitiesPage() {
     void load();
   }, [load]);
 
-  if (loading) return <LoadingState label="Hämtar opportunities…" />;
+  if (loading) return <LoadingState label="Hämtar möjligheter…" />;
   if (error) {
     return (
       <ErrorState
-        title="Kunde inte hämta opportunities"
+        title="Kunde inte hämta möjligheter"
         description={error}
         onRetry={() => void load()}
       />
@@ -202,8 +200,8 @@ export function OpportunitiesPage() {
   if (!data) {
     return (
       <EmptyState
-        title="Inga opportunities"
-        description="Live-detektorer körs när hushållsdata finns."
+        title="Inga möjligheter ännu"
+        description="När det finns tillräckligt med historik visas konkreta förbättringsförslag här."
       />
     );
   }
@@ -212,25 +210,30 @@ export function OpportunitiesPage() {
     <div className="space-y-6">
       <div>
         <h1 className="font-[family-name:var(--ffos-font-display)] text-3xl tracking-tight">
-          Opportunities
+          Möjligheter
         </h1>
         <p className="mt-2 text-sm text-text-secondary">
-          Live-detektorer · {data.source ?? "live-engine"} · as of {data.asOf}
+          Förslag baserade på hushållets mönster · beräknat per {data.asOf}
         </p>
         <p className="mt-2 text-sm">
-          <Link href="/advisor" className="text-accent hover:underline">
-            Recommendation outcomes →
+          <Link
+            href="/advisor"
+            className="inline-flex min-h-11 items-center text-accent hover:underline"
+          >
+            Se tidigare rekommendationer →
           </Link>
         </p>
       </div>
 
       {data.lifestyleCreep ? (
         <section className="rounded-[16px] bg-surface-elevated p-5">
-          <h2 className="text-sm text-text-secondary">Lifestyle creep</h2>
+          <h2 className="text-sm text-text-secondary">
+            Ökar utgifterna över tid?
+          </h2>
           <p className="mt-2 text-sm text-text-primary">
             {data.lifestyleCreep.creeping
-              ? "Utgifterna har stigit mot baseline."
-              : "Ingen tydlig lifestyle creep just nu."}
+              ? "Utgifterna har stigit jämfört med hushållets normalnivå."
+              : "Ingen tydlig långsiktig utgiftsökning just nu."}
           </p>
           <dl className="mt-4 grid gap-3 text-sm sm:grid-cols-3">
             <div>
@@ -240,13 +243,13 @@ export function OpportunitiesPage() {
               </dd>
             </div>
             <div>
-              <dt className="text-text-secondary">Baseline 12 mån</dt>
+              <dt className="text-text-secondary">Normalnivå 12 mån</dt>
               <dd>
                 <MoneyValue value={data.lifestyleCreep.baselineAvgMonthly} />
               </dd>
             </div>
             <div>
-              <dt className="text-text-secondary">Delta</dt>
+              <dt className="text-text-secondary">Förändring</dt>
               <dd>
                 <MoneyValue value={data.lifestyleCreep.delta} signed />
                 {data.lifestyleCreep.deltaPercent != null
@@ -259,7 +262,10 @@ export function OpportunitiesPage() {
             <ul className="mt-4 space-y-2 text-sm">
               {data.lifestyleCreep.drivers.map((d) => (
                 <li key={d.categoryKey} className="flex flex-wrap justify-between gap-3">
-                  <Link href={d.href} className="text-accent hover:underline">
+                  <Link
+                    href={d.href}
+                    className="inline-flex min-h-11 items-center text-accent hover:underline"
+                  >
                     {d.categoryName}
                   </Link>
                   <MoneyValue value={d.delta} signed />
@@ -272,8 +278,8 @@ export function OpportunitiesPage() {
 
       {data.items.length === 0 ? (
         <EmptyState
-          title="Inga aktiva opportunities"
-          description="Detektorerna hittade inget över tröskelvärdena."
+          title="Inga aktiva möjligheter"
+          description="Inget kräver en rekommendation just nu."
         />
       ) : (
         <ul className="space-y-3">

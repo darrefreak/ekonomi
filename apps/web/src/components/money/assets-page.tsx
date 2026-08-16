@@ -62,7 +62,7 @@ export function AssetsPage() {
           Tillgångar
         </h1>
         <p className="mt-2 text-sm text-text-secondary">
-          Reala tillgångar och fordonskopplingar · as of {data.asOf}
+          Reala tillgångar och kopplade fordon · per {data.asOf}
         </p>
         <p className="mt-3 flex flex-wrap gap-4 text-sm">
           <Link href="/net-worth" className="text-accent hover:underline">

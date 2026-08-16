@@ -61,7 +61,7 @@ export function NetWorthPage() {
     return (
       <EmptyState
         title="Ingen nettoförmögenhet"
-        description="När konton finns beräknas NW från ledger och snapshots."
+        description="När konton finns beräknas nettoförmögenheten från saldon och bokförda händelser."
         actionLabel="Försök igen"
         onAction={() => void load()}
       />

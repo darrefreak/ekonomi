@@ -85,7 +85,7 @@ export function DebtPage() {
           Skulder
         </h1>
         <p className="mt-2 text-sm text-text-secondary">
-          Bolån, lån och kredit · principal vs ränta · as of {data.asOf}
+          Bolån, lån och krediter · amortering och ränta · per {data.asOf}
         </p>
       </div>
 

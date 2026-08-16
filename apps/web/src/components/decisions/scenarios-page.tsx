@@ -109,8 +109,8 @@ export function ScenariosPage() {
   if (!data) {
     return (
       <EmptyState
-        title="Inga scenarios"
-        description="Skapa ett what-if-scenario utan att ändra ledger."
+        title="Inga scenarier"
+        description="Skapa ett scenario och jämför utfallet utan att ändra hushållets uppgifter."
         actionLabel="Försök igen"
         onAction={() => void load()}
       />
@@ -124,7 +124,7 @@ export function ScenariosPage() {
           Scenarios
         </h1>
         <p className="mt-2 text-sm text-text-secondary">
-          Icke-destruktiv simulering · ledger muteras aldrig · as of {data.asOf}
+          Jämför tänkbara beslut utan att ändra hushållets ekonomi · per {data.asOf}
         </p>
       </div>
 
@@ -205,7 +205,7 @@ export function ScenariosPage() {
                   <p className="font-medium">{s.name}</p>
                   <p className="mt-2 text-sm text-text-secondary">{s.description}</p>
                   <p className="mt-2 text-xs text-text-muted">
-                    {s.status} · ledger orörd
+                    Scenario · påverkar inte bokförda uppgifter
                   </p>
                 </div>
                 <div className="text-right text-sm">
@@ -232,8 +232,7 @@ export function ScenariosPage() {
             Senaste simulering: {simulation.name}
           </h2>
           <p className="mt-1 text-xs text-text-muted">
-            ledgerMutated={String(simulation.ledgerMutated)} · as of{" "}
-            {simulation.asOf}
+            Beräknat per {simulation.asOf} · inga bokförda uppgifter har ändrats
           </p>
           <dl className="mt-4 grid gap-3 text-sm md:grid-cols-3">
             <div>

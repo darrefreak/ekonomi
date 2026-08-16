@@ -132,7 +132,7 @@ export function TransactionDetailPage({ transactionId }: { transactionId: string
     mutationFn: async () => {
       if (!data) throw new Error("Transaktionen är inte laddad.");
       if (!data.financialEventId) {
-        throw new Error("Transaktionen är inte kopplad till en bokförd ledger-händelse.");
+        throw new Error("Transaktionen saknar ett bokfört underlag.");
       }
       if (!reviseToAccountId) throw new Error("Välj mottagarkonto för överföringen.");
       const id = await ensureHouseholdSession();
@@ -168,9 +168,7 @@ export function TransactionDetailPage({ transactionId }: { transactionId: string
     return (
       <ErrorState
         title="Kunde inte hämta transaktionen"
-        description={
-          detailQuery.error instanceof Error ? detailQuery.error.message : "Något gick fel"
-        }
+        description={describeError(detailQuery.error, "Något gick fel")}
         onRetry={() => void detailQuery.refetch()}
       />
     );
@@ -285,8 +283,8 @@ export function TransactionDetailPage({ transactionId }: { transactionId: string
             Omklassificera till intern överföring
           </h2>
           <p className="text-sm text-text-secondary">
-            Skapar en riktig ledger-överföring istället för en utgift. Intern
-            överföring — räknas inte som utgift.
+            Bokför posten som en intern överföring i stället för en utgift.
+            Interna överföringar påverkar inte hushållets utgifter.
           </p>
           <label className="block text-sm">
             <span className="text-text-secondary">Mottagarkonto</span>
@@ -332,7 +330,7 @@ export function TransactionDetailPage({ transactionId }: { transactionId: string
 
       <section className="space-y-3 rounded-[16px] bg-surface-elevated p-5">
         <h2 className="text-sm font-medium text-text-secondary">
-          Återbetalning (ledger)
+          Återbetalning
         </h2>
         <p className="text-sm text-text-secondary">
           Registrerar en kontant återbetalning som minskar periodens utgift — inte

@@ -16,6 +16,22 @@ const NEEDS_RECONNECT = new Set([
   "DEGRADED",
 ]);
 
+const connectionLabels: Record<string, string> = {
+  CONNECTED: "Ansluten",
+  AUTH_REQUIRED: "Behöver återanslutas",
+  ERROR: "Fel",
+  DISCONNECTED: "Frånkopplad",
+  DEGRADED: "Begränsad anslutning",
+  SYNCING: "Uppdaterar",
+};
+
+const syncStatusLabels: Record<string, string> = {
+  COMPLETED: "Klar",
+  FAILED: "Misslyckades",
+  RUNNING: "Pågår",
+  PENDING: "Väntar",
+};
+
 export function IntegrationsPage() {
   const [data, setData] = useState<IntegrationsResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -31,7 +47,9 @@ export function IntegrationsPage() {
 
   useEffect(() => {
     void load()
-      .catch((err: Error) => setError(err.message))
+      .catch((err: unknown) =>
+        setError(describeError(err, "Kunde inte hämta kopplingarna")),
+      )
       .finally(() => setLoading(false));
   }, [load]);
 
@@ -49,9 +67,9 @@ export function IntegrationsPage() {
     }
   }
 
-  if (loading) return <LoadingState label="Hämtar integrationer…" />;
+  if (loading) return <LoadingState label="Hämtar kopplingar…" />;
   if (!data) {
-    return <ErrorState title="Kunde inte hämta integrationer" description={error ?? ""} />;
+    return <ErrorState title="Kunde inte hämta kopplingar" description={error ?? ""} />;
   }
 
   const providers = data.providers ?? [];
@@ -61,21 +79,21 @@ export function IntegrationsPage() {
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h1 className="font-[family-name:var(--ffos-font-display)] text-3xl tracking-tight">
-            Integrationer
+            Kopplingar
           </h1>
           <p className="mt-2 text-sm text-text-secondary">
-            Källor, hälsa och reconnect · mock connectors · {data.asOf}
+            Datakällor och när de senast uppdaterades · per {data.asOf}
           </p>
         </div>
         <button
           type="button"
           disabled={busy !== null}
-          className="rounded-[12px] bg-accent px-4 py-2 text-sm text-on-accent disabled:opacity-60"
+          className="min-h-11 rounded-[12px] bg-accent px-4 text-sm text-on-accent disabled:opacity-60"
           onClick={() =>
             void run("sync-all", (id) => api.triggerFakeSync(id))
           }
         >
-          {busy === "sync-all" ? "Synkar…" : "Fake sync (första källa)"}
+          {busy === "sync-all" ? "Uppdaterar…" : "Uppdatera första källan"}
         </button>
       </div>
 
@@ -89,7 +107,7 @@ export function IntegrationsPage() {
         <h2 className="text-sm font-medium text-text-secondary">Lägg till källa</h2>
         <div className="mt-3 flex flex-wrap gap-3">
           <label className="text-sm text-text-secondary">
-            Provider
+            Typ av källa
             <select
               className="mt-1 block min-h-11 rounded-[12px] border border-border bg-surface px-3 py-2 text-text-primary"
               value={providerId}
@@ -108,13 +126,13 @@ export function IntegrationsPage() {
               className="mt-1 block min-h-11 rounded-[12px] border border-border bg-surface px-3 py-2 text-text-primary"
               value={customName}
               onChange={(e) => setCustomName(e.target.value)}
-              placeholder="Eg. Extra SEB"
+              placeholder="Till exempel Extra SEB"
             />
           </label>
           <button
             type="button"
             disabled={busy !== null}
-            className="self-end rounded-[12px] border border-border px-4 py-2 text-sm disabled:opacity-60"
+            className="min-h-11 self-end rounded-[12px] border border-border px-4 text-sm disabled:opacity-60"
             onClick={() =>
               void run("create", (householdId) =>
                 api.createSource({
@@ -133,7 +151,7 @@ export function IntegrationsPage() {
       {data.sources.length === 0 ? (
         <EmptyState
           title="Inga aktiva källor"
-          description="Lägg till en mock-provider ovan för att börja importera."
+          description="Lägg till en källa ovan eller importera ett kontoutdrag."
         />
       ) : (
         <ul className="space-y-3">
@@ -143,10 +161,11 @@ export function IntegrationsPage() {
                 <div>
                   <p className="font-medium">{s.name}</p>
                   <p className="mt-1 text-xs text-text-muted">
-                    {s.connectionStatus} · {s.domain} · {s.providerId}
+                    {connectionLabels[s.connectionStatus] ?? "Okänd status"} ·{" "}
+                    {s.domain}
                   </p>
                   <p className="mt-1 text-xs text-text-secondary">
-                    Freshness: {s.freshnessLabel ?? "okänd"}
+                    Aktualitet: {s.freshnessLabel ?? "okänd"}
                     {s.lastSyncedAt ? ` · senast ${s.lastSyncedAt}` : ""}
                   </p>
                 </div>
@@ -155,33 +174,33 @@ export function IntegrationsPage() {
                     <button
                       type="button"
                       disabled={busy !== null}
-                      className="rounded-[12px] bg-accent px-3 py-2 text-sm text-on-accent disabled:opacity-60"
+                      className="min-h-11 rounded-[12px] bg-accent px-3 text-sm text-on-accent disabled:opacity-60"
                       onClick={() =>
                         void run(`reconnect-${s.id}`, (householdId) =>
                           api.reconnectSource(s.id, { householdId }),
                         )
                       }
                     >
-                      {busy === `reconnect-${s.id}` ? "…" : "Reconnect"}
+                      {busy === `reconnect-${s.id}` ? "…" : "Återanslut"}
                     </button>
                   ) : (
                     <button
                       type="button"
                       disabled={busy !== null}
-                      className="rounded-[12px] border border-border px-3 py-2 text-sm disabled:opacity-60"
+                      className="min-h-11 rounded-[12px] border border-border px-3 text-sm disabled:opacity-60"
                       onClick={() =>
                         void run(`sync-${s.id}`, (householdId) =>
                           api.syncSource(householdId, s.id),
                         )
                       }
                     >
-                      {busy === `sync-${s.id}` ? "…" : "Sync"}
+                      {busy === `sync-${s.id}` ? "…" : "Uppdatera"}
                     </button>
                   )}
                   <button
                     type="button"
                     disabled={busy !== null}
-                    className="rounded-[12px] border border-border px-3 py-2 text-sm text-text-secondary disabled:opacity-60"
+                    className="min-h-11 rounded-[12px] border border-border px-3 text-sm text-text-secondary disabled:opacity-60"
                     onClick={() =>
                       void run(`archive-${s.id}`, (householdId) =>
                         api.archiveSource(householdId, s.id),
@@ -199,17 +218,19 @@ export function IntegrationsPage() {
 
       <section className="overflow-hidden rounded-[16px] bg-surface-elevated">
         <h2 className="border-b border-border px-5 py-3 text-sm text-text-secondary">
-          Senaste syncs
+          Senaste uppdateringar
         </h2>
         {data.recentSyncs.length === 0 ? (
-          <p className="px-5 py-4 text-sm text-text-muted">Inga syncs ännu.</p>
+          <p className="px-5 py-4 text-sm text-text-muted">
+            Inga uppdateringar ännu.
+          </p>
         ) : (
           <ul className="divide-y divide-border">
             {data.recentSyncs.map((s) => (
               <li key={s.id} className="px-5 py-3 text-sm">
                 <p className="font-medium">
-                  {s.sourceName ?? "Okänd källa"} · {s.status} · {s.recordsFetched}{" "}
-                  poster
+                  {s.sourceName ?? "Okänd källa"} ·{" "}
+                  {syncStatusLabels[s.status] ?? "Okänd status"} · {s.recordsFetched} poster
                 </p>
                 <p className="text-xs text-text-muted">{s.message}</p>
               </li>

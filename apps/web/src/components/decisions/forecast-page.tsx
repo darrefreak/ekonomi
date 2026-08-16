@@ -79,8 +79,7 @@ export function ForecastPage() {
           Forecast
         </h1>
         <p className="mt-2 text-sm text-text-secondary">
-          Deterministisk live-projektion (7d–12m) · {data.source} · as of{" "}
-          {data.asOf}
+          Beräknad utveckling från 7 dagar till 12 månader · per {data.asOf}
         </p>
       </div>
 

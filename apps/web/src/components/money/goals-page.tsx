@@ -177,9 +177,7 @@ export function GoalsPage() {
     return (
       <ErrorState
         title="Kunde inte hämta mål"
-        description={
-          goalsQuery.error instanceof Error ? goalsQuery.error.message : "Något gick fel"
-        }
+        description={describeError(goalsQuery.error, "Något gick fel")}
         onRetry={() => void goalsQuery.refetch()}
       />
     );
@@ -193,7 +191,7 @@ export function GoalsPage() {
           Mål
         </h1>
         <p className="mt-2 text-sm text-text-secondary">
-          Sparmål och öronmärkta fonder · as of {data.asOf}
+          Sparmål och öronmärkta pengar · per {data.asOf}
         </p>
       </div>
 
