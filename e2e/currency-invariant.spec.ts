@@ -17,11 +17,14 @@ test.describe("household currency", () => {
       timeout: 20_000,
     });
 
-    await page.getByRole("button", { name: /fortsätt/i }).first().click();
-
     const currency = page.getByTestId("household-currency");
     await expect(currency).toBeVisible();
-    await expect(currency).toHaveText("SEK");
+    await expect(currency).toContainText("SEK");
+
+    await page.getByRole("button", { name: /fortsätt/i }).first().click();
+    await expect(
+      page.getByRole("heading", { name: /vad vill ni börja med/i }),
+    ).toBeVisible();
 
     // The old step 2 was a select carrying EUR and NOK.
     await expect(page.locator("select")).toHaveCount(0);

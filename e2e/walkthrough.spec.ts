@@ -29,6 +29,7 @@ test.describe("product walkthrough", () => {
   test("creating an account shows it in the list without a refresh", async ({ page }) => {
     await page.goto("/accounts");
     await settle(page);
+    await page.getByRole("button", { name: /nytt konto/i }).click();
 
     const name = `Sparkonto ${unique()}`;
     await page.getByLabel(/^namn$/i).first().fill(name);

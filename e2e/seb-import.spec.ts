@@ -68,6 +68,7 @@ async function attachStatement(page: Page, name = "kontoutdrag.csv") {
 async function ensureImportableAccount(page: Page): Promise<string> {
   await page.goto("/accounts");
   await page.waitForTimeout(2000);
+  await page.getByRole("button", { name: /nytt konto/i }).click();
   const name = `SEB Import ${Date.now().toString(36).slice(-5)}`;
   await page.getByLabel(/^namn$/i).first().fill(name);
   await page.getByRole("button", { name: /^skapa konto$/i }).click();

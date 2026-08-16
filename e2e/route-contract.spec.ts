@@ -35,13 +35,17 @@ test.describe("navigation route contract", () => {
   }, testInfo) => {
     test.skip(testInfo.project.name !== "chromium", "desktop project only");
 
-    await page.goto("/");
-    const sidebar = page.getByRole("navigation", { name: /huvudnavigation/i });
-    await expect(sidebar).toBeVisible();
-    const hrefs = await internalHrefs(page, sidebar);
-    expect(hrefs.length, "the sidebar should expose the product's sections").toBeGreaterThan(
-      15,
-    );
+    const hrefs = new Set<string>();
+    for (const primary of ["/", "/money", "/plan", "/insights", "/more"]) {
+      await page.goto(primary);
+      const sidebar = page.getByRole("navigation", { name: /huvudnavigation/i });
+      await expect(sidebar).toBeVisible();
+      for (const href of await internalHrefs(page, sidebar)) hrefs.add(href);
+    }
+    expect(
+      hrefs.size,
+      "five primary destinations plus contextual links should expose the product",
+    ).toBeGreaterThan(15);
 
     for (const href of hrefs) {
       await page.goto(href);
@@ -62,18 +66,42 @@ test.describe("navigation route contract", () => {
     const bottomNav = page.getByRole("navigation", { name: /mobilnavigation/i });
     await expect(bottomNav).toBeVisible();
     const bottom = await internalHrefs(page, bottomNav);
-    expect(bottom.length, "the bottom navigation should expose the primary tabs")
-      .toBeGreaterThanOrEqual(4);
+    expect(bottom, "the bottom navigation should expose exactly five primary tabs").toEqual([
+      "/",
+      "/money",
+      "/plan",
+      "/insights",
+      "/more",
+    ]);
+
+    const hubHrefs: string[] = [];
+    for (const [path, name] of [
+      ["/money", "Pengar"],
+      ["/plan", "Planera"],
+      ["/insights", "Insikter"],
+    ] as const) {
+      await page.goto(path);
+      hubHrefs.push(
+        ...(await internalHrefs(
+          page,
+          page.getByRole("navigation", { name: new RegExp(`^${name}$`, "i") }),
+        )),
+      );
+    }
 
     await page.goto("/more");
     const moreNav = page.getByRole("navigation", { name: /fler sidor/i });
     await expect(moreNav).toBeVisible();
     const more = await internalHrefs(page, moreNav);
     expect(more.length, "the More menu should expose the overflow sections").toBeGreaterThan(
-      15,
+      10,
     );
+    expect(
+      more.filter((href) => hubHrefs.includes(href)),
+      "More must not duplicate links already owned by a primary hub",
+    ).toEqual([]);
 
-    for (const href of [...new Set([...bottom, ...more])]) {
+    for (const href of [...new Set([...bottom, ...hubHrefs, ...more])]) {
       await page.goto(href);
       await expectRouteRendered(page, href, { content: false });
     }

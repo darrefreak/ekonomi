@@ -11,6 +11,7 @@ test.describe("P1-U1 core workflows", () => {
     const name = `U1 Konto ${Date.now()}`;
     await page.goto("/accounts");
     await expect(page.getByRole("heading", { name: /konton/i })).toBeVisible();
+    await page.getByRole("button", { name: /nytt konto/i }).click();
 
     const form = page.locator("form").filter({ hasText: /nytt konto/i });
     await form
@@ -91,6 +92,7 @@ test.describe("P1-U1 core workflows", () => {
     test.skip(testInfo.project.name !== "mobile", "mobile project only");
     await page.goto("/accounts");
     await expect(page.getByRole("heading", { name: /konton/i })).toBeVisible();
+    await page.getByRole("button", { name: /nytt konto/i }).click();
     await expect(page.getByRole("button", { name: /skapa konto/i })).toBeVisible();
     const overflow = await page.evaluate(
       () => document.documentElement.scrollWidth > window.innerWidth + 2,

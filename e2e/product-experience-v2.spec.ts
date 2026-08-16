@@ -19,7 +19,7 @@ async function expectNoHorizontalOverflow(page: Page) {
 }
 
 test.describe("hubs and navigation", () => {
-  test("the Money and Plan hubs render and their links resolve", async ({ page }) => {
+  test("Money, Plan and Insights expose their user jobs", async ({ page }) => {
     await gotoRoute(page, "/money");
     const moneyLinks = page
       .getByRole("navigation", { name: /^Pengar$/ })
@@ -30,6 +30,13 @@ test.describe("hubs and navigation", () => {
     const planNav = page.getByRole("navigation", { name: /^Planera$/ });
     await expect(planNav.getByRole("link", { name: /smart budget/i })).toBeVisible();
     await expect(planNav.getByRole("link", { name: /finansiell kalender/i })).toBeVisible();
+
+    await gotoRoute(page, "/insights");
+    const insightsNav = page.getByRole("navigation", { name: /^Insikter$/ });
+    await expect(
+      insightsNav.getByRole("link", { name: /vad har förändrats/i }),
+    ).toBeVisible();
+    await expect(insightsNav.getByRole("link", { name: /rapporter/i })).toBeVisible();
     await expectNoHorizontalOverflow(page);
   });
 
@@ -94,6 +101,29 @@ test.describe("what changed", () => {
     const hasData = (await page.getByText(/engångsköp/i).count()) > 0;
     test.skip(!hasData, "comparison had too little data today");
     await expect(page.getByText(/ingår.*i summorna/i).first()).toBeVisible();
+  });
+
+  test("a category driver keeps context and reaches its transactions", async ({
+    page,
+  }) => {
+    await gotoRoute(page, "/what-changed");
+    const categorySection = page.locator("section").filter({
+      has: page.getByRole("heading", {
+        name: /största förändringarna per kategori/i,
+      }),
+    });
+    const driver = categorySection.getByRole("link").first();
+    test.skip((await driver.count()) === 0, "comparison had no category driver");
+
+    await driver.click();
+    await expect(page).toHaveURL(/\/reports\?/);
+    await expect(page.getByText(/du granskar/i)).toBeVisible();
+
+    const row = page.getByTestId("report-drill-row").first();
+    await expect(row).toBeVisible({ timeout: 20_000 });
+    await row.click();
+    await expect(page).toHaveURL(/\/transactions\?/);
+    await expect(page.getByTestId("drill-filters")).toBeVisible();
   });
 });
 
@@ -195,6 +225,17 @@ test.describe("review V2", () => {
     const progress = page.getByTestId("review-progress");
     test.skip((await progress.count()) === 0, "nothing to review in the demo household today");
     await expect(progress).toContainText(/kvar/i);
+  });
+
+  test("decision surfaces hide internal enums and tool names", async ({ page }) => {
+    await gotoRoute(page, "/review");
+    await expect(page.locator("body")).not.toContainText(/UNKNOWN TRANSACTION/i);
+    await expect(page.locator("body")).not.toContainText(/POSSIBLE INTERNAL TRANSFER/i);
+
+    await gotoRoute(page, "/advisor");
+    await expect(page.locator("body")).not.toContainText(/Källverktyg:/i);
+    await expect(page.locator("body")).not.toContainText(/Tool trace/i);
+    await expect(page.locator("body")).not.toContainText(/Recommendation outcomes/i);
   });
 });
 

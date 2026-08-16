@@ -60,9 +60,38 @@ test.describe("mobile critical paths", () => {
     await expectNoHorizontalOverflow(page);
   });
 
+  test("deep pages keep their primary destination selected", async ({ page }) => {
+    for (const [path, label] of [
+      ["/transactions", "Pengar"],
+      ["/budget", "Planera"],
+      ["/reports", "Insikter"],
+      ["/vehicles", "Mer"],
+      ["/review", "Hem"],
+    ] as const) {
+      await gotoRoute(page, path);
+      const current = page
+        .getByRole("navigation", { name: /mobilnavigation/i })
+        .getByRole("link", { name: new RegExp(`^${label}$`, "i") });
+      await expect(current).toHaveAttribute("aria-current", "page");
+    }
+  });
+
+  test("report controls meet the 44px mobile target", async ({ page }) => {
+    await gotoRoute(page, "/reports");
+    const controls = page
+      .getByRole("group", { name: /^(Mått|Dimension)$/ })
+      .getByRole("button");
+    const boxes = await controls.evaluateAll((nodes) =>
+      nodes.map((node) => node.getBoundingClientRect().height),
+    );
+    expect(boxes.length).toBeGreaterThan(0);
+    expect(Math.min(...boxes)).toBeGreaterThanOrEqual(44);
+  });
+
   test("core money mutation: create an account from mobile", async ({ page }) => {
     const name = `Mobil konto ${Date.now()}`;
     await gotoRoute(page, "/accounts");
+    await page.getByRole("button", { name: /nytt konto/i }).click();
     const form = page.locator("form").filter({ hasText: /nytt konto/i });
     await form
       .locator("label")
