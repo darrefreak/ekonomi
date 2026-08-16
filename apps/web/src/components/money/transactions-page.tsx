@@ -11,6 +11,7 @@ import { EmptyState } from "../feedback/empty-state";
 import { ErrorState } from "../feedback/error-state";
 import { LoadingState } from "../feedback/loading-state";
 import { NewTransactionForm } from "./new-transaction-form";
+import { describeError } from "@/lib/error-message";
 
 function readQueryParam(name: string) {
   if (typeof window === "undefined") return "";
@@ -27,10 +28,22 @@ export function TransactionsPage() {
   // removable chips rather than duplicated as form fields.
   const [categoryId, setCategoryId] = useState(() => readQueryParam("categoryId"));
   const [merchantId, setMerchantId] = useState(() => readQueryParam("merchantId"));
+  const [merchantMissing, setMerchantMissing] = useState(
+    () => readQueryParam("merchantMissing") === "true",
+  );
   const [includeExcluded, setIncludeExcluded] = useState(false);
   const [showNew, setShowNew] = useState(false);
 
-  const filters = { q, accountId, from, to, categoryId, merchantId, includeExcluded };
+  const filters = {
+    q,
+    accountId,
+    from,
+    to,
+    categoryId,
+    merchantId,
+    merchantMissing,
+    includeExcluded,
+  };
 
   const transactionsQuery = useQuery({
     queryKey: householdId
@@ -45,6 +58,7 @@ export function TransactionsPage() {
         to: to || undefined,
         categoryId: categoryId || undefined,
         merchantId: merchantId || undefined,
+        merchantMissing,
         includeExcluded,
       }),
     enabled: Boolean(householdId),
@@ -73,11 +87,7 @@ export function TransactionsPage() {
     return (
       <ErrorState
         title="Kunde inte hämta transaktioner"
-        description={
-          transactionsQuery.error instanceof Error
-            ? transactionsQuery.error.message
-            : "Något gick fel"
-        }
+        description={describeError(transactionsQuery.error, "Något gick fel")}
         onRetry={() => void transactionsQuery.refetch()}
       />
     );
@@ -112,14 +122,14 @@ export function TransactionsPage() {
         />
       ) : null}
 
-      {categoryId || merchantId ? (
+      {categoryId || merchantId || merchantMissing ? (
         <div className="flex flex-wrap items-center gap-2" data-testid="drill-filters">
           <span className="text-xs text-text-muted">Filtrerat på</span>
           {categoryId ? (
             <button
               type="button"
               onClick={() => setCategoryId("")}
-              className="inline-flex min-h-9 items-center gap-1 rounded-full bg-accent/10 px-3 text-sm text-accent"
+              className="inline-flex min-h-11 items-center gap-1 rounded-full bg-accent/10 px-3 text-sm text-accent"
             >
               {categories.find((c) => c.id === categoryId)?.name ?? "Kategori"}
               <span aria-hidden>×</span>
@@ -130,11 +140,22 @@ export function TransactionsPage() {
             <button
               type="button"
               onClick={() => setMerchantId("")}
-              className="inline-flex min-h-9 items-center gap-1 rounded-full bg-accent/10 px-3 text-sm text-accent"
+              className="inline-flex min-h-11 items-center gap-1 rounded-full bg-accent/10 px-3 text-sm text-accent"
             >
               Mottagare
               <span aria-hidden>×</span>
               <span className="sr-only">Ta bort mottagarfilter</span>
+            </button>
+          ) : null}
+          {merchantMissing ? (
+            <button
+              type="button"
+              onClick={() => setMerchantMissing(false)}
+              className="inline-flex min-h-11 items-center gap-1 rounded-full bg-accent/10 px-3 text-sm text-accent"
+            >
+              Okänd mottagare
+              <span aria-hidden>×</span>
+              <span className="sr-only">Ta bort filter för okänd mottagare</span>
             </button>
           ) : null}
         </div>
@@ -152,7 +173,7 @@ export function TransactionsPage() {
           onChange={(e) => setQ(e.target.value)}
           aria-label="Sök transaktioner"
           type="search"
-          placeholder="Sök merchant, kategori…"
+          placeholder="Sök mottagare, kategori…"
           className="min-h-11 rounded-[12px] border border-border bg-surface-elevated px-3 text-sm lg:col-span-2"
         />
         <select
@@ -208,6 +229,9 @@ export function TransactionsPage() {
             setAccountId("");
             setFrom("");
             setTo("");
+            setCategoryId("");
+            setMerchantId("");
+            setMerchantMissing(false);
             setIncludeExcluded(false);
           }}
         />

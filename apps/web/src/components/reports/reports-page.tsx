@@ -83,6 +83,7 @@ function ReportsPageInner() {
   const categoryId = searchParams.get("categoryId") ?? "";
   const merchantId = searchParams.get("merchantId") ?? "";
   const accountId = searchParams.get("accountId") ?? "";
+  const contextLabel = searchParams.get("contextLabel") ?? "";
 
   const setParams = useCallback(
     (updates: Record<string, string | null>) => {
@@ -146,14 +147,40 @@ function ReportsPageInner() {
 
   return (
     <div className="space-y-6">
+      <nav aria-label="Sökväg" className="flex min-h-11 items-center gap-2 text-sm">
+        <Link href="/insights" className="text-accent">
+          Insikter
+        </Link>
+        <span aria-hidden className="text-text-muted">
+          /
+        </span>
+        {categoryId ? (
+          <>
+            <Link href="/what-changed" className="text-accent">
+              Vad har förändrats?
+            </Link>
+            <span aria-hidden className="text-text-muted">
+              /
+            </span>
+          </>
+        ) : null}
+        <span className="text-text-muted">Rapporter</span>
+      </nav>
+
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h1 className="font-[family-name:var(--ffos-font-display)] text-3xl tracking-tight">
             Rapporter
           </h1>
           <p className="mt-2 text-sm text-text-secondary">
-            Utforska utgifter, inkomster och kassaflöde — klicka på en rad för att
-            gräva djupare.
+            {contextLabel ? (
+              <>
+                Du granskar <strong>{contextLabel}</strong>. Klicka på en mottagare
+                för att se transaktionerna bakom summan.
+              </>
+            ) : (
+              "Utforska utgifter, inkomster och kassaflöde — klicka på en rad för att gräva djupare."
+            )}
           </p>
         </div>
         <button
@@ -198,7 +225,7 @@ function ReportsPageInner() {
               type="button"
               onClick={() => setParams({ measure: option.key })}
               aria-pressed={measure === option.key}
-              className={`min-h-9 rounded-[8px] px-3 text-sm ${
+              className={`min-h-11 rounded-[8px] px-3 text-sm ${
                 measure === option.key
                   ? "bg-surface font-medium text-text-primary shadow-sm"
                   : "text-text-muted hover:text-text-primary"
@@ -215,7 +242,7 @@ function ReportsPageInner() {
               type="button"
               onClick={() => setParams({ dimension: option.key })}
               aria-pressed={dimension === option.key}
-              className={`min-h-9 rounded-[8px] px-3 text-sm ${
+              className={`min-h-11 rounded-[8px] px-3 text-sm ${
                 dimension === option.key
                   ? "bg-surface font-medium text-text-primary shadow-sm"
                   : "text-text-muted hover:text-text-primary"
@@ -231,7 +258,7 @@ function ReportsPageInner() {
             type="date"
             value={from}
             onChange={(event) => setParams({ from: event.target.value })}
-            className="ml-2 min-h-9 rounded-[8px] border border-border bg-surface px-2 text-sm text-text-primary"
+            className="ml-2 min-h-11 rounded-[8px] border border-border bg-surface px-2 text-sm text-text-primary"
           />
         </label>
         <label className="text-xs text-text-muted">
@@ -240,7 +267,7 @@ function ReportsPageInner() {
             type="date"
             value={to}
             onChange={(event) => setParams({ to: event.target.value })}
-            className="ml-2 min-h-9 rounded-[8px] border border-border bg-surface px-2 text-sm text-text-primary"
+            className="ml-2 min-h-11 rounded-[8px] border border-border bg-surface px-2 text-sm text-text-primary"
           />
         </label>
       </div>
@@ -249,7 +276,10 @@ function ReportsPageInner() {
         <div className="flex flex-wrap items-center gap-2">
           <span className="text-xs text-text-muted">Filtrerat på</span>
           {categoryId ? (
-            <FilterChip label="Kategori" onRemove={() => setParams({ categoryId: null })} />
+            <FilterChip
+              label={contextLabel ? `Kategori: ${contextLabel}` : "Kategori"}
+              onRemove={() => setParams({ categoryId: null, contextLabel: null })}
+            />
           ) : null}
           {merchantId ? (
             <FilterChip label="Mottagare" onRemove={() => setParams({ merchantId: null })} />
@@ -272,7 +302,7 @@ function FilterChip({ label, onRemove }: { label: string; onRemove: () => void }
     <button
       type="button"
       onClick={onRemove}
-      className="inline-flex min-h-9 items-center gap-1 rounded-full bg-accent/10 px-3 text-sm text-accent"
+      className="inline-flex min-h-11 items-center gap-1 rounded-full bg-accent/10 px-3 text-sm text-accent"
     >
       {label}
       <span aria-hidden>×</span>
@@ -394,27 +424,36 @@ function MonthlyBars({ series }: { series: Array<{ month: string; amountMinor: s
 
   return (
     <div>
-      <div className="flex h-24 items-end gap-1" role="img" aria-label="Månadsserie">
-        {series.map((point) => {
-          const abs =
-            BigInt(point.amountMinor) < 0n
-              ? -BigInt(point.amountMinor)
-              : BigInt(point.amountMinor);
-          const height = maxAbs > 0n ? Number((abs * 1000n) / maxAbs) / 10 : 0;
-          return (
-            <button
-              key={point.month}
-              type="button"
-              onClick={() => setActive(active === point.month ? null : point.month)}
-              aria-pressed={active === point.month}
-              aria-label={`${point.month}`}
-              className={`flex-1 rounded-t-[4px] ${
-                active === point.month ? "bg-accent" : "bg-accent/40 hover:bg-accent/60"
-              }`}
-              style={{ height: `${Math.max(height, 3)}%` }}
-            />
-          );
-        })}
+      <div className="overflow-x-auto pb-1" role="group" aria-label="Månadsserie">
+        <div className="flex h-24 min-w-[33rem] items-end gap-1">
+          {series.map((point) => {
+            const abs =
+              BigInt(point.amountMinor) < 0n
+                ? -BigInt(point.amountMinor)
+                : BigInt(point.amountMinor);
+            const height = maxAbs > 0n ? Number((abs * 1000n) / maxAbs) / 10 : 0;
+            return (
+              <button
+                key={point.month}
+                type="button"
+                onClick={() => setActive(active === point.month ? null : point.month)}
+                aria-pressed={active === point.month}
+                aria-label={`${point.month}`}
+                className="flex h-full min-w-10 flex-1 items-end"
+              >
+                <span
+                  aria-hidden
+                  className={`w-full rounded-t-[4px] transition ${
+                    active === point.month
+                      ? "bg-accent"
+                      : "bg-accent/40 hover:bg-accent/60"
+                  }`}
+                  style={{ height: `${Math.max(height, 3)}%` }}
+                />
+              </button>
+            );
+          })}
+        </div>
       </div>
       <p className="mt-2 text-xs tabular-nums text-text-muted">
         {activePoint ? (
@@ -454,7 +493,9 @@ function ClassicReports() {
     setLoading(true);
     void load(period)
       .then(() => setError(null))
-      .catch((err: Error) => setError(err.message))
+      .catch((err: unknown) =>
+        setError(describeError(err, "Kunde inte hämta periodrapporten")),
+      )
       .finally(() => setLoading(false));
   }, [load, period]);
 

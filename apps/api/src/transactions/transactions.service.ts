@@ -46,6 +46,7 @@ export type TransactionListFilters = {
   vehicleId?: string;
   categoryId?: string;
   merchantId?: string;
+  merchantMissing?: boolean;
   direction?: "inflow" | "outflow";
   minAmountMinor?: string;
   maxAmountMinor?: string;
@@ -339,6 +340,8 @@ export class TransactionsService {
     }
     if (filters.merchantId) {
       conditions.push(eq(sourceTransactions.merchantId, filters.merchantId));
+    } else if (filters.merchantMissing) {
+      conditions.push(isNull(sourceTransactions.merchantId));
     }
     if (filters.direction === "inflow") {
       conditions.push(sql`${sourceTransactions.amountMinor} >= 0`);
@@ -420,6 +423,9 @@ export class TransactionsService {
         from: filters.from ?? null,
         to: filters.to ?? null,
         includeExcluded: Boolean(filters.includeExcluded),
+        categoryId: filters.categoryId ?? null,
+        merchantId: filters.merchantId ?? null,
+        merchantMissing: Boolean(filters.merchantMissing),
       },
     };
   }

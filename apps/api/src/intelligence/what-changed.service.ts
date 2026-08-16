@@ -225,7 +225,7 @@ export class WhatChangedService {
         const name = cur?.name ?? ref?.name ?? key;
         const href =
           kind === "category" && id
-            ? `/reports?measure=spending&dimension=merchant&categoryId=${id}&from=${current.from}&to=${current.to}`
+            ? `/reports?measure=spending&dimension=merchant&categoryId=${id}&contextLabel=${encodeURIComponent(name)}&from=${current.from}&to=${current.to}`
             : kind === "merchant" && id
               ? `/transactions?merchantId=${id}&from=${current.from}&to=${current.to}`
               : null;
