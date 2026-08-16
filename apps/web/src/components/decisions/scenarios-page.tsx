@@ -121,7 +121,7 @@ export function ScenariosPage() {
     <div className="space-y-6">
       <div>
         <h1 className="font-[family-name:var(--ffos-font-display)] text-3xl tracking-tight">
-          Scenarios
+          Scenarier
         </h1>
         <p className="mt-2 text-sm text-text-secondary">
           Jämför tänkbara beslut utan att ändra hushållets ekonomi · per {data.asOf}

@@ -76,7 +76,7 @@ export function ForecastPage() {
     <div className="space-y-6">
       <div>
         <h1 className="font-[family-name:var(--ffos-font-display)] text-3xl tracking-tight">
-          Forecast
+          Prognos
         </h1>
         <p className="mt-2 text-sm text-text-secondary">
           Beräknad utveckling från 7 dagar till 12 månader · per {data.asOf}
