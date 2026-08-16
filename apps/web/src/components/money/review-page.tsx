@@ -12,6 +12,13 @@ import { ErrorState } from "../feedback/error-state";
 import { LoadingState } from "../feedback/loading-state";
 import { describeError } from "@/lib/error-message";
 
+const reviewKindLabels: Record<string, string> = {
+  unknown_transaction: "Okategoriserad transaktion",
+  possible_internal_transfer: "Möjlig intern överföring",
+  unknown_merchant: "Okänd mottagare",
+  document_field: "Dokument behöver granskas",
+};
+
 export function ReviewPage() {
   const [householdId, setHouseholdId] = useState<string | null>(null);
   const [data, setData] = useState<ReviewResponse | null>(null);
@@ -37,7 +44,9 @@ export function ReviewPage() {
 
   useEffect(() => {
     void load()
-      .catch((err: Error) => setError(err.message))
+      .catch((err: unknown) =>
+        setError(describeError(err, "Kunde inte hämta granskningen")),
+      )
       .finally(() => setLoading(false));
   }, [load]);
 
@@ -134,7 +143,7 @@ export function ReviewPage() {
               href="/insights"
               className="inline-flex min-h-11 items-center rounded-[12px] border border-border-strong px-4 text-sm"
             >
-              Hantera i Insights
+              Öppna insikter
             </Link>
           </div>
           <ul className="mt-4 space-y-2">
@@ -152,7 +161,7 @@ export function ReviewPage() {
       <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
         <Count label="Okända transaktioner" value={data.counts.unknownTransactions} />
         <Count label="Möjliga överföringar" value={data.counts.possibleInternalTransfers} />
-        <Count label="Okända merchants" value={data.counts.unknownMerchants} />
+        <Count label="Okända mottagare" value={data.counts.unknownMerchants} />
         <Count label="Dokumentfält" value={data.counts.documentFields} />
       </div>
 
@@ -162,7 +171,7 @@ export function ReviewPage() {
             <div className="flex flex-wrap items-start justify-between gap-3">
               <div className="min-w-0 flex-1">
                 <p className="text-xs uppercase tracking-wide text-text-muted">
-                  {item.kind.replaceAll("_", " ")}
+                  {reviewKindLabels[item.kind] ?? "Behöver granskas"}
                 </p>
                 <p className="mt-1 font-medium text-text-primary">{item.title}</p>
                 <p className="mt-1 text-sm text-text-secondary">{item.detail}</p>
@@ -235,10 +244,11 @@ export function ReviewPage() {
                 <button
                   type="button"
                   disabled={busyId === item.id}
+                  title="Markera att posten inte behöver någon åtgärd"
                   className="min-h-11 rounded-[12px] border border-border px-3 text-sm disabled:opacity-50"
                   onClick={() => void resolve(item, "dismiss")}
                 >
-                  Avfärda
+                  Inte relevant
                 </button>
               ) : null}
             </div>

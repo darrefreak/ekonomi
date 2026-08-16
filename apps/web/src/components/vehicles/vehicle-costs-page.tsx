@@ -9,6 +9,7 @@ import { EmptyState } from "../feedback/empty-state";
 import { ErrorState } from "../feedback/error-state";
 import { LoadingState } from "../feedback/loading-state";
 import { VehicleDetailNav } from "./vehicle-subnav";
+import { describeError } from "@/lib/error-message";
 
 export function VehicleCostsPage({ vehicleId }: { vehicleId: string }) {
   const [data, setData] = useState<VehicleDetailDto | null>(null);
@@ -20,7 +21,9 @@ export function VehicleCostsPage({ vehicleId }: { vehicleId: string }) {
     void ensureHouseholdSession()
       .then((id) => api.getVehicle(id, vehicleId))
       .then(setData)
-      .catch((err: Error) => setError(err.message))
+      .catch((err: unknown) =>
+        setError(describeError(err, "Kunde inte hämta fordonskostnaderna")),
+      )
       .finally(() => setLoading(false));
   }, [vehicleId]);
 
@@ -49,7 +52,7 @@ export function VehicleCostsPage({ vehicleId }: { vehicleId: string }) {
           Kostnader · {data.name}
         </h1>
         <p className="mt-2 text-sm text-text-secondary">
-          Fordonskopplade cost events (12 mån) + ledger-länkade events
+          Fordonets bokförda kostnader under de senaste 12 månaderna
         </p>
         <div className="mt-3">
           <VehicleDetailNav vehicleId={vehicleId} active="costs" />

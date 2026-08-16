@@ -62,13 +62,19 @@ export function AssetsPage() {
           Tillgångar
         </h1>
         <p className="mt-2 text-sm text-text-secondary">
-          Reala tillgångar och fordonskopplingar · as of {data.asOf}
+          Reala tillgångar och kopplade fordon · per {data.asOf}
         </p>
         <p className="mt-3 flex flex-wrap gap-4 text-sm">
-          <Link href="/net-worth" className="text-accent hover:underline">
+          <Link
+            href="/net-worth"
+            className="inline-flex min-h-11 items-center text-accent hover:underline"
+          >
             Nettoförmögenhet →
           </Link>
-          <Link href="/vehicles" className="text-accent hover:underline">
+          <Link
+            href="/vehicles"
+            className="inline-flex min-h-11 items-center text-accent hover:underline"
+          >
             Fordon →
           </Link>
         </p>
@@ -115,7 +121,7 @@ export function AssetsPage() {
                           ·{" "}
                           <Link
                             href={`/vehicles/${item.vehicleId}`}
-                            className="text-accent hover:underline"
+                            className="inline-flex min-h-11 items-center text-accent hover:underline"
                           >
                             öppna
                           </Link>

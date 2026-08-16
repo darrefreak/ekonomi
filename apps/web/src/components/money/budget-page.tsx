@@ -139,7 +139,7 @@ export function BudgetPage({ embedded = false }: { embedded?: boolean } = {}) {
               Budget
             </h1>
             <p className="mt-2 text-sm text-text-secondary">
-              Ingen budget ännu · as of {data.asOf}
+              Ingen budget ännu · per {data.asOf}
             </p>
           </div>
         )}
@@ -190,8 +190,7 @@ export function BudgetPage({ embedded = false }: { embedded?: boolean } = {}) {
             Budget
           </h1>
           <p className="mt-2 text-sm text-text-secondary">
-            Planerat vs faktiskt (från financial events) · {data.period?.label} ·
-            as of {data.asOf}
+            Planerat jämfört med faktiskt · {data.period?.label} · per {data.asOf}
           </p>
         </div>
       )}

@@ -583,6 +583,7 @@ export function createApiClient(options: ApiClientOptions) {
         includeExcluded?: boolean;
         categoryId?: string;
         merchantId?: string;
+        merchantMissing?: boolean;
         direction?: "inflow" | "outflow";
         minAmountMinor?: string;
         maxAmountMinor?: string;
@@ -599,6 +600,7 @@ export function createApiClient(options: ApiClientOptions) {
       if (opts?.includeExcluded) params.set("includeExcluded", "true");
       if (opts?.categoryId) params.set("categoryId", opts.categoryId);
       if (opts?.merchantId) params.set("merchantId", opts.merchantId);
+      if (opts?.merchantMissing) params.set("merchantMissing", "true");
       if (opts?.direction) params.set("direction", opts.direction);
       if (opts?.minAmountMinor) params.set("minAmountMinor", opts.minAmountMinor);
       if (opts?.maxAmountMinor) params.set("maxAmountMinor", opts.maxAmountMinor);

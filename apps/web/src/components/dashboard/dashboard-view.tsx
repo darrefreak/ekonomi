@@ -10,11 +10,20 @@ import { MoneyValue } from "../financial/money-value";
 import { SpendingVsNormalCard } from "./spending-vs-normal-card";
 import { EmptyState } from "../feedback/empty-state";
 
+const effortLabels: Record<string, string> = {
+  low: "Liten insats",
+  medium: "Måttlig insats",
+  high: "Större insats",
+};
+
 export function DashboardView({ data }: { data: DashboardResponse }) {
   const opportunities = data.opportunities ?? [];
   const cashflowPoints = data.cashflowPoints ?? [];
   const hasAccounts = data.hasAccounts ?? cashflowPoints.length > 0;
   const excludedByCurrency = data.excludedByCurrency ?? [];
+  const sourceNeedsAttention =
+    /omautentisering|synkfel|frånkopplad|ingen data/i.test(data.freshnessLabel);
+  const hasAttention = sourceNeedsAttention || data.reviewCount > 0;
 
   return (
     <div className="space-y-6">
@@ -24,7 +33,8 @@ export function DashboardView({ data }: { data: DashboardResponse }) {
           {data.householdName}
         </h1>
         <p className="mt-2 text-sm text-text-secondary">
-          Finansiell position · {data.freshnessLabel} · per {data.asOf}
+          Läge per {data.asOf} ·{" "}
+          {sourceNeedsAttention ? "data behöver uppdateras" : data.freshnessLabel}
         </p>
       </div>
 
@@ -70,47 +80,66 @@ export function DashboardView({ data }: { data: DashboardResponse }) {
         </div>
       ) : null}
 
-      <section aria-labelledby="position-heading">
-        <h2 id="position-heading" className="sr-only">
-          Finansiell position
-        </h2>
-        <div className="rounded-[18px] bg-surface-elevated p-5 shadow-[var(--ffos-shadow-soft)] md:p-6">
-          <div className="flex flex-wrap items-start justify-between gap-3">
-            <div>
-              <p className="text-sm text-text-secondary">Nettoförmögenhet</p>
-              <p className="mt-1 text-3xl font-medium tracking-tight text-text-primary md:text-4xl">
-                <MoneyValue value={data.position.netWorth} />
-              </p>
-              <p className="mt-2 text-sm text-positive">
-                <MoneyValue value={data.position.netWorthChangeMonth} signed /> den här
-                månaden
-              </p>
-            </div>
-            <Link
-              href="/net-worth"
-              className="min-h-11 text-sm font-medium text-accent"
+      <section
+        aria-labelledby="attention-heading"
+        className={`rounded-[18px] border p-5 md:p-6 ${
+          hasAttention
+            ? "border-warning/40 bg-warning/10"
+            : "border-positive/30 bg-positive/10"
+        }`}
+      >
+        <p className="text-xs font-semibold uppercase tracking-[0.08em] text-text-muted">
+          Just nu
+        </p>
+        <div className="mt-2 flex flex-col justify-between gap-4 md:flex-row md:items-end">
+          <div className="max-w-2xl">
+            <h2
+              id="attention-heading"
+              className="font-[family-name:var(--ffos-font-display)] text-2xl tracking-tight"
             >
-              Nettoförmögenhet →
-            </Link>
+              {sourceNeedsAttention
+                ? "Uppdatera en datakälla för att lita på dagens siffror"
+                : data.reviewCount > 0
+                  ? `${data.reviewCount} poster behöver din hjälp`
+                  : "Inget akut behöver hanteras"}
+            </h2>
+            <p className="mt-2 text-sm text-text-secondary">
+              {sourceNeedsAttention
+                ? "En koppling behöver förnyas. Befintlig historik finns kvar under tiden."
+                : data.reviewCount > 0
+                  ? "En snabb granskning förbättrar kategorier, budget och kommande insikter."
+                  : "Fortsätt till kommande händelser eller fördjupa dig när det passar."}
+            </p>
           </div>
-          <div className="mt-5 grid grid-cols-2 gap-4 md:grid-cols-3">
-            <Metric label="Likvida medel" value={<MoneyValue value={data.position.availableCash} />} />
-            <Metric
-              label="Investeringar"
-              value={
-                <Link href="/investments" className="hover:text-accent">
-                  <MoneyValue value={data.position.investments} />
-                </Link>
-              }
-            />
-            <Metric
-              label="Skuld"
-              value={
-                <Link href="/debt" className="hover:text-accent">
-                  <MoneyValue value={data.position.debt} />
-                </Link>
-              }
-            />
+          <div className="flex flex-wrap gap-2">
+            {sourceNeedsAttention ? (
+              <Link
+                href="/integrations"
+                className="inline-flex min-h-11 items-center rounded-[12px] bg-accent px-4 text-sm font-medium text-on-accent"
+              >
+                Uppdatera koppling
+              </Link>
+            ) : null}
+            {data.reviewCount > 0 ? (
+              <Link
+                href="/review"
+                className={`inline-flex min-h-11 items-center rounded-[12px] px-4 text-sm font-medium ${
+                  sourceNeedsAttention
+                    ? "border border-border-strong text-text-primary"
+                    : "bg-accent text-on-accent"
+                }`}
+              >
+                Granska nu
+              </Link>
+            ) : null}
+            {!hasAttention ? (
+              <Link
+                href="/calendar"
+                className="inline-flex min-h-11 items-center rounded-[12px] bg-accent px-4 text-sm font-medium text-on-accent"
+              >
+                Se vad som kommer
+              </Link>
+            ) : null}
           </div>
         </div>
       </section>
@@ -119,7 +148,10 @@ export function DashboardView({ data }: { data: DashboardResponse }) {
         <section className="rounded-[18px] bg-surface-elevated p-5 shadow-[var(--ffos-shadow-soft)]">
           <div className="flex items-center justify-between gap-3">
             <h2 className="text-sm font-medium text-text-secondary">Den här månaden</h2>
-            <Link href="/budget" className="text-sm text-accent">
+            <Link
+              href="/budget"
+              className="inline-flex min-h-11 items-center text-sm text-accent"
+            >
               Budget
             </Link>
           </div>
@@ -141,30 +173,81 @@ export function DashboardView({ data }: { data: DashboardResponse }) {
             />
           </dl>
           <p className="mt-4 text-sm text-text-muted">
-            Cash runway:{" "}
+            Ekonomisk uthållighet:{" "}
             <span className="tabular-nums text-text-primary">
               {data.cashRunwayMonths.toFixed(1)} månader
             </span>
           </p>
-          {data.reviewCount > 0 ? (
-            <Link
-              href="/review"
-              className="mt-4 inline-flex min-h-11 items-center text-sm font-medium text-accent"
-            >
-              {data.reviewCount} poster behöver granskning →
-            </Link>
-          ) : null}
         </section>
 
         <FinancialBriefCard />
       </div>
+
+      <section aria-labelledby="position-heading">
+        <h2 id="position-heading" className="sr-only">
+          Finansiell position
+        </h2>
+        <div className="rounded-[18px] bg-surface-elevated p-5 shadow-[var(--ffos-shadow-soft)] md:p-6">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <p className="text-sm text-text-secondary">Nettoförmögenhet</p>
+              <p className="mt-1 text-3xl font-medium tracking-tight text-text-primary md:text-4xl">
+                <MoneyValue value={data.position.netWorth} />
+              </p>
+              <p className="mt-2 text-sm text-positive">
+                <MoneyValue value={data.position.netWorthChangeMonth} signed /> den här
+                månaden
+              </p>
+            </div>
+            <Link
+              href="/net-worth"
+              className="inline-flex min-h-11 items-center text-sm font-medium text-accent"
+            >
+              Se nettoförmögenhet →
+            </Link>
+          </div>
+          <div className="mt-5 grid grid-cols-2 gap-4 md:grid-cols-3">
+            <Metric
+              label="Likvida medel"
+              value={<MoneyValue value={data.position.availableCash} />}
+            />
+            <Metric
+              label="Investeringar"
+              value={
+                <Link
+                  href="/investments"
+                  aria-label="Öppna investeringar"
+                  className="inline-flex min-h-11 min-w-11 items-center hover:text-accent"
+                >
+                  <MoneyValue value={data.position.investments} />
+                </Link>
+              }
+            />
+            <Metric
+              label="Skuld"
+              value={
+                <Link
+                  href="/debt"
+                  aria-label="Öppna skulder"
+                  className="inline-flex min-h-11 min-w-11 items-center hover:text-accent"
+                >
+                  <MoneyValue value={data.position.debt} />
+                </Link>
+              }
+            />
+          </div>
+        </div>
+      </section>
 
       <SpendingVsNormalCard />
 
       <section className="rounded-[18px] bg-surface-elevated p-5 shadow-[var(--ffos-shadow-soft)]">
         <div className="mb-4 flex items-center justify-between gap-3">
           <h2 className="text-sm font-medium text-text-secondary">Kommande</h2>
-          <Link href="/calendar" className="text-sm text-accent">
+          <Link
+            href="/calendar"
+            className="inline-flex min-h-11 items-center text-sm text-accent"
+          >
             Kalender →
           </Link>
         </div>
@@ -194,7 +277,21 @@ export function DashboardView({ data }: { data: DashboardResponse }) {
         )}
       </section>
 
-      {data.availableToInvest ? (
+      <details className="group rounded-[18px] border border-border bg-surface-elevated">
+        <summary className="flex min-h-16 cursor-pointer list-none items-center justify-between gap-4 px-5 py-4">
+          <span>
+            <span className="block font-medium text-text-primary">Fördjupa bilden</span>
+            <span className="mt-1 block text-sm text-text-muted">
+              Likviditet, prognos, möjligheter, kassaflöde och datatäckning
+            </span>
+          </span>
+          <span className="text-sm font-medium text-accent group-open:hidden">Visa</span>
+          <span className="hidden text-sm font-medium text-accent group-open:inline">
+            Dölj
+          </span>
+        </summary>
+        <div className="space-y-4 border-t border-border p-4 md:p-5">
+          {data.availableToInvest ? (
         <section
           aria-labelledby="available-to-invest-heading"
           className="rounded-[18px] bg-surface-elevated p-5 shadow-[var(--ffos-shadow-soft)]"
@@ -206,7 +303,10 @@ export function DashboardView({ data }: { data: DashboardResponse }) {
             >
               Tillgängligt överskott
             </h2>
-            <Link href="/liquidity" className="text-sm text-accent">
+            <Link
+              href="/liquidity"
+              className="inline-flex min-h-11 items-center text-sm text-accent"
+            >
               Likviditet →
             </Link>
           </div>
@@ -218,7 +318,7 @@ export function DashboardView({ data }: { data: DashboardResponse }) {
             investeringsrådgivning.
           </p>
           <details className="mt-3 text-sm">
-            <summary className="cursor-pointer select-none text-accent">
+            <summary className="flex min-h-11 cursor-pointer select-none items-center text-accent">
               Så räknas det fram
             </summary>
             <ul className="mt-2 space-y-1 text-xs text-text-secondary">
@@ -260,7 +360,10 @@ export function DashboardView({ data }: { data: DashboardResponse }) {
             </dl>
           </details>
           <p className="mt-3 text-sm">
-            <Link href="/savings" className="font-medium text-accent">
+            <Link
+              href="/savings"
+              className="inline-flex min-h-11 items-center font-medium text-accent"
+            >
               Vad kan jag göra med överskottet? →
             </Link>
           </p>
@@ -272,7 +375,10 @@ export function DashboardView({ data }: { data: DashboardResponse }) {
           <h2 className="text-sm font-medium text-text-secondary">
             Prognos (kassaförändring)
           </h2>
-          <Link href="/forecast" className="text-sm text-accent">
+          <Link
+            href="/forecast"
+            className="inline-flex min-h-11 items-center text-sm text-accent"
+          >
             Visa mer
           </Link>
         </div>
@@ -282,20 +388,23 @@ export function DashboardView({ data }: { data: DashboardResponse }) {
           <ForecastCell label="90 dagar" value={data.forecast.days90} />
         </div>
         <p className="mt-3 text-xs text-text-muted">
-          Linjär prognos från aktuell månads nettobesparing via financial-engine.
+          Enkel riktning baserad på månadens nuvarande inkomster och utgifter.
         </p>
       </section>
 
       <section className="rounded-[18px] bg-surface-elevated p-5 shadow-[var(--ffos-shadow-soft)]">
         <div className="mb-4 flex items-center justify-between gap-3">
-          <h2 className="text-sm font-medium text-text-secondary">Opportunities</h2>
-          <Link href="/opportunities" className="text-sm text-accent">
+          <h2 className="text-sm font-medium text-text-secondary">Möjligheter</h2>
+          <Link
+            href="/opportunities"
+            className="inline-flex min-h-11 items-center text-sm text-accent"
+          >
             Alla
           </Link>
         </div>
         {opportunities.length === 0 ? (
           <p className="text-sm text-text-muted">
-            Inga aktiva opportunities just nu. Detektorn fylls på när mer data finns.
+            Inga aktiva förslag just nu. Nya möjligheter visas när mer data finns.
           </p>
         ) : (
           <ul className="space-y-3">
@@ -310,9 +419,9 @@ export function DashboardView({ data }: { data: DashboardResponse }) {
                     {item.description}
                   </p>
                   <p className="mt-1 text-xs text-text-muted">
-                    {item.effort} effort
+                    {effortLabels[item.effort] ?? "Insats ej bedömd"}
                     {item.confidence != null
-                      ? ` · ${(item.confidence * 100).toFixed(0)}% confidence`
+                      ? ` · ${(item.confidence * 100).toFixed(0)} % säkerhet`
                       : ""}
                   </p>
                 </div>
@@ -337,7 +446,10 @@ export function DashboardView({ data }: { data: DashboardResponse }) {
         <section className="rounded-[18px] bg-surface-elevated p-5 shadow-[var(--ffos-shadow-soft)]">
           <div className="mb-4 flex items-center justify-between gap-3">
             <h2 className="text-sm font-medium text-text-secondary">Kassaflöde</h2>
-            <Link href="/cashflow" className="text-sm text-accent">
+            <Link
+              href="/cashflow"
+              className="inline-flex min-h-11 items-center text-sm text-accent"
+            >
               Visa mer
             </Link>
           </div>
@@ -356,7 +468,8 @@ export function DashboardView({ data }: { data: DashboardResponse }) {
           />
         </section>
       </div>
-
+        </div>
+      </details>
     </div>
   );
 }

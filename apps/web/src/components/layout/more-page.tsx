@@ -1,12 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { desktopNav } from "./nav-config";
-
-const mobilePrimary = new Set(["/", "/money", "/plan", "/insights", "/more"]);
+import { moreNav } from "./nav-config";
 
 export function MorePage() {
-  const items = desktopNav.filter((item) => !mobilePrimary.has(item.href));
   let lastSection = "";
 
   return (
@@ -16,12 +13,12 @@ export function MorePage() {
           Mer
         </h1>
         <p className="mt-2 text-sm text-text-secondary">
-          Alla övriga delar av Family Financial OS.
+          Förmögenhet, rådgivning, datakällor och inställningar.
         </p>
       </div>
       <nav aria-label="Fler sidor">
         <ul className="space-y-1">
-          {items.map((item) => {
+          {moreNav.map((item) => {
             const showSection = item.section && item.section !== lastSection;
             if (item.section) lastSection = item.section;
             return (

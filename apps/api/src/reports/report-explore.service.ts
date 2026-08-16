@@ -130,8 +130,9 @@ export class ReportExploreService {
           params.set("measure", query.measure);
           params.set("dimension", "merchant");
           drillHref = `/reports?${params.toString()}`;
-        } else if (query.dimension === "merchant" && row.id) {
-          const params = filterParams({ merchantId: row.id });
+        } else if (query.dimension === "merchant") {
+          const params = filterParams(row.id ? { merchantId: row.id } : {});
+          if (!row.id) params.set("merchantMissing", "true");
           drillHref = `/transactions?${params.toString()}`;
         } else if (query.dimension === "account" && row.id) {
           const params = filterParams({ accountId: row.id });

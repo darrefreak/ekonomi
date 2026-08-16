@@ -48,6 +48,9 @@ export const transactionsResponseSchema = z.object({
       from: z.string().nullable().optional(),
       to: z.string().nullable().optional(),
       includeExcluded: z.boolean().optional(),
+      categoryId: z.string().nullable().optional(),
+      merchantId: z.string().nullable().optional(),
+      merchantMissing: z.boolean().optional(),
     })
     .optional(),
 });
@@ -86,6 +89,7 @@ export const listTransactionsQuerySchema = z
     vehicleId: uuidSchema.optional(),
     categoryId: uuidSchema.optional(),
     merchantId: uuidSchema.optional(),
+    merchantMissing: z.enum(["true", "false", "1", "0"]).optional(),
     direction: z.enum(["inflow", "outflow"]).optional(),
     /** Absolute amount bounds in minor units. */
     minAmountMinor: z.string().regex(/^\d+$/).optional(),

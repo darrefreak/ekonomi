@@ -8,6 +8,7 @@ import { MiniCashflowChart } from "../financial/mini-cashflow-chart";
 import { MoneyValue } from "../financial/money-value";
 import { ErrorState } from "../feedback/error-state";
 import { LoadingState } from "../feedback/loading-state";
+import { describeError } from "@/lib/error-message";
 
 export function CashflowPage() {
   const [data, setData] = useState<CashflowResponse | null>(null);
@@ -18,7 +19,9 @@ export function CashflowPage() {
     void ensureHouseholdSession()
       .then((id) => api.getCashflow(id))
       .then(setData)
-      .catch((err: Error) => setError(err.message))
+      .catch((err: unknown) =>
+        setError(describeError(err, "Kunde inte hämta kassaflödet")),
+      )
       .finally(() => setLoading(false));
   }, []);
 
@@ -39,7 +42,7 @@ export function CashflowPage() {
           Kassaflöde
         </h1>
         <p className="mt-2 text-sm text-text-secondary">
-          Inkomst, utgifter och sparande per månad · as of {data.asOf}
+          Inkomster, utgifter och sparande per månad · per {data.asOf}
         </p>
       </div>
 

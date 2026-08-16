@@ -12,6 +12,7 @@ import { ErrorState } from "../feedback/error-state";
 import { LoadingState } from "../feedback/loading-state";
 import { AddVehicleForm } from "./add-vehicle-form";
 import { VehicleHouseholdNav } from "./vehicle-subnav";
+import { describeError } from "@/lib/error-message";
 
 export function VehiclesPage() {
   const router = useRouter();
@@ -24,7 +25,9 @@ export function VehiclesPage() {
     void ensureHouseholdSession()
       .then((id) => api.listVehicles(id))
       .then(setData)
-      .catch((err: Error) => setError(err.message))
+      .catch((err: unknown) =>
+        setError(describeError(err, "Kunde inte hämta fordonen")),
+      )
       .finally(() => setLoading(false));
   }, []);
 
@@ -42,7 +45,7 @@ export function VehiclesPage() {
           Fordon
         </h1>
         <p className="mt-2 text-sm text-text-secondary">
-          Ägande, TCO och equity · as of {data.asOf}
+          Ägande, total kostnad och eget kapital · per {data.asOf}
         </p>
         <div className="mt-3">
           <VehicleHouseholdNav active="/vehicles" />

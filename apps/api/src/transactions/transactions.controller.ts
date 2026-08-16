@@ -114,6 +114,7 @@ export class TransactionsController {
       vehicleId?: string;
       categoryId?: string;
       merchantId?: string;
+      merchantMissing?: string;
       direction?: "inflow" | "outflow";
       minAmountMinor?: string;
       maxAmountMinor?: string;
@@ -134,6 +135,8 @@ export class TransactionsController {
       vehicleId: query.vehicleId,
       categoryId: query.categoryId,
       merchantId: query.merchantId,
+      merchantMissing:
+        query.merchantMissing === "true" || query.merchantMissing === "1",
       direction: query.direction,
       minAmountMinor: query.minAmountMinor,
       maxAmountMinor: query.maxAmountMinor,

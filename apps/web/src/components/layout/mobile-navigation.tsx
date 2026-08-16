@@ -2,10 +2,11 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { mobileNav } from "./nav-config";
+import { mobileNav, primaryHrefForPathname } from "./nav-config";
 
 export function MobileNavigation() {
   const pathname = usePathname();
+  const primaryHref = primaryHrefForPathname(pathname);
 
   return (
     <nav
@@ -14,18 +15,22 @@ export function MobileNavigation() {
     >
       <ul className="mx-auto grid max-w-lg grid-cols-5">
         {mobileNav.map((item) => {
-          const active =
-            item.href === "/"
-              ? pathname === "/"
-              : pathname === item.href || pathname.startsWith(`${item.href}/`);
+          const active = primaryHref === item.href;
           return (
             <li key={item.href}>
               <Link
                 href={item.href}
-                className={`flex min-h-14 flex-col items-center justify-center text-xs ${
+                aria-current={active ? "page" : undefined}
+                className={`flex min-h-16 flex-col items-center justify-center text-xs transition ${
                   active ? "font-semibold text-accent" : "text-text-muted"
                 }`}
               >
+                <span
+                  aria-hidden
+                  className={`mb-1 h-1 w-5 rounded-full transition ${
+                    active ? "bg-accent" : "bg-transparent"
+                  }`}
+                />
                 {item.label}
               </Link>
             </li>

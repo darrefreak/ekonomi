@@ -88,7 +88,7 @@ export function WhatChangedPage() {
             type="button"
             onClick={() => setMode(option.key)}
             aria-pressed={mode === option.key}
-            className={`min-h-9 rounded-full px-3.5 text-sm ${
+            className={`min-h-11 rounded-full px-3.5 text-sm ${
               mode === option.key
                 ? "bg-accent/15 font-medium text-accent"
                 : "bg-surface-elevated text-text-secondary hover:text-text-primary"
@@ -248,7 +248,7 @@ function DriverSection({
         <ul className="divide-y divide-border">
           {drivers.map((driver) => {
             const row = (
-              <div className="flex items-center justify-between gap-3">
+              <div className="flex w-full items-center justify-between gap-3">
                 <div className="min-w-0">
                   <p className="truncate text-sm text-text-primary">{driver.name}</p>
                   <p className="text-xs tabular-nums text-text-muted">
@@ -271,7 +271,10 @@ function DriverSection({
             return (
               <li key={`${driver.kind}-${driver.key}`} className="py-2.5 first:pt-0 last:pb-0">
                 {driver.href ? (
-                  <Link href={driver.href} className="block hover:text-accent">
+                  <Link
+                    href={driver.href}
+                    className="flex min-h-11 items-center hover:text-accent"
+                  >
                     {row}
                   </Link>
                 ) : (

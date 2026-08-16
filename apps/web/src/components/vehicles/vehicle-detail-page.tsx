@@ -10,6 +10,7 @@ import { ErrorState } from "../feedback/error-state";
 import { LoadingState } from "../feedback/loading-state";
 import { VehicleDetailNav, VehicleHouseholdNav } from "./vehicle-subnav";
 import { VehiclePurchaseForm } from "./vehicle-purchase-form";
+import { describeError } from "@/lib/error-message";
 
 export function VehicleDetailPage({ vehicleId }: { vehicleId: string }) {
   const [data, setData] = useState<VehicleDetailDto | null>(null);
@@ -27,7 +28,9 @@ export function VehicleDetailPage({ vehicleId }: { vehicleId: string }) {
         setData(vehicle);
         setMarket(marketData);
       })
-      .catch((err: Error) => setError(err.message))
+      .catch((err: unknown) =>
+        setError(describeError(err, "Kunde inte hämta fordonet")),
+      )
       .finally(() => setLoading(false));
   }, [vehicleId]);
 

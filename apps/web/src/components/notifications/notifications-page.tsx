@@ -8,6 +8,15 @@ import { ensureHouseholdSession } from "@/lib/session";
 import { EmptyState } from "../feedback/empty-state";
 import { ErrorState } from "../feedback/error-state";
 import { LoadingState } from "../feedback/loading-state";
+import { describeError } from "@/lib/error-message";
+
+const notificationTypeLabels: Record<string, string> = {
+  INFO: "Information",
+  WARNING: "Behöver uppmärksamhet",
+  ERROR: "Problem",
+  OPPORTUNITY: "Möjlighet",
+  REMINDER: "Påminnelse",
+};
 
 export function NotificationsPage() {
   const [householdId, setHouseholdId] = useState<string | null>(null);
@@ -23,7 +32,9 @@ export function NotificationsPage() {
 
   useEffect(() => {
     void load()
-      .catch((err: Error) => setError(err.message))
+      .catch((err: unknown) =>
+        setError(describeError(err, "Kunde inte hämta notiser")),
+      )
       .finally(() => setLoading(false));
   }, [load]);
 
@@ -45,13 +56,15 @@ export function NotificationsPage() {
         </div>
         <button
           type="button"
-          className="rounded-[12px] border border-border px-4 py-2 text-sm"
+          className="min-h-11 rounded-[12px] border border-border px-4 text-sm"
           onClick={() => {
             if (!householdId) return;
             void api
               .markAllNotificationsRead(householdId)
               .then(setData)
-              .catch((err: Error) => setError(err.message));
+              .catch((err: unknown) =>
+                setError(describeError(err, "Kunde inte uppdatera notiserna")),
+              );
           }}
         >
           Markera alla lästa
@@ -69,7 +82,9 @@ export function NotificationsPage() {
             >
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div>
-                  <p className="text-xs uppercase text-text-muted">{n.type}</p>
+                  <p className="text-xs uppercase text-text-muted">
+                    {notificationTypeLabels[n.type] ?? "Notis"}
+                  </p>
                   <p className="mt-1 font-medium">{n.title}</p>
                   {n.body ? (
                     <p className="mt-1 text-sm text-text-secondary">{n.body}</p>
@@ -79,7 +94,10 @@ export function NotificationsPage() {
                     {n.readAt ? " · läst" : " · oläst"}
                   </p>
                   {n.href ? (
-                    <Link href={n.href} className="mt-2 inline-block text-sm text-accent">
+                    <Link
+                      href={n.href}
+                      className="mt-2 inline-flex min-h-11 items-center text-sm text-accent"
+                    >
                       Öppna →
                     </Link>
                   ) : null}
@@ -87,7 +105,7 @@ export function NotificationsPage() {
                 {!n.readAt && householdId ? (
                   <button
                     type="button"
-                    className="text-sm text-accent"
+                    className="min-h-11 px-2 text-sm text-accent"
                     onClick={() =>
                       void api
                         .markNotificationRead(householdId, n.id)

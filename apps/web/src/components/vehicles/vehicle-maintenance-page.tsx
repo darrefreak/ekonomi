@@ -9,6 +9,7 @@ import { EmptyState } from "../feedback/empty-state";
 import { ErrorState } from "../feedback/error-state";
 import { LoadingState } from "../feedback/loading-state";
 import { VehicleDetailNav } from "./vehicle-subnav";
+import { describeError } from "@/lib/error-message";
 
 const MAINT_KINDS = new Set(["SERVICE", "REPAIR", "TIRES", "INSURANCE", "TAX"]);
 
@@ -21,7 +22,9 @@ export function VehicleMaintenancePage({ vehicleId }: { vehicleId: string }) {
     void ensureHouseholdSession()
       .then((id) => api.getVehicle(id, vehicleId))
       .then(setData)
-      .catch((err: Error) => setError(err.message))
+      .catch((err: unknown) =>
+        setError(describeError(err, "Kunde inte hämta underhållet")),
+      )
       .finally(() => setLoading(false));
   }, [vehicleId]);
 

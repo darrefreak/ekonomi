@@ -29,22 +29,42 @@ async function internalHrefs(page: Page, scope: ReturnType<Page["locator"]>) {
   return [...new Set(hrefs.map((href) => href.split("?")[0]!))];
 }
 
+async function navigateTo(page: Page, href: string) {
+  let lastError: unknown;
+  for (let attempt = 0; attempt < 2; attempt += 1) {
+    try {
+      await page.goto(href, { waitUntil: "domcontentloaded" });
+      return;
+    } catch (error) {
+      lastError = error;
+      if (!/interrupted by another navigation/i.test(String(error))) throw error;
+      await page.waitForTimeout(250);
+    }
+  }
+  throw lastError;
+}
+
 test.describe("navigation route contract", () => {
   test("desktop sidebar hrefs all resolve to their own page", async ({
     page,
   }, testInfo) => {
     test.skip(testInfo.project.name !== "chromium", "desktop project only");
+    test.setTimeout(180_000);
 
-    await page.goto("/");
-    const sidebar = page.getByRole("navigation", { name: /huvudnavigation/i });
-    await expect(sidebar).toBeVisible();
-    const hrefs = await internalHrefs(page, sidebar);
-    expect(hrefs.length, "the sidebar should expose the product's sections").toBeGreaterThan(
-      15,
-    );
+    const hrefs = new Set<string>();
+    for (const primary of ["/", "/money", "/plan", "/insights", "/more"]) {
+      await page.goto(primary);
+      const sidebar = page.getByRole("navigation", { name: /huvudnavigation/i });
+      await expect(sidebar).toBeVisible();
+      for (const href of await internalHrefs(page, sidebar)) hrefs.add(href);
+    }
+    expect(
+      hrefs.size,
+      "five primary destinations plus contextual links should expose the product",
+    ).toBeGreaterThan(15);
 
     for (const href of hrefs) {
-      await page.goto(href);
+      await navigateTo(page, href);
       // Route identity only: walking two dozen pages in one minute can trip the
       // API's rate limit, which leaves a real page without its data. Whether
       // each page renders its content is asserted by the specs that visit one
@@ -57,24 +77,49 @@ test.describe("navigation route contract", () => {
     page,
   }, testInfo) => {
     test.skip(testInfo.project.name !== "mobile", "mobile project only");
+    test.setTimeout(180_000);
 
     await page.goto("/");
     const bottomNav = page.getByRole("navigation", { name: /mobilnavigation/i });
     await expect(bottomNav).toBeVisible();
     const bottom = await internalHrefs(page, bottomNav);
-    expect(bottom.length, "the bottom navigation should expose the primary tabs")
-      .toBeGreaterThanOrEqual(4);
+    expect(bottom, "the bottom navigation should expose exactly five primary tabs").toEqual([
+      "/",
+      "/money",
+      "/plan",
+      "/insights",
+      "/more",
+    ]);
+
+    const hubHrefs: string[] = [];
+    for (const [path, name] of [
+      ["/money", "Pengar"],
+      ["/plan", "Planera"],
+      ["/insights", "Insikter"],
+    ] as const) {
+      await page.goto(path);
+      hubHrefs.push(
+        ...(await internalHrefs(
+          page,
+          page.getByRole("navigation", { name: new RegExp(`^${name}$`, "i") }),
+        )),
+      );
+    }
 
     await page.goto("/more");
     const moreNav = page.getByRole("navigation", { name: /fler sidor/i });
     await expect(moreNav).toBeVisible();
     const more = await internalHrefs(page, moreNav);
     expect(more.length, "the More menu should expose the overflow sections").toBeGreaterThan(
-      15,
+      10,
     );
+    expect(
+      more.filter((href) => hubHrefs.includes(href)),
+      "More must not duplicate links already owned by a primary hub",
+    ).toEqual([]);
 
-    for (const href of [...new Set([...bottom, ...more])]) {
-      await page.goto(href);
+    for (const href of [...new Set([...bottom, ...hubHrefs, ...more])]) {
+      await navigateTo(page, href);
       await expectRouteRendered(page, href, { content: false });
     }
   });

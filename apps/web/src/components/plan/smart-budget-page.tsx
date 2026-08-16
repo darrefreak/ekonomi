@@ -54,7 +54,7 @@ export function SmartBudgetPage() {
             type="button"
             onClick={() => setMode("smart")}
             aria-pressed={mode === "smart"}
-            className={`min-h-9 rounded-[8px] px-3 text-sm ${
+            className={`min-h-11 rounded-[8px] px-3 text-sm ${
               mode === "smart"
                 ? "bg-surface font-medium text-text-primary shadow-sm"
                 : "text-text-muted hover:text-text-primary"
@@ -66,7 +66,7 @@ export function SmartBudgetPage() {
             type="button"
             onClick={() => setMode("detailed")}
             aria-pressed={mode === "detailed"}
-            className={`min-h-9 rounded-[8px] px-3 text-sm ${
+            className={`min-h-11 rounded-[8px] px-3 text-sm ${
               mode === "detailed"
                 ? "bg-surface font-medium text-text-primary shadow-sm"
                 : "text-text-muted hover:text-text-primary"
@@ -369,12 +369,19 @@ function GroupCard({
                     {contributor.href ? (
                       <Link
                         href={contributor.href}
-                        className="min-w-0 truncate text-text-primary hover:text-accent"
+                        aria-label={
+                          contributor.name?.trim()
+                            ? `Öppna underlaget ${contributor.name}`
+                            : "Öppna budgetunderlag"
+                        }
+                        className="flex min-h-11 min-w-0 flex-1 items-center truncate text-text-primary hover:text-accent"
                       >
-                        {contributor.name}
+                        {contributor.name?.trim() || "Budgetunderlag"}
                       </Link>
                     ) : (
-                      <span className="min-w-0 truncate">{contributor.name}</span>
+                      <span className="min-w-0 truncate">
+                        {contributor.name?.trim() || "Budgetunderlag"}
+                      </span>
                     )}
                     <span className="shrink-0 tabular-nums text-text-secondary">
                       {kr(contributor.monthlyMinor, currency)}/mån

@@ -37,7 +37,8 @@ export const ROUTE_IDENTITY: Record<string, RouteIdentity> = {
   "/": {
     title: "Översikt",
     heading: /^Familjen Demo$/,
-    control: (page) => page.getByRole("link", { name: /^Nettoförmögenhet →$/ }),
+    control: (page) =>
+      page.getByRole("link", { name: /se nettoförmögenhet/i }),
   },
   "/liquidity": {
     title: "Likviditet",
@@ -53,7 +54,7 @@ export const ROUTE_IDENTITY: Record<string, RouteIdentity> = {
   "/accounts": {
     title: "Konton",
     heading: /^Konton$/,
-    control: (page) => page.getByRole("button", { name: /skapa konto/i }),
+    control: (page) => page.getByRole("button", { name: /nytt konto/i }),
   },
   "/cashflow": { title: "Kassaflöde", heading: /^Kassaflöde$/ },
   "/budget": {
@@ -97,11 +98,11 @@ export const ROUTE_IDENTITY: Record<string, RouteIdentity> = {
   "/vehicles/market": { title: "Fordonsmarknad", heading: /^Marknad$/ },
   "/vehicles/candidates": { title: "Kandidater", heading: /^Kandidater$/ },
   "/vehicles/compare": { title: "Jämför fordon", heading: /^Jämför$/ },
-  "/forecast": { title: "Prognos", heading: /^Forecast$/ },
+  "/forecast": { title: "Prognos", heading: /^Prognos$/ },
   "/goals": { title: "Mål", heading: /^Mål$/ },
-  "/scenarios": { title: "Scenarier", heading: /^Scenarios$/ },
-  "/insights": { title: "Insikter", heading: /^Insights$/ },
-  "/opportunities": { title: "Möjligheter", heading: /^Opportunities$/ },
+  "/scenarios": { title: "Scenarier", heading: /^Scenarier$/ },
+  "/insights": { title: "Insikter", heading: /^Insikter$/ },
+  "/opportunities": { title: "Möjligheter", heading: /^Möjligheter$/ },
   "/subscriptions": {
     title: "Abonnemang",
     heading: /^Abonnemang & återkommande$/,
@@ -111,9 +112,9 @@ export const ROUTE_IDENTITY: Record<string, RouteIdentity> = {
   "/contracts": { title: "Avtal", heading: /^Avtal$/ },
   "/risk": { title: "Risk", heading: /^Risk & hälsa$/ },
   "/documents": { title: "Dokument", heading: /^Dokument \/ inbox$/ },
-  "/integrations": { title: "Kopplingar", heading: /^Integrationer$/ },
-  "/imports": { title: "Importer", heading: /^Imports$/ },
-  "/advisor": { title: "Rådgivare", heading: /^AI-rådgivare$/ },
+  "/integrations": { title: "Kopplingar", heading: /^Kopplingar$/ },
+  "/imports": { title: "Importer", heading: /^Importer$/ },
+  "/advisor": { title: "Rådgivare", heading: /^Rådgivare$/ },
   "/review": { title: "Granska", heading: /^Granska$/ },
   "/reports": { title: "Rapporter", heading: /^Rapporter$/ },
   "/notifications": { title: "Notiser", heading: /^Notiser$/ },

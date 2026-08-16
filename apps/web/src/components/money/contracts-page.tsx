@@ -7,6 +7,7 @@ import { ensureHouseholdSession } from "@/lib/session";
 import { MoneyValue } from "../financial/money-value";
 import { ErrorState } from "../feedback/error-state";
 import { LoadingState } from "../feedback/loading-state";
+import { describeError } from "@/lib/error-message";
 
 export function ContractsPage() {
   const [data, setData] = useState<ContractsResponse | null>(null);
@@ -17,7 +18,9 @@ export function ContractsPage() {
     void ensureHouseholdSession()
       .then((id) => api.getContracts(id))
       .then(setData)
-      .catch((err: Error) => setError(err.message))
+      .catch((err: unknown) =>
+        setError(describeError(err, "Kunde inte hämta avtalen")),
+      )
       .finally(() => setLoading(false));
   }, []);
 
@@ -35,7 +38,7 @@ export function ContractsPage() {
           Avtal
         </h1>
         <p className="mt-2 text-sm text-text-secondary">
-          Förnyelser, uppsägningstider och bundna perioder · as of {data.asOf}
+          Förnyelser, uppsägningstider och bundna perioder · per {data.asOf}
         </p>
       </div>
 

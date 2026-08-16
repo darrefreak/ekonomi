@@ -14,6 +14,7 @@ test.describe("form validation", () => {
   test("UX-V01 an empty account form answers in the product's own words", async ({ page }) => {
     await page.goto("/accounts");
     await page.waitForTimeout(2000);
+    await page.getByRole("button", { name: /nytt konto/i }).click();
 
     await page.getByRole("button", { name: /^skapa konto$/i }).click();
 
@@ -33,6 +34,7 @@ test.describe("form validation", () => {
   }) => {
     await page.goto("/accounts");
     await page.waitForTimeout(2000);
+    await page.getByRole("button", { name: /nytt konto/i }).click();
 
     await page.getByRole("button", { name: /^skapa konto$/i }).click();
     await expect(page.getByText(/ange ett kontonamn/i)).toBeVisible({ timeout: 10_000 });

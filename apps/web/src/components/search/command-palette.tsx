@@ -106,6 +106,7 @@ export function CommandPalette() {
           autoFocus
           value={q}
           onChange={(e) => setQ(e.target.value)}
+          aria-label="Sök i appen"
           placeholder="Sök transaktioner, konton, dokument…"
           className="min-h-12 w-full border-b border-border bg-transparent px-4 text-sm outline-none"
         />
@@ -114,7 +115,7 @@ export function CommandPalette() {
             <li key={action.href}>
               <button
                 type="button"
-                className="flex w-full items-center gap-2 px-4 py-2.5 text-left hover:bg-surface"
+                className="flex min-h-11 w-full items-center gap-2 px-4 text-left hover:bg-surface"
                 onClick={() => {
                   setOpen(false);
                   setQ("");
@@ -138,7 +139,7 @@ export function CommandPalette() {
             <li key={`${r.type}-${r.id}`}>
               <button
                 type="button"
-                className="flex w-full flex-col px-4 py-2.5 text-left hover:bg-surface"
+                className="flex min-h-12 w-full flex-col justify-center px-4 text-left hover:bg-surface"
                 onClick={() => {
                   setOpen(false);
                   setQ("");
@@ -159,14 +160,16 @@ export function CommandPalette() {
   );
 }
 
-export function SearchTriggerButton() {
+export function SearchTriggerButton({ compact = false }: { compact?: boolean }) {
   return (
     <button
       type="button"
-      className="hidden min-h-11 rounded-[12px] border border-border px-3 text-sm text-text-muted md:inline-flex"
+      className={`min-h-11 rounded-[12px] border border-border px-3 text-sm text-text-muted ${
+        compact ? "inline-flex items-center md:hidden" : "hidden items-center md:inline-flex"
+      }`}
       onClick={() => openCommandPalette()}
     >
-      Sök ⌘K
+      {compact ? "Sök" : "Sök ⌘K"}
     </button>
   );
 }
