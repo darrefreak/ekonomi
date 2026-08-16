@@ -148,7 +148,7 @@ function ReportsPageInner() {
   return (
     <div className="space-y-6">
       <nav aria-label="Sökväg" className="flex min-h-11 items-center gap-2 text-sm">
-        <Link href="/insights" className="text-accent">
+        <Link href="/insights" className="inline-flex min-h-11 items-center text-accent">
           Insikter
         </Link>
         <span aria-hidden className="text-text-muted">
@@ -156,7 +156,10 @@ function ReportsPageInner() {
         </span>
         {categoryId ? (
           <>
-            <Link href="/what-changed" className="text-accent">
+            <Link
+              href="/what-changed"
+              className="inline-flex min-h-11 items-center text-accent"
+            >
               Vad har förändrats?
             </Link>
             <span aria-hidden className="text-text-muted">

@@ -74,9 +74,10 @@ function VsNormalBody({ data }: { data: WhatChangedResponse }) {
               {driver.href ? (
                 <Link
                   href={driver.href}
+                  aria-label={`Öppna underlag för ${driver.name || "förändringen"}`}
                   className="flex min-h-11 min-w-0 flex-1 items-center truncate hover:text-accent"
                 >
-                  {driver.name}
+                  {driver.name || "Visa underlag"}
                 </Link>
               ) : (
                 <span className="min-w-0 truncate">{driver.name}</span>

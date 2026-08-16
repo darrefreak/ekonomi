@@ -163,10 +163,16 @@ export function AdvisorPage() {
           underlaget.
         </p>
         <p className="mt-3 flex flex-wrap gap-4 text-sm">
-          <Link href="/opportunities" className="text-accent hover:underline">
+          <Link
+            href="/opportunities"
+            className="inline-flex min-h-11 items-center text-accent hover:underline"
+          >
             Möjligheter →
           </Link>
-          <Link href="/risk" className="text-accent hover:underline">
+          <Link
+            href="/risk"
+            className="inline-flex min-h-11 items-center text-accent hover:underline"
+          >
             Risker →
           </Link>
         </p>
@@ -214,7 +220,10 @@ export function AdvisorPage() {
                     {turn.citations.map((c, ci) => (
                       <li key={`${c.tool}-${ci}`}>
                         {c.href ? (
-                          <Link href={c.href} className="text-accent hover:underline">
+                          <Link
+                            href={c.href}
+                            className="inline-flex min-h-11 items-center text-accent hover:underline"
+                          >
                             {c.label}
                           </Link>
                         ) : (
@@ -260,7 +269,10 @@ export function AdvisorPage() {
                 {(s.citations ?? []).map((c, i) => (
                   <li key={`${s.title}-${i}`}>
                     {c.href ? (
-                      <Link href={c.href} className="text-accent hover:underline">
+                      <Link
+                        href={c.href}
+                        className="inline-flex min-h-11 items-center text-accent hover:underline"
+                      >
                         {c.label}
                       </Link>
                     ) : (

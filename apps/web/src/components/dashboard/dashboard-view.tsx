@@ -216,7 +216,8 @@ export function DashboardView({ data }: { data: DashboardResponse }) {
               value={
                 <Link
                   href="/investments"
-                  className="inline-flex min-h-11 items-center hover:text-accent"
+                  aria-label="Öppna investeringar"
+                  className="inline-flex min-h-11 min-w-11 items-center hover:text-accent"
                 >
                   <MoneyValue value={data.position.investments} />
                 </Link>
@@ -227,7 +228,8 @@ export function DashboardView({ data }: { data: DashboardResponse }) {
               value={
                 <Link
                   href="/debt"
-                  className="inline-flex min-h-11 items-center hover:text-accent"
+                  aria-label="Öppna skulder"
+                  className="inline-flex min-h-11 min-w-11 items-center hover:text-accent"
                 >
                   <MoneyValue value={data.position.debt} />
                 </Link>

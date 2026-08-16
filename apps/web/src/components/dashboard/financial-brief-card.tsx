@@ -97,6 +97,7 @@ function BriefItemRow({ item, index }: { item: BriefItem; index: number }) {
           </p>
           <Link
             href={item.explainRoute}
+            aria-label={`Förklaring: ${item.explainLabel || item.text}`}
             className="mt-1 inline-flex min-h-11 items-center text-sm font-medium text-accent"
           >
             Varför ser jag detta? · {item.explainLabel} →

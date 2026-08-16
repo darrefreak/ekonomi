@@ -21,7 +21,10 @@ export function AppShell({ children }: { children: ReactNode }) {
       <div className="flex min-w-0 flex-1 flex-col">
         <header className="sticky top-0 z-30 flex min-h-14 items-center justify-between border-b border-border/80 bg-surface/80 px-4 backdrop-blur md:px-8">
           <div className="flex items-center gap-2 md:hidden">
-            <Link href="/" className="text-sm font-medium text-text-primary">
+            <Link
+              href="/"
+              className="inline-flex min-h-11 items-center text-sm font-medium text-text-primary"
+            >
               Ekonomi
             </Link>
             <SearchTriggerButton compact />
