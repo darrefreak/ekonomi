@@ -37,7 +37,8 @@ export const ROUTE_IDENTITY: Record<string, RouteIdentity> = {
   "/": {
     title: "Översikt",
     heading: /^Familjen Demo$/,
-    control: (page) => page.getByRole("link", { name: /^Nettoförmögenhet →$/ }),
+    control: (page) =>
+      page.getByRole("link", { name: /se nettoförmögenhet/i }),
   },
   "/liquidity": {
     title: "Likviditet",
@@ -53,7 +54,7 @@ export const ROUTE_IDENTITY: Record<string, RouteIdentity> = {
   "/accounts": {
     title: "Konton",
     heading: /^Konton$/,
-    control: (page) => page.getByRole("button", { name: /skapa konto/i }),
+    control: (page) => page.getByRole("button", { name: /nytt konto/i }),
   },
   "/cashflow": { title: "Kassaflöde", heading: /^Kassaflöde$/ },
   "/budget": {

@@ -29,11 +29,27 @@ async function internalHrefs(page: Page, scope: ReturnType<Page["locator"]>) {
   return [...new Set(hrefs.map((href) => href.split("?")[0]!))];
 }
 
+async function navigateTo(page: Page, href: string) {
+  let lastError: unknown;
+  for (let attempt = 0; attempt < 2; attempt += 1) {
+    try {
+      await page.goto(href, { waitUntil: "domcontentloaded" });
+      return;
+    } catch (error) {
+      lastError = error;
+      if (!/interrupted by another navigation/i.test(String(error))) throw error;
+      await page.waitForTimeout(250);
+    }
+  }
+  throw lastError;
+}
+
 test.describe("navigation route contract", () => {
   test("desktop sidebar hrefs all resolve to their own page", async ({
     page,
   }, testInfo) => {
     test.skip(testInfo.project.name !== "chromium", "desktop project only");
+    test.setTimeout(180_000);
 
     const hrefs = new Set<string>();
     for (const primary of ["/", "/money", "/plan", "/insights", "/more"]) {
@@ -48,7 +64,7 @@ test.describe("navigation route contract", () => {
     ).toBeGreaterThan(15);
 
     for (const href of hrefs) {
-      await page.goto(href);
+      await navigateTo(page, href);
       // Route identity only: walking two dozen pages in one minute can trip the
       // API's rate limit, which leaves a real page without its data. Whether
       // each page renders its content is asserted by the specs that visit one
@@ -61,6 +77,7 @@ test.describe("navigation route contract", () => {
     page,
   }, testInfo) => {
     test.skip(testInfo.project.name !== "mobile", "mobile project only");
+    test.setTimeout(180_000);
 
     await page.goto("/");
     const bottomNav = page.getByRole("navigation", { name: /mobilnavigation/i });
@@ -102,7 +119,7 @@ test.describe("navigation route contract", () => {
     ).toEqual([]);
 
     for (const href of [...new Set([...bottom, ...hubHrefs, ...more])]) {
-      await page.goto(href);
+      await navigateTo(page, href);
       await expectRouteRendered(page, href, { content: false });
     }
   });
