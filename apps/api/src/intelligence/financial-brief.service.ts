@@ -5,10 +5,12 @@ import {
   buildFindings,
   calculateCategoryTrend,
   calculateLiquidityRequirement,
+  calculateNetSavingsRate,
   calculateSpendingBaseline,
   composeHeadline,
   explainLabel,
   FINDINGS_VERSION,
+  medianMinor,
   mergeAiTexts,
   renderTemplateText,
   selectBriefFindings,
@@ -48,6 +50,18 @@ const FRESH_DATA_MAX_AGE_DAYS = 45;
 
 /** Obligations below 5 000 kr are routine, not brief-worthy. */
 const LARGE_OBLIGATION_FLOOR_MINOR = 500_000n;
+
+/**
+ * The reserve floor a household is measured against, in months of essential
+ * spending. Three months is the widely cited lower bound for an emergency
+ * fund (commonly stated as 3–6 months of necessary expenses); the household's
+ * own volatility-adjusted requirement lives in the liquidity engine and is
+ * shown separately. This is only the trigger for the "buffert" finding.
+ */
+const RESERVE_TARGET_MONTHS = 3;
+
+/** Default net savings-rate target when the household has not set its own. */
+const DEFAULT_SAVINGS_RATE_TARGET_PERCENT = 20;
 
 @Injectable()
 export class FinancialBriefService {
@@ -279,6 +293,15 @@ export class FinancialBriefService {
     };
   }
 
+  /** The household's configured savings-rate target, or the default. */
+  private savingsRateTarget(configured: string | null): number {
+    if (configured == null) return DEFAULT_SAVINGS_RATE_TARGET_PERCENT;
+    const parsed = Number(configured);
+    return Number.isFinite(parsed) && parsed > 0
+      ? Math.round(parsed)
+      : DEFAULT_SAVINGS_RATE_TARGET_PERCENT;
+  }
+
   private async householdAiEnabled(householdId: string): Promise<boolean> {
     const db = getDb();
     const [row] = await db
@@ -303,6 +326,13 @@ export class FinancialBriefService {
     const asOf = input.asOf;
     const fresh = input.dataAgeDays <= FRESH_DATA_MAX_AGE_DAYS;
     const currentMonth = asOf.slice(0, 7);
+
+    const [settingsRow] = await db
+      .select({ savingsRateTargetPercent: householdSettings.savingsRateTargetPercent })
+      .from(householdSettings)
+      .where(eq(householdSettings.householdId, householdId))
+      .limit(1);
+    const settingsTargetPercent = settingsRow?.savingsRateTargetPercent ?? null;
 
     const findingsInput: FindingsInput = { asOf };
 
@@ -495,6 +525,55 @@ export class FinancialBriefService {
         requiredMinor: requirement.recommendedMinor,
         fresh,
       };
+    }
+
+    /*
+     * Savings rate vs the household's target, and reserve months vs the
+     * research floor. Both were defined in the findings engine but never wired
+     * in — a family's two most important questions ("sparar vi för lite?",
+     * "har vi en buffert?") were silently missing from the brief.
+     *
+     * Both are read off the household's *normal* month (medians of completed
+     * months), not the month in progress, and both come from existing engine
+     * functions. No number is invented here.
+     */
+    if (populated.length >= 3) {
+      const totals = populated.map(
+        (month) =>
+          month.essentialMinor + month.semiDiscretionaryMinor + month.discretionaryMinor,
+      );
+      const incomes = populatedIncome
+        .map((month) => month.amountMinor)
+        .filter((amount) => amount > 0n);
+      const essentials = populated
+        .map((month) => month.essentialMinor)
+        .filter((amount) => amount > 0n);
+      const medianIncome = medianMinor(incomes);
+      const medianCost = medianMinor(totals.filter((amount) => amount > 0n));
+      const medianEssential = medianMinor(essentials);
+
+      if (medianIncome != null && medianIncome > 0n) {
+        const currentPercent = calculateNetSavingsRate({
+          incomeMinor: medianIncome,
+          spendingMinor: medianCost ?? 0n,
+        });
+        findingsInput.savingsRate = {
+          currentPercent,
+          targetPercent: this.savingsRateTarget(settingsTargetPercent),
+          fresh,
+        };
+      }
+
+      if (medianEssential != null && medianEssential > 0n) {
+        // One-decimal months of essential-only coverage from liquid cash.
+        const coverageMonths =
+          Number((input.liquidCashMinor * 10n) / medianEssential) / 10;
+        findingsInput.reserve = {
+          coverageMonths,
+          targetMonths: RESERVE_TARGET_MONTHS,
+          fresh,
+        };
+      }
     }
 
     /* Upcoming large obligations (§34). */

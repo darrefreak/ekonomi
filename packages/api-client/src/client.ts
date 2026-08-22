@@ -97,6 +97,7 @@ import {
   aiDryRunReportSchema,
   aiStatusResponseSchema,
   financialBriefResponseSchema,
+  familySummaryResponseSchema,
   classificationRulesResponseSchema,
   updateClassificationRuleSchema,
   riskResponseSchema,
@@ -201,6 +202,7 @@ import {
   type AiDryRunReport,
   type AiStatusResponse,
   type FinancialBriefResponse,
+  type FamilySummaryResponse,
   type ClassificationRulesResponse,
   type UpdateClassificationRuleInput,
   type ReviewResponse,
@@ -1163,6 +1165,14 @@ export function createApiClient(options: ApiClientOptions) {
         `/api/v1/brief?householdId=${encodeURIComponent(householdId)}`,
       );
       return financialBriefResponseSchema.parse(data) as FinancialBriefResponse;
+    },
+
+    /** Family summary: the three household questions, composed from the engines. */
+    getFamilySummary: async (householdId: string) => {
+      const data = await request<unknown>(
+        `/api/v1/family-summary?householdId=${encodeURIComponent(householdId)}`,
+      );
+      return familySummaryResponseSchema.parse(data) as FamilySummaryResponse;
     },
 
     /** All recurring streams, grouped, with totals, price insights and review. */

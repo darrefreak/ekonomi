@@ -6,6 +6,7 @@ import type { DashboardResponse } from "@ffos/schemas";
 import { api, clearSession } from "@/lib/api";
 import { AuthRequiredError, ensureHouseholdSession } from "@/lib/session";
 import { DashboardView } from "./dashboard-view";
+import { FamilySummaryView } from "./family-summary-view";
 import { EmptyState } from "../feedback/empty-state";
 import { ErrorState } from "../feedback/error-state";
 import { LoadingState } from "../feedback/loading-state";
@@ -65,5 +66,29 @@ export function DashboardPage() {
       />
     );
   }
-  return <DashboardView data={data} />;
+  return (
+    <div className="space-y-8">
+      <FamilySummaryView />
+
+      <details className="group rounded-[18px] border border-border bg-surface-elevated">
+        <summary className="flex min-h-16 cursor-pointer list-none items-center justify-between gap-4 px-5 py-4">
+          <span>
+            <span className="block font-medium text-text-primary">
+              Alla detaljer
+            </span>
+            <span className="mt-1 block text-sm text-text-muted">
+              Position, månad, prognos, kassaflöde och datatäckning
+            </span>
+          </span>
+          <span className="text-sm font-medium text-accent group-open:hidden">Visa</span>
+          <span className="hidden text-sm font-medium text-accent group-open:inline">
+            Dölj
+          </span>
+        </summary>
+        <div className="border-t border-border p-4 md:p-5">
+          <DashboardView data={data} />
+        </div>
+      </details>
+    </div>
+  );
 }
