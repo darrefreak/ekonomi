@@ -38,4 +38,5 @@ export * from "./audit";
 export * from "./calendar";
 export * from "./smart-budget";
 export * from "./what-changed";
+export * from "./family-summary";
 
