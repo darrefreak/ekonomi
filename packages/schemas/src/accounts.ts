@@ -1,5 +1,11 @@
 import { z } from "zod";
-import { amountMinorStringSchema, currencyCodeSchema, nonNegativeAmountMinorStringSchema } from "./common";
+import {
+  amountMinorStringSchema,
+  currencyCodeSchema,
+  interestRateBpsSchema,
+  isoDateSchema,
+  nonNegativeAmountMinorStringSchema,
+} from "./common";
 import { moneySchema } from "./money";
 
 export const accountTypeSchema = z.enum([
@@ -50,6 +56,14 @@ export const createAccountSchema = z
     externalReference: z.string().max(160).optional().nullable(),
     openingBalanceMinor: nonNegativeAmountMinorStringSchema.optional().default("0"),
     ownerMemberId: z.string().uuid().optional().nullable(),
+    /**
+     * Annual nominal interest rate in basis points (e.g. 350 = 3.50%).
+     * Meaningful for liability accounts; feeds interest estimates and the debt
+     * payoff order. The DB column has always existed; it is now settable.
+     */
+    interestRateBps: interestRateBpsSchema.optional().nullable(),
+    /** Fixed-rate binding end date for a mortgage, if any. */
+    bindingEndDate: isoDateSchema.optional().nullable(),
   })
   .strict();
 
@@ -76,6 +90,10 @@ export const updateAccountSchema = z
      */
     openingBalanceMinor: nonNegativeAmountMinorStringSchema.optional(),
     externalReference: z.string().max(160).optional().nullable(),
+    /** Correct or set the account's annual interest rate in basis points. */
+    interestRateBps: interestRateBpsSchema.optional().nullable(),
+    /** Correct or set a mortgage's fixed-rate binding end date. */
+    bindingEndDate: isoDateSchema.optional().nullable(),
     connectionStatus: z
       .enum([
         "CONNECTED",

@@ -11,7 +11,9 @@ import {
   monthlyInterestFromRateMinor,
   mortgageRateScenarioMonthlyDeltaMinor,
   outstandingLiabilityMinor,
+  planDebtPayoff,
   summarizePrincipalInterest,
+  type DebtPayoffMethod,
 } from "@ffos/financial-engine";
 import { getDb } from "../db/client";
 import {
@@ -275,6 +277,107 @@ export class DebtService {
           money(p.principalMinor + p.interestMinor, currency),
         ),
       })),
+    };
+  }
+
+  /**
+   * Payoff order — which debt to clear first, and why.
+   *
+   * Reuses the same ledger-aligned balances as `list`, then ranks them with the
+   * deterministic engine. Nothing is moved; this only advises.
+   */
+  async payoff(
+    userId: string,
+    householdId: string,
+    opts: {
+      method?: DebtPayoffMethod;
+      asOf?: string;
+      extraMonthlyMinor?: bigint;
+    } = {},
+  ) {
+    const { household } = await this.access.requireMembership(userId, householdId);
+    const currency = (household.baseCurrency || "SEK") as CurrencyCode;
+    const asOf = await resolveHouseholdAsOf(householdId, opts.asOf);
+    const method: DebtPayoffMethod = opts.method ?? "avalanche";
+
+    const rows = await this.liabilityAccounts(householdId);
+    const aligned = await this.metrics.getLedgerAlignedAccountRows(householdId, asOf);
+    const balanceById = new Map(
+      aligned.map((a) => [a.id, a.currentBalanceMinor] as const),
+    );
+
+    const inputs = rows.map((row) => {
+      const ledgerBal = balanceById.get(row.id) ?? row.currentBalanceMinor;
+      return {
+        id: row.id,
+        name: row.name,
+        provider: row.provider,
+        accountType: row.accountType as "MORTGAGE" | "LOAN" | "CREDIT_CARD",
+        outstandingMinor: outstandingLiabilityMinor(ledgerBal),
+        interestRateBps: row.interestRateBps,
+      };
+    });
+
+    const plan = planDebtPayoff(inputs, {
+      method,
+      extraMonthlyMinor: opts.extraMonthlyMinor,
+    });
+
+    const methodNotes =
+      method === "avalanche"
+        ? [
+            "Ränta först (avalanche): dyrast skuld betalas av först. Ger lägst total räntekostnad.",
+          ]
+        : [
+            "Minst först (snowball): minsta saldot betalas av först. Ger snabbast känsla av att bli av med hela skulder.",
+          ];
+    if (plan.hasAssumedRates) {
+      methodNotes.push(
+        "Vissa räntor är antagna utifrån skuldtyp tills du fyllt i den verkliga räntan.",
+      );
+    }
+
+    return {
+      asOf,
+      currency,
+      method,
+      totals: {
+        outstanding: moneyToJson(money(plan.totalOutstandingMinor, currency)),
+        monthlyInterest: moneyToJson(
+          money(plan.totalMonthlyInterestMinor, currency),
+        ),
+      },
+      items: plan.items.map((item) => ({
+        id: item.id,
+        name: item.name,
+        provider: item.provider,
+        accountType: item.accountType,
+        priority: item.priority,
+        outstanding: moneyToJson(money(item.outstandingMinor, currency)),
+        interestRateBps: item.interestRateBps,
+        interestRatePercent: item.interestRateBps / 100,
+        assumedRate: item.assumedRate,
+        monthlyInterest: moneyToJson(money(item.monthlyInterestMinor, currency)),
+        interestShare: item.interestShare,
+        reason: item.reason,
+      })),
+      focus: plan.focus,
+      projection: plan.projection
+        ? {
+            extraMonthly: moneyToJson(
+              money(plan.projection.extraMonthlyMinor, currency),
+            ),
+            focusMonthsToClear: plan.projection.focusMonthsToClear,
+            focusInterestPaid: moneyToJson(
+              money(plan.projection.focusInterestPaidMinor, currency),
+            ),
+            focusInterestSaved: moneyToJson(
+              money(plan.projection.focusInterestSavedMinor, currency),
+            ),
+          }
+        : null,
+      hasAssumedRates: plan.hasAssumedRates,
+      method_notes: methodNotes,
     };
   }
 

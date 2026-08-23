@@ -2,6 +2,7 @@ import { Controller, Get, Inject, Param, Query, UseGuards } from "@nestjs/common
 import { ApiBearerAuth, ApiTags } from "@nestjs/swagger";
 import {
   accountIdParamSchema,
+  debtPayoffQuerySchema,
   householdAsOfQuerySchema,
 } from "@ffos/schemas";
 import { AuthGuard } from "../auth/auth.guard";
@@ -24,6 +25,29 @@ export class DebtController {
     query: { householdId: string; asOf?: string },
   ) {
     return this.debt.list(user.userId, query.householdId, query.asOf);
+  }
+
+  // Declared before ":accountId" so "payoff" is matched as a static route
+  // rather than captured as an account id.
+  @Get("payoff")
+  payoff(
+    @CurrentUser() user: AuthenticatedUser,
+    @Query(new ZodValidationPipe(debtPayoffQuerySchema))
+    query: {
+      householdId: string;
+      method: "avalanche" | "snowball";
+      asOf?: string;
+      extraMonthlyMinor?: string;
+    },
+  ) {
+    return this.debt.payoff(user.userId, query.householdId, {
+      method: query.method,
+      asOf: query.asOf,
+      extraMonthlyMinor:
+        query.extraMonthlyMinor != null && query.extraMonthlyMinor !== ""
+          ? BigInt(query.extraMonthlyMinor)
+          : undefined,
+    });
   }
 
   @Get(":accountId")
