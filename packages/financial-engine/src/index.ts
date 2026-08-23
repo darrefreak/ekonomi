@@ -13,6 +13,7 @@ export * from "./forecast";
 export * from "./scenarios";
 export * from "./backtest";
 export * from "./debt";
+export * from "./debt-payoff";
 export * from "./wealth";
 export * from "./lifestyle-creep";
 export * from "./opportunities";

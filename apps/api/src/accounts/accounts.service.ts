@@ -147,6 +147,9 @@ export class AccountsService {
       input.creditLimitMinor != null && input.creditLimitMinor !== ""
         ? BigInt(input.creditLimitMinor)
         : null;
+    const interestRateBps =
+      input.interestRateBps != null ? input.interestRateBps : null;
+    const bindingEndDate = input.bindingEndDate ?? null;
 
     const { accountId } = await runIdempotentCommand({
       householdId: input.householdId,
@@ -163,6 +166,8 @@ export class AccountsService {
         creditLimitMinor: creditLimit?.toString() ?? null,
         externalReference: input.externalReference ?? null,
         openingBalanceMinor: opening.toString(),
+        interestRateBps,
+        bindingEndDate,
       },
       command: async (tx) => {
         const [row] = await tx
@@ -177,6 +182,8 @@ export class AccountsService {
             isShared: input.isShared ?? true,
             creditLimitMinor: creditLimit,
             externalReference: input.externalReference ?? null,
+            interestRateBps,
+            bindingEndDate,
             openingBalanceMinor: opening,
             currentBalanceMinor: opening,
             reportedBalanceMinor: opening,
@@ -274,6 +281,12 @@ export class AccountsService {
         input.creditLimitMinor === null || input.creditLimitMinor === ""
           ? null
           : BigInt(input.creditLimitMinor);
+    }
+    if (input.interestRateBps !== undefined) {
+      patch.interestRateBps = input.interestRateBps;
+    }
+    if (input.bindingEndDate !== undefined) {
+      patch.bindingEndDate = input.bindingEndDate;
     }
 
     /*

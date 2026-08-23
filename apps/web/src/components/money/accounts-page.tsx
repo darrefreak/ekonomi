@@ -26,6 +26,8 @@ type FormState = {
   provider: string;
   openingBalance: string;
   creditLimit: string;
+  interestRate: string;
+  bindingEndDate: string;
 };
 
 const INITIAL_FORM: FormState = {
@@ -36,7 +38,11 @@ const INITIAL_FORM: FormState = {
   provider: "",
   openingBalance: "0",
   creditLimit: "",
+  interestRate: "",
+  bindingEndDate: "",
 };
+
+const LIABILITY_TYPES = new Set(["MORTGAGE", "LOAN", "CREDIT_CARD"]);
 
 export function AccountsPage() {
   const householdId = useHouseholdId();
@@ -84,6 +90,18 @@ export function AccountsPage() {
           throw new Error("Kreditgränsen måste vara ett giltigt belopp i kronor (≥ 0).");
         }
       }
+      let interestRateBps: number | null | undefined;
+      if (LIABILITY_TYPES.has(form.accountType) && form.interestRate.trim()) {
+        const pct = Number(form.interestRate.replace(",", ".").trim());
+        if (!Number.isFinite(pct) || pct < 0 || pct > 100) {
+          throw new Error("Räntan måste vara mellan 0 och 100 %.");
+        }
+        interestRateBps = Math.round(pct * 100);
+      }
+      const bindingEndDate =
+        form.accountType === "MORTGAGE" && form.bindingEndDate.trim()
+          ? form.bindingEndDate.trim()
+          : undefined;
       return api.createAccount({
         householdId: id,
         name: form.name.trim(),
@@ -95,6 +113,8 @@ export function AccountsPage() {
         ownerMemberId: form.isShared ? null : form.ownerMemberId || null,
         openingBalanceMinor,
         creditLimitMinor,
+        interestRateBps,
+        bindingEndDate,
       }, { idempotencyKey: submissionKey.current() });
     },
     onSuccess: async () => {
@@ -275,6 +295,36 @@ export function AccountsPage() {
                 }
                 placeholder="15000"
                 className="mt-1 min-h-11 w-full rounded-[12px] border border-border bg-surface px-3 text-sm tabular-nums"
+              />
+            </label>
+          ) : null}
+          {LIABILITY_TYPES.has(form.accountType) ? (
+            <label className="block text-sm">
+              <span className="text-text-muted">Ränta (% per år, valfritt)</span>
+              <input
+                inputMode="decimal"
+                value={form.interestRate}
+                onChange={(e) =>
+                  setForm((f) => ({ ...f, interestRate: e.target.value }))
+                }
+                placeholder="t.ex. 3,5"
+                className="mt-1 min-h-11 w-full rounded-[12px] border border-border bg-surface px-3 text-sm tabular-nums"
+              />
+              <span className="mt-1 block text-xs text-text-muted">
+                Används för räntekostnad och betalningsordning.
+              </span>
+            </label>
+          ) : null}
+          {form.accountType === "MORTGAGE" ? (
+            <label className="block text-sm">
+              <span className="text-text-muted">Bindningstid t.o.m. (valfritt)</span>
+              <input
+                type="date"
+                value={form.bindingEndDate}
+                onChange={(e) =>
+                  setForm((f) => ({ ...f, bindingEndDate: e.target.value }))
+                }
+                className="mt-1 min-h-11 w-full rounded-[12px] border border-border bg-surface px-3 text-sm"
               />
             </label>
           ) : null}

@@ -37,6 +37,7 @@ import {
   coverageResponseSchema,
   dashboardResponseSchema,
   debtDetailResponseSchema,
+  debtPayoffResponseSchema,
   debtResponseSchema,
   documentDetailSchema,
   documentsResponseSchema,
@@ -160,6 +161,8 @@ import {
   type CreateFinancedAssetPurchaseInput,
   type DashboardResponse,
   type DebtDetailResponse,
+  type DebtPayoffMethod,
+  type DebtPayoffResponse,
   type DebtResponse,
   type DocumentDetailDto,
   type DocumentsResponse,
@@ -847,6 +850,17 @@ export function createApiClient(options: ApiClientOptions) {
         `/api/v1/debt/${encodeURIComponent(accountId)}?householdId=${encodeURIComponent(householdId)}`,
       );
       return debtDetailResponseSchema.parse(data) as DebtDetailResponse;
+    },
+    getDebtPayoff: async (
+      householdId: string,
+      opts?: { method?: DebtPayoffMethod; extraMonthlyMinor?: string },
+    ) => {
+      const params = new URLSearchParams({ householdId });
+      if (opts?.method) params.set("method", opts.method);
+      if (opts?.extraMonthlyMinor)
+        params.set("extraMonthlyMinor", opts.extraMonthlyMinor);
+      const data = await request<unknown>(`/api/v1/debt/payoff?${params.toString()}`);
+      return debtPayoffResponseSchema.parse(data) as DebtPayoffResponse;
     },
     getCoverage: async (householdId: string) => {
       const data = await request<unknown>(
