@@ -80,6 +80,15 @@ export class DecisionsCenterService {
       savings?.asOf ?? payoff?.asOf ?? brief?.asOf ?? new Date().toISOString().slice(0, 10);
     const kr = (minor: bigint) => formatMoney(money(minor, currency), "sv-SE");
 
+    // When the household's history is thin, spending-derived estimates are
+    // noisy — the trend detector can extrapolate an implausible yearly figure
+    // from one or two sparse months. In that state we still surface the signal
+    // but refuse to put a precise krona number on it, and keep it out of the
+    // headline total, so the advice stays honest rather than alarmist.
+    const thinData = Boolean(
+      brief?.findings.find((f) => f.type === "DATA_COVERAGE_WARNING"),
+    );
+
     const actions: DecisionAction[] = [];
     const seen = new Set<string>();
 
@@ -153,10 +162,14 @@ export class DecisionsCenterService {
       // the very surplus that should clear that debt first.
       if (opp.type === "CASH_SURPLUS" && expensiveDebt) continue;
       const category = this.categoryForOpportunity(opp);
-      const annual = this.annualImpactForOpportunity(opp);
       const dedupe = `${opp.type ?? opp.detectorKey ?? opp.id}:${opp.evidence?.[0]?.id ?? opp.id}`;
       if (seen.has(dedupe)) continue;
       seen.add(dedupe);
+      // Estimates that lean on spending history are the ones thin data distorts.
+      const spendingHistoryBased =
+        opp.type === "SPENDING_TREND" || opp.type === "BUDGET_OVERRUN";
+      const suppressNumber = thinData && spendingHistoryBased;
+      const annual = suppressNumber ? null : this.annualImpactForOpportunity(opp);
       const tone: DecisionAction["tone"] =
         opp.type === "BUDGET_OVERRUN" || opp.type === "VEHICLE_COST"
           ? "warning"
@@ -168,20 +181,25 @@ export class DecisionsCenterService {
         title: opp.title,
         detail: opp.description,
         recommendation: this.recommendationForOpportunity(opp, kr, annual),
-        impact: opp.estimatedAnnualSaving ?? opp.estimatedMonthlyImpact ?? null,
-        impactHorizon: opp.estimatedAnnualSaving
-          ? "annual"
-          : opp.estimatedMonthlyImpact
-            ? "monthly"
-            : null,
+        impact: suppressNumber
+          ? null
+          : (opp.estimatedAnnualSaving ?? opp.estimatedMonthlyImpact ?? null),
+        impactHorizon: suppressNumber
+          ? null
+          : opp.estimatedAnnualSaving
+            ? "annual"
+            : opp.estimatedMonthlyImpact
+              ? "monthly"
+              : null,
         annualImpactMinor: annual != null ? annual.toString() : null,
         confidence: opp.confidence ?? null,
         confidenceLabel: opp.confidenceLabel ?? null,
         effort: opp.effort ?? null,
         tone,
-        score:
-          opp.priorityScore ??
-          this.score({ annualImpactMinor: annual, confidence: opp.confidence ?? null, tone }),
+        score: suppressNumber
+          ? this.score({ annualImpactMinor: null, confidence: opp.confidence ?? null, tone })
+          : (opp.priorityScore ??
+            this.score({ annualImpactMinor: annual, confidence: opp.confidence ?? null, tone })),
         href: opp.evidence?.[0]?.href ?? this.routeForCategory(category),
         evidence: opp.evidence ?? [],
       });
@@ -325,10 +343,7 @@ export class DecisionsCenterService {
             top ? ` — störst effekt: ${top.title}` : ""
           }`;
 
-    const coverageWarning = brief?.findings.find(
-      (f) => f.type === "DATA_COVERAGE_WARNING",
-    );
-    const coverageNote = coverageWarning
+    const coverageNote = thinData
       ? "Bilden bygger på de konton och den historik som finns inne. Lägg till fler konton och importera mer historik för en mer komplett bild."
       : null;
 
