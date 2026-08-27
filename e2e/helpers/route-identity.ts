@@ -34,11 +34,12 @@ export type RouteIdentity = {
 export const ROUTE_IDENTITY: Record<string, RouteIdentity> = {
   // The dashboard heads with the household's own name, and only it links to
   // net worth from the position card.
+  // The home now leads with the family summary, whose headline is dynamic; its
+  // "what should we do next" section title is the stable proof this page loaded.
   "/": {
     title: "Översikt",
-    heading: /^Familjen Demo$/,
     control: (page) =>
-      page.getByRole("link", { name: /se nettoförmögenhet/i }),
+      page.getByRole("heading", { name: /vad bör vi göra härnäst\?/i }),
   },
   "/liquidity": {
     title: "Likviditet",
@@ -116,6 +117,13 @@ export const ROUTE_IDENTITY: Record<string, RouteIdentity> = {
   "/imports": { title: "Importer", heading: /^Importer$/ },
   "/advisor": { title: "Rådgivare", heading: /^Rådgivare$/ },
   "/review": { title: "Granska", heading: /^Granska$/ },
+  "/atgarder": { title: "Att göra", heading: /^Att göra$/ },
+  "/lagg-till": {
+    title: "Lägg till",
+    heading: /^Lägg till i din ekonomi$/,
+    control: (page) =>
+      page.getByRole("navigation", { name: /lägg till i din ekonomi/i }),
+  },
   "/reports": { title: "Rapporter", heading: /^Rapporter$/ },
   "/notifications": { title: "Notiser", heading: /^Notiser$/ },
   "/onboarding": { title: "Onboarding", heading: /^Kom igång$/ },

@@ -99,6 +99,7 @@ import {
   aiStatusResponseSchema,
   financialBriefResponseSchema,
   familySummaryResponseSchema,
+  decisionsCenterResponseSchema,
   classificationRulesResponseSchema,
   updateClassificationRuleSchema,
   riskResponseSchema,
@@ -206,6 +207,7 @@ import {
   type AiStatusResponse,
   type FinancialBriefResponse,
   type FamilySummaryResponse,
+  type DecisionsCenterResponse,
   type ClassificationRulesResponse,
   type UpdateClassificationRuleInput,
   type ReviewResponse,
@@ -1187,6 +1189,14 @@ export function createApiClient(options: ApiClientOptions) {
         `/api/v1/family-summary?householdId=${encodeURIComponent(householdId)}`,
       );
       return familySummaryResponseSchema.parse(data) as FamilySummaryResponse;
+    },
+
+    /** The Decision Center — one ranked list of concrete actions to take. */
+    getDecisions: async (householdId: string) => {
+      const data = await request<unknown>(
+        `/api/v1/decisions/actions?householdId=${encodeURIComponent(householdId)}`,
+      );
+      return decisionsCenterResponseSchema.parse(data) as DecisionsCenterResponse;
     },
 
     /** All recurring streams, grouped, with totals, price insights and review. */

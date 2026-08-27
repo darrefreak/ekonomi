@@ -12,6 +12,7 @@ import { DebtModule } from "./debt/debt.module";
 import { DecisionsModule } from "./decisions/decisions.module";
 import { DemoModule } from "./demo/demo.module";
 import { FamilySummaryModule } from "./family-summary/family-summary.module";
+import { DecisionsCenterModule } from "./decisions-center/decisions-center.module";
 import { FeatureFlagsModule } from "./feature-flags/feature-flags.module";
 import { FinancialCoverageModule } from "./financial-coverage/financial-coverage.module";
 import { HealthModule } from "./health/health.module";
@@ -76,6 +77,7 @@ import { WealthModule } from "./wealth/wealth.module";
     AiModule,
     DashboardModule,
     FamilySummaryModule,
+    DecisionsCenterModule,
     FeatureFlagsModule,
     SettingsModule,
     SearchModule,

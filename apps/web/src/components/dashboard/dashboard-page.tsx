@@ -7,6 +7,7 @@ import { api, clearSession } from "@/lib/api";
 import { AuthRequiredError, ensureHouseholdSession } from "@/lib/session";
 import { DashboardView } from "./dashboard-view";
 import { FamilySummaryView } from "./family-summary-view";
+import { NextActionsCard } from "./next-actions-card";
 import { EmptyState } from "../feedback/empty-state";
 import { ErrorState } from "../feedback/error-state";
 import { LoadingState } from "../feedback/loading-state";
@@ -68,9 +69,11 @@ export function DashboardPage() {
   }
   return (
     <div className="space-y-8">
+      <NextActionsCard />
+
       <FamilySummaryView />
 
-      <details className="group rounded-[18px] border border-border bg-surface-elevated">
+      <details open className="group rounded-[18px] border border-border bg-surface-elevated">
         <summary className="flex min-h-16 cursor-pointer list-none items-center justify-between gap-4 px-5 py-4">
           <span>
             <span className="block font-medium text-text-primary">

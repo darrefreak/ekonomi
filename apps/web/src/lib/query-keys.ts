@@ -115,6 +115,9 @@ export const queryKeys = {
   notifications: {
     all: (householdId: string) => ["notifications", householdId] as const,
   },
+  decisions: {
+    all: (householdId: string) => ["decisions", householdId] as const,
+  },
 } as const;
 
 /**
