@@ -7,7 +7,6 @@ import { CoverageList } from "../financial/coverage-list";
 import { FinancialBriefCard } from "./financial-brief-card";
 import { MiniCashflowChart } from "../financial/mini-cashflow-chart";
 import { MoneyValue } from "../financial/money-value";
-import { NextActionsCard } from "./next-actions-card";
 import { SpendingVsNormalCard } from "./spending-vs-normal-card";
 import { EmptyState } from "../feedback/empty-state";
 
@@ -38,8 +37,6 @@ export function DashboardView({ data }: { data: DashboardResponse }) {
           {sourceNeedsAttention ? "data behöver uppdateras" : data.freshnessLabel}
         </p>
       </div>
-
-      {hasAccounts ? <NextActionsCard /> : null}
 
       {!hasAccounts ? (
         <div className="space-y-3">
