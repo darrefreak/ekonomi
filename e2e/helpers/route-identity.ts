@@ -116,6 +116,13 @@ export const ROUTE_IDENTITY: Record<string, RouteIdentity> = {
   "/imports": { title: "Importer", heading: /^Importer$/ },
   "/advisor": { title: "Rådgivare", heading: /^Rådgivare$/ },
   "/review": { title: "Granska", heading: /^Granska$/ },
+  "/atgarder": { title: "Att göra", heading: /^Att göra$/ },
+  "/lagg-till": {
+    title: "Lägg till",
+    heading: /^Lägg till i din ekonomi$/,
+    control: (page) =>
+      page.getByRole("navigation", { name: /lägg till i din ekonomi/i }),
+  },
   "/reports": { title: "Rapporter", heading: /^Rapporter$/ },
   "/notifications": { title: "Notiser", heading: /^Notiser$/ },
   "/onboarding": { title: "Onboarding", heading: /^Kom igång$/ },

@@ -6,6 +6,7 @@ export type NavItem = {
 
 export const desktopNav: NavItem[] = [
   { href: "/", label: "Översikt", section: "Start" },
+  { href: "/atgarder", label: "Att göra", section: "Start" },
   { href: "/review", label: "Granska", section: "Start" },
   { href: "/transactions", label: "Transaktioner", section: "Pengar" },
   { href: "/accounts", label: "Konton", section: "Pengar" },
@@ -31,6 +32,7 @@ export const desktopNav: NavItem[] = [
   { href: "/debt", label: "Skulder", section: "Förmögenhet" },
   { href: "/vehicles", label: "Fordon", section: "Förmögenhet" },
   { href: "/advisor", label: "Rådgivare", section: "AI" },
+  { href: "/lagg-till", label: "Lägg till", section: "Data" },
   { href: "/documents", label: "Dokument", section: "Data" },
   { href: "/integrations", label: "Kopplingar", section: "Data" },
   { href: "/imports", label: "Importer", section: "Data" },
@@ -98,7 +100,12 @@ function routeMatches(pathname: string, href: string): boolean {
 
 /** Resolve a feature route back to the primary destination it belongs to. */
 export function primaryHrefForPathname(pathname: string): string {
-  if (pathname === "/" || pathname === "/dashboard" || routeMatches(pathname, "/review")) {
+  if (
+    pathname === "/" ||
+    pathname === "/dashboard" ||
+    routeMatches(pathname, "/review") ||
+    routeMatches(pathname, "/atgarder")
+  ) {
     return "/";
   }
   if (pathname === "/money" || moneyHub.some((item) => routeMatches(pathname, item.href))) {
@@ -120,7 +127,9 @@ export function primaryHrefForPathname(pathname: string): string {
 export function contextNavForPathname(pathname: string): NavItem[] {
   switch (primaryHrefForPathname(pathname)) {
     case "/":
-      return desktopNav.filter((item) => item.href === "/review");
+      return desktopNav.filter(
+        (item) => item.href === "/atgarder" || item.href === "/review",
+      );
     case "/money":
       return moneyHub;
     case "/plan":
